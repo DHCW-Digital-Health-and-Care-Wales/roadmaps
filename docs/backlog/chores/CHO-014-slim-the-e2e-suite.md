@@ -1,29 +1,53 @@
-# CHO-014: The E2E suite holds geometry, and repeats a run, only where that proves something
+# CHO-014: Each check in the test suite is held once, at the lowest layer that can see it
 
-- **Status**: Proposed — asked for by the owner (D1); measured here, no test changed yet; not to be selected until its measurements grow (D4); the focus tours stay in both themes (D7)
+- **Status**: Proposed — an umbrella: its work is CHO-036 to CHO-042, each selected alone (D9); S6 is delivered (D11)
 - **Type**: Refactor
-- **Area**: E2E (tests only)
+- **Area**: E2E + Features/UI + Domain (tests only)
 - **Epic**: standalone
 - **Depends on**: none (STY-044, which re-pointed the item-form tests at a dialog as
   STY-043 did the About tests, is delivered)
-- **Binding ADRs**: ADR-006, ADR-008, ADR-010
+- **Binding ADRs**: ADR-002, ADR-006, ADR-008, ADR-010, ADR-015
 - **Suggested model**: Sonnet — each test needs reading to tell a behaviour from a
   repeat; no production code
 - **Delivered**: _(add on delivery)_
 
 ## Summary
 
-The Playwright suite is long, and part of it checks where things sit on the screen or
-runs the same journey again per theme, language or width. The owner asked whether to
-slim it where a test holds only geometry or repeats without a behaviour of its own (D1).
-Measured, the tests that do either are 28 of 241 runs and 5% of the suite's time, and
-most of them stay with a check or a width removed, so slimming makes the suite shorter
-to read more than faster to run. More than half the time is the accessibility scans and
-focus tours, which run in both themes because contrast and the focus indicator can break
-in one alone: those stay. Done looks like: a run repeats, and a position is checked,
-only where that proves something, and the guide says when a new one is earned.
+The test suite repeats itself. Re-measured at `9ee767b`, the Playwright suite takes
+10 min 20 s on CI, four times its first measurement, when the chore was parked (D4).
+About 35% of that time, and about 5,300 of its 19,077 lines, hold nothing a Vitest page
+test does not, or repeat a run that cannot fail alone; Vitest asserts some rules at
+several seams.
+The owner widened the chore to the whole suite (D8) and split it into sub-chores (D9),
+and a cut must leave its scenario held after the switch from Google Sheets to the API
+(D10). Done looks like: CHO-036 to CHO-042 are Done.
 
 ## Measurement
+
+### At `9ee767b` (2026-11-22)
+
+44 specs, 19,077 lines with their fixtures, 673 runs: 10 min 20 s on CI with two
+workers (the `main` run at `9ee767b`), 1,215 s summed from the list reporter's
+per-test times. Vitest: 133 files, 44,654 lines, 1,777 tests, 2 to 3 minutes on CI.
+One read-only audit per slice classified every E2E test against the Vitest tests of the
+same screens (D12); each sub-chore's Measurement names its candidates.
+
+| Slice                     | Specs (summed CI s)                                                                                                                                                                                                             | Removable, estimated | What repeats                                                                                                               | Sub-chore |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------- |
+| The look checks           | `focus-indicator`, `accessibility`, `structure`, `styles`, `typography` (497 s)                                                                                                                                                 | ~65 s, ~180 lines    | Two page tours walk a page another tour walks; a few scans scan a state another scan holds                                 | CHO-036   |
+| Editing items             | `editing`, `adding-an-item`, `quick-add`, `editing-an-item`, `removing-an-item`, `item-tags`, `field-icons`, `closing-a-dialog`, `pinned-dialog` (221 s)                                                                        | ~140 s, ~1,900 lines | 52 tests whose every assertion a page test makes: a co-lead's change per field, a cell written per field, Welsh copy alone | CHO-037   |
+| The roadmap page          | `moved-travel`, `roadmap-items-compact`, `control-row`, `roadmap-header`, `roadmap-controls`, `roadmap-items-cut`, `placement-navigation`, `side-panel`, `roadmap-page`, `moved-mark`, `last-updated`, `roadmap-errors` (341 s) | ~120 s, ~900 lines   | Runs per width, language or choice that cross no breakpoint and take no other branch                                       | CHO-038   |
+| Shell, list, navigation   | `shell`, `shell-navigation`, `navigation-*`, `unpublished-changes`, `roadmaps`, `families`, `adding-a-roadmap`, `editing-a-roadmap`, `landing`, `preferences` (123 s)                                                           | ~80 s, ~1,900 lines  | Navigation, list and roadmap-dialog behaviour that page tests and the repository contract hold                             | CHO-039   |
+| Connecting and publishing | `auth`, `reconnect`, `session-warning`, `publishing-roadmap`, `sheets-writes` (33 s)                                                                                                                                            | ~26 s, ~430 lines    | Connect failures, session states and publish outcomes that component and page tests hold                                   | CHO-040   |
+| Vitest                    | Page, component, domain and editing-state tests                                                                                                                                                                                 | a few hundred lines  | One rule asserted through the page and in its unit test; page tests repeating each other                                   | CHO-041   |
+| Reflow                    | The sideways-scroll checks across the specs (S3)                                                                                                                                                                                | none; one helper     | One expression copied into many specs                                                                                      | CHO-042   |
+
+Together about 430 s of the 1,215 summed (35%), roughly 3.5 minutes off CI. The
+estimates count every cut and trim the audits proposed; each sub-chore's table lists
+its main candidates, not all of them. The
+Sheets adapter's own tests hold a further ~500 removable lines, left alone (D13).
+
+### At `697fcc5` (first measured)
 
 At commit `697fcc5`: 19 specs, 7,259 lines with their fixtures, 173 tests declared and
 241 run, since 68 runs come from loops over a theme, a language, a width or a kind of
@@ -55,7 +79,7 @@ Find the candidates with:
 | Welsh                                 | `structure.spec.ts`: six screens snapshotted in English and Welsh (12 runs); `shell.spec.ts`: the header and footer in both                                                                                                                                                                                                                                                            | Keep: Welsh copy and structure                                          |
 | The same theme set-up, declared twice | `accessibility.spec.ts` declares its own `Theme` and its own list of themes, though `fixtures/look.ts` exports both; it and `styles.spec.ts` each write the check that the page is in the theme asked for                                                                                                                                                                              | Share                                                                   |
 
-The 28 runs of the Summary, 22.1 s together, are every run of the tests in the rows
+The 28 runs first measured, 22.1 s together, are every run of the tests in the rows
 above "Fitting a phone". It is an upper bound: most of those tests stay, with a check or
 a width removed. The loops in `auth.spec.ts`, over each way connecting fails and each
 place it starts from, are behaviour, and stay.
@@ -113,6 +137,34 @@ asks for "Light and dark, desktop (1280 px) and phone (375 px) where layout chan
 without saying whether a screenshot or a test holds each, and story Tests notes
 repeat it, which is how STY-041's journey came to run four times
 
+### S7: An E2E test holds something its Vitest tests cannot (D8)
+
+**Given** an E2E test whose assertions a Vitest test already makes after the same
+user action
+**When** the suite is slimmed
+**Then** it has gone, or keeps only what jsdom cannot see, as
+`apps/editor/tests/e2e/AGENTS.md` lists it
+**And** an assertion no other test makes moves into a Vitest test before it goes
+
+### S8: A rule is asserted at the lowest seam that holds it, and wired once above (D8)
+
+**Given** a rule asserted alike in a unit test, a repository contract test and a page
+test
+**When** the suite is slimmed
+**Then** the lowest seam that holds every case keeps them, and each seam above keeps
+one test of the wiring
+**And** tests that differ only in data that takes no new branch are one table-driven
+test
+
+### S9: A cut leaves its scenario held after the switch from Google Sheets (D10)
+
+**Given** a test cut because another test holds its scenario
+**When** the editor's data source moves from Google Sheets to the API
+**Then** the scenario is still held by a test that outlives the switch: a domain test,
+the repository contract, a page or component test, or an E2E test through the fakes
+**And** only an assertion about Sheets or Google sign-in alone (a request, a cell, a
+column, a token) rests on the Sheets or GIS adapter's own tests, which go with it
+
 ## Decisions
 
 - **D1** (owner, 2026-11-14, to the orchestrator after CHO-011): "e2e tests are
@@ -141,11 +193,46 @@ repeat it, which is how STY-041's journey came to run four times
   gone: no form sits in a card now, and the dialog is narrowest on a phone. The
   square icons and the row's alignment are still asserted, as measured.
 - **D7** (owner, 2026-11-15, the owner's triage of the live chores and defects): the focus tours keep running in both themes (S4). The chore stays parked as D4 set.
+- **D8** (owner, 2026-11-22, a session re-assessing this chore): "are all the tests in
+  the suite adding value or do we have redundancy and/or tests that only check what
+  would already be verified by integration tests and a playwright test would catch
+  nothing further?", then "Do step 1" on widening this record → it covers the whole
+  suite, Vitest included, and D4's parking ends, its trigger met (2 min 32 s to
+  10 min 20 s). Adds S7 and S8; Out of scope loses the Vitest suite.
+- **D9** (owner, 2026-11-22, same session): "I want the proposed cuts/work written up
+  as sub chores", this record "being the chore 'Epic'", numbered by the next free IDs
+  over letter suffixes → CHO-036 to CHO-042, each naming this record as its Parent and
+  delivered alone; this record is Done when they are, S6 aside (D11).
+- **D10** (owner, 2026-11-22, same session): "we will soon be switching to a FastAPI
+  backend instead of Google sheets, so we don't want to cut tests that would end up
+  being useful after that switch", and "new tests will be written for the backend as
+  well (unit and integration)" → adds S9. A rule the API takes over (ADR-015) gains
+  the API's own tests then; retiring the editor's copy waits for the switch.
+- **D11** (owner, 2026-11-22, same session): "Then do S6s guide rule" → S6 is
+  delivered ahead of the sub-chores, in the PR that records D8 to D14.
+- **D12** (agent, 2026-11-22): the `9ee767b` measurement comes from six read-only
+  audits by slice, two of their largest claims checked by hand; their verdicts are
+  estimates, so each sub-chore re-reads every test it cuts (S5) rather than trusting
+  its candidate list.
+- **D13** (agent, 2026-11-22): the Sheets adapter's own tests, its parsers and the
+  spreadsheet fake's tests stay out of the cuts, over the ~500 lines they repeat,
+  because the switch deletes them (`docs/operations/replacing-google-sheets.md`); and
+  the repository contract keeps running whole against the in-memory repository, since
+  it proves the double the page tests use matches every adapter, the API's included
+  (ADR-002). Reopen if Sheets is to stay.
+- **D14** (agent, 2026-11-22): S6 also changes the Features row of `validation.md`,
+  over the Visible UI row alone, since its "Playwright coverage for each changed
+  journey" asks for an E2E test of every journey, which is how the suite came to repeat
+  its page tests (S7).
 
 ## Out of scope
 
-- Any change to production code, or to what a test asserts about behaviour.
-- The Vitest suite, and its shared fixtures (CHO-012).
+- Any change to production code, or to which behaviours the suite holds (S4): a cut
+  moves an assertion down a layer or drops a repeat (D8).
+- The Sheets adapter's own tests, its parsers and the spreadsheet fake's tests: the
+  switch to the API deletes them (D13).
+- Retiring the editor's tests of a rule the API takes over (conflicts, merging,
+  validation; ADR-015) once the API's own tests hold it: the switch-over epic (D10).
 - How the page focus tour names its stops (CHO-013): this chore decides only whether
   a tour runs in both themes.
 - Running the suite faster by other means (workers, shards, a shared sign-in): no

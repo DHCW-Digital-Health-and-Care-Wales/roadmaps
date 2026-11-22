@@ -10,7 +10,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Opus — a dependency change across the lint tooling and a runtime
   package, with a pnpm override if upstream has not moved
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/238
 
 ## Summary
 

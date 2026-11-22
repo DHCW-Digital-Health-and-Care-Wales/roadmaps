@@ -28,13 +28,14 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
 /**
  * A Product Lead edits a roadmap's English and publishes it, or saves it when the roadmap
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
- * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
- * category are chosen from their lists (STY-028). An item is moved to another placement,
- * writing its `Horizon` cell and moving its row to last there (STY-031, STY-051), or
- * put elsewhere in its own, which moves rows alone (STY-050). Its
- * organisations are ticked in a field that opens on request (STY-034, STY-038), its tags
- * are added, renamed and removed in another (STY-037), and its details are written as
- * an outline in a third (STY-039).
+ * What each field shows and keeps, a co-lead's change to it and the Welsh copy are held
+ * in the page tests (`roadmap-detail-page-*.test.tsx`), and each cell's shape in the
+ * Sheets adapter's; this spec holds one round trip of each kind of write: a cell, a new
+ * column (STY-037), a moved row (STY-031, STY-050, STY-051), a family and category
+ * chosen from their lists (STY-028), and a co-lead's change shown beside yours, never
+ * overwritten (STY-026). Its other tests hold what only a browser shows: the leave
+ * warning, a phone's width, a keyboard move's focus, and the Organisations, tags and
+ * details fields opening on request (STY-034, STY-037, STY-038, STY-039).
  */
 
 const ITEM = "Example card with every column"
@@ -911,9 +912,8 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
     expect(sheets.writes).toEqual([])
   })
 
-  test("Done keeps a choice made in a field shut again, and publishes it (S4)", async ({
+  test("Done keeps a choice made in a field shut again (S4)", async ({
     page,
-    sheets,
   }) => {
     await openRoadmap(page, "producta", ITEM)
     const form = await openForm(page, ITEM)
@@ -927,14 +927,6 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
       itemCard(page, ITEM).getByText("Cardiff and Vale, Powys, Swansea Bay"),
     ).toBeVisible()
     await expect(itemCard(page, ITEM).getByText("Changed")).toBeVisible()
-    await chooseAndConfirm(page, "Publish")
-    await expect(
-      page.getByRole("main").getByText(/^Changes published\./),
-    ).toBeVisible()
-    const organisations = sheets.spreadsheet
-      .find(({ title }) => title === "ProductA")
-      ?.rows.find(([title]) => title === ITEM)?.[6]
-    expect(organisations).toBe("CAVUHB, PTHB, SBUHB")
   })
 
   test("an item with none reads No organisations beside Add, and an unknown code is named while shut (S1, S5)", async ({
@@ -1299,15 +1291,15 @@ test.describe("an item's tags, organisations and details together (STY-034, STY-
     const form = await openEditItemDialog(page, DETAILED)
 
     await form.getByRole("button", { name: "Add tags" }).click()
-    await form
-      .getByRole("textbox", { name: "Add a tag" })
-      .fill("Patients, Carers")
+    const tag = form.getByRole("textbox", { name: "Add a tag" })
+    await expect(tag).toBeFocused()
+    await tag.fill("Patients, Carers")
     await form.getByRole("button", { name: "Change organisations" }).click()
     await form.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
     await form.getByRole("button", { name: "Change details" }).click()
     const details = form.getByRole("group", { name: "Details" })
     // Enter at the end of the first detail starts the next, and a hyphen nests it.
-    await details.getByRole("textbox").first().focus()
+    await expect(details.getByRole("textbox").first()).toBeFocused()
     await page.keyboard.press("End")
     await page.keyboard.press("Enter")
     await page.keyboard.type("-Added line")

@@ -285,7 +285,7 @@ for (const motion of ["reduce", "no-preference"] as const) {
   })
 }
 
-test.describe("a desktop's compact row, reducedMotion reduce (S4)", () => {
+test.describe("a desktop's compact row, its tags still with a long title, a new tag, a removal or an unplaced flag, reducedMotion reduce (S4)", () => {
   test.use({ reducedMotion: "reduce" })
 
   test("keeps them still when the title wraps onto more lines opened", async ({

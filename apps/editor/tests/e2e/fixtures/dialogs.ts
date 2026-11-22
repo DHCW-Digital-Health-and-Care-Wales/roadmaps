@@ -122,7 +122,8 @@ export function reviewFooterClose(review: Locator): Locator {
 
 /**
  * Clicks the dimmed page above `dialog` and beside it, wherever it sits: a click
- * outside a form dialog does nothing, which the caller then shows.
+ * outside a form dialog, or an alert dialog such as the hold after a write, does
+ * nothing, which the caller then shows.
  */
 export async function clickOutside(page: Page, dialog: Locator): Promise<void> {
   const box = await boxOf(dialog)

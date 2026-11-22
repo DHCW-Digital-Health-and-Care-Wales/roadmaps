@@ -17,18 +17,13 @@ test.use({ reducedMotion: "reduce" })
 const COPY = {
   en: {
     open: (placement: string) => `Add an item to ${placement}`,
-    first: (placement: string) => `Add the first item to ${placement}`,
     field: (placement: string) => `Title of a new item in ${placement}`,
-    add: "Add",
     more: "Add more details",
-    cancel: "Cancel",
     compact: "Compact",
     compactView: "Compact view",
-    next: "Next",
   },
   cy: {
     open: (placement: string) => `Ychwanegu eitem o dan ${placement}`,
-    first: (placement: string) => `Ychwanegu'r eitem gyntaf o dan ${placement}`,
     field: (placement: string) => `Teitl eitem newydd o dan ${placement}`,
     add: "Ychwanegu",
     more: "Ychwanegu rhagor o fanylion",
@@ -40,6 +35,7 @@ const COPY = {
 } as const
 
 const HEARING = "Book a hearing test online"
+const CHECK_IN = "Check in from your phone"
 
 /** Product A with items in Now, Next, Later and Delivered this year, none elsewhere. */
 const SPREADSHEET: readonly FakeTab[] = withTabItems(
@@ -169,10 +165,50 @@ test("the session warning, opening as a title is typed, leaves the field and its
   ])
 })
 
+test("closing the item dialog “Add more details” opens sends focus back: to the field as typed after Cancel, to the new card's Edit after adding, to the placement's “Add an item” after “Add and start another” (STY-081 S3, S4, S7)", async ({
+  page,
+  sheets,
+}) => {
+  const typed = " Book a  hearing test "
+  const tidied = "Book a hearing test"
+  await openRoadmap(page, sheets)
+  await quickAdd(page, "Next").click()
+  await field(page, "Next").fill(typed)
+  const more = main(page).getByRole("button", { name: COPY.en.more })
+  await more.click()
+  const dialog = page.getByRole("dialog", { name: "Add an item" })
+  await expect(dialog.getByRole("textbox", { name: "Title" })).toBeFocused()
+
+  await dialog.getByRole("button", { name: "Cancel" }).click()
+  await expect(dialog).toBeHidden()
+  await expect(field(page, "Next")).toBeFocused()
+  await expect(field(page, "Next")).toHaveValue(typed)
+
+  await more.click()
+  await dialog.getByRole("button", { name: "Add item", exact: true }).click()
+  await expect(dialog).toBeHidden()
+  await expect(
+    main(page).getByRole("button", { name: `Edit ${tidied}` }),
+  ).toBeFocused()
+  await expect(field(page, "Next")).toHaveCount(0)
+
+  await quickAdd(page, "Later").click()
+  await field(page, "Later").fill(CHECK_IN)
+  await more.click()
+  await dialog
+    .getByRole("button", { name: "Add and start another", exact: true })
+    .click()
+  await expect(dialog.getByRole("status")).toContainText(CHECK_IN)
+  await escapeFrom(dialog)
+  await expect(quickAdd(page, "Later")).toBeFocused()
+  await expect(field(page, "Later")).toHaveCount(0)
+})
+
 test.describe("the field's layout (S2)", () => {
-  // A width each side of the `md` breakpoint, where Add and Cancel move beside the field.
+  // The phone's reflow width and the `md` breakpoint, where Add and Cancel move beside
+  // the field.
   for (const [width, beside] of [
-    [640, false],
+    [375, false],
     [768, true],
   ] as const) {
     test(`in Welsh at ${String(width)}px, Add and Cancel sit ${beside ? "beside" : "under"} the field in the compact view and under it in the cards view, full size, within the list`, async ({

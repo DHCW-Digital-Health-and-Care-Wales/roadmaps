@@ -348,13 +348,12 @@ describe("“Add more details” says what it does on hover", () => {
 
     await user.hover(main().getByRole("button", { name: "Add more details" }))
 
+    // Base UI gives a tooltip no role: it is found by its slot.
     expect(
-      await waitFor(() => {
-        const tip = document.querySelector("[data-slot=tooltip-content]")
-        if (!tip) throw new Error("No tooltip yet")
-        return tip
+      await screen.findByText("Add more details", {
+        selector: "[data-slot=tooltip-content]",
       }),
-    ).toHaveTextContent("Add more details")
+    ).toBeVisible()
   })
 })
 

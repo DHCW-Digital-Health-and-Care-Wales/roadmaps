@@ -83,22 +83,23 @@ row, an appended row, a removed row
 ### Departures
 
 - Estimates re-read at delivery (CHO-014 D12), against `f9ce1e34` (CHO-036 merged):
-  the nine specs take 133 runs and 189.6 s summed on CI there. After: 82 runs, 51
+  the nine specs take 133 runs and 189.6 s summed on CI there. After: 83 runs, 50
   fewer; the 65 test names that are gone or renamed took 102.5 s on CI there, of which
   the renamed and trimmed tests (the desktop runs, the double click, the closing loop,
-  the combined test) keep about 19 s, so about 84 s summed go. The record's ~140 s
+  the combined test) keep about 19 s, so about 80 s summed go. The record's ~140 s
   was measured at `9ee767b` against a 221 s baseline.
-- The nine specs go from 4,602 to 3,038 lines (the whole change: 1,885 lines deleted,
-  328 inserted, test files only).
+- The nine specs go from 4,602 to 3,067 lines (1,872 deleted, 337 inserted);
+  `accessibility.spec.ts` gains 8 lines and the Vitest tests 105. Tests only.
 - One round trip per kind of write remains (S1): a cell (`editing.spec.ts` "publishes a
   roadmap's changes in one write", and the combined test below), a new column
-  ("adds a Labels column"), a moved row (the order test on a desktop and a phone, and
+  ("adds a Labels column"), a moved row (the order test on a desktop, and
   the Move test), an appended row (`adding-an-item.spec.ts` "a Product Lead adds an
   item in the item dialog") and a removed row (`removing-an-item.spec.ts`).
 - The combined test (`editing.spec.ts`, "an item's tags, organisations and details
   together") edits all three fields of "Earlier delivery this year" in one dialog and
-  asserts the three cells of its row that the publish changes. It replaces the six
-  per-field cell and column tests and the four Welsh-locked ones.
+  asserts the three cells of its row that the publish changes. It replaces the five
+  per-field cell and column tests (the Labels column test stays) and the four
+  Welsh-locked ones.
 - The Welsh-locked tests are cut as the record says: their page-level behaviour is held
   by `roadmap-detail-page-tags.test.tsx` and `-details.test.tsx` (locked and
   "gained Welsh since read"), the cell shapes by the Sheets adapter's tests and the
@@ -114,9 +115,14 @@ row, an appended row, a removed row
 - The edit dialog's click-outside was not held in jsdom (Not settled): it moves to the
   loop in `closing-a-dialog.spec.ts` that closes each of the four form dialogs, which
   now clicks outside each first. The read hold's click-outside and Tab move into the
-  hold test of `accessibility.spec.ts` (both themes).
-- `quick-add.spec.ts` keeps the Welsh layout at 640 and 768 px, a width each side of
-  `md`, where Add and Cancel move beside the field; 375, 1024 and 1280 go. Every axe
+  hold test of `accessibility.spec.ts`, in the light theme alone, since nothing there
+  differs by theme.
+- `quick-add.spec.ts` keeps the Welsh layout at 375 px, the reflow width, and 768 px,
+  where Add and Cancel move beside the field (`md`); 640, 1024 and 1280 go, since they
+  take the controls of one of the two. "Add more details" is trimmed to where focus
+  returns once its dialog closes (to the field as typed, to the new card's Edit, to
+  the placement's "Add an item"), which jsdom's instant close cannot hold; its data
+  assertions and the tooltip are in `roadmap-detail-page-quick-add.test.tsx`. Every axe
   scan stays (CHO-014 S4), the dialog's among them.
 - `adding-an-item.spec.ts:201` (the read after a 503) is cut: the retry policy is held
   by `query-client.test.ts`, the real HTTP failures and back-off by
@@ -125,26 +131,35 @@ row, an appended row, a removed row
 - The phone runs of the two removal tests are cut: the dialog and the page's "Add an
   item" have no width-dependent code, and `clickOutside` geometry is the only thing a
   phone could change.
-- Not cut, though near the candidates: the STY-038 tests of the Organisations field,
-  and the tags' and details' phone-width tests, which hold layout.
+- `editing.spec.ts` "Use theirs drops the pending order" is cut as the record says (it
+  was flaky on `main`), which gives up its real-browser check that focus lands on the
+  review's Close and then the page's heading once every change is decided; those
+  focus moves are held in jsdom by `roadmap-detail-page-editing.test.tsx`. "Keep mine"
+  and Publish's focus return stay in the desktop order test.
+- Not cut, though near the candidates: the STY-038 tests of the Organisations field
+  (the publish half of "Done keeps a choice" goes, since the combined test holds the
+  cell), and the tags' and details' phone-width tests, which hold layout.
+- Not settled: focus after a move to another placement is held in a real browser by
+  "moves by keyboard on a phone, focus staying on the moved card" and by
+  `editing-an-item.spec.ts` (Done after a change of placement); both stay.
 - Archived records that cite a cut or renamed test stay as they were.
 
 ### Cuts and the test that holds each (S5, S9)
 
-| Cut                                                                                                                                                   | Held by                                                                                                                                                                                                               |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `editing.spec.ts` a co-lead's different tags, details, organisations, family, move                                                                    | `roadmap-detail-page-tags`, `-details`, `-choosing-organisations`, `-choices`, `-moving` tests "shows a co-lead's … beside yours" (the conflict review through the in-memory repository)                              |
-| `editing.spec.ts` "Use theirs drops the pending order" (flaky on `main`)                                                                              | `roadmap-detail-page-ordering.test.tsx` "“Use theirs” drops the pending order"; the review's close focus by `-editing.test.tsx`                                                                                       |
-| `editing.spec.ts` the date's review, a removed item, a removed roadmap                                                                                | `-last-updated.test.tsx`; `-editing.test.tsx` "discards the changes to items a co-lead removed", and its removed-roadmap cases                                                                                        |
-| `editing.spec.ts` organisations, tags and details cells, the Organisations and Details columns                                                        | the fields' page tests; the cell shapes by the Sheets adapter's tests; one round trip by the combined test and "adds a Labels column"                                                                                 |
-| `editing.spec.ts` four Welsh-locked tests                                                                                                             | `-tags.test.tsx`, `-details.test.tsx` (locked, and gained Welsh since read), the repository contract                                                                                                                  |
-| `editing.spec.ts` three Welsh copy tests                                                                                                              | `-choosing-organisations.test.tsx` "is Welsh on the Welsh interface"; `-tags` and `-details` (now asserting "Tynnwyd" and the undo button)                                                                            |
-| `editing-an-item.spec.ts` the field values, Cancel and Escape, Welsh                                                                                  | `-editing.test.tsx`; the Welsh plural by `create-i18n.test.ts`; click-outside by `closing-a-dialog.spec.ts`                                                                                                           |
-| `adding-an-item.spec.ts` the read hold, the publish dialog beside an edit, the empty panel, Cancel and Escape, the session's end, Welsh, a title only | `-adding.test.tsx` and `-editing.test.tsx` (hold, conflict, then publish of the new item), `-adding.test.tsx` (panel, Cancel and Escape, Welsh, listed title); the session over a dialog by `editing-an-item.spec.ts` |
-| `quick-add.spec.ts` the run, Cancel and Tab, the empty placement, the expired session, the read, "Add more details"                                   | `roadmap-detail-page-quick-add.test.tsx` (the empty placement and the tooltip now asserted there)                                                                                                                     |
-| `quick-add.spec.ts` three Welsh widths                                                                                                                | the 640 and 768 px runs                                                                                                                                                                                               |
-| the phone runs of two removal tests, three card tests, `field-icons`; the no-preference runs of three compact-row tests                               | the desktop run, or the `reduce` run, of each                                                                                                                                                                         |
-| `closing-a-dialog.spec.ts` Welsh "Cau"; `field-icons.spec.ts` Welsh icons; `pinned-dialog.spec.ts` the note                                           | `form-dialog.test.tsx`; `roadmap-detail-page-field-icons.test.tsx`; `-adding.test.tsx` (now asserting the note is the body's last child)                                                                              |
+| Cut                                                                                                                                                               | Held by                                                                                                                                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `editing.spec.ts` a co-lead's different tags, details, organisations, family, move                                                                                | `roadmap-detail-page-tags`, `-details`, `-choosing-organisations`, `-choices`, `-moving` tests "shows a co-lead's … beside yours" (the conflict review through the in-memory repository)                              |
+| `editing.spec.ts` "Use theirs drops the pending order" (flaky on `main`)                                                                                          | `roadmap-detail-page-ordering.test.tsx` "“Use theirs” drops the pending order"; the review's close focus by `-editing.test.tsx`                                                                                       |
+| `editing.spec.ts` the date's review, a removed item, a removed roadmap                                                                                            | `-last-updated.test.tsx`; `-editing.test.tsx` "discards the changes to items a co-lead removed", and its removed-roadmap cases                                                                                        |
+| `editing.spec.ts` organisations, tags and details cells, the Organisations and Details columns                                                                    | the fields' page tests; the cell shapes by the Sheets adapter's tests; one round trip by the combined test and "adds a Labels column"                                                                                 |
+| `editing.spec.ts` four Welsh-locked tests                                                                                                                         | `-tags.test.tsx`, `-details.test.tsx` (locked, and gained Welsh since read), the repository contract                                                                                                                  |
+| `editing.spec.ts` three Welsh copy tests                                                                                                                          | `-choosing-organisations.test.tsx` "is Welsh on the Welsh interface"; `-tags` and `-details` (now asserting "Tynnwyd" and the undo button)                                                                            |
+| `editing-an-item.spec.ts` the field values, Cancel and Escape, Welsh                                                                                              | `-editing.test.tsx`; the Welsh plural by `create-i18n.test.ts`; click-outside by `closing-a-dialog.spec.ts`                                                                                                           |
+| `adding-an-item.spec.ts` the read hold, the publish dialog beside an edit, the empty panel, Cancel and Escape, the session's end, Welsh, a title only             | `-adding.test.tsx` and `-editing.test.tsx` (hold, conflict, then publish of the new item), `-adding.test.tsx` (panel, Cancel and Escape, Welsh, listed title); the session over a dialog by `editing-an-item.spec.ts` |
+| `quick-add.spec.ts` the run, Cancel and Tab, the empty placement, the expired session, the read, and the data half of "Add more details" (its focus returns stay) | `roadmap-detail-page-quick-add.test.tsx` (the empty placement and the tooltip now asserted there)                                                                                                                     |
+| `quick-add.spec.ts` three Welsh widths                                                                                                                            | the 375 and 768 px runs                                                                                                                                                                                               |
+| the phone runs of two removal tests, three card tests, `field-icons`; the no-preference runs of three compact-row tests                                           | the desktop run, or the `reduce` run, of each                                                                                                                                                                         |
+| `closing-a-dialog.spec.ts` Welsh "Cau"; `field-icons.spec.ts` Welsh icons; `pinned-dialog.spec.ts` the note                                                       | `form-dialog.test.tsx`; `roadmap-detail-page-field-icons.test.tsx`; `-adding.test.tsx` (now asserting the note is the body's last child)                                                                              |
 
 Each holder runs against the in-memory repository or through the fakes, so it outlives
 the switch from Google Sheets; only a cell, a column or a request shape rests on the

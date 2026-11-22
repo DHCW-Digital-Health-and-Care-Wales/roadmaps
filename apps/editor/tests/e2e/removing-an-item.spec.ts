@@ -60,7 +60,7 @@ function storedTitles(sheets: {
   return (tab?.rows ?? []).slice(1).map((row) => row[0])
 }
 
-test(`a published item is removed, pending until published, then its row is deleted (S1, S2, S5)`, async ({
+test("a published item is removed, pending until published, then its row is deleted (S1, S2, S5)", async ({
   page,
   sheets,
 }) => {
@@ -153,7 +153,7 @@ test("a co-lead's change to a removed item is reviewed; Remove anyway then delet
   expect(storedTitles(sheets)).not.toContain(EXPLORED)
 })
 
-test(`a new item's Remove asks the same question, then drops it at once, focus on “Add an item” (S10)`, async ({
+test("a new item's Remove asks the same question, then drops it at once, focus on “Add an item” (S10)", async ({
   page,
   sheets,
 }) => {

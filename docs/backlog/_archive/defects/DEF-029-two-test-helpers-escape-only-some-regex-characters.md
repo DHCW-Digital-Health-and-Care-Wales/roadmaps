@@ -1,6 +1,6 @@
 # DEF-029: Two test helpers escape only some regex characters, so CodeQL keeps two high alerts open
 
-- **Status**: Proposed — triaged by the owner (D1); found by CHO-031 delivery (CodeQL's
+- **Status**: Done — triaged by the owner (D1); found by CHO-031 delivery (CodeQL's
   first run on `main`)
 - **Severity**: Low — test code only, with fixed inputs; the cost is two open high
   alerts that hide new ones in the code-scanning list
@@ -61,7 +61,7 @@ included
   without an advanced-setup workflow).
 - **D2** (owner, 2026-11-22, grilling on PR #239): the two flagged helpers only. The
   other test regexes built from unescaped strings are
-  [CHO-035](../chores/CHO-035-test-regexes-match-interpolated-strings-literally.md).
+  [CHO-035](../../chores/CHO-035-test-regexes-match-interpolated-strings-literally.md).
 - **D3** (owner, 2026-11-22, grilling on PR #239): one shared escape helper, which
   escapes every metacharacter, in a place both the unit and the E2E tests import; both
   flagged helpers call it. It gives way to the built-in `RegExp.escape` once the
@@ -74,3 +74,22 @@ included
   Sonnet, once this record is on `main`.
 
 ## Delivery _(add on delivery; as in `story.md`)_
+
+**Departures.** None. The helper's escape class includes `/` and `-` beyond the regex
+metacharacters, so a pattern built from the text is also safe inside a character class
+or a literal.
+
+**Contract for dependents.** `escapeRegExp` in `apps/editor/tests/fixtures/escape-regexp.ts`
+is the one escape for unit and E2E tests; [CHO-035](../../chores/CHO-035-test-regexes-match-interpolated-strings-literally.md)
+uses it. It gives way to `RegExp.escape` at ES2025 and Node 24.
+
+**Scenario evidence.**
+
+- **S1**: `sassVariable` (`tokens.test.ts`) and `shadowOf` (`moved-mark.spec.ts`) call
+  `escapeRegExp`. `tokens.test.ts` passes; the E2E spec was type-checked and linted, not
+  run (it needs a browser build; CI runs it). CodeQL closing alerts #1 and #2 shows on
+  the PR's CodeQL run.
+- **S2**: `escape-regexp.test.ts` compiles the escape of every metacharacter, a
+  backslash included, and matches it literally and nothing else. Test-first order was not
+  kept for this helper; red was shown by breaking the finished helper (a negated class):
+  3 of 3 failed, 3 passed once restored.

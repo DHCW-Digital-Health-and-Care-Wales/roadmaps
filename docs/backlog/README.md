@@ -111,7 +111,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-026](_archive/defects/DEF-026-a-pinned-dialog-scrolls-its-title-out-of-view.md)                                | A pinned dialog can be scrolled so its title leaves the screen, out of reach                     | Done       |
 | [DEF-027](_archive/defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)                 | A quick add test looks for the field before it has come back                                     | Superseded |
 | [DEF-028](_archive/defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md)                            | A fresh clone gets no Git hooks from `pnpm install`                                              | Done       |
-| [DEF-029](defects/DEF-029-two-test-helpers-escape-only-some-regex-characters.md)                                    | Two test helpers escape only some regex characters, so CodeQL keeps two high alerts open         | Proposed   |
+| [DEF-029](_archive/defects/DEF-029-two-test-helpers-escape-only-some-regex-characters.md)                           | Two test helpers escape only some regex characters, so CodeQL keeps two high alerts open         | Done       |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

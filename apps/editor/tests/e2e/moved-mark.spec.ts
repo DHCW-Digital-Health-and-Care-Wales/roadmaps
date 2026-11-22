@@ -1,5 +1,6 @@
 import type { Locator } from "@playwright/test"
 
+import { escapeRegExp } from "../fixtures/escape-regexp"
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
 import { boxesOf, boxOf, levelWithOrUnder } from "./fixtures/layout"
@@ -39,7 +40,7 @@ const COPY = {
 
 /** A computed `box-shadow` layer in `colour` whose lengths match `lengths`. */
 function shadowOf(colour: string, lengths: RegExp): RegExp {
-  const escaped = colour.replace(/[()]/g, "\\$&")
+  const escaped = escapeRegExp(colour)
   return new RegExp(`${escaped} ${lengths.source}`)
 }
 

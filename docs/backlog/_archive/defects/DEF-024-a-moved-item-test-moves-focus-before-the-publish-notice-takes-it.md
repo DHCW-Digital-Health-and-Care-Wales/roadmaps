@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a wait in one shared test helper, checked by a stress run
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/242
 
 ## Summary
 

@@ -8,7 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — a search over `apps/editor/tests/e2e`, a stress script run, and one
   guide line, once the owner chooses
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/242
 
 ## Summary
 

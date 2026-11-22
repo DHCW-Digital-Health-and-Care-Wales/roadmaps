@@ -155,17 +155,22 @@ under the new base path, and S4's search.
 | S4       | `git grep -n roadmaps-editor`, every hit in the exceptions S4 lists                                                                                                                                                                                 |
 
 Observed at the cut-over on 2026-11-22 (Scope step 3). The owner renamed the
-repository, then merged the pull request (`2730f1e`), and every job of its run on
-`main` passed (Actions run `44967558607`).
+repository, then merged the pull request (`2730f1e`) at 00:37:51Z, and its run on
+`main` succeeded (Actions run `44967558607`; Docs skipped, as on any run that is not
+docs-only).
 
 - **S1**: `/roadmaps/` loads its assets from `/roadmaps/assets/` (200). The owner
-  connected Google there with the existing OAuth client and saw their roadmaps. A deep
-  link is a hash route on that same page, and the origin is unchanged.
+  connected Google there with the existing OAuth client and saw their roadmaps. The
+  run's E2E held a deep link under `/roadmaps/` (`tests/e2e/roadmaps.spec.ts`, "a deep
+  link survives a reload"); the preferences were not tried live, and rest on the
+  unchanged origin (_Starting point_).
 - **S2**: `/roadmaps-editor/`, a deep link under it and its `assets/` answer 404, and
   `gh repo view` of the old name resolves to `roadmaps`, so no repository holds it.
-  Between the rename and the deploy, about nine minutes, `/roadmaps/` served the old
-  build, whose assets pointed at `/roadmaps-editor/`: a blank page, as _Starting point_
-  expected.
+  While the run was under way, `/roadmaps/` was seen serving the old build, whose
+  assets point at `/roadmaps-editor/`, which answered 404, so the page would be blank,
+  as _Starting point_ expected, until the deploy finished at 00:46:51Z; when that
+  window began, at the rename, is not recorded.
 - **S3**: the run checked out the repository as `roadmaps`; Verify's base-path guard
-  ran with `PAGES_BASE_PATH: /roadmaps` and passed; E2E passed (669); and `deploy`
-  published to `https://dhcw-digital-health-and-care-wales.github.io/roadmaps/`.
+  ran with `PAGES_BASE_PATH: /roadmaps` and passed; E2E passed, with one known flake
+  (`item-tags.spec.ts:282`, CHO-030) passing on its retry; and `deploy` published to
+  `https://dhcw-digital-health-and-care-wales.github.io/roadmaps/`.

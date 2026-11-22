@@ -1,13 +1,14 @@
 # DEF-029: Two test helpers escape only some regex characters, so CodeQL keeps two high alerts open
 
-- **Status**: Needs triage — found by CHO-031 delivery (CodeQL's first run on `main`)
+- **Status**: Proposed — triaged by the owner (D1); found by CHO-031 delivery (CodeQL's
+  first run on `main`)
 - **Severity**: Low — test code only, with fixed inputs; the cost is two open high
   alerts that hide new ones in the code-scanning list
 - **Area**: CI/CD + E2E
 - **Epic**: standalone
 - **Depends on**: none
 - **Binding ADRs**: none
-- **Suggested model**: Sonnet — two small helper changes and a lint rule or test
+- **Suggested model**: Sonnet — one shared helper, its test and two call sites (D5)
 - **Delivered**: _(add on delivery)_
 
 ## Summary
@@ -47,6 +48,29 @@ included
 **When** it builds its pattern
 **Then** the pattern matches that string literally, and CodeQL closes alerts #1 and #2
 
+### S2: The shared escape helper escapes every metacharacter
+
+**Given** a string holding every regex metacharacter, a backslash included
+**When** the shared helper escapes it and the result is compiled
+**Then** the pattern matches the string literally and nothing else
+
 ## Decisions
+
+- **D1** (owner, 2026-11-22, grilling on PR #239): fix, over dismissing the alerts in
+  GitHub as test code or excluding tests from CodeQL (which default setup cannot do
+  without an advanced-setup workflow).
+- **D2** (owner, 2026-11-22, grilling on PR #239): the two flagged helpers only. The
+  other test regexes built from unescaped strings are
+  [CHO-035](../chores/CHO-035-test-regexes-match-interpolated-strings-literally.md).
+- **D3** (owner, 2026-11-22, grilling on PR #239): one shared escape helper, which
+  escapes every metacharacter, in a place both the unit and the E2E tests import; both
+  flagged helpers call it. It gives way to the built-in `RegExp.escape` once the
+  TypeScript target and every supported Node have it (ES2025, Node 24), over a full
+  character class inlined twice or rewriting the helpers without a regex.
+- **D4** (owner, 2026-11-22, grilling on PR #239): the helper's own unit test (S2) and
+  CodeQL's pull-request runs guard against a partial escape coming back, with no lint
+  rule.
+- **D5** (owner, 2026-11-22, grilling on PR #239): delivered next, in its own thread on
+  Sonnet, once this record is on `main`.
 
 ## Delivery _(add on delivery; as in `story.md`)_

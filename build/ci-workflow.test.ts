@@ -7,7 +7,8 @@ import { parse } from "yaml"
 /**
  * main's ruleset requires one check, CI result, which passes unless a job it needs
  * failed (STY-087 D5, D11). A job left out of its needs could fail and still merge, and
- * a gate renamed away from the ruleset's check would block every merge.
+ * a gate renamed away from the ruleset's check would block every merge. The owner's
+ * bypass can merge past a failing gate, so deploy waits on it too.
  */
 const ROOT = join(import.meta.dirname, "..")
 const GATE = "ci-result"
@@ -57,6 +58,10 @@ describe("ci.yml's CI result gate", () => {
 
   it("runs whatever the jobs it needs did", () => {
     expect(gate?.if).toBe("always()")
+  })
+
+  it("passes before deploy publishes anything", () => {
+    expect([workflow.jobs.deploy?.needs ?? []].flat()).toContain(GATE)
   })
 
   it("is the one check main's ruleset requires, from GitHub Actions", () => {

@@ -27,22 +27,25 @@ repo=DHCW-Digital-Health-and-Care-Wales/roadmaps
 gh api --method POST "repos/$repo/rulesets" --input .github/rulesets/main.json
 ```
 
+Then untick _Settings → General → Pull Requests → Allow rebase merging_, so a merge
+through the bypass, which may skip the ruleset's squash-only rule with the rest, is a
+squash too.
+
 After a later change to the file, replace the live ruleset with it:
 
 ```sh
+repo=DHCW-Digital-Health-and-Care-Wales/roadmaps
 id="$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main-protection") | .id')"
 gh api --method PUT "repos/$repo/rulesets/$id" --input .github/rulesets/main.json
 ```
-
-The repository's settings still allow rebase merges; the ruleset allows only squash,
-so _Settings → General → Pull Requests → Allow rebase merging_ can be unticked to
-match.
 
 ## Check it
 
 Compare the live ruleset with the file; an empty diff means they match:
 
 ```sh
+repo=DHCW-Digital-Health-and-Care-Wales/roadmaps
+id="$(gh api "repos/$repo/rulesets" --jq '.[] | select(.name == "main-protection") | .id')"
 fields='{name, target, enforcement, conditions, bypass_actors, rules: (.rules | sort_by(.type))}'
 diff <(jq -S "$fields" .github/rulesets/main.json) \
   <(gh api "repos/$repo/rulesets/$id" | jq -S "$fields")

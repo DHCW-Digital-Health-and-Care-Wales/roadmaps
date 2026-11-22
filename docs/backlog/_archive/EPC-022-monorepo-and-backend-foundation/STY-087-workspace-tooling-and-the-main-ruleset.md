@@ -237,26 +237,35 @@ repos/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/rulesets/24720402`)
   too (agent).
 - **S5**: the path rule is a script, `scripts/ci/classify-changes.sh`, with tests, in
   place of the inline `grep`, so each app's rule is tested as STY-088 and STY-090 add
-  theirs (agent).
+  theirs; with `--all` it runs every app's jobs, for a push to `main` or a manual run.
+  Its step runs with `pipefail`, and an app's jobs skip only on an explicit `false`, so
+  a failing classifier runs them or fails the gate (agent, from review).
 - **S6**: lefthook's own install script installs the hooks (pnpm's `allowBuilds`), and
   skips itself when `CI` is set, so CI never installs them. The commit hook runs
   Prettier with `--ignore-unknown` on every staged file, then, in order, each package's
   ESLint with `--no-warn-ignored` from its own directory, the root package's included
   (agent).
+- **S7**: `@playwright/test` comes in a pull request of its own, beside the grouped
+  one, since its bump also needs the E2E job's image tag and digest and would hold the
+  rest of the group red until then (agent, from review).
 - **S7**: GitHub's options reference names `cooldown` for npm and Yarn, not pnpm, and
   pnpm 12 writes `pnpm-lock.yaml` as two YAML documents; whether the pnpm entry's first
   monthly run reads it and raises its pull request, held back by the cooldown, is
   observed at that run (agent).
 - **S1, S2, S8**: the owner applies the ruleset (`docs/operations/protecting-main.md`);
   this pull request holds the file and the commands, and the scenarios are observed
-  once it is applied, recorded below (agent).
+  once it is applied, recorded below. The file copies the parameters of
+  `product-roadmaps`' live ruleset, so its first `POST` is also the test that the API
+  accepts them (agent).
 
 ### Contract for dependents
 
 - **A new CI job** joins `ci-result`'s `needs` in `ci.yml`, or `build/ci-workflow.test.ts`
   fails. An app's jobs run on `needs.changes.outputs.<app> == 'true'`; STY-088 and
-  STY-090 add a case and an output for their app to `scripts/ci/classify-changes.sh`,
-  with a test, and stop `apps/*/*` skipping their own directory.
+  STY-090 add a case, an output and a line under `--all` for their app to
+  `scripts/ci/classify-changes.sh`, with tests, and stop `apps/*/*` skipping their own
+  directory. A file another app's tests read from outside its directory (STY-089's
+  shared fixtures) needs its own case, or `apps/*/*` skips that app for it.
 - **Root scripts**: `repo:typecheck`, `repo:lint` and `repo:test` run the root package's
   own checks (the Repository job's); `<app>:typecheck`, `<app>:lint`, `<app>:test` and
   `<app>:build` run one app's, as its CI job calls them. `typecheck`, `lint` and `test`
@@ -270,18 +279,19 @@ repos/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/rulesets/24720402`)
 - **The ruleset** requires one check, _CI result_ from GitHub Actions (integration
   15368); `build/ci-workflow.test.ts` holds the gate job's name to it.
 - **Worktrees on one host share `.git/hooks`**: lefthook writes it from whichever
-  checkout last ran `pnpm install`, and a checkout without `lefthook.yml` (an older
-  branch) prints lefthook's "No config files" notice and commits as before.
+  checkout last ran `pnpm install`, naming that checkout's lefthook binary, which every
+  checkout's hooks then run until it is deleted. A checkout without `lefthook.yml` (an
+  older branch) prints lefthook's "No config files" notice and commits as before.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1, S2   | the applied ruleset, observed after the owner applies it (`docs/operations/protecting-main.md`)                                                                                                                                                                                                                                                                                                                                             |
-| S3       | `build/ci-workflow.test.ts` (`needs every job that runs before it`), red with `editor-e2e` left out of the gate's `needs`; the gate's step run locally on sample `needs` (passes with jobs skipped; fails naming `repository: failure, editor-e2e: cancelled`, and `changes: failure`); manual run `45011093662`: attempt 1's _CI result_ failed with `editor-verify: failure` (DEF-027's flake), attempt 2's passed with every job passing |
-| S4       | manual run `45011093662`: the Repository job ran Prettier, the root package's typecheck, lint and tests (the Markdown links, the agent-guide budget, the worktree, classifier and gate tests), actionlint 1.7.12 (checksum checked) and zizmor 1.32.0 (auditor persona), all passing; zizmor locally on the base found the two findings _Departures_ names, and none on the head                                                            |
-| S5       | `scripts/ci/classify-changes.test.ts` (10 cases), red with the other-app case or the Markdown case removed; manual run `45011093662` ran every job and skipped deploy; the classifier on a pull request's files is observed in this pull request's run                                                                                                                                                                                      |
-| S6       | observed locally: a staged file with bad formatting was rewritten and re-staged; `git commit` with an `any` in `build/` was refused by the root's ESLint, and one in `apps/editor/src/` by the editor's; a push of a commit with a type error to a scratch remote was refused by `pnpm typecheck`                                                                                                                                           |
-| S7       | zizmor's `dependabot-cooldown` audit in the Repository job (every entry ≥ 7 days); the first monthly run of the pnpm entry, observed when it comes                                                                                                                                                                                                                                                                                          |
-| S8       | the comparison in `docs/operations/protecting-main.md`, run after the owner applies the ruleset                                                                                                                                                                                                                                                                                                                                             |
-| S9       | the root `AGENTS.md` (_Delivery_)                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1, S2   | the applied ruleset, observed after the owner applies it (`docs/operations/protecting-main.md`)                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| S3       | `build/ci-workflow.test.ts` (`needs every job that runs before it`, `passes before deploy publishes anything`), red with `editor-e2e` left out of the gate's `needs`, and with the gate left out of deploy's; the gate's step run locally on sample `needs` (passes with jobs skipped; fails naming `repository: failure, editor-e2e: cancelled`, and `changes: failure`); manual run `45011093662`: attempt 1's _CI result_ failed with `editor-verify: failure` (DEF-027's flake), attempt 2's passed with every job passing |
+| S4       | manual run `45011093662`: the Repository job ran Prettier, the root package's typecheck, lint and tests (the Markdown links, the agent-guide budget, the worktree, classifier and gate tests), actionlint 1.7.12 (checksum checked) and zizmor 1.32.0 (auditor persona), all passing; zizmor locally on the base found the two findings _Departures_ names, and none on the head                                                                                                                                               |
+| S5       | `scripts/ci/classify-changes.test.ts` (11 cases), red with the other-app case, the Markdown case or the `--all` line broken; manual run `45011093662` ran every job and skipped deploy; the classifier on a pull request's files is observed in this pull request's run                                                                                                                                                                                                                                                        |
+| S6       | observed locally: a staged file with bad formatting was rewritten and re-staged; `git commit` with an `any` in `build/` was refused by the root's ESLint, and one in `apps/editor/src/` by the editor's; a push of a commit with a type error to a scratch remote was refused by `pnpm typecheck`                                                                                                                                                                                                                              |
+| S7       | zizmor's `dependabot-cooldown` audit in the Repository job (every entry ≥ 7 days); the first monthly run of the pnpm entry, observed when it comes                                                                                                                                                                                                                                                                                                                                                                             |
+| S8       | the comparison in `docs/operations/protecting-main.md`, run after the owner applies the ruleset                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| S9       | the root `AGENTS.md` (_Delivery_)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |

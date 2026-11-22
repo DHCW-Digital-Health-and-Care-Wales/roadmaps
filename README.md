@@ -56,8 +56,9 @@ pnpm build          # every app's production build
 ```
 
 Pull requests into `main` merge as a signed squash, once the _CI result_ check passes
-and the owner approves (`.github/rulesets/main.json`,
-[protecting main](docs/operations/protecting-main.md)).
+and the owner approves; the owner, or an agent the owner authorises, can merge one past
+those conditions through a bypass that works only through a pull request
+(`.github/rulesets/main.json`, [protecting main](docs/operations/protecting-main.md)).
 
 ## Spreadsheet format
 

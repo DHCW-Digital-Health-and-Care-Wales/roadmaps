@@ -7,7 +7,11 @@ import { describe, expect, it } from "vitest"
 const SCRIPT = join(import.meta.dirname, "classify-changes.sh")
 
 function classify(...paths: string[]): string {
-  const result = spawnSync(SCRIPT, {
+  return run([], paths)
+}
+
+function run(args: string[], paths: string[]): string {
+  const result = spawnSync(SCRIPT, args, {
     input: paths.map((path) => `${path}\n`).join(""),
     encoding: "utf8",
   })
@@ -41,5 +45,9 @@ describe("classify-changes.sh", () => {
     ["one code file among documentation", ["docs/a.md", "eslint.config.ts"]],
   ])("runs the editor's jobs for %s", (_case, paths) => {
     expect(classify(...paths)).toBe("editor=true\n")
+  })
+
+  it("runs every app's jobs with --all, whatever the paths", () => {
+    expect(run(["--all"], ["docs/a.md"])).toBe("editor=true\n")
   })
 })

@@ -57,7 +57,7 @@ writes_).
   the owner authorised, through the owner's bypass, once _CI result_ has passed on the
   head you inspected (implement-story's `references/pr-watch.md`).
 - Rulesets, branch protections and repository settings are owner steps: never change
-  them; a PR that needs one names it under _Needs you_.
+  them.
 - A change to visible UI publishes before/after screenshots (implement-story's
   `references/screenshots.md`).
 - What a delivery learned goes to its narrowest home, by the ladder in

@@ -98,7 +98,8 @@
   (with `editor-verify`, for the artifact's name), so a deploy waits on every check.
   `build/ci-workflow.test.ts` fails when a job is missing from the gate's `needs`.
   Pushes to `main` and manual runs still run every job, and only a push to `main`
-  deploys.
+  deploys. `verify` and `e2e` above are now `editor-verify` and `editor-e2e`, and
+  `deploy` needs `ci-result` and `editor-verify`.
 
 ## Consequences
 

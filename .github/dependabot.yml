@@ -1,7 +1,8 @@
 # Keeps the SHA-pinned actions in .github/workflows and the workspace's pnpm
 # dependencies current: one grouped pull request a month for each. Every entry waits
-# out a cooldown, so a version is taken only once it is a week old (STY-087 D10, D12);
-# security updates are never held back by it.
+# out a cooldown, so a version is taken only once it is a week old (STY-087 D10, D12).
+# The cooldown does not hold back Dependabot's security updates, a repository setting
+# (CHO-031).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -24,3 +25,6 @@ updates:
     groups:
       pnpm:
         patterns: ["*"]
+        # Its own pull request: a bump also needs the E2E job's image tag and digest in
+        # ci.yml, which that job's check step asks for, so it cannot hold up the rest.
+        exclude-patterns: ["@playwright/test"]

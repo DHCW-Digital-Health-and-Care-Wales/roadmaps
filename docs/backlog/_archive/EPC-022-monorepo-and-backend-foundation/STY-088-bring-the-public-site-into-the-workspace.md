@@ -258,8 +258,13 @@ Audited at `product-roadmaps` `2548219` on 2026-11-21:
   site is in the workspace; the glossary's _Public site_ names its directory
   (agent).
 - **S3**: `product-roadmaps` keeps a short `AGENTS.md` and its `CLAUDE.md` (D9), and
-  loses its pull request template and `.gitignore`, which S3's list leaves out. Its deploy keeps its concurrency, and neither workflow caches
-  the pnpm store, since the deploy publishes what it builds (agent).
+  loses its pull request template and `.gitignore`, which S3's list leaves out. Its
+  deploy keeps its concurrency, and neither workflow caches the pnpm store, since the
+  deploy publishes what it builds (agent).
+- **S8**: the protection check in `docs/operations/protecting-main.md` also reads each
+  repository's `github-pages` environment branch policy (`main` only), the control that
+  refuses a deploy run from another branch, which the ruleset does not cover (agent,
+  from review).
 - **S1**: `.git-blame-ignore-revs` names the reformat by its SHA, which holds because
   the pull request merges with a merge commit (D1); a rebase of the branch rewrites it,
   and the entry with it (agent).

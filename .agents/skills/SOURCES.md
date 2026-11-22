@@ -36,7 +36,10 @@ shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
   cross-provider delegate, PR notifications, a new top-level session), never a
   specific tool, with a sequential fallback where it is unavailable.
 - `shadcn` and `playwright-cli` open with a local preface: this repository's
-  guides and `pnpm` take precedence over the upstream examples.
+  guides and `pnpm` take precedence over the upstream examples. Both also name
+  this repository's paths and commands beyond the preface, in their `SKILL.md`,
+  `shadcn`'s rules and `playwright-cli`'s references: sweep them for moved paths or
+  renamed commands.
 - `wayfinder` tracks its maps as GitHub issues (`references/github-issues.md`
   replaces upstream's tracker setup), briefs research subagents itself in
   place of upstream's `research` skill, hands prototype tickets to

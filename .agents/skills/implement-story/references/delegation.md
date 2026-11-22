@@ -59,8 +59,10 @@ one is a decline candidate. Ask too for each part of the pinned diff the
 reviewer left unread, by path and lines, which Dispatch step 5 gives to a
 fresh reviewer: a reviewer not asked may report a diff it read in part as
 read. Tell a delivery PR's reviewers to report each incidental guide change
-in its diff as a blocker (P1 or 🔴), and to check that each correction to a
-guide file changes no rule, as
+in its diff as a blocker (P1 or 🔴), judged by each line's change from the
+PR's base, so an edit between heads to a line the PR itself added takes that
+line's standing, not a standing of its own, and to check that each correction
+to a guide file changes no rule, as
 `docs/operations/authoring-agent-instructions.md` defines them (_Where it
 goes_).
 
@@ -164,9 +166,9 @@ pass.
 - **Round 2, the re-check**: only for a reviewer whose round 1 found anything
   above P3 (correctness or security) or a 🔴 or 🟡 (quality); a CI finding that arrives
   first joins it. Start a fresh reviewer on the same model and effort. Supply
-  its previous findings and how each was addressed, the head last reviewed, the
-  new head and the diff command between them. A rebase since the last round
-  moves the base too: re-pin both SHAs and supply
+  its previous findings and how each was addressed, the base, the head last
+  reviewed, the new head and the diff command between them. A rebase since the
+  last round moves the base too: re-pin both SHAs and supply
   `git range-diff <old base>..<old head> <new base>..<new head>`, since a diff
   between the heads shows the base's new work as the fix. The re-checker
   confirms or reopens each finding and reviews the changed lines and the code

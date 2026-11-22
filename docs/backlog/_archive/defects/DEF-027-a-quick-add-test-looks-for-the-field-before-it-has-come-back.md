@@ -1,6 +1,7 @@
 # DEF-027: A quick add test looks for the field before it has come back
 
-- **Status**: Needs triage — found by STY-087 delivery
+- **Status**: Superseded by CHO-030 — the owner's triage (2026-11-22, D1); found by
+  STY-087 delivery
 - **Severity**: Low — the editor's unit run fails now and then on a change that does not
   touch quick add, and a re-run passes; no user is affected
 - **Area**: Features/UI
@@ -54,3 +55,8 @@ it has not been rendered again yet, and the lookup throws without a retry.
 and passes
 
 ## Decisions
+
+- **D1** (owner, 2026-11-22, triage of STY-087's delivery): Superseded by
+  [CHO-030](../../chores/CHO-030-e2e-flakes-are-found-by-a-stress-run-not-by-ci.md),
+  over fixing it next on its own or Won't fix — the flake audit holds S1, so the field's
+  return is waited for with the rest of its kind.

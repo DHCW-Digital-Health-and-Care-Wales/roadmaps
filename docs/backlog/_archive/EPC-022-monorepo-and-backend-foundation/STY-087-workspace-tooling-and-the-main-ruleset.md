@@ -296,3 +296,30 @@ repos/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/rulesets/24720402`)
 | S7       | zizmor's `dependabot-cooldown` audit in the Repository job (every entry ≥ 7 days); the first monthly run of the pnpm entry, observed when it comes                                                                                                                                                                                                                                                                                                                                                                                                               |
 | S8       | the comparison in `docs/operations/protecting-main.md`, run after the owner applies the ruleset                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | S9       | the root `AGENTS.md` (_Delivery_)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+
+Observed after the cut-over on 2026-11-22. The owner merged the pull request (`1e91882`)
+at 12:05:05Z, and at the owner's request the delivering agent applied the ruleset with
+the runbook's `POST` at 12:05:48Z (ruleset `27839907`); the owner unticked rebase merging
+and turned on Dependabot security updates.
+
+- **S1**: GitHub accepted every parameter, and lists deletion, non-fast-forward,
+  required signatures, pull request and required status checks as active on `main`
+  (`gh api repos/…/rules/branches/main`); the branch reads protected, and the owner's
+  `current_user_can_bypass` reads `pull_requests_only`. No push to `main` was tried,
+  since a failure would have landed on it.
+- **S2**: the next pull request (#232, rebased onto `1e91882`) reads `BLOCKED` with
+  `REVIEW_REQUIRED` after its _CI result_ passed, and the repository allows only squash
+  merges.
+- **S5**: the merge's run on `main` (Actions run `45020462213`) ran every job, and deploy
+  published the site (200 at `/roadmaps/`); #232's run skipped both editor jobs for its
+  Markdown-only change, and _CI result_ passed.
+- **S6**: a fresh clone got no hooks from `pnpm install` once the machine's pnpm store
+  held lefthook: DEF-028, fixed in its own pull request.
+- **S7**: Dependabot ran on the merge and raised the grouped pnpm pull request (#233, 14
+  updates) and `@playwright/test`'s own (#234), so the pnpm entry reads pnpm 12's
+  lockfile. These pull requests do not show whether a younger version was held back. Its
+  security run for an existing alert on `minimatch`, a transitive dependency of ESLint,
+  reported the update not possible: the packages that need it allow only up to 10.2.6,
+  and the fix is 11.0.1.
+- **S8**: the runbook's comparison of the live ruleset with the file printed an empty
+  diff.

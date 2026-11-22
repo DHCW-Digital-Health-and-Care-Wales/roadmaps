@@ -24,8 +24,8 @@ clock tick), and `side-panel.spec.ts:256` (session warning) was seen to flake th
 times in CI, with no record. In CI, 11 of 29 E2E runs had a flaky test (Measurement).
 DEF-021 was a real layout defect, not a test. Each flake costs a failed run, a retry and
 a retrospective. Done: the owner has chosen whether to look for the rest of the E2E kind
-on purpose, and the E2E guide says how a helper must settle. Component tests are out of
-scope here (Out of scope).
+on purpose, the E2E guide says how a helper must settle, and DEF-027's quick add test
+waits for its field (S3). Other component tests are out of scope here (Out of scope).
 
 ## Measurement
 
@@ -76,6 +76,15 @@ Delivery lists what was searched and found
 publishes **Then** it says the helper returns only once the focus or notice its action
 causes has arrived
 
+### S3: DEF-027's quick add test waits for its field (D1)
+
+DEF-027's S1, by reference
+([DEF-027](../_archive/defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)):
+**Given** quick add's field comes back one render after the add-item dialog has gone
+**When** a test of closing the dialog checks the field
+**Then** it waits for the field to appear before checking its focus, title and cursor,
+and passes. Its search: `rg -n 'expectFieldBack\(' apps/editor/src`.
+
 ## Open questions
 
 - **Q1**: Is a stress run part of delivering a test change, or a one-off?
@@ -86,10 +95,16 @@ causes has arrived
 
 ## Decisions
 
+- **D1** (owner, 2026-11-22, triage of DEF-027): this chore holds DEF-027's S1, a Vitest
+  component test that looks for quick add's field the moment the add-item dialog
+  closes, before it has rendered again, over a fix of its own; its failures on `main`
+  (Actions run `44968551783`) and on PR #231 passed on a re-run
+  ([DEF-027](../_archive/defects/DEF-027-a-quick-add-test-looks-for-the-field-before-it-has-come-back.md)).
+
 ## Out of scope
 
 DEF-024's own fix to `publishOnce`, DEF-025's to the side panel spec's helpers, the CI
 runner's package mirror (CHO-029), and Vitest component tests (DEF-013, DEF-022,
-CHO-018 were their own cases).
+CHO-018 were their own cases), except DEF-027's, which D1 brings in.
 
 ## Delivery _(add on delivery; as in `story.md`)_

@@ -195,7 +195,8 @@ stories follow STY-093, adding their factories; the editor's adapter follows STY
 
 ## Defects
 
-None.
+- [DEF-028](../_archive/defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md):
+  a fresh clone got no Git hooks from `pnpm install` (Done).
 
 ## Related
 

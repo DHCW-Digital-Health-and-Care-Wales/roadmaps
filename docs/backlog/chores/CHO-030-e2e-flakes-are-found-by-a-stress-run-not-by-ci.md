@@ -56,8 +56,9 @@ numbers are the spec's at that run:
 A load run does not find every kind: DEF-025 passed 205 loaded runs, and only holding
 the page's animations at their start showed it (its Reproduce).
 Nor is every flake a race: DEF-026 (found in STY-085's delivery) was a popup that hid
-its overflow but held 421 px of it, which a click's retry scrolled to bring its target
-into view, moving what the test measured next. `rg -n 'overflow-hidden' src` lists the
+its overflow but held 421 px of it, so a scroll into view moved it; a click's retry,
+which scrolls its target into view, is the suspected trigger of the CI failures, not
+shown. `rg -n 'overflow-hidden' src` lists the
 boxes to check, each by its `scrollHeight` against its `clientHeight` in the test's
 state.
 

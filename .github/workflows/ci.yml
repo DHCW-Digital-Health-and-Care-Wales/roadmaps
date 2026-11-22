@@ -1,7 +1,7 @@
 # CI for pull requests and main; deploys main to GitHub Pages once every check passes
-# (ADR-007). The Repository job runs every time, each app's jobs when the app can be
-# affected, and CI result, the one check main's ruleset requires, fails when any of
-# them fails (.github/rulesets/main.json). Actions are pinned to commit SHAs;
+# (ADR-007). The Repository job runs every time, Dependency review on pull requests,
+# each app's jobs when the app can be affected, and CI result, the one check main's
+# ruleset requires, fails when any of them fails (.github/rulesets/main.json). Actions are pinned to commit SHAs;
 # Dependabot keeps them current.
 name: CI/CD
 
@@ -228,8 +228,8 @@ jobs:
           if-no-files-found: ignore
 
   # The one check main's ruleset requires. It needs every job but deploy, runs whatever
-  # they did, and fails when any failed or was cancelled; a job skipped by its paths
-  # passes, as no job would if the ruleset required each by name (STY-087 D5).
+  # they did, and fails when any failed or was cancelled; a job skipped by its paths or
+  # its event passes, as no job would if the ruleset required each by name (STY-087 D5).
   # build/ci-workflow.test.ts fails when a job is missing from needs.
   ci-result:
     name: CI result
@@ -251,7 +251,8 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    # CI result passes only when every check did, and none skips on a push to main.
+    # CI result passes only when every check did, and on a push to main only Dependency
+    # review, a pull request's check, skips.
     needs: [editor-verify, ci-result]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest

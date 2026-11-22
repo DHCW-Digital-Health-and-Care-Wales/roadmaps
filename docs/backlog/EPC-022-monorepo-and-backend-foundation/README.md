@@ -175,7 +175,8 @@ change, with no other editor-code pull request open while it is in flight (STY-0
 D8), then STY-087, whose hooks and gate the API joins. Then two tracks run in
 parallel: the repository's (STY-088 into a protected `main`, then STY-089 and STY-095
 in either order) and the API's (STY-090, then STY-091 and STY-092 in either order, with
-STY-093 after STY-091). CHO-031 (supply-chain checks) is done, beside STY-087. The threat model comes before
+STY-093 after STY-091). CHO-031 (supply-chain checks) is done, beside STY-087. The
+threat model comes before
 any identity story (ADR-018); STY-094 follows the invitation story. The schema
 stories follow STY-093, adding their factories; the editor's adapter follows STY-092.
 

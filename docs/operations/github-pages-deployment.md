@@ -30,10 +30,13 @@ changes ──┤                    │
   over every lockfile, also on each push to `main`; it is outside the gate, so a
   finding there fails its own run but blocks no merge or deploy. A finding accepted for
   a while goes in `osv-scanner.toml`, with its reason and an expiry.
+- `pnpm install --frozen-lockfile` fails when the lockfile holds a version published
+  less than a week ago (`minimumReleaseAge` in `pnpm-workspace.yaml`), so a security
+  update younger than that needs its versions in `minimumReleaseAgeExclude` first.
 - `ci-result` (_CI result_) runs after every other job, whatever they did, and fails if
-  any failed or was cancelled; a job skipped by its paths passes. It is the one check
-  `main`'s ruleset requires ([protecting main](protecting-main.md)), so a new job joins
-  its `needs`, or the Repository job's tests fail.
+  any failed or was cancelled; a job skipped by its paths or its event passes. It is the
+  one check `main`'s ruleset requires ([protecting main](protecting-main.md)), so a new
+  job joins its `needs`, or the Repository job's tests fail.
 - `editor-verify` and `editor-e2e` run in parallel. On a push to `main`,
   `editor-verify` also reads the Pages configuration, checks the build's base path
   against it and uploads `apps/editor/dist/` as the Pages artifact.

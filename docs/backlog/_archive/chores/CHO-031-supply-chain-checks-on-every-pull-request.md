@@ -1,0 +1,155 @@
+# CHO-031: Supply-chain checks run on every pull request, and leaked secrets are refused at push
+
+- **Status**: Done — S1 and S3 are observed once the owner turns on push protection
+  and CodeQL's default setup (D3)
+- **Type**: Chore
+- **Area**: CI/CD
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Depends on**: none; it changes `ci.yml` and `.github/dependabot.yml`, as STY-087 and
+  STY-090 do, so whichever lands later rebases
+- **Binding ADRs**: none
+- **Suggested model**: Sonnet — configuration with known shapes, observed in runs
+- **Delivered**: _(add on delivery)_
+
+## Summary
+
+The repository is public and is about to gain a Python API, a second app and an
+identity layer, but nothing checks its dependencies for known vulnerabilities, holds
+back a just-published package version, scans the code statically beyond lint, or stops
+a secret at push. STY-087 adds actionlint, zizmor and Dependabot for pnpm, STY-090
+Dependabot for uv (ADR-016), and ADR-017 ruff's `S` rules; this chore adds the rest, for what the repository holds
+when it is delivered, so the API's first dependencies arrive under the checks (analysis
+[identity and authorisation](../../../analysis/identity-and-authorisation.md), F9). Done
+means each check below runs on a pull request, or is a repository setting that is on,
+observed once.
+
+## Measurement
+
+At commit `86afe40`, 2026-11-21 (`gh api repos/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor`
+`--jq .security_and_analysis`, `.github/`):
+
+| Area                         | Measurement                                                     | Verdict |
+| ---------------------------- | --------------------------------------------------------------- | ------- |
+| Secret scanning              | enabled                                                         | keep    |
+| Push protection              | disabled                                                        | turn on |
+| Dependabot security updates  | disabled; `dependabot.yml` updates GitHub Actions only, monthly | turn on |
+| CodeQL                       | default setup not configured                                    | add     |
+| Dependency review on PRs     | none in `ci.yml`                                                | add     |
+| Lockfile vulnerability audit | none for `pnpm-lock.yaml`; no `uv.lock` yet                     | add     |
+| Release cooldown             | none in Dependabot, pnpm or uv                                  | add     |
+
+## Acceptance criteria
+
+### S1: A secret pushed to the repository is refused
+
+Secret scanning's push protection is on, and a test push of a provider-pattern secret
+on a scratch branch is blocked; the run of it is recorded in Delivery.
+
+### S2: A pull request that adds a vulnerable dependency fails
+
+The dependency review action runs on every pull request that changes a lockfile and
+fails on a known vulnerable version, observed on a scratch pull request. An OSV audit of
+every lockfile the repository holds runs weekly and on `main`, so a vulnerability
+disclosed in an existing dependency is found too.
+
+### S3: The code is scanned statically
+
+CodeQL runs for every language the repository holds (JavaScript/TypeScript and GitHub
+Actions; Python once the API exists), on pull requests and on `main`.
+
+### S4: A just-published version waits before it is taken
+
+Dependabot's `cooldown`, pnpm's `minimumReleaseAge` (set in minutes) and, once the API
+exists, uv's `exclude-newer` (with the uv version pinned, since relative values are
+recent) hold back a newly published version for a stated number of days. A security
+update younger than the window still lands: Dependabot's cooldown exempts security
+updates, and pnpm's `minimumReleaseAgeExclude`, or a manual bump, covers its side.
+
+### S5: Dependabot raises security updates
+
+Dependabot security updates are on in the repository's settings.
+
+## Decisions
+
+- **D1** (owner, 2026-11-21, identity and authorisation grilling D14): a chore now,
+  delivered beside STY-087, over folding it into STY-087 or deferring it to the API's
+  first release.
+- **D2** (owner, 2026-11-21, review of the EPC-022 story records, STY-087 D10):
+  Dependabot's `cooldown` arrives with STY-087's pnpm entry, so S4's Dependabot part is
+  STY-087's if it lands first; this chore keeps pnpm's `minimumReleaseAge` and uv's
+  `exclude-newer`. Once STY-087 has landed, every CI job this chore adds feeds the _CI
+  result_ gate (STY-087 S3), so S2's failing dependency review blocks a merge.
+- **D3** (owner, 2026-11-21, review of the EPC-022 story records, STY-087 D9): agents
+  never change repository settings, so push protection (S1), CodeQL's default setup
+  (S3) and Dependabot security updates (S5) are owner steps the pull request names, and
+  the delivery observes each once it is on.
+
+- **D4** (agent, 2026-11-22, delivery): the OSV audit is a workflow of its own,
+  `dependency-audit.yml`, not a job in `ci.yml` feeding _CI result_ as D2 has every
+  added job do. It runs on a push to `main` and weekly, never on a pull request, so in
+  the gate it would block no merge, only hold back a deploy until an upstream fix for a
+  vulnerability disclosed in a merged dependency; a failed run reports it instead.
+  Dependency review, the check on pull requests, feeds the gate, so D2's purpose holds.
+- **D5** (agent, 2026-11-22, delivery): the audit's first run found GHSA-g3hv-75wg-m249
+  (minimatch 10, medium: a denial of service through glob patterns) under ESLint,
+  typescript-eslint and shadcn's ts-morph. The patterns come only from the repository's
+  own configuration, and the fix, minimatch 11, needs their newer releases, which
+  Dependabot's monthly update proposes; `osv-scanner.toml` ignores it until 2027-01-15,
+  after which the audit fails on it again.
+
+## Out of scope
+
+- zizmor with every audit on, and Dependabot's pnpm and uv ecosystems: STY-087 and
+  STY-090 (ADR-016).
+- Container image scanning, an SBOM and build provenance: with the first container
+  build (EPC-023).
+- Mutation testing.
+
+## Delivery
+
+### Departures
+
+- **S1, S3**: owner steps (D3). The pull request names them: push protection, and
+  CodeQL's default setup, which GitHub offers for `actions` and
+  `javascript-typescript` here and extends to Python once the API's first file lands.
+  Each is observed once it is on, as the epic's delivery notes set: S1 by a test push
+  of a provider-pattern secret to a scratch branch, S3 by CodeQL's first run on a pull
+  request and on `main` (agent).
+- **S2**: dependency review runs on every pull request, not only one that changes a
+  lockfile: it compares GitHub's dependency graph of the base and the head, without a
+  checkout, and passes in seconds when nothing changed. It fails on development
+  dependencies too (`fail-on-scopes`), since CI and every developer run them, and the
+  action's own default fails on runtime ones only. It is pinned to v5.0.0, as v5.0.1 is
+  younger than the actions' seven-day cooldown (agent).
+- **S2**: the OSV audit is its own workflow, outside the gate (D4), and runs
+  OSV-Scanner 2.7.1, pinned by version and checksum as actionlint is, with
+  `--recursive`, so it finds `uv.lock` once the API adds it. One finding is ignored
+  until 2027-01-15 (D5) (agent).
+- **S4**: Dependabot's `cooldown` landed with STY-087 (D2). pnpm's
+  `minimumReleaseAge` is 10,080 minutes, a week, matching it. To take a younger
+  security fix, `minimumReleaseAgeExclude` names it and each young package it brings,
+  each as `<name>@<version>`: pnpm refused an exclusion that named only the top-level
+  package, and takes no name pattern with a version. uv's `exclude-newer` comes with
+  the API, so STY-090's rough shape carries it (agent).
+
+### Contract for dependents
+
+- **A new lockfile** (STY-090's `uv.lock`, the public site's in STY-088) is audited
+  weekly and on `main` without a change here. Dependency review covers each ecosystem
+  GitHub's dependency graph reads.
+- **A new dependency younger than a week** is refused by `pnpm add`
+  (`ERR_PNPM_NO_MATURE_MATCHING_VERSION`), or resolves to an older version when the
+  range allows one.
+- **An accepted audit finding** goes in `osv-scanner.toml` with a `reason` and an
+  `effectiveUntil`, never without an expiry.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | the owner turns on push protection; observed after, recorded below                                                                                                                                                                                                                                                                                                                                                        |
+| S2       | scratch pull request #236 (lodash 4.17.20 in the editor's dev dependencies, closed and its branch deleted): _Dependency review_ failed on four advisories, and _CI result_ failed with `dependency-review: failure`; the OSV audit, triggered on that pull request for the test, failed on the same four and logged GHSA-g3hv-75wg-m249 as ignored. Manual CI run `45029961733` on this branch skipped the job and passed |
+| S2       | the OSV audit's first run on `main` and its first weekly run, observed after the merge; locally, OSV-Scanner 2.7.1 found GHSA-g3hv-75wg-m249 in `pnpm-lock.yaml` (570 packages) and nothing else, then nothing once it was ignored                                                                                                                                                                                        |
+| S3       | the owner turns on CodeQL's default setup; observed after, recorded below                                                                                                                                                                                                                                                                                                                                                 |
+| S4       | locally, with `minimumReleaseAge: 10080`: `pnpm add typescript@7.1.0-dev.20261121.1` (published the day before) was refused, `pnpm add typescript@next` resolved `7.1.0-dev.20261115.1`, the newest at least a week old; `pnpm install --frozen-lockfile` and `pnpm install` left the lockfile unchanged                                                                                                                  |
+| S5       | `gh api repos/DHCW-Digital-Health-and-Care-Wales/roadmaps --jq .security_and_analysis` on 2026-11-22: `dependabot_security_updates` enabled (turned on by the owner at STY-087's cut-over); Dependabot holds alert GHSA-g3hv-75wg-m249 open, with no update pull request, since no compatible fix exists                                                                                                                  |

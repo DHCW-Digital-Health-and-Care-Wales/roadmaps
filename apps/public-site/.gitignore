@@ -1,27 +1,11 @@
-# Logs
-logs
-*.log
-npm-debug.log*
+# The workspace's .gitignore covers node_modules, dist and the Playwright output.
 
-# Dependencies
-node_modules
-
-# Build output
-dist
+# The server-side build that scripts/prerender.ts renders from
 dist-ssr
 *.tsbuildinfo
 
-# Playwright and Lighthouse output
-test-results
-playwright-report
+# Lighthouse output
 .lighthouseci
 
-# Editor and OS
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.local
-
-# Made by `npm run sync`; never committed
+# Made by `pnpm site:sync`; never committed
 .data

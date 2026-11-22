@@ -21,6 +21,7 @@ interface Job {
   name?: string
   needs?: string | string[]
   if?: string
+  container?: { image?: string }
 }
 interface Workflow {
   jobs: Record<string, Job>
@@ -89,5 +90,39 @@ describe("ci.yml's app jobs", () => {
     expect(checks).toEqual([
       { context: gate?.name, integration_id: GITHUB_ACTIONS_INTEGRATION_ID },
     ])
+  })
+})
+
+describe("ci.yml's E2E jobs", () => {
+  it("run in one Playwright image, as both apps take @playwright/test from the catalog", () => {
+    const images = Object.values(workflow.jobs).flatMap((job) => {
+      const image = job.container?.image
+      return image?.startsWith("mcr.microsoft.com/playwright:") ? [image] : []
+    })
+
+    expect(images.length).toBeGreaterThan(1)
+    expect(
+      new Set(images).size,
+      "Give every E2E job in .github/workflows/ci.yml the same Playwright image tag and digest.",
+    ).toBe(1)
+  })
+})
+
+/**
+ * product-roadmaps publishes the public site from main here, so it is protected as
+ * main is, less the required check, which it has no CI to report (ADR-016, STY-088 S8).
+ */
+describe("product-roadmaps' ruleset", () => {
+  it("is main's, less the required status check", () => {
+    const productRoadmaps = JSON.parse(
+      read(".github/rulesets/product-roadmaps.json"),
+    ) as Ruleset
+
+    expect(productRoadmaps).toEqual({
+      ...ruleset,
+      rules: ruleset.rules.filter(
+        (rule) => rule.type !== "required_status_checks",
+      ),
+    })
   })
 })

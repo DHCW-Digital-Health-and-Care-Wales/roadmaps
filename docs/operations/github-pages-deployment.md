@@ -1,7 +1,8 @@
 # Deploying to GitHub Pages
 
-How the app is built and published, and what to do by hand for a first deployment, a
-fork or a custom domain. The decision behind it is
+How the editor is built and published, and what to do by hand for a first deployment, a
+fork or a custom domain, then how the public site is published from `product-roadmaps`
+([The public site](#the-public-site)). The decision behind it is
 [ADR-007](../adr/ADR-007-github-pages-deployment.md).
 
 ## The workflow
@@ -13,15 +14,18 @@ dispatch:
 repository ────────────────────┐   every run: format:check · the root's typecheck, lint, tests · actionlint · zizmor
 dependency-review ─────────────┤   not on a push to main: a dependency added at a known vulnerable version
           ┌──► editor-verify ──┤   typecheck · lint · test · build
+          ├──► editor-e2e ─────┤   Playwright, in Playwright's pinned image
 changes ──┤                    │
-          └──► editor-e2e ─────┤   Playwright, in Playwright's pinned image
+          ├──► site-verify ────┤   the public site: typecheck · lint · test · build (example data)
+          ├──► site-e2e ───────┤   the public site's Playwright, in the same image
+          └──► site-lighthouse ┤   the public site's Lighthouse budgets
                                ▼
                            ci-result ──► deploy   (push to main only: deploy-pages → github-pages environment)
 ```
 
-- `changes` classifies a pull request's files (`scripts/ci/classify-changes.sh`). The
-  editor's jobs skip only when every changed file is Markdown, under `docs/` or in
-  another app's directory; any other file, a push to `main` or a manual run runs them.
+- `changes` classifies a pull request's files (`scripts/ci/classify-changes.sh`). An
+  app's jobs skip only when every changed file is Markdown, under `docs/` or in another
+  app's directory; any other file, a push to `main` or a manual run runs them.
 - `repository` runs on every run, whatever changed.
 - `dependency-review` runs on every pull request, and on a manual run against `main`,
   and fails when it adds or changes a dependency, development ones included, to a
@@ -41,8 +45,10 @@ changes ──┤                    │
 - `editor-verify` and `editor-e2e` run in parallel. On a push to `main`,
   `editor-verify` also reads the Pages configuration, checks the build's base path
   against it and uploads `apps/editor/dist/` as the Pages artifact.
-- `editor-e2e` runs in `mcr.microsoft.com/playwright:v<version>-noble`, pinned by digest, which holds
-  that version's Chromium and its system packages, so the job installs neither. A
+- `editor-e2e` and `site-e2e` run in `mcr.microsoft.com/playwright:v<version>-noble`, pinned by digest, which holds
+  that version's Chromium and its system packages, so the jobs install neither. Both
+  apps take `@playwright/test` from the catalog in `pnpm-workspace.yaml`, and a test
+  holds the two jobs to one image. A
   `@playwright/test` bump changes the image tag and digest in `ci.yml` with it
   (`docker pull mcr.microsoft.com/playwright:v<version>-noble` prints the digest); the job's
   check step fails with that instruction when the image lacks the Chromium the installed
@@ -54,8 +60,8 @@ changes ──┤                    │
   is never cancelled; a newer push replaces one that is still waiting, so the latest
   commit is what deploys. To redeploy without a new commit, re-run the latest `main`
   run (each attempt uploads its own artifact).
-- The Playwright report (and traces of failed tests) is uploaded as an artifact of every
-  run that was not cancelled.
+- The Playwright reports (and traces of failed tests) and the Lighthouse reports are
+  uploaded as artifacts of every run that was not cancelled.
 
 No GitHub secrets are needed: the public config is committed in `apps/editor/.env.production`.
 
@@ -109,6 +115,36 @@ mismatch, rather than deploying a site whose assets 404. A fork deploys to
    file is needed: GitHub ignores it for Actions deployments.
 3. Add `https://<your-domain>` to the OAuth client's Authorised JavaScript origins.
 4. Push to `main` (or re-run the latest `main` run).
+
+## The public site
+
+The public site (`apps/public-site/`) is published at
+<https://dhcw-digital-health-and-care-wales.github.io/product-roadmaps/> by the
+[`product-roadmaps`](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps)
+repository, since GitHub Pages serves one site per repository and `deploy-pages`
+publishes only to its own. Its `deploy.yml` runs nightly at 02:00 UTC and by hand
+(_Actions → Deploy to GitHub Pages → Run workflow_ there), never on a push:
+
+```
+build (no Pages permission)                                          deploy
+checkout roadmaps refs/heads/main ─► pnpm install ─► site:sync ─► site:build ─► upload ──► deploy-pages
+```
+
+- The build job checks out this repository's `main` at its head when the run starts,
+  names that commit in the run's summary, fetches the sheet (`pnpm site:sync`, which
+  lists sheet mistakes in the summary and fails on a fatal one) and builds. A merged
+  change, like a sheet edit, goes public at the next run.
+- The deploy job checks out and runs nothing but `deploy-pages`; it alone has
+  `pages: write` and `id-token: write`. The `github-pages` environment there accepts
+  deployments only from its `main`.
+- Its `check-sheet.yml` runs the sync alone, for sheet editors, by hand.
+- No secret or cross-repository trigger is involved (ADR-016 _Rejected_). GitHub pauses
+  a public repository's scheduled workflows after 60 days without activity; re-enable
+  the deploy from its Actions tab if that happens.
+- Its workflows are linted by hand before a change there merges (actionlint, and zizmor
+  with `--persona auditor`), as this repository's Repository job lints its own; its
+  ruleset is `.github/rulesets/product-roadmaps.json`
+  ([protecting main](protecting-main.md#product-roadmaps)).
 
 ## Troubleshooting
 

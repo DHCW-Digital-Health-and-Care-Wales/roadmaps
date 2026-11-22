@@ -7,17 +7,18 @@ tests.
 
 ## What this is
 
-One pnpm workspace (ADR-016) for Digital Health and Care Wales (DHCW), used only by DHCW
-staff. **Product Leads** manage the **public roadmaps** of the products they lead in the
-Roadmap Editor. A **separate app, the public site**, reads the same shared data source
-and shows the roadmaps to the public, so what a Product Lead publishes goes public
-through it. The data source's format is a contract with the public site: any change to
+One pnpm workspace (ADR-016) for Digital Health and Care Wales (DHCW). **Product Leads**
+manage the **public roadmaps** of the products they lead in the Roadmap Editor, used
+only by DHCW staff. A **separate app, the public site**, reads the same shared data
+source and shows the roadmaps to the public, so what a Product Lead publishes goes
+public through it. The data source's format is a contract with the public site: any change to
 what is written, or how, is stated in its record and its PR (README, _What the editor
 writes_).
 
 | Area                          | Its guide                                                                            |
 | ----------------------------- | ------------------------------------------------------------------------------------ |
 | `apps/editor/`                | `apps/editor/AGENTS.md`, every TypeScript and React convention included              |
+| `apps/public-site/`           | `apps/public-site/AGENTS.md`                                                         |
 | `docs/`                       | `docs/AGENTS.md`                                                                     |
 | `.agents/skills/`, `.claude/` | The `writing-for-agents` skill and `docs/operations/authoring-agent-instructions.md` |
 | Anything else                 | This file                                                                            |

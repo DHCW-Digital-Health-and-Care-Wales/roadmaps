@@ -4,7 +4,8 @@
 
 Digital Health and Care Wales (DHCW) publishes the Now / Next / Later roadmaps of its
 products. Product Leads, DHCW staff, manage them in the Roadmap Editor; a separate app,
-the public site, reads the same Google Spreadsheet and shows the published roadmaps. The
+the public site, reads the same Google Spreadsheet and shows the published roadmaps to
+the public. The
 [Product Lead persona](docs/backlog/personas/product-lead.md) describes who the editor is
 for.
 
@@ -14,6 +15,12 @@ This repository is one pnpm workspace
 - [`apps/editor/`](apps/editor/README.md): the Roadmap Editor, a static React app on
   GitHub Pages at **<https://dhcw-digital-health-and-care-wales.github.io/roadmaps/>**.
   Its README covers its setup, architecture, testing and operations.
+- [`apps/public-site/`](apps/public-site/README.md): the public site, a static site
+  prerendered from a snapshot of the spreadsheet, at
+  **<https://dhcw-digital-health-and-care-wales.github.io/product-roadmaps/>**. The
+  [`product-roadmaps`](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps)
+  repository publishes it from `main` here, nightly and by hand, and takes the public's
+  feedback as issues.
 
 Licensed under the [MIT License](LICENSE).
 
@@ -41,10 +48,12 @@ files with Prettier and runs the touched package's ESLint on them, and a push ru
 `pnpm typecheck`. `LEFTHOOK=0 git …` skips them for one command; CI runs the same
 checks in full.
 
-Each app's README says how to run it, starting with
-[the editor's](apps/editor/README.md#getting-started). Root scripts that run one app carry
-its prefix (`pnpm editor:dev`, `editor:test`, `editor:build`, …), and those for the root
-package's own checks the prefix `repo:`; the checks below run across every package:
+Each app's README says how to run it: [the editor's](apps/editor/README.md#getting-started)
+and [the public site's](apps/public-site/README.md#run-locally). Root scripts that run one
+app carry its prefix (`pnpm editor:dev`, `editor:test`, `site:sync`, `site:dev`, …), and
+those for the root package's own checks the prefix `repo:`; the checks below run across
+every package (`pnpm build` builds the public site from its last `pnpm site:sync`, or
+from `ROADMAPS_DATA=e2e/fixtures/roadmaps.json`):
 
 ```sh
 pnpm typecheck      # TypeScript, every package
@@ -55,25 +64,123 @@ pnpm test:docs      # the Markdown tests alone (links, agent guides)
 pnpm build          # every app's production build
 ```
 
-Pull requests into `main` merge as a signed squash, once the _CI result_ check passes
+[CONTRIBUTING.md](CONTRIBUTING.md) says how to propose a change. Pull requests into
+`main` merge as a signed squash, once the _CI result_ check passes
 and the owner approves; the owner, or an agent the owner authorises, can merge one past
 those conditions through a bypass that works only through a pull request
 (`.github/rulesets/main.json`, [protecting main](docs/operations/protecting-main.md)).
 
 ## Spreadsheet format
 
-The spreadsheet is shared with the public site, so its format is a contract with it
-([ADR-009](docs/adr/ADR-009-roadmap-list-from-the-first-tab.md)). The **first tab**,
-whatever it is called and even when hidden, is the roadmap index: row 1 is the header and
-each other row is one roadmap. Its `Sheet` column (required) names the tab holding that
-roadmap's items; `Enabled` (exactly `Yes`), `Title`, `Category`, `Family`, `Status label`,
-`Last updated`, `Colour`, `Vision`, `Service description` and `Product Lead` are read
-when present, with `(cy)` columns for Welsh. The tab a row's `Sheet` names holds that
-roadmap's items, one per row, its columns found by their row-1 header in any order
-([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)). The `Template` tab
-is copied to start a roadmap, after its header row is read to check it; its other rows
-are never read and it is never changed. An optional `Item ID` column holds each item's identity
-([ADR-012](docs/adr/ADR-012-publishing-a-roadmaps-changes.md)); the public site ignores it.
+This is the one description of the spreadsheet's format. Both apps read it: the editor
+reads and writes it, and the public site publishes what it holds, so its format is a
+contract between them
+([ADR-009](docs/adr/ADR-009-roadmap-list-from-the-first-tab.md)).
+
+The spreadsheet is shared as **Anyone with the link can view**, so every tab is visible to
+anyone with the link, a tab no roadmap names included. Row 1 of every tab is the header.
+The public site matches column names ignoring case, accents, spaces and punctuation,
+ignores extra columns (such as `Notes`) and, when two headers match the same column,
+uses the first. Keep text columns as plain text: the export the public site reads guesses
+each column's type, and a lone number in a text column can come through blank.
+
+**The roadmap index** (the first tab, `Roadmaps` in the examples): one row per roadmap.
+
+| Column                | Use                                                                                                                                                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Sheet`               | Name of the tab holding this roadmap's items. Required.                                                                                                                                                                                         |
+| `Enabled`             | `Yes` publishes the roadmap. Anything else, or blank, leaves it out (case-sensitive; no Welsh).                                                                                                                                                 |
+| `Title`               | Page heading and landing page card name.                                                                                                                                                                                                        |
+| `Category`            | Landing page group: one of the categories listed below, matched ignoring case and spaces. Blank puts the roadmap under "Other roadmaps".                                                                                                        |
+| `Family`              | Optional product family, for example `Single Record`. Shown with a swatch in the roadmap's colour above the title on the landing page card and the roadmap page. The roadmap page's heading and title read `Single Record: Nursing Healthcare`. |
+| `Status label`        | Shown as text under the title on the roadmap page (`Status: Beta`) and above it on the landing page card, for example `Beta`.                                                                                                                   |
+| `Last updated`        | `YYYY-MM-DD` or `DD/MM/YYYY`.                                                                                                                                                                                                                   |
+| `Colour`              | Hex highlight colour, for example `#325083`. Used on the landing page card and as the edge under the roadmap page's intro.                                                                                                                      |
+| `Vision`              | "Our vision", at the top of the roadmap page under the title. Leave blank to show a general intro sentence instead.                                                                                                                             |
+| `Service description` | "Our value" section and landing page summary. Blank hides it.                                                                                                                                                                                   |
+| `Product Lead`        | "Product lead" under the title on the roadmap page. Blank hides it.                                                                                                                                                                             |
+
+`Category` takes one of these, and the landing page shows them in this order (best set
+up as a dropdown with **Data → Data validation**): `Public Health & Apps`,
+`GP & Community Services`, `Tests, Scans & Results`, `Urgent & Emergency Care`,
+`Hospital & Specialist Care`, `National Systems & Data`. Each has a jump link at the top
+of the landing page; roadmaps with a blank category are listed last under "Other
+roadmaps", which has no jump link. Any other value is reported as a sheet warning and
+treated as blank. Within a category, roadmaps are sorted by title. The categories'
+Welsh names, descriptions, icons and colours are the public site's
+(`apps/public-site/src/lib/content.ts`); the sheet only picks one.
+
+**Roadmap tabs**: one row per item, in any column order.
+
+| Column          | Use                                                                                                  |
+| --------------- | ---------------------------------------------------------------------------------------------------- |
+| `Title`         | Card heading. Required.                                                                              |
+| `Description`   | What the work is. Each line shows as its own paragraph; start lines with `- ` to make a bullet list. |
+| `Outcome`       | What changes when it is done. Optional. Lines and `- ` bullets work as in `Description`.             |
+| `Horizon`       | `Now`, `Next`, `Later`, `Recently delivered`, `Delivered this year` or `Not doing`. Required.        |
+| `Phase`         | Free-text tag shown above the card title, for example `Discovery`.                                   |
+| `Labels`        | Comma separated; each becomes a tag.                                                                 |
+| `Organisations` | Who the work is for: organisation codes from the list below, comma separated. Optional.              |
+| `Details`       | Expandable "What this covers" list. One bullet per line; start a line with `-` to nest it.           |
+
+`Organisations` takes one or more of these codes, comma separated, matched ignoring
+case, spaces and punctuation:
+
+| Code       | Organisation                                  |
+| ---------- | --------------------------------------------- |
+| `National` | All of Wales, such as national systems        |
+| `ABUHB`    | Aneurin Bevan University Health Board         |
+| `BCUHB`    | Betsi Cadwaladr University Health Board       |
+| `CAVUHB`   | Cardiff and Vale University Health Board      |
+| `CTMUHB`   | Cwm Taf Morgannwg University Health Board     |
+| `HDUHB`    | Hywel Dda University Health Board             |
+| `PTHB`     | Powys Teaching Health Board                   |
+| `SBUHB`    | Swansea Bay University Health Board           |
+| `VUNHST`   | Velindre University NHS Trust                 |
+| `WAST`     | Welsh Ambulance Services University NHS Trust |
+| `PHW`      | Public Health Wales                           |
+| `HEIW`     | Health Education and Improvement Wales        |
+| `DHCW`     | Digital Health and Care Wales                 |
+| `P&I`      | NHS Wales Performance and Improvement         |
+
+Use `National` for work that applies to every organisation, rather than listing them
+all, and leave the cell blank when the work isn't for particular organisations. The
+public site shows each organisation as a button that filters the page, and its "Filter
+by organisation" control's "Include all-Wales work" option also shows `National` cards.
+Any other code is reported as a sheet warning and left out, and a blank cell means the
+card is shown only when no filter is set. `Organisations` has no Welsh column. Items
+appear in sheet order within their horizon or section.
+
+**Welsh (optional)**: any text column on either tab (`Title`, `Family`, `Status label`,
+`Vision`, `Service description`, `Description`, `Outcome`, `Phase`, `Labels`,
+`Details`) can have a Welsh column with ` (cy)` added to its name, for example
+`Title (cy)`; `(Welsh)` and `(Cymraeg)` also work. Welsh is shown when the reader picks
+Cymraeg; if the column is missing or the cell is blank, the English is shown instead.
+`Labels (cy)` and `Details (cy)` are matched to the English by position, so they need
+the same number of labels or lines. Leave an entry blank, or put just `-`, to show the
+English for that entry (for example `Gwasanaeth X, -`). Nesting comes from the English,
+so Welsh lines may repeat or omit the `-` prefixes. If the counts differ, all the Welsh
+in that cell is ignored. Labels can't contain commas in either language.
+
+**Mistakes**: the public site's sync lists sheet mistakes, with row numbers, in the
+summary of `product-roadmaps`' deploy and _Check the roadmap sheet_ runs: unknown
+horizons, rows with no title, missing optional columns, unknown categories or
+organisation codes, an `Enabled` value that is neither `Yes` nor `No` (for example
+`yes`), and likely translation mistakes (Welsh with no English, Welsh the same as the
+English for text of 3 or more words, placeholders such as `TODO` or `TBC`, Welsh and
+English that differ a lot in length, and Welsh headers for a column that can't have
+Welsh, such as `Colour (cy)`). A roadmap that is not enabled is not synced (its tab is
+not even fetched), and without an `Enabled` column no roadmaps are published. A `Sheet`
+value with no matching tab, or a tab missing a required column, fails the sync, so the
+deploy fails and the previous site stays live.
+
+**What the editor adds.** The editor reads the first tab as the roadmap index whatever
+it is called, even when hidden, and finds a roadmap tab's columns by their row-1 header,
+in any order ([ADR-011](docs/adr/ADR-011-roadmap-items-from-each-roadmaps-tab.md)). The
+`Template` tab is copied to start a roadmap, after its header row is read to check it;
+its other rows are never read and it is never changed. An optional `Item ID` column holds
+each item's identity ([ADR-012](docs/adr/ADR-012-publishing-a-roadmaps-changes.md)); the
+public site ignores it.
 
 **Families and categories** are defined once, in a `Families` tab (`ID`, `Name`,
 `Name (cy)`, `Colour`) and a `Categories` tab (`ID`, `Name`, `Name (cy)`), neither of

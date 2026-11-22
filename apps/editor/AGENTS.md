@@ -17,6 +17,8 @@ It is a static, frontend-only React SPA on GitHub Pages. It connects a Google ac
 (Google Identity Services, token model), reads and writes one Google Spreadsheet, and
 treats Google Sheets as a _temporary_ data source: a PostgreSQL-backed HTTP API must be
 able to replace it without touching the presentation layer (ADR-002).
+The spreadsheet format it reads and writes, the contract with the public site, is the root
+README's _Spreadsheet format_.
 
 ## Layering (ADR-002)
 

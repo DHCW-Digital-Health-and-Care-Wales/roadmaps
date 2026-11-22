@@ -28,6 +28,6 @@ updates:
     groups:
       pnpm:
         patterns: ["*"]
-        # Its own pull request: a bump also needs the E2E job's image tag and digest in
-        # ci.yml, which that job's check step asks for, so it cannot hold up the rest.
+        # Its own pull request: a bump also needs the E2E jobs' image tag and digest in
+        # ci.yml, which their check steps ask for, so it cannot hold up the rest.
         exclude-patterns: ["@playwright/test"]

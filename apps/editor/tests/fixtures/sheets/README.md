@@ -1,11 +1,10 @@
 # Example spreadsheet (fake data)
 
 These CSVs are the **layout** of the roadmap spreadsheet, filled with **fake example data**.
-All but `Template.csv` are copied unchanged from the `sheets/` folder of
-[DHCW-Digital-Health-and-Care-Wales/product-roadmaps](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/tree/main/sheets)
-(MIT licence, © 2026 Digital Health and Care Wales, kept in [`LICENSE`](LICENSE); commit
-`50e67f9`), the public site that
-publishes the same spreadsheet. The format is analysed in
+All but `Template.csv` are copied unchanged from the public site's example sheets,
+now [`apps/public-site/sheets/`](../../../../public-site/sheets/README.md) (MIT licence,
+© 2026 Digital Health and Care Wales, kept in [`LICENSE`](LICENSE); commit `50e67f9`), the
+public site that publishes the same spreadsheet. The format is analysed in
 [the roadmap index analysis](../../../../../docs/analysis/roadmaps-tab-format.md) and
 [the roadmap tab analysis](../../../../../docs/analysis/roadmap-tab-format.md), and decided in
 [ADR-009](../../../../../docs/adr/ADR-009-roadmap-list-from-the-first-tab.md) and

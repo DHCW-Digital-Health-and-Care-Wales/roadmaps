@@ -3,3 +3,9 @@ apps/editor/src/routeTree.gen.ts
 apps/editor/build/fixtures
 # Playwright writes aria snapshots in its own format (apps/editor/tests/e2e/AGENTS.md)
 apps/editor/tests/e2e/*-snapshots
+# The public site's build and sync output, which its own .gitignore lists
+apps/public-site/dist-ssr
+apps/public-site/.lighthouseci
+apps/public-site/.data
+# Playwright writes aria snapshots in its own format
+apps/public-site/e2e/__snapshots__

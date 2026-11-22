@@ -1,0 +1,11 @@
+# The workspace's .gitignore covers node_modules, dist and the Playwright output.
+
+# The server-side build that scripts/prerender.ts renders from
+dist-ssr
+*.tsbuildinfo
+
+# Lighthouse output
+.lighthouseci
+
+# Made by `pnpm site:sync`; never committed
+.data

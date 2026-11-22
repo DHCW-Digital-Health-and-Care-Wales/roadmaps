@@ -1,0 +1,53 @@
+{
+  "name": "@roadmaps/public-site",
+  "private": true,
+  "version": "0.0.0",
+  "description": "DHCW public product roadmaps, prerendered from a snapshot of the Google Sheet and published by product-roadmaps.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build && pnpm prerender",
+    "prerender": "vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.ts",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "lighthouse": "ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm build && node scripts/lighthouse.ts",
+    "sync": "node scripts/sync-roadmaps.ts"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.3.0",
+    "lucide-react": "^1.35.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@eslint-react/eslint-plugin": "^5.24.9",
+    "@eslint/js": "catalog:",
+    "@lhci/cli": "0.16.1",
+    "@playwright/test": "catalog:",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^24.19.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "axe-core": "^4.14.0",
+    "eslint": "catalog:",
+    "eslint-plugin-jsx-a11y-x": "^0.2.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "catalog:",
+    "jsdom": "^30.1.2",
+    "tailwindcss": "^4.3.3",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vite": "^8.3.8",
+    "vitest": "catalog:",
+    "zod": "^4.6.7"
+  }
+}

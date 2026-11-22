@@ -1,5 +1,6 @@
-# CI for pull requests and main; deploys main to GitHub Pages once every check passes
-# (ADR-007). The Repository job runs every time, Dependency review on all but a push to
+# CI for pull requests and main; deploys the editor from main to GitHub Pages once every
+# check passes (ADR-007), and checks the public site, which product-roadmaps publishes
+# from main. The Repository job runs every time, Dependency review on all but a push to
 # main, each app's jobs when the app can be affected, and CI result, the one check main's
 # ruleset requires, fails when any of them fails (.github/rulesets/main.json). Actions
 # are pinned to commit SHAs; Dependabot keeps them current.
@@ -38,6 +39,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       editor: ${{ steps.classify.outputs.editor }}
+      site: ${{ steps.classify.outputs.site }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -186,8 +188,9 @@ jobs:
     # Playwright's image holds the Chromium and the system packages of one Playwright
     # version, so the job installs neither and waits on no apt mirror (CHO-029). Pinned by
     # digest, like the actions. A bump of @playwright/test changes the tag and digest
-    # too: the check below fails the job, naming the version, when the image lacks its
-    # Chromium, before the build and the tests would fail on it. Find the digest with:
+    # here and in site-e2e: the check below fails the job, naming the version, when the
+    # image lacks its Chromium, before the build and the tests would fail on it. Find the
+    # digest with:
     # docker pull mcr.microsoft.com/playwright:v<version>-noble
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
@@ -231,13 +234,128 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  # The public site (apps/public-site), checked here and published by product-roadmaps'
+  # deploy from main (ADR-016, The public site). It builds from the example data in
+  # e2e/fixtures/roadmaps.json, so a pull request never depends on the live sheet.
+  site-verify:
+    name: "Public site: verify"
+    needs: changes
+    # Skips only on an explicit false, so a missing output runs the job.
+    if: needs.changes.outputs.site != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm site:typecheck
+      - run: pnpm site:lint
+      - run: pnpm site:test
+      - run: pnpm site:build
+        env:
+          ROADMAPS_DATA: e2e/fixtures/roadmaps.json
+
+  site-e2e:
+    name: "Public site: E2E (Playwright)"
+    needs: changes
+    # Skips only on an explicit false, so a missing output runs the job.
+    if: needs.changes.outputs.site != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The editor's E2E image, as both apps take @playwright/test from the catalog;
+    # build/ci-workflow.test.ts holds the two to one tag and digest.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+      options: --ipc=host
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check the container has the Playwright browser
+        working-directory: apps/public-site
+        run: |
+          node -e "
+            const { chromium } = require('@playwright/test');
+            const { version } = require('@playwright/test/package.json');
+            chromium.launch().then((browser) => browser.close()).catch((error) => {
+              console.error(error.message);
+              console.error('::error::Update the Playwright image tag and digest in .github/workflows/ci.yml to v' + version + '.');
+              process.exit(1);
+            });
+          "
+
+      # The Playwright web server builds the example data and serves it with
+      # `vite preview`.
+      - run: pnpm site:test:e2e
+      - name: Upload the Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-playwright-report-attempt-${{ github.run_attempt }}
+          path: |
+            apps/public-site/playwright-report/
+            apps/public-site/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # Score thresholds and size budgets (apps/public-site/lighthouserc.json), with the
+  # runner's Chrome.
+  site-lighthouse:
+    name: "Public site: Lighthouse"
+    needs: changes
+    # Skips only on an explicit false, so a missing output runs the job.
+    if: needs.changes.outputs.site != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm site:lighthouse
+      - name: Upload the Lighthouse reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-lighthouse-reports-attempt-${{ github.run_attempt }}
+          path: apps/public-site/.lighthouseci
+          include-hidden-files: true
+          retention-days: 14
+          if-no-files-found: ignore
+
   # The one check main's ruleset requires. It needs every job but deploy, runs whatever
   # they did, and fails when any failed or was cancelled; a job skipped by its paths or
   # its event passes, as no job would if the ruleset required each by name (STY-087 D5).
   # build/ci-workflow.test.ts fails when a job is missing from needs.
   ci-result:
     name: CI result
-    needs: [changes, repository, dependency-review, editor-verify, editor-e2e]
+    needs:
+      - changes
+      - repository
+      - dependency-review
+      - editor-verify
+      - editor-e2e
+      - site-verify
+      - site-e2e
+      - site-lighthouse
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5

@@ -94,12 +94,18 @@ describe("worktree.sh setup", () => {
     ])
   })
 
-  it("writes the ports at the root and the editor's .env.local from its example", async () => {
+  it("writes each app's ports at the root and the editor's .env.local from its example", async () => {
     const root = worktree("fresh")
     const slot = await setup(root)
+    const base = 21000 + slot * 10
 
     expect(readFileSync(join(root, ".env.worktree"), "utf8")).toContain(
-      `DEV_PORT=${String(21000 + slot * 10)}`,
+      [
+        `DEV_PORT=${String(base)}`,
+        `PREVIEW_PORT=${String(base + 1)}`,
+        `SITE_DEV_PORT=${String(base + 2)}`,
+        `SITE_PREVIEW_PORT=${String(base + 3)}`,
+      ].join("\n"),
     )
     expect(
       readFileSync(join(root, "apps", "editor", ".env.local"), "utf8"),
@@ -140,4 +146,45 @@ describe("worktree.sh setup", () => {
       expect(readdirSync(registry)).not.toContain(".lock")
     }
   }, 60_000)
+})
+
+describe("worktree.sh info", () => {
+  async function info(root: string): Promise<string> {
+    const { stdout } = await run(
+      join(root, "scripts", "worktree", "worktree.sh"),
+      ["info"],
+      { env, timeout: 30_000 },
+    )
+    return stdout
+  }
+
+  it("names each app's ports", async () => {
+    const root = worktree("listed")
+    const base = 21000 + (await setup(root)) * 10
+
+    const output = await info(root)
+
+    expect(output).toMatch(
+      new RegExp(`editor:dev\\s+http://localhost:${String(base)}\\n`),
+    )
+    expect(output).toMatch(
+      new RegExp(`site:dev\\s+http://localhost:${String(base + 2)}/`),
+    )
+    expect(output).toMatch(
+      new RegExp(`site:preview.*\\s+http://localhost:${String(base + 3)}/`),
+    )
+  })
+
+  it("asks for setup again when .env.worktree predates a port", async () => {
+    const root = worktree("older")
+    await setup(root)
+    writeFileSync(
+      join(root, ".env.worktree"),
+      "WORKTREE_SLOT=1\nDEV_PORT=21010\nPREVIEW_PORT=21011\n",
+    )
+
+    await expect(info(root)).rejects.toThrow(
+      /no SITE_DEV_PORT — rerun pnpm worktree:setup/,
+    )
+  })
 })

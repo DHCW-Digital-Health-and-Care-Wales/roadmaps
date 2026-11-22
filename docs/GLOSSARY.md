@@ -23,8 +23,8 @@ but every roadmap item is written for them.
 _Avoid_: Customer, end user
 
 **Public site**:
-The separate app that reads the shared data source and shows published roadmaps to
-public readers. This tool never renders it.
+The separate app (`apps/public-site/`) that reads the shared data source and shows
+published roadmaps to public readers. This tool never renders it.
 _Avoid_: Viewer (a role in this tool), front end, website
 
 ### Roadmaps

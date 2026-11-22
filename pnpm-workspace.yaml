@@ -14,11 +14,13 @@ catalog:
   vitest: ^5.1.0
 
 # minimatch below 11.0.1 has a denial of service through glob patterns
-# (GHSA-g3hv-75wg-m249). These dependents have no release yet that takes minimatch 11,
-# so each is raised to it here; drop an entry once the dependent's own range does.
+# (GHSA-g3hv-75wg-m249). These dependents have no release that takes minimatch 11, or
+# none a week old yet, so each is raised to it here; drop an entry once the dependent's
+# own range takes it (Dependabot's monthly pnpm update proposes such a release).
 overrides:
-  # Drop when the typescript-eslint catalog entry moves to ^8.73.0 (published
-  # 2026-11-16, so a week old on 2026-11-23).
+  # typescript-eslint 8.73.0 takes it, but was published 2026-11-16, under the week a
+  # new version waits (CHO-031's minimumReleaseAge). Drop when the catalog entry above
+  # moves to ^8.73.0.
   "@typescript-eslint/typescript-estree>minimatch": ^11.0.1
   # Drop when a release of eslint-plugin-jsx-a11y-x after 0.2.0 takes minimatch 11.
   "eslint-plugin-jsx-a11y-x>minimatch": ^11.0.1

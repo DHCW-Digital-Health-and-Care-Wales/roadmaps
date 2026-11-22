@@ -74,6 +74,8 @@ for it closes.
 
 - CHO-031, if it lands after this chore, drops its GHSA-g3hv-75wg-m249 entry from
   `osv-scanner.toml` (and the file, if that leaves it empty).
+- `pnpm-workspace.yaml`'s new `overrides` block sits where CHO-031's branch adds
+  `minimumReleaseAge`, after `catalog:`; whichever lands second keeps both blocks.
 - `pnpm-workspace.yaml` gains `overrides`, each with the condition that drops it. The
   typescript-eslint one goes when its catalog entry reaches ^8.73.0, which Dependabot's
   monthly pnpm update proposes.

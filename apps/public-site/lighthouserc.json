@@ -1,12 +1,8 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "npm run preview -- --port 4173 --strictPort",
+      "startServerCommand": "pnpm preview",
       "startServerReadyPattern": "Local",
-      "url": [
-        "http://localhost:4173/product-roadmaps/en/",
-        "http://localhost:4173/product-roadmaps/cy/producta/"
-      ],
       "numberOfRuns": 3,
       "settings": {
         "chromeFlags": "--no-sandbox --headless=new"
@@ -14,19 +10,48 @@
     },
     "assert": {
       "assertions": {
-        "categories:performance": ["error", { "minScore": 0.9 }],
-        "categories:accessibility": ["error", { "minScore": 1 }],
-        "categories:best-practices": ["error", { "minScore": 0.95 }],
-        "categories:seo": ["error", { "minScore": 1 }],
+        "categories:performance": [
+          "error",
+          {
+            "minScore": 0.9
+          }
+        ],
+        "categories:accessibility": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
+        "categories:best-practices": [
+          "error",
+          {
+            "minScore": 0.95
+          }
+        ],
+        "categories:seo": [
+          "error",
+          {
+            "minScore": 1
+          }
+        ],
         "resource-summary:script:size": [
           "error",
-          { "maxNumericValue": 100000 }
+          {
+            "maxNumericValue": 100000
+          }
         ],
         "resource-summary:stylesheet:size": [
           "error",
-          { "maxNumericValue": 30000 }
+          {
+            "maxNumericValue": 30000
+          }
         ],
-        "resource-summary:total:size": ["error", { "maxNumericValue": 250000 }]
+        "resource-summary:total:size": [
+          "error",
+          {
+            "maxNumericValue": 250000
+          }
+        ]
       }
     },
     "upload": {

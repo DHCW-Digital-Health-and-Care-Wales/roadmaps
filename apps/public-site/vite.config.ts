@@ -1,9 +1,10 @@
 /// <reference types="vitest/config" />
 import { existsSync, readFileSync, statSync } from "node:fs"
 import { join, resolve } from "node:path"
-import { defineConfig, type Plugin } from "vite"
+import { defineConfig, type Plugin, type UserConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
+import { type DevPorts, resolveDevPorts } from "./scripts/dev-ports.ts"
 
 // The live data is made by `npm run sync` and never committed. ROADMAPS_DATA
 // swaps in other data, so unit, end-to-end and visual tests use fixed example
@@ -76,8 +77,13 @@ function pagesNotFound(): Plugin {
 // so assets must be referenced from that absolute base. A relative base ('./')
 // 404s when the site is accessed without a trailing slash or on a client-side
 // deep link, because ./assets/... then resolves one directory too high.
-export default defineConfig({
+export default defineConfig(({ command, mode }) => ({
   base: "/product-roadmaps/",
+  // A worktree's own ports (scripts/dev-ports.ts), read only to start the dev
+  // server or `vite preview`, so a build or a test run needs no ports; strict,
+  // so a port in use fails rather than moving where the E2E suite and
+  // Lighthouse don't look.
+  ...(command === "serve" && mode !== "test" && serverPorts(resolveDevPorts())),
   plugins: [
     react(),
     tailwindcss(),
@@ -92,4 +98,11 @@ export default defineConfig({
     env: { BASE_URL: "/product-roadmaps/" },
     exclude: ["**/node_modules/**", "e2e/**"],
   },
-})
+}))
+
+function serverPorts(ports: DevPorts): UserConfig {
+  return {
+    server: { port: ports.dev, strictPort: true },
+    preview: { port: ports.preview, strictPort: true },
+  }
+}

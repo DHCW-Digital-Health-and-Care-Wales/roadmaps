@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test"
+import { resolveDevPorts } from "./scripts/dev-ports.ts"
 
-const PORT = 4173
-const BASE_URL = `http://localhost:${PORT}/product-roadmaps/`
+const BASE_URL = `http://localhost:${resolveDevPorts().preview}/product-roadmaps/`
 
 /**
  * End-to-end and ARIA snapshot tests against a production build (`vite preview`) of
@@ -31,7 +31,8 @@ export default defineConfig({
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
+    // vite preview listens on the same port (vite.config.ts).
+    command: "pnpm build && pnpm preview",
     env: { ROADMAPS_DATA: "e2e/fixtures/roadmaps.json" },
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,

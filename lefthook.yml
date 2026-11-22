@@ -22,6 +22,11 @@ pre-commit:
       glob: "*.{ts,tsx}"
       run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
 
+    - name: eslint (public site)
+      root: apps/public-site/
+      glob: "*.{ts,tsx}"
+      run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
+
 pre-push:
   jobs:
     - name: typecheck

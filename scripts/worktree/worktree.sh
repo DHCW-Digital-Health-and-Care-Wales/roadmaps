@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Give a git worktree ports of its own, so several sessions (T3 Code threads,
-# parallel agents) can run `pnpm editor:dev` and `pnpm editor:test:e2e` side by
-# side on one host.
+# parallel agents) can run each app's dev server and E2E suite (`pnpm editor:dev`,
+# `pnpm site:test:e2e`, …) side by side on one host.
 #
 # Each worktree claims a numbered slot, and the slot fixes a block of host
 # ports, written to .env.worktree at the repository's root, one file for every
-# app. The editor's vite.config.ts and playwright.config.ts read that file
-# (apps/editor/build/resolve-dev-ports.ts); without it they keep the canonical
-# ports (5173 dev, 4173 preview and E2E), so a main checkout is unaffected.
+# app. Each app's vite.config.ts and playwright.config.ts read that file
+# (apps/editor/build/resolve-dev-ports.ts, apps/public-site/scripts/dev-ports.ts);
+# without it they keep their canonical ports (the editor 5173 dev and 4173
+# preview and E2E, the public site 5174 and 4174), so a main checkout is
+# unaffected.
 #
 #   setup      claim a slot, write .env.worktree, install dependencies, create
 #              apps/editor/.env.local (idempotent: t3.json runs it on create)
@@ -26,7 +28,7 @@ PORT_BASE=21000
 MAX_SLOT=99
 # A slot's ports, in offset order from its base: the one place the layout is
 # written down.
-PORT_VARS=(DEV_PORT PREVIEW_PORT)
+PORT_VARS=(DEV_PORT PREVIEW_PORT SITE_DEV_PORT SITE_PREVIEW_PORT)
 
 port_in_use() {
   (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null || (exec 3<>"/dev/tcp/::1/$1") 2>/dev/null
@@ -134,8 +136,8 @@ ensure_env() {
   unlock
 
   local base=$((PORT_BASE + SLOT * 10)) offset
-  # Plain KEY=VALUE lines: apps/editor/build/resolve-dev-ports.ts parses
-  # them, and a shell can `source` them. Written aside and renamed, so a
+  # Plain KEY=VALUE lines: each app's port resolver parses them, and a shell
+  # can `source` them. Written aside and renamed, so a
   # concurrent reader (a starting Vite or Playwright) never reads a
   # half-written file.
   {
@@ -154,6 +156,10 @@ require_env() {
   [ -f "$ENV_FILE" ] || { echo "worktree: no .env.worktree — run pnpm worktree:setup" >&2; exit 1; }
   # shellcheck disable=SC1090
   . "$ENV_FILE"
+  local var
+  for var in "${PORT_VARS[@]}"; do
+    [ -n "${!var:-}" ] || { echo "worktree: .env.worktree has no $var — rerun pnpm worktree:setup" >&2; exit 1; }
+  done
 }
 
 # Stops the listener on a port by its PID, never by a name pattern: worktrees
@@ -188,8 +194,11 @@ teardown() {
   if [ -f "$ENV_FILE" ]; then
     # shellcheck disable=SC1090
     . "$ENV_FILE"
-    stop_port "$DEV_PORT"
-    stop_port "$PREVIEW_PORT"
+    local var
+    for var in "${PORT_VARS[@]}"; do
+      # A file written before a port was added lacks its line.
+      [ -n "${!var:-}" ] && stop_port "${!var}"
+    done
   fi
   lock
   release_slot
@@ -204,6 +213,9 @@ info() {
 Worktree slot $WORKTREE_SLOT
   pnpm editor:dev                       http://localhost:$DEV_PORT
   pnpm editor:preview, editor:test:e2e  http://localhost:$PREVIEW_PORT
+  pnpm site:dev                         http://localhost:$SITE_DEV_PORT/product-roadmaps/
+  pnpm site:preview, site:test:e2e,     http://localhost:$SITE_PREVIEW_PORT/product-roadmaps/
+    site:lighthouse
 EOF
 }
 

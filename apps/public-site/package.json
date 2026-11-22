@@ -15,7 +15,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "lighthouse": "ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm build && lhci autorun",
+    "lighthouse": "ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm build && node scripts/lighthouse.ts",
     "sync": "node scripts/sync-roadmaps.ts"
   },
   "dependencies": {

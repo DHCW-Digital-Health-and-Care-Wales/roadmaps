@@ -9,7 +9,7 @@
   `.github/dependabot.yml`, so whichever lands later rebases
 - **Binding ADRs**: ADR-016 §Workspace tooling, §CI, §Who may change main, ADR-007
 - **Suggested model**: Sonnet — configuration with known shapes, observed in runs
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/231
 
 ## Summary
 

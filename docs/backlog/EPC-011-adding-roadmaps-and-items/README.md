@@ -116,7 +116,7 @@ one possible place without a new kind of write: after the last row.
    a pending edit of the placement, written as row moves, and a co-lead's change to the
    same placement's items is a conflict reviewed with both orders (STY-050). Settled on
    the wayfinder map
-   [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102),
+   [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/102),
    whose tickets each story's Decisions cite.
 9. A Product Lead removes a published item from its card, after a question that offers
    Not doing first; the removal is pending, struck through with Undo, and publishing

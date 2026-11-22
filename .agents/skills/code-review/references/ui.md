@@ -6,7 +6,7 @@ working order, and grade and report findings as it sets.
 - **Routing and Pages (ADR-004, ADR-007).** Routes use hash history, so deep
   links are `#/roadmaps/<id>`; the router, `Link`s and E2E use relative URLs,
   never an absolute `/path` that ignores the base. The build base path comes
-  from `resolveBasePath` (`/roadmaps-editor/` in CI, `/` locally); assets,
+  from `resolveBasePath` (`/roadmaps/` in CI, `/` locally); assets,
   `index.html` references, the inline theme script and any `fetch` of a static
   file must work under both. Route modules stay thin and delegate to feature
   pages; `src/routeTree.gen.ts` is regenerated and committed when routes

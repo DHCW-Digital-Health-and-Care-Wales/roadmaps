@@ -11,7 +11,7 @@ GitHub Pages cannot rewrite unknown paths to `index.html`; deep links must survi
 
 - TanStack Router with the official Vite plugin (`@tanstack/router-plugin`) and file-based
   routes in `src/routes/`. Route modules are thin and render feature pages.
-- `createHashHistory()` so URLs look like `/roadmaps-editor/#/roadmaps/123`. No 404.html hack.
+- `createHashHistory()` so URLs look like `/roadmaps/#/roadmaps/123`. No 404.html hack.
 - Routes: `/` (landing + roadmap list), `/roadmaps/$roadmapId` (placeholder detail),
   `notFoundComponent` on the root route.
 - `src/routeTree.gen.ts` is generated and committed (so typecheck works before a build);

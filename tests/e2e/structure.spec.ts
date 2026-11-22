@@ -45,7 +45,7 @@ function snapshotName(screen: string, language: Language) {
 
 /**
  * Holds a screen's structure against its snapshot. Links carry the deployment's base path
- * (`/roadmaps-editor/` in CI, `/` locally), so they are first pointed at the site root:
+ * (`/roadmaps/` in CI, `/` locally), so they are first pointed at the site root:
  * one snapshot serves every build.
  */
 async function expectStructure(locator: Locator, name: string) {

@@ -15,9 +15,11 @@
 // hairline, and only the body scrolls, so the title, the close button and the buttons
 // stay in view. Narrower or shorter, the whole popup scrolls as one piece, as it did
 // before, and the padding stays the popup's. A header over two fifths of the screen (a
-// very long title) scrolls itself, so the footer stays in view. A dialog with no body (a
-// question: its description is in the header) has one hairline between its header and
-// its footer.
+// very long title) scrolls itself, so the footer stays in view. Pinned, the popup clips
+// its overflow rather than hiding it, so it is no scroll box: the body's hidden labels
+// reach past its foot, and a scroll into view would take it there, its title out of
+// view and out of reach (DEF-026). A dialog with no body (a question: its description
+// is in the header) has one hairline between its header and its footer.
 //
 // `position="right"` (STY-077) sets the same dialog along the screen's right edge, full
 // height and as wide, sliding in as the navigation drawer does. It is a position, not a
@@ -110,7 +112,7 @@ function DialogContent({
         data-slot="dialog-content"
         data-position={position}
         className={cn(
-          "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-y-auto rounded-t-lg border border-border bg-popover p-6 text-popover-foreground shadow-popup duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 pinned:gap-0 pinned:overflow-hidden pinned:p-0",
+          "fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-y-auto rounded-t-lg border border-border bg-popover p-6 text-popover-foreground shadow-popup duration-100 outline-none data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 pinned:gap-0 pinned:overflow-clip pinned:p-0",
           POSITION_CLASSES[position],
           className,
         )}

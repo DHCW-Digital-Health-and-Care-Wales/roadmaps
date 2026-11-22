@@ -7,9 +7,9 @@
 - **Scope**: a roadmap's page, for
   [STY-050](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md),
   answering the wayfinder ticket
-  [How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/105)
+  [How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/105)
   on the map
-  [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
+  [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/102).
   Base `69ff0d1`. Only documents and one prototype page were added; no application
   code.
 - **Prototypes**: [`reorder-items-ux-analysis/reorder-items-ux-prototypes.html`](reorder-items-ux-analysis/reorder-items-ux-prototypes.html),
@@ -36,16 +36,16 @@ the same roadmap (A12), and nothing is public until a deliberate publish (A9, A1
 When the mock-ups were drawn, STY-050 had no acceptance scenarios, so each design is
 traced against the ticket's question and the decisions already made on the map (its
 scenarios are now settled: see _Outcome_):
-[What is an order change, and when is it a conflict?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/104)
+[What is an order change, and when is it a conflict?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/104)
 and
-[Where does a moved item land, and where does a new item go?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/106).
+[Where does a moved item land, and where does a new item go?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/106).
 Each journey relies on A1 (short visits), A2 (desktop first, phone second), A9 and A10
 (pending until published) and A12 (a co-lead).
 
 Excluded: the conflict review of an order, which is
-[How is an order conflict reviewed?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/117);
+[How is an order conflict reviewed?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/117);
 what publishing writes
-([What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/107));
+([What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/107));
 reordering roadmaps in the roadmap list and an item's tags (out of the map's scope);
 the Welsh interface; connecting to Google.
 
@@ -141,9 +141,9 @@ by name with its changed fields (STY-025 S9).
 
 Reads and writes: every design reads only the roadmap's items on the page, pending
 edits included, and makes the order a pending edit (ticket 104). Writing it is
-[What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/107);
+[What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/107);
 a co-lead's change to the same placement is
-[How is an order conflict reviewed?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/117).
+[How is an order conflict reviewed?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/117).
 No design needs a read or write those don't supply.
 
 ## Not yet drawn
@@ -176,7 +176,7 @@ No design needs a read or write those don't supply.
 - [STY-050](../backlog/_archive/EPC-011-adding-roadmaps-and-items/STY-050-reorder-items-in-a-placement.md)
   and [EPC-011](../backlog/EPC-011-adding-roadmaps-and-items/README.md).
 - The map:
-  [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
+  [Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/102).
 - [`roadmap-tab-format.md`](roadmap-tab-format.md): items keep their row order within a
   placement.
 - [STY-039](../backlog/_archive/EPC-010-item-details/STY-039-edit-an-items-details.md):
@@ -186,7 +186,7 @@ No design needs a read or write those don't supply.
 ## Outcome
 
 Decided with the owner on 2026-11-16, on the wayfinder ticket
-[How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/105).
+[How does a Product Lead reorder a placement's items?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/105).
 Every recommendation was taken.
 
 - **Put an item in its place**: A, the Move menu, with "To the top", "Up one", "Down

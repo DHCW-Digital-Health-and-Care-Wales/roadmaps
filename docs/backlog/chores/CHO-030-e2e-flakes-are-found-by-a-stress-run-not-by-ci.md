@@ -49,7 +49,7 @@ numbers are the spec's at that run:
 | `moved-travel.spec.ts:207` (keyboard "far down")       | 3                  | focus not on Move                                                     | DEF-024 |
 | `item-tags.spec.ts:282` (compact row, title wraps)     | 4                  | "Not laid out" (`fixtures/layout.ts` `boxOf`)                         | none    |
 | `side-panel.spec.ts:261`, then `:256` (S9)             | 3                  | the session warning still shown after it should close                 | none    |
-| `pinned-dialog.spec.ts:303` (long title added)         | 3                  | a dialog part not in view (line 328)                                  | none    |
+| `pinned-dialog.spec.ts:303` (long title added)         | 3                  | a dialog part not in view (line 328)                                  | DEF-026 |
 | `roadmap-controls.spec.ts:271` (Publish roadmap)       | 1                  | timeout waiting for a stuck row's button (`fixtures/roadmap-page.ts`) | none    |
 | `side-panel.spec.ts:134` (tall screen, form that fits) | 1                  | the panel measured mid-slide                                          | DEF-025 |
 

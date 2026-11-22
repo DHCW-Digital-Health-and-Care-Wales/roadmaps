@@ -115,7 +115,7 @@ option of Q1 to try next
 
 ### S2: the measured deliveries
 
-**STY-051** ([#128](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/128)):
+**STY-051** ([#128](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/128)):
 round 1 over `25079d1..94b0063`, 41 files, 3,708 lines and 164,582 characters; the
 re-check over `94b0063..98a107d`, 535 lines. Durations and tokens are the runtime's
 totals in the delivery session's results for each reviewer; what each read is from the
@@ -135,16 +135,16 @@ reviewer session logs.
   Opus correctness reviewer took 3.3 min and 130.4k tokens over the same round 1 diff.
 - **Not measured**: three quality reviews over more than 100,000 characters ran after
   D1 and before STY-051, their sessions outside this evidence: DEF-015
-  ([#115](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/115),
+  ([#115](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/115),
   round 1 at `3611e9b`, 184,862); the reordering UX prototypes
-  ([#118](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/118),
+  ([#118](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/118),
   round 1 at `607d1a0`, 330,720); and CHO-009's fresh pass
-  ([#120](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/120),
+  ([#120](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/120),
   at `ea1d47a`, 100,417). By S2's "next two", their measurement is outstanding, not
   STY-051's; counting STY-051 in their place, or leaving D1's trial as it stands, takes
   an owner decision in Decisions.
 
-**STY-050** ([#130](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/pull/130)):
+**STY-050** ([#130](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/130)):
 round 1 over `3f309cc..2c4fc7c`, 68 files, 8,150 lines and 342,827 characters; the
 re-check over `2c4fc7c..c5dd96c`, 2,310 lines and 106,597 characters. The sources are
 STY-051's.

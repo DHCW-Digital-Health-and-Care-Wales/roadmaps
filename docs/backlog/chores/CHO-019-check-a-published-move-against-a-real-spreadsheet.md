@@ -15,7 +15,7 @@
 STY-051 publishes a moved item by writing its `Horizon` cell and moving its row
 (`moveDimension`) in one `spreadsheets.batchUpdate`. The owner checked a single
 `moveDimension` request on a scratch copy of a roadmap tab (map ticket
-[#109](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109));
+[#109](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/109));
 the editor's own publish, with cell writes, several moves and an appended row in one
 request, was never sent to Google. A wrong assumption shows as a row in the wrong
 place, or as a publish Google refuses, writing nothing. Done looks like: the moves

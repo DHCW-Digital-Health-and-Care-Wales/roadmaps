@@ -16,7 +16,7 @@ STY-050 publishes a placement's order as `moveDimension` requests, and a new ite
 is not last in a reordered placement as an `insertDimension` followed by its cells, in
 one `spreadsheets.batchUpdate`. The delivery had no Google account, so the editor's
 own publish was never sent to Google; the owner's check on a scratch copy (map ticket
-[#109](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109))
+[#109](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/109))
 covered one `moveDimension` alone. A wrong assumption shows as a row in the wrong
 place, a new item formatted as the header, or a publish Google refuses, writing
 nothing. Done looks like: the publishes below made from the editor to a test

@@ -361,11 +361,11 @@ Nothing checks permission in advance.
 ### STY-051 amendments
 
 Decided with the owner on 2026-11-16, on the wayfinder map
-[Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/102).
+[Reordering a placement's items](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/102).
 ADR-014 _STY-051 amendments_ say where a moved item goes; these say how it is written.
 
 - **Publishing moves rows, never rewrites them** (map ticket
-  [How do row moves behave in one Sheets batchUpdate?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/103)):
+  [How do row moves behave in one Sheets batchUpdate?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/103)):
   a row is moved by a `moveDimension` request in the same `batchUpdate`, after the cell
   and `Item ID` writes (which keep the re-read's row numbers) and before any appended
   row. Rewriting the rows' values lost: it would write cells the editor never writes
@@ -376,10 +376,10 @@ ADR-014 _STY-051 amendments_ say where a moved item goes; these say how it is wr
   placement's items and of the items moved in before it, gets its `Horizon` cell
   alone.
 - **A move that would leave a row where it is is never sent** (map ticket
-  [What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/109)):
+  [What do row moves do to a real roadmap tab?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/109)):
   Google refuses it, and the whole batch with it.
 - **A protected row refuses the publish** (map ticket
-  [What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/107)
+  [What does publishing write for an order change?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/107)
   Q4): Google refuses a move, or a write, of a cell the account may not edit, so nothing
   is published. Pending changes are kept, and a new `AppError` kind says a protected
   part of the spreadsheet stopped it. This refines _Who may edit_: nothing is still
@@ -399,7 +399,7 @@ ADR-014 _STY-051 amendments_ say where a moved item goes; these say how it is wr
 Decided with the owner on 2026-11-16, on the same map.
 
 - **An order is a pending edit of a placement** (map ticket
-  [What is an order change, and when is it a conflict?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/104)):
+  [What is an order change, and when is it a conflict?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/104)):
   one per placement, its placed items in sequence, its base the order as loaded,
   compared as one value as an item's tags are. It exists only once the Product Lead
   reorders; items moved or added into the placement join it last, items moved out leave
@@ -414,7 +414,7 @@ Decided with the owner on 2026-11-16, on the same map.
   found first (Option 13) and leaves the order; if the order then differs only by it,
   there is no conflict.
 - **It is reviewed as one value** (map ticket
-  [How is an order conflict reviewed?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps-editor/issues/117)),
+  [How is an order conflict reviewed?](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/issues/117)),
   in the existing review: "Your order", what "Keep mine" would publish, beside "Current
   order". "Keep mine" writes the Product Lead's order of the items they know, with a
   co-lead's added or moved-in items last and removed or moved-out ones gone, and makes

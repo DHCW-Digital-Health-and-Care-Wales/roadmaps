@@ -82,7 +82,8 @@ cannot be inferred safely, or a needed new or successor ADR, and ask the moment
 the question appears, at any step. Each option states what the build does now
 and what choosing it adds, removes or moves, so the chosen answer names its
 remaining work. Record each answer as an owner entry in the record's
-`## Decisions`. An answer covers only what was asked: when review or later work
+`## Decisions`, in the owner's terms, quoting where a paraphrase would narrow or
+widen it. An answer covers only what was asked: when review or later work
 widens or changes what an answered decision commits to, ask again, saying what
 changed; keep the answered entry as it was and add the change as an agent entry,
 without the owner's acceptance, until they reply. A delegated agent heads its

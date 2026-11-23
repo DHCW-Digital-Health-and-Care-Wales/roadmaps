@@ -517,7 +517,9 @@ describe("A pending order and the items' own changes (S4, S5)", () => {
     expect(titlesUnder("Next")).toEqual(["Echo", "Foxtrot"])
     expect(main().getByText("Order changed")).toBeInTheDocument()
   })
+})
 
+describe("Publishing a pending order (S6, S7, S15)", () => {
   it("names the order in one line of “What changes”, the new order not listed (S6)", async () => {
     const { user } = await renderPage()
     await chooseFromMenu(user, "Delta", "To the top")

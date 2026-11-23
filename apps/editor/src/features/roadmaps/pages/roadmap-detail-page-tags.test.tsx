@@ -576,6 +576,10 @@ describe("Editing an item's tags (STY-037)", () => {
     await user.keyboard("Carers{Enter}")
     expect(rowsOf(field)).toEqual(["Patients", "Video consultations", "Carers"])
     expect(field.getByRole("textbox", { name: "Add a tag" })).toHaveFocus()
+    // A comma ends a tag as it is typed, with no Enter.
+    await user.keyboard(" Waiting lists ,")
+    expect(rowsOf(field).at(-1)).toBe("Waiting lists")
+    expect(field.getByRole("textbox", { name: "Add a tag" })).toHaveValue("")
 
     // Add tag, then the first tag offered.
     await user.tab()

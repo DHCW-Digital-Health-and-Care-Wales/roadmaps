@@ -525,6 +525,12 @@ describe("RoadmapDetailPage items", () => {
         }),
       ).toBeInTheDocument()
       expect(main().getAllByRole("alert")).toHaveLength(1)
+      expect(
+        main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
+      ).toBeInTheDocument()
+      expect(
+        main().getByRole("region", { name: "Product details" }),
+      ).toBeInTheDocument()
     })
 
     it("shows the items after connecting from a deep link", async () => {

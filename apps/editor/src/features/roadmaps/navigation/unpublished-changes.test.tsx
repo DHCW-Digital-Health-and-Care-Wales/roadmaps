@@ -117,7 +117,7 @@ describe("on a desktop", () => {
     expect(dot("Product C roadmap")).toBeNull()
   })
 
-  it("leads to the roadmap with changes while it is the only one, and to nothing, the count not the current page, on its own page (STY-063 S5; S2)", async () => {
+  it("leads to the roadmap with changes while it is the only one, and to nothing on its own page, where only that roadmap is the current page (STY-063 S5; S2)", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderShell()
     await change(user, router, "productb", "B item")

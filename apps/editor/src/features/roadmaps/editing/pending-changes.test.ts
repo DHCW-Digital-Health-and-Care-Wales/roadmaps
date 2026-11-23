@@ -940,7 +940,7 @@ describe("a change of details (STY-039)", () => {
   })
 })
 
-describe("an item without an ID, found by the details it shows (STY-039 S15, review rounds)", () => {
+describe("an item without an ID, found by the details it shows (STY-039 S15)", () => {
   /** Details of the levels given, each named for its place. */
   const detailed = (...levels: number[]) =>
     levels.map((level, index) => ({
@@ -970,7 +970,7 @@ describe("an item without an ID, found by the details it shows (STY-039 S15, rev
       true,
     ],
     [
-      "is found in that row with a pending change of its details",
+      "is found in a row showing the same list with a hyphen on every line, with a pending change of its details",
       [0, 1],
       { details: "Detail 1\n- Detail 2\nDetail 3" },
       { details: detailed(1, 2) },

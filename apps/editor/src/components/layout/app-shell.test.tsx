@@ -47,7 +47,7 @@ const copy = {
 
 const appInfo = { version: "1.2.3+abc1234" }
 
-/** What the shell says in each language: its copy, with the structure it holds below. */
+/** What the shell says in each language; its structure, which no language changes, is held once below. */
 describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
   const c = copy[language]
 

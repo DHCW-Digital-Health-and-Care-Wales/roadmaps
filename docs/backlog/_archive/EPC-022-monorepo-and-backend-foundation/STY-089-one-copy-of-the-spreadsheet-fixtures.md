@@ -150,9 +150,10 @@ Audited at `63ff97a4`:
   paragraphs on the Sheets fake's `apply-batch-update.ts` and `parse-csv.ts`, which
   stay in `apps/editor/tests/fixtures/sheets/` (D12) and whose docblocks already say
   what they do; the README names them where it says who reads the CSVs (agent).
-- **S4**: the analyses' _Example data_ paragraphs, which called the fixtures a copy of the
-  public site's, now say they are the one copy both apps read, beyond a path-only
-  correction (agent).
+- **S4**: the analyses' lines that called the fixtures a copy of the public site's
+  (`roadmap-tab-format.md`, _Items have no identity_; `roadmaps-tab-format.md`, _Example
+  data_) now say there is one copy both apps read, beyond a path-only correction, since
+  the move made the old wording false (agent).
 - **S4**: lines that record what an audit or an analysis read at a past commit keep
   that commit's paths: EPC-022's _Findings_ (audited at `5d8c58d`) and the analyses'
   _Source_ lines, which name `product-roadmaps`' own `sheets/` (agent).

@@ -84,8 +84,8 @@ work.
 
 The public repository's `sheets/*.csv` were fake data in this exact layout, MIT licensed.
 They were copied into this repository and are now its one copy,
-[`fixtures/sheets/`](../../fixtures/sheets/README.md), which both apps' tests read (STY-089):
-the only data tests may use; nothing from the live spreadsheet is stored in this repository.
+[`fixtures/sheets/`](../../fixtures/sheets/README.md), which both apps' tests read (STY-089).
+It is the only data tests may use; nothing from the live spreadsheet is stored in this repository.
 
 ## Options
 

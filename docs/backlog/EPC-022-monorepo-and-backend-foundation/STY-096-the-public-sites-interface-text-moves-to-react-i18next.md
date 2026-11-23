@@ -1,7 +1,6 @@
 # STY-096: The public site's interface text moves to react-i18next
 
-- **Status**: In progress — t3/epc-022-alignment-sequence; Q1 (the script budget) awaits
-  the owner
+- **Status**: In progress — PR #273; Q1 (the script budget) awaits the owner
 - **Type**: Refactor + Copy
 - **Area**: Features/UI + i18n (en + cy)
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
@@ -9,6 +8,7 @@
 - **Binding ADRs**: ADR-008, ADR-016 §STY-095 amendments
 - **Suggested model**: Opus — a string migration through the prerender, with Welsh
   plurals and fallback marking
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/273
 
 ## Summary
 

@@ -1,6 +1,4 @@
-import type { Page } from "@playwright/test"
-
-import { boxOf } from "./fixtures/layout"
+import { boxOf, scrollsSideways } from "./fixtures/layout"
 import { tokenColour, useLanguage } from "./fixtures/look"
 import { expect, roadmapCards, test } from "./fixtures/test"
 
@@ -23,13 +21,6 @@ const copy = {
     connect: "Cysylltu â Google",
   },
 } as const
-
-const horizontalOverflow = (page: Page) =>
-  page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth,
-  )
 
 const en = copy.en
 
@@ -103,7 +94,7 @@ test.describe("header and footer", () => {
         await expect(
           page.getByRole("main").getByRole("button", { name: c.connect }),
         ).toBeVisible()
-        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+        expect(await scrollsSideways(page)).toBe(false)
         await page
           .getByRole("main")
           .getByRole("button", { name: c.connect })
@@ -133,7 +124,7 @@ test.describe("header and footer", () => {
         // Beside the menu button and the two header buttons, in Cymraeg too (S4), it
         // stays on one line: the account menu gave the room back (STY-056).
         expect(lines).toBeLessThanOrEqual(1)
-        expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+        expect(await scrollsSideways(page)).toBe(false)
       })
     }
   }
@@ -159,7 +150,7 @@ test("the not-found page does not scroll sideways on a phone (S6)", async ({
   await expect(
     page.getByRole("heading", { level: 1, name: "Page not found" }),
   ).toBeVisible()
-  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+  expect(await scrollsSideways(page)).toBe(false)
 })
 
 test("a DHCW skip link appears on the first Tab and moves focus to the content (S7)", async ({

@@ -1,7 +1,7 @@
 import type { Locator, Page } from "@playwright/test"
 
 import type { FakeSheets } from "./fixtures/fake-sheets"
-import { boxOf } from "./fixtures/layout"
+import { boxOf, scrollsSideways } from "./fixtures/layout"
 import { type Language, useLanguage } from "./fixtures/look"
 import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
 import { openLongRoadmap } from "./fixtures/roadmap-page"
@@ -88,13 +88,6 @@ async function openWorld(
   ).toBeVisible()
 }
 
-const horizontalOverflow = (page: Page) =>
-  page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth,
-  )
-
 test.describe("on a desktop", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(DESKTOP)
@@ -116,7 +109,7 @@ test.describe("on a desktop", () => {
     expect(await navigationWidth(page)).toBe(400)
     await drag(page, -800)
     expect(await navigationWidth(page)).toBe(208)
-    expect(await horizontalOverflow(page)).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
   })
 
   test("shows the edge can be dragged, and puts the navigation back to 256px on a double-click (S1, S3)", async ({
@@ -240,7 +233,7 @@ for (const language of ["en", "cy"] as const) {
     await drag(page, 144, language)
 
     expect(await navigationWidth(page)).toBe(400)
-    expect(await horizontalOverflow(page)).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
     const inside = await page
       .getByRole("main")
       .locator("button, a")

@@ -82,7 +82,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-039](_archive/chores/CHO-039-the-shell-list-and-navigation-specs-hold-what-their-page-tests-cannot.md)      | The shell, list and navigation specs hold only what their page tests cannot (part of CHO-014)                                       | Done           |
 | [CHO-040](_archive/chores/CHO-040-the-connecting-and-publishing-specs-hold-what-their-component-tests-cannot.md) | The connecting and publishing specs hold only what their component tests cannot (part of CHO-014)                                   | Done           |
 | [CHO-041](_archive/chores/CHO-041-the-vitest-suite-asserts-each-rule-once-at-its-lowest-seam.md)                 | The Vitest suite asserts each rule once, at its lowest seam (part of CHO-014)                                                       | Done           |
-| [CHO-042](chores/CHO-042-every-sideways-scroll-check-uses-one-helper.md)                                         | Every sideways-scroll check uses one helper (part of CHO-014)                                                                       | Proposed       |
+| [CHO-042](_archive/chores/CHO-042-every-sideways-scroll-check-uses-one-helper.md)                                | Every sideways-scroll check uses one helper (part of CHO-014)                                                                       | Done           |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

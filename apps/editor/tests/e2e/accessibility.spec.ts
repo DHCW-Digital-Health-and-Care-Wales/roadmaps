@@ -18,6 +18,7 @@ import {
   reviewFooterClose,
 } from "./fixtures/dialogs"
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
+import { scrollsSideways } from "./fixtures/layout"
 import {
   EXAMPLE_INDEX_ROWS,
   EXAMPLE_SPREADSHEET_WITH_LISTS,
@@ -393,12 +394,7 @@ for (const theme of THEMES) {
           page.getByRole("heading", { level: 3, name: itemTitle }),
         ).toBeVisible()
 
-        const overflow = await page.evaluate(
-          () =>
-            document.documentElement.scrollWidth -
-            document.documentElement.clientWidth,
-        )
-        expect(overflow).toBe(0)
+        expect(await scrollsSideways(page)).toBe(false)
         const levels = await page
           .getByRole("main")
           .getByRole("heading")
@@ -1090,12 +1086,7 @@ for (const theme of THEMES) {
         "My vision.",
         "Their vision.",
       ])
-      const overflow = await page.evaluate(
-        () =>
-          document.documentElement.scrollWidth -
-          document.documentElement.clientWidth,
-      )
-      expect(overflow).toBe(0)
+      expect(await scrollsSideways(page)).toBe(false)
       // The narrow header's home link fails 2.5.3 in English only (DEF-002), but the
       // review is the page's own content.
       await expectNoAxeViolations(page, theme, { only: "[role=dialog]" })

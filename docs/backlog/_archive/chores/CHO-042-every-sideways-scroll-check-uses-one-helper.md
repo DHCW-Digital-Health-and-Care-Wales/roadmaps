@@ -9,7 +9,7 @@
   fewer sites remain after them)
 - **Binding ADRs**: ADR-006
 - **Suggested model**: Haiku — one expression replaced by one call at each site
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #262](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/262)
 
 ## Summary
 

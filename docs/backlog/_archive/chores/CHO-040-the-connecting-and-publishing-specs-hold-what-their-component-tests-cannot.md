@@ -88,8 +88,9 @@ through the fakes shown after a reload
 - `reconnect.spec.ts:59` stays, with two additions that hold what a cut test did in a
   browser at no extra run: Cancel is pressed first and focus is back on Publish (the one
   Base UI timing of `:94`, which Vitest sees without the closing animation), and the
-  write that follows carries the new session's token (`sheets.tokens` ends on
-  `e2e-token-2`), which S1 names.
+  requests that follow, the write among them, all carry the new session's token
+  (`sheets.tokens` since the Reconnect click is `e2e-token-2` alone; the fake still
+  accepts the old token, so only this shows it), which S1 names.
 - `session-warning.spec.ts:53` stays, and gains the focus on Stay connected as the
   warning opens (from `:38`), which jsdom reaches without a real frame.
 - `publishing-roadmap.spec.ts:53` stays and now reloads before it reads the result: a
@@ -107,7 +108,11 @@ through the fakes shown after a reload
   red by dropping "hyn" from `cy.ts`), before the E2E test went (CHO-014 S7).
 - `sheets-writes.spec.ts` is untouched: its two tests are not merged, since the saving
   would be one connect (about 0.5 s) and the second reads the violations of its own
-  clean spreadsheet.
+  clean spreadsheet. The cuts leave the fake GIS's `popup-closed` outcome and `scope`
+  option and the `chooseFromMore` helper with no spec that uses them: they stay as the
+  fakes' and fixtures' documented model of Google and of the page, which the guide names
+  (`apps/editor/tests/e2e/AGENTS.md`). The reconnect helpers lose their Welsh variant
+  with the one test that used it.
 - No axe scan is in these specs, so none is dropped (the owner's rule of 2026-11-23).
 - Archived records that cite a cut test stay as they were.
 
@@ -140,5 +145,5 @@ the GIS and Sheets adapters' tests, which go with it.
 
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | the five specs pass, 9 runs (7.8 s locally): the popup opened inside a real click (`auth.spec.ts` both rows, `reconnect.spec.ts:46`, `session-warning.spec.ts:43`), the reconnected and the renewed token on the next request (`reconnect.spec.ts`, `session-warning.spec.ts`), a token kept out of storage (the fixture's teardown guard on every run), and one publish through the fakes shown after a reload (`publishing-roadmap.spec.ts:42`) |
+| S1       | the five specs pass, 9 runs (7.8 s locally): the popup opened inside a real click (`auth.spec.ts` both rows, `reconnect.spec.ts:59`, `session-warning.spec.ts:53`), the reconnected and the renewed token on the next request (`reconnect.spec.ts`, `session-warning.spec.ts`), a token kept out of storage (the fixture's teardown guard on every run), and one publish through the fakes shown after a reload (`publishing-roadmap.spec.ts:53`) |
 | S2       | the PR lists each cut and its holder; the one moved assertion, the Welsh publish confirmation's title, shown red                                                                                                                                                                                                                                                                                                                                  |

@@ -48,12 +48,11 @@ test("staying connected renews in one click and keeps the page (S4)", async ({
   const warning = await reachWarning(page)
   const statuses = await recordStatuses(page)
   expect(sheets.reads).toHaveLength(2)
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
+  const stay = warning.getByRole("button", { name: "Stay connected" })
+  await expect(stay).toBeFocused()
 
   // A real click: the fake GIS records a violation if the popup opens outside it.
-  await warning.getByRole("button", { name: "Stay connected" }).click()
+  await stay.click()
 
   await expect(warning).toBeHidden()
   await expect.poll(() => gis.tokenRequests.length).toBe(2)

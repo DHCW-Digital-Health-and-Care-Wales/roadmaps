@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test"
 import {
   confirmPublish,
   openEditItemDialog,
+  reconnectButton,
   reconnectDialog,
 } from "./fixtures/dialogs"
 import { sessionMs } from "./fixtures/fake-gis"
@@ -43,7 +44,7 @@ async function expireWithAChange(page: Page) {
   return main
 }
 
-test("Publish stays on offer, asks to reconnect, then asks to publish the changes (S1, S2, S3)", async ({
+test("Publish stays on offer, asks to reconnect, Cancel keeps the change, then asks to publish the changes (S1, S2, S3)", async ({
   page,
   gis,
   sheets,
@@ -56,7 +57,7 @@ test("Publish stays on offer, asks to reconnect, then asks to publish the change
   await publish.click()
 
   const dialog = reconnectDialog(page)
-  const reconnect = dialog.getByRole("button", { name: "Reconnect" })
+  const reconnect = reconnectButton(page)
   await expect(reconnect).toBeFocused()
 
   // Cancelled, the dialog gives focus back to Publish and keeps the change.
@@ -67,7 +68,9 @@ test("Publish stays on offer, asks to reconnect, then asks to publish the change
   expect(sheets.writes).toEqual([])
 
   await publish.click()
+  await expect(reconnect).toBeFocused()
   const requests = gis.tokenRequests.length
+  const tokensBefore = sheets.tokens.length
   await reconnect.click()
 
   // Google's popup came from the click itself: the fake fails the test otherwise.
@@ -80,6 +83,9 @@ test("Publish stays on offer, asks to reconnect, then asks to publish the change
   expect(sheets.writes).toEqual([])
   await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
-  // The write went with the new session's token.
-  expect(sheets.tokens.at(-1)).toBe("e2e-token-2")
+  // Every request since reconnecting, the write among them, carries the new session's
+  // token: the fake still accepts the old one, so only this proves it.
+  const since = sheets.tokens.slice(tokensBefore)
+  expect(since.length).toBeGreaterThan(1)
+  expect(new Set(since)).toEqual(new Set(["e2e-token-2"]))
 })

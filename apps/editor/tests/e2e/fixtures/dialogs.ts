@@ -448,29 +448,12 @@ export async function confirmPublish(
   await expect(notice).toBeFocused()
 }
 
-/**
- * The dialog an action that needs a session asks in once it has expired (STY-057), in
- * each language: `reconnect` is its button that reconnects.
- */
-const RECONNECT = {
-  en: { title: "Your session has expired", reconnect: "Reconnect" },
-  cy: { title: "Mae eich sesiwn wedi dod i ben", reconnect: "Ailgysylltu" },
-} as const satisfies Record<Language, { title: string; reconnect: string }>
-
-/** The reconnect dialog, in `language`. */
-export function reconnectDialog(
-  page: Page,
-  language: Language = "en",
-): Locator {
-  return page.getByRole("alertdialog", { name: RECONNECT[language].title })
+/** The dialog an action that needs a session asks in once it has expired (STY-057). */
+export function reconnectDialog(page: Page): Locator {
+  return page.getByRole("alertdialog", { name: "Your session has expired" })
 }
 
-/** The reconnect dialog's Reconnect, in `language`. */
-export function reconnectButton(
-  page: Page,
-  language: Language = "en",
-): Locator {
-  return reconnectDialog(page, language).getByRole("button", {
-    name: RECONNECT[language].reconnect,
-  })
+/** The reconnect dialog's Reconnect. */
+export function reconnectButton(page: Page): Locator {
+  return reconnectDialog(page).getByRole("button", { name: "Reconnect" })
 }

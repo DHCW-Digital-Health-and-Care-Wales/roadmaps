@@ -98,8 +98,9 @@ tours.
   version changes per build.
 - Compare a computed style with the token it comes from, `tokenColour(page, "--token")`
   (`fixtures/look.ts`), never a copied colour.
-- Keep every axe scan. Remove one only where another axe scan holds the same page and
-  state, and name that scan in the PR; never ask the owner.
+- Keep every axe scan. Remove one only where another axe scan holds the same page,
+  state, theme, width and language, and name that scan in the PR; that decides it, with
+  no question to the owner.
 - The focus tours need every tab stop to match `focus-fill`, `focus-ring` or
   `focus-link`: a new kind of control uses one of them, or the check gains a utility.
 - The item dialog's tour (`focus-indicator.spec.ts`) opens each form field that opens

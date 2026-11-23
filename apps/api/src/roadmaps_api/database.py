@@ -1,14 +1,13 @@
-"""The engine and the session each request gets."""
+"""The engine, and the session factory a service takes."""
 
-from collections.abc import Iterator
 from typing import Annotated, Final
 
 from fastapi import Depends, Request
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-# About two seconds for each wait a readiness check can meet: a pooled connection, a
-# new connection (libpq's floor), and the query itself (`ReadinessRepository`).
+# About two seconds for each wait a query can meet: a pooled connection, a new
+# connection (libpq's floor) and, for the readiness check, the query itself.
 TIMEOUT_SECONDS: Final = 2
 # SQLAlchemy's defaults, named so a test can exhaust the pool.
 POOL_SIZE: Final = 5
@@ -28,11 +27,9 @@ def create_database_engine(url: str) -> Engine:
     )
 
 
-def get_session(request: Request) -> Iterator[Session]:
-    """A session for one request; closing it rolls back whatever was left open."""
-    factory: sessionmaker[Session] = request.app.state.sessions
-    with factory() as session:
-        yield session
+def get_sessions(request: Request) -> sessionmaker[Session]:
+    sessions: sessionmaker[Session] = request.app.state.sessions
+    return sessions
 
 
-DbSession = Annotated[Session, Depends(get_session)]
+Sessions = Annotated[sessionmaker[Session], Depends(get_sessions)]

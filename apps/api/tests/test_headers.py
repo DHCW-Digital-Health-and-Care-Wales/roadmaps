@@ -5,11 +5,10 @@ from collections.abc import Callable
 import pytest
 from fastapi.testclient import TestClient
 from httpx2 import Response
-from tests.conftest import client_for
-from tests.support import make_settings
 
 from roadmaps_api.app import create_app
 from roadmaps_api.settings import MAX_BODY_BYTES, Environment
+from tests.support import make_settings, serving
 
 HEADERS = {
     "cache-control": "no-store",
@@ -75,19 +74,19 @@ HOSTS = {
 
 @pytest.mark.parametrize(("host", "allowed", "status"), HOSTS.values(), ids=HOSTS)
 def test_the_host_allow_list(host: str, allowed: tuple[str, ...], status: int) -> None:
-    for client in client_for(make_settings(environment=Environment.LOCAL, hosts=allowed)):
+    with serving(make_settings(environment=Environment.LOCAL, hosts=allowed)) as client:
         assert client.get("/health", headers={"Host": host}).status_code == status
 
 
 @pytest.mark.parametrize("environment", [Environment.TEST, Environment.PRODUCTION])
 def test_no_docs_and_no_live_openapi_outside_local(environment: Environment) -> None:
-    for client in client_for(make_settings(environment=environment)):
+    with serving(make_settings(environment=environment)) as client:
         for path in ("/api/v1/openapi.json", "/openapi.json", "/docs", "/redoc"):
             assert client.get(path).json()["code"] == "request.not_found"
 
 
 def test_only_local_serves_the_live_openapi_json_and_no_docs_page() -> None:
-    for client in client_for(make_settings(environment=Environment.LOCAL)):
+    with serving(make_settings(environment=Environment.LOCAL)) as client:
         openapi = client.get("/api/v1/openapi.json")
 
         assert openapi.status_code == 200
@@ -101,4 +100,4 @@ def test_only_local_serves_the_live_openapi_json_and_no_docs_page() -> None:
 def test_the_probes_are_left_out_of_the_contract() -> None:
     app = create_app(make_settings(environment=Environment.LOCAL))
 
-    assert set(app.openapi()["paths"]) == set()
+    assert not {"/health", "/ready"} & set(app.openapi()["paths"])

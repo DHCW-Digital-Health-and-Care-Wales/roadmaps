@@ -5,16 +5,20 @@ route of their own. The server test runs `create_test_app` under uvicorn.
 """
 
 import os
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Annotated, Final
 
 from fastapi import APIRouter, FastAPI, Query
+from fastapi.responses import PlainTextResponse
+from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
 # Imported only to raise one, as FastAPI's routing would for a status it never uses.
 from starlette.exceptions import HTTPException  # noqa: TID251
 
 from roadmaps_api.app import create_app
-from roadmaps_api.settings import Environment, Settings
+from roadmaps_api.settings import Environment, Settings, load_settings
 
 TEST_HOST: Final = "testserver"
 # A port where nothing listens: the database is down.
@@ -58,10 +62,31 @@ def add_test_routes(app: FastAPI) -> FastAPI:
     def teapot() -> None:
         raise HTTPException(status_code=418, detail=PLANTED)
 
+    @router.get("/items/{item_id}")
+    def item(item_id: str) -> dict[str, str]:
+        return {"item": item_id}
+
     app.include_router(router)
+
+    # A mounted app, under a template of its own, and a mounted app with no routes.
+    tenant = FastAPI()
+
+    @tenant.get("/items/{item_id}")
+    def tenant_item(item_id: str) -> dict[str, str]:
+        return {"item": item_id}
+
+    app.mount("/test/tenants/{tenant}", tenant)
+    app.mount("/test/raw", PlainTextResponse("raw"))
     return app
+
+
+@contextmanager
+def serving(settings: Settings) -> Generator[TestClient]:
+    """A client of the test app, with its lifespan run."""
+    with TestClient(add_test_routes(create_app(settings))) as client:
+        yield client
 
 
 def create_test_app() -> FastAPI:
     """Uvicorn's factory for the server test: the settings come from the environment."""
-    return add_test_routes(create_app())
+    return add_test_routes(create_app(load_settings()))

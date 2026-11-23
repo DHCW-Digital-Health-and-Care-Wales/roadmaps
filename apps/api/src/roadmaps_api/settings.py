@@ -7,9 +7,12 @@ No `.env` file is read, so no file in a checkout can switch an environment to lo
 import logging
 import os
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Final
+
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +34,8 @@ class Environment(StrEnum):
 @dataclass(frozen=True, kw_only=True)
 class Settings:
     environment: Environment
-    database_url: str
+    # Out of the repr, so it never reaches an error's text.
+    database_url: str = field(repr=False)
     # Host names without a port; `*` and `*.example` forms only in a local environment.
     allowed_hosts: tuple[str, ...]
     max_body_bytes: int = MAX_BODY_BYTES
@@ -64,7 +68,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
             invalid.append(ENV)
 
     database_url = environ.get(DATABASE_URL, "").strip()
-    if not database_url.startswith(DATABASE_URL_SCHEME):
+    if not _is_database_url(database_url):
         invalid.append(DATABASE_URL)
 
     hosts = tuple(host.strip().lower() for host in environ.get(ALLOWED_HOSTS, "").split(","))
@@ -76,3 +80,14 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         logger.error("settings.invalid", extra={"invalid_settings": invalid})
         raise SettingsError(invalid)
     return Settings(environment=environment, database_url=database_url, allowed_hosts=hosts)
+
+
+def _is_database_url(url: str) -> bool:
+    """A psycopg URL SQLAlchemy can parse, so the engine never fails on it with its text."""
+    if not url.startswith(DATABASE_URL_SCHEME):
+        return False
+    try:
+        make_url(url)
+    except ArgumentError, ValueError:
+        return False
+    return True

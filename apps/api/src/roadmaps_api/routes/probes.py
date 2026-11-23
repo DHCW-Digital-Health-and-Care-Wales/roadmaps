@@ -1,10 +1,8 @@
-"""The platform's probes, at the root and unversioned (ADR-017 _STY-090 amendments_)."""
+"""The platform's probes, at the root and unversioned (ADR-017's amendments)."""
 
 from fastapi import APIRouter
 
-from roadmaps_api.database import DbSession
-from roadmaps_api.repositories.readiness import ReadinessRepository
-from roadmaps_api.services.readiness import ReadinessService
+from roadmaps_api.services.readiness import Readiness
 
 router = APIRouter(include_in_schema=False)
 
@@ -16,7 +14,7 @@ def health() -> dict[str, str]:
 
 
 @router.get("/ready")
-def ready(session: DbSession) -> dict[str, str]:
+def ready(readiness: Readiness) -> dict[str, str]:
     """The database answers too."""
-    ReadinessService(ReadinessRepository(session)).check()
+    readiness.check()
     return {"status": "ok"}

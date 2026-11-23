@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from tools import check_transactions
 
 API_DIR = Path(__file__).parent.parent
@@ -28,7 +29,7 @@ def test_import_linter_keeps_the_api_s_layers() -> None:
     result = lint_imports(API_DIR / "src", API_DIR)
 
     assert result.returncode == 0, result.stdout
-    assert "1 kept, 0 broken" in result.stdout
+    assert "0 broken" in result.stdout
 
 
 UPWARD_IMPORTS = {

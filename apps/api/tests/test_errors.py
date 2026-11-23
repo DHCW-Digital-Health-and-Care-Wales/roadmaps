@@ -6,9 +6,9 @@ from collections.abc import Callable, Iterator
 import pytest
 from fastapi.testclient import TestClient
 from httpx2 import Response
-from tests.support import PLANTED
 
 from roadmaps_api.settings import MAX_BODY_BYTES
+from tests.support import PLANTED
 
 
 def too_large_stream() -> Iterator[bytes]:
@@ -49,6 +49,16 @@ REFUSALS = {
         422,
         "request.invalid",
         {"errors": [{"loc": ["body", 0], "type": "json_invalid"}]},
+    ),
+    "a body that is not UTF-8": (
+        lambda c: c.post(
+            "/test/echo",
+            content=b'{"name": "\xff"}',
+            headers={"Content-Type": "application/json"},
+        ),
+        422,
+        "request.invalid",
+        {"errors": [{"loc": ["body"], "type": "body_unreadable"}]},
     ),
     "a declared body over 1 MiB": (
         lambda c: c.post("/test/echo", content=PLANTED.encode().ljust(MAX_BODY_BYTES + 1)),
@@ -120,3 +130,7 @@ def test_a_valid_request_passes_through(client: TestClient) -> None:
 
     assert response.status_code == 200
     assert response.json() == {"name": "a", "count": 2}
+
+
+def test_a_405_names_the_methods_the_path_allows(client: TestClient) -> None:
+    assert client.post("/health").headers["Allow"] == "GET"

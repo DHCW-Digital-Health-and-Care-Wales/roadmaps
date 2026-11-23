@@ -220,14 +220,15 @@ teardown() {
   if [ -f "$ENV_FILE" ]; then
     # shellcheck disable=SC1090
     . "$ENV_FILE"
+    # The database first, so stopping DB_PORT's listener below finds none.
+    if [ -n "${WORKTREE_SLOT:-}" ]; then
+      remove_database "${API_DB_PROJECT:-$(db_project "$WORKTREE_SLOT")}"
+    fi
     local var
     for var in "${PORT_VARS[@]}"; do
       # A file written before a port was added lacks its line.
       if [ -n "${!var:-}" ]; then stop_port "${!var}"; fi
     done
-    if [ -n "${WORKTREE_SLOT:-}" ]; then
-      remove_database "${API_DB_PROJECT:-$(db_project "$WORKTREE_SLOT")}"
-    fi
   fi
   lock
   release_slot

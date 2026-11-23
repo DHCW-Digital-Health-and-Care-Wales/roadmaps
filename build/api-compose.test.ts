@@ -49,6 +49,9 @@ describe("apps/api/compose.yaml", () => {
 
     expect(images).toHaveLength(1)
     expect(images[0]).toMatch(/^postgres:18@sha256:[0-9a-f]{64}$/)
-    expect(ciImages).toEqual(images)
+    expect(
+      ciImages,
+      "Give api-verify's postgres service in .github/workflows/ci.yml the image of apps/api/compose.yaml.",
+    ).toEqual(images)
   })
 })

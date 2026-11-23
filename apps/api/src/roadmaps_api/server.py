@@ -13,7 +13,7 @@ import uvicorn
 from roadmaps_api.logs import LOG_CONFIG
 from roadmaps_api.settings import SettingsError, load_settings
 
-APP: Final = "roadmaps_api.app:create_app"
+APP: Final = "roadmaps_api.app:factory"
 
 
 def serve(*, port: int, reload: bool, app: str = APP) -> None:
@@ -38,8 +38,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args(argv)
     logging.config.dictConfig(LOG_CONFIG)
-    # Checked before uvicorn starts, which would print the factory's exception, with
-    # its text, to stderr.
+    # Checked before uvicorn starts too, so bad settings end the command, not only a
+    # reload worker the reloader would wait on.
     try:
         load_settings()
     except SettingsError:

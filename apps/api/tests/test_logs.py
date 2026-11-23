@@ -5,25 +5,27 @@ import json
 import logging
 import logging.config
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from httpx2 import Response
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-from tests.conftest import client_for
-from tests.support import PLANTED, database_url, make_settings
 
 from roadmaps_api.database import create_database_engine
-from roadmaps_api.logs import LOG_CONFIG, JsonFormatter, StdoutHandler
+from roadmaps_api.logs import JsonFormatter, StdoutHandler
+from roadmaps_api.settings import MAX_BODY_BYTES
+from tests.support import PLANTED, database_url, make_settings, serving
 
 
 @pytest.fixture
-def lines(capsys: pytest.CaptureFixture[str]) -> Iterator[Lines]:
-    logging.config.dictConfig(LOG_CONFIG)
-    yield Lines(capsys)
-    logging.config.dictConfig({"version": 1, "disable_existing_loggers": False})
+def lines(
+    capsys: pytest.CaptureFixture[str],
+    json_logging: None,  # noqa: ARG001 - requested for its configuration
+) -> Lines:
+    return Lines(capsys)
 
 
 class Lines:
@@ -54,14 +56,77 @@ def test_an_access_line_holds_the_allow_listed_fields_and_the_response_s_id(
         "message",
         "request_id",
         "method",
-        "path",
+        "route",
         "status",
         "duration_ms",
     }
     assert line["message"] == "request"
     assert line["request_id"] == request_id
-    assert (line["method"], line["path"], line["status"]) == ("GET", "/nowhere", 404)
+    assert (line["method"], line["route"], line["status"]) == ("GET", "unmatched", 404)
     assert isinstance(line["duration_ms"], float)
+
+
+ROUTES = {
+    "a route with a path parameter": (
+        lambda c: c.get(f"/test/items/{PLANTED}"),
+        200,
+        "/test/items/{item_id}",
+    ),
+    "a route in a mounted app": (
+        lambda c: c.get(f"/test/tenants/{PLANTED}/items/{PLANTED}"),
+        200,
+        "/test/tenants/{tenant}/items/{item_id}",
+    ),
+    "a path a mounted app does not route": (
+        lambda c: c.get(f"/test/tenants/{PLANTED}/{PLANTED}"),
+        404,
+        "unmatched",
+    ),
+    "a mounted app with no routes": (
+        lambda c: c.get(f"/test/raw/{PLANTED}"),
+        200,
+        "/test/raw/{path:path}",
+    ),
+    "an unknown path": (lambda c: c.get(f"/{PLANTED}"), 404, "unmatched"),
+    "a redirect to the path without its trailing slash": (
+        lambda c: c.get(f"/test/items/{PLANTED}/", follow_redirects=False),
+        307,
+        "unmatched",
+    ),
+    "a method the path does not take": (lambda c: c.delete("/test/echo"), 405, "/test/echo"),
+    "a body that fails validation": (
+        lambda c: c.post(f"/test/echo?{PLANTED}=1", json={}),
+        422,
+        "/test/echo",
+    ),
+    # Refused before routing, so no route took them.
+    "a body over the limit": (
+        lambda c: c.post("/test/echo", content=b"x" * (MAX_BODY_BYTES + 1)),
+        413,
+        "unmatched",
+    ),
+    "a refused Host": (
+        lambda c: c.get(f"/test/items/{PLANTED}", headers={"Host": "elsewhere.example"}),
+        400,
+        "unmatched",
+    ),
+    "an unexpected error": (lambda c: c.get("/test/boom"), 500, "/test/boom"),
+    "a probe that fails": (lambda c: c.get("/ready"), 503, "/ready"),
+}
+
+
+@pytest.mark.parametrize(("send", "status", "route"), ROUTES.values(), ids=ROUTES)
+def test_the_access_line_names_the_route_by_its_template_never_the_path(
+    client: TestClient,
+    lines: Lines,
+    send: Callable[[TestClient], Response],
+    status: int,
+    route: str,
+) -> None:
+    assert send(client).status_code == status
+
+    [access] = [line for line in lines.read() if line.get("message") == "request"]
+    assert (access["route"], access["status"]) == (route, status)
 
 
 def test_each_request_gets_its_own_id(client: TestClient) -> None:
@@ -101,11 +166,11 @@ def test_ready_s_503_logs_a_warning_with_the_code_and_the_exception_s_type(
         "code": "service.not_ready",
         "exception_type": "sqlalchemy.exc.OperationalError",
     }
-    assert (access["path"], access["status"]) == ("/ready", 503)
+    assert (access["route"], access["status"]) == ("/ready", 503)
 
 
 def test_a_probe_that_succeeds_writes_no_access_line(lines: Lines) -> None:
-    for client in client_for(make_settings(database_url())):
+    with serving(make_settings(database_url())) as client:
         assert client.get("/health").status_code == 200
         assert client.get("/ready").status_code == 200
 
@@ -126,7 +191,7 @@ def test_another_library_s_message_and_arguments_are_dropped(lines: Lines) -> No
 
 
 def test_a_warning_reaches_the_log_without_its_text(lines: Lines) -> None:
-    for _client in client_for(make_settings()):
+    with serving(make_settings()):
         logging.getLogger("py.warnings").warning("x.py:1: UserWarning: %s", PLANTED)
 
     [line] = lines.read()

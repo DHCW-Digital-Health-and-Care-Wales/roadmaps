@@ -11,12 +11,28 @@ from roadmaps_api.database import create_database_engine
 from roadmaps_api.errors import register_error_handlers
 from roadmaps_api.middleware import BodyLimit, HostAllowList, RequestContext
 from roadmaps_api.routes import api_v1, probes
-from roadmaps_api.settings import Settings, load_settings
+from roadmaps_api.settings import Settings, SettingsError, load_settings
+
+logger = logging.getLogger(__name__)
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
-    """Build the API: uvicorn's factory, which reads the settings from the environment."""
-    settings = settings or load_settings()
+def factory() -> FastAPI:
+    """The API from the environment's settings, as uvicorn's factory, or exit 1.
+
+    An exception left to uvicorn reaches the interpreter, or a reload worker's process,
+    which prints it, with its text, on stderr; here it is logged as its type and frames.
+    """
+    try:
+        return create_app(load_settings())
+    except SettingsError:
+        # load_settings has logged each bad setting's name.
+        raise SystemExit(1) from None
+    except Exception:
+        logger.exception("app.failed")
+        raise SystemExit(1) from None
+
+
+def create_app(settings: Settings) -> FastAPI:
     # Python's warnings go to the JSON log, not to stderr with their text.
     logging.captureWarnings(capture=True)
     engine = create_database_engine(settings.database_url)

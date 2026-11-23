@@ -1,7 +1,7 @@
 # Contributing
 
-Thanks for helping improve DHCW's roadmaps: the Roadmap Editor (`apps/editor/`) and the
-public site (`apps/public-site/`).
+Thanks for helping improve DHCW's roadmaps: the Roadmap Editor (`apps/editor/`), the
+public site (`apps/public-site/`) and the API (`apps/api/`).
 
 ## Content or code?
 
@@ -18,10 +18,13 @@ public site (`apps/public-site/`).
    branch from `main` with a short descriptive name, for example `fix-focus-order`.
 2. Make your change, and try it with the app's dev server
    ([the editor](apps/editor/README.md#getting-started),
-   [the public site](apps/public-site/README.md#run-locally)).
-3. Run the checks: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm test`, and
-   the E2E suite of each app you changed (`pnpm editor:test:e2e`, `pnpm site:test:e2e`).
-   CI runs the same checks, and the public site's Lighthouse budgets.
+   [the public site](apps/public-site/README.md#run-locally),
+   [the API](apps/api/README.md#run-locally)).
+3. Run the checks: `pnpm format:check`, and the `typecheck`, `lint` and `test` scripts of
+   each app you changed (`pnpm editor:test`, `pnpm site:test`, `pnpm api:test`, …), with
+   its E2E suite (`pnpm editor:test:e2e`, `pnpm site:test:e2e`).
+   `pnpm typecheck && pnpm lint && pnpm test` runs every app's. CI runs the same checks,
+   and the public site's Lighthouse budgets.
 4. Open a pull request into `main` and fill in the template. Keep it small and focused
    on one change.
 5. The code owner ([`.github/CODEOWNERS`](.github/CODEOWNERS)) reviews it, and the _CI

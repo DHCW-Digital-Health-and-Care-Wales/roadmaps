@@ -39,9 +39,10 @@ Licensed under the [MIT License](LICENSE).
 You need Node.js 26 (see `.nvmrc`) and pnpm, e.g.
 `npm install --global pnpm` (see <https://pnpm.io/installation>); any recent pnpm switches
 itself to the version pinned in `packageManager` (Node 25+ no longer ships Corepack).
-For the API you also need [uv](https://docs.astral.sh/uv/getting-started/installation/),
-which fetches the pinned Python, and Docker with Compose, which runs its database.
-Then:
+You also need [uv](https://docs.astral.sh/uv/getting-started/installation/), which
+fetches the API's pinned Python, and Docker with Compose, which runs the API's database:
+the push hook's `pnpm typecheck` runs the API's ty through uv, and `pnpm test` runs the
+API's tests against that database. Then:
 
 ```sh
 git clone https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps.git

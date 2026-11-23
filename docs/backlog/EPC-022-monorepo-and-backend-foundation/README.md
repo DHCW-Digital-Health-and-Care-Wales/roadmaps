@@ -132,7 +132,7 @@ Owner answers of 2026-11-23 (STY-089 grilling), recorded in STY-089 D2–D16:
     config, data and code live: a package only for code two or more apps import that
     outlives the Sheets format.
 
-Owner answers of 2026-11-23 (STY-090 grilling), recorded in STY-090 D1–D34 and ADR-017
+Owner answers of 2026-11-23 (STY-090 grilling), recorded in STY-090 D1–D35 and ADR-017
 _STY-090 amendments_:
 
 19. **The API's paths**: contract routes under `/api/v1`, the probes `/health` and
@@ -142,7 +142,8 @@ _STY-090 amendments_:
     slot's database, which teardown removes with its volume; settings from environment
     variables only, failing closed; JSON logs everywhere, with a request ID in each line
     and in `X-Request-ID`; ADR-020's headers, a 1 MiB body limit and the `Host`
-    allow-list from the start; logs hold only ADR-018's allow-listed fields; 100%
+    allow-list from the start; logs hold only ADR-018's allow-listed fields, naming a
+    request by its route's template, never its path; 100%
     branch coverage; the gate before a PR runs only the apps a change touches. Tracing
     follows as STY-100; the image and the production server are EPC-023's.
 

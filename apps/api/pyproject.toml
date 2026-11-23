@@ -36,7 +36,7 @@ exclude-newer = "7 days"
 [tool.ruff]
 line-length = 100
 target-version = "py315"
-src = ["src", "tests", "tools"]
+src = ["src", "."]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -44,26 +44,19 @@ select = ["ALL"]
 ignore = [
   "COM812", # trailing commas are the formatter's, which this rule fights
   "CPY001", # no copyright header: the licence is the repository's
-  "D100",   # a module docstring only where it says something the code does not
-  "D101",   # likewise a class's
-  "D102",   # a method's
-  "D103",   # a function's
-  "D104",   # a package's
-  "D105",   # a magic method's
-  "D107",   # an __init__'s
+  "D1",     # a docstring only where it says what the code does not
   "D203",   # conflicts with D211: no blank line before a class docstring
   "D213",   # conflicts with D212: a docstring's summary starts on its first line
   "D401",   # a docstring may say what a thing is, not only command
-  "TC001",  # imports stay eager: FastAPI reads annotations at run time, and moving
-  "TC002",  # them into TYPE_CHECKING blocks or lazy imports would hide from it what
-  "TC003",  # it needs, for no gain at start-up
+  "TC00",   # imports stay eager: FastAPI reads annotations at run time, and moving
+  #           them into TYPE_CHECKING blocks or lazy imports would hide from it what
+  #           it needs, for no gain at start-up
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = [
   "S101",    # pytest asserts with assert
   "PLR2004", # a test's expected numbers are its subject
-  "INP001",  # tests/ is a directory pytest walks, not a package
 ]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]

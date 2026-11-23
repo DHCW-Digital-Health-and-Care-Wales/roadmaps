@@ -41,8 +41,9 @@ _Not acceptance criteria._
 - Open for its criteria (STY-090's security review): whether an inbound `traceparent`
   is honoured, and from whom, since OpenTelemetry's default propagators take it from any
   caller and the trace ID becomes the request ID.
-- Spans hold STY-090 S7's allow-list (STY-090 D30): no query string (`url.query`), no
-  exception message and no SQL parameters, with a planted-value test as in S7.
+- Spans hold STY-090 S7's allow-list (STY-090 D30, D35): the route's template, never the
+  path (`url.path`), no query string (`url.query`), no exception message and no SQL
+  parameters, with a planted-value test as in S7.
 
 ## Decisions
 
@@ -55,3 +56,7 @@ _Not acceptance criteria._
 - **D4** (agent, 2026-11-23, STY-090's security review, from STY-090 D30 and D33): spans
   hold STY-090 S7's log allow-list (no query string, exception message or SQL
   parameters), and Jaeger is bound to 127.0.0.1 with its image pinned by digest.
+- **D5** (agent, 2026-11-23, from STY-090 D35, the owner's answer narrowing S7): spans
+  name a request by its route's template (`http.route`), or `unmatched`, never by the
+  path a caller sent (`url.path`), as the access line does. Awaits the owner's
+  acceptance with this story's criteria.

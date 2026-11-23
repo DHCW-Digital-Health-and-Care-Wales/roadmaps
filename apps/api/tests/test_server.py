@@ -6,7 +6,6 @@ reload, the log configuration and the environment `scripts/api.sh dev` uses.
 """
 
 import json
-import logging.config
 import os
 import signal
 import socket
@@ -19,9 +18,9 @@ from pathlib import Path
 
 import httpx2
 import pytest
-from tests.support import DOWN_DATABASE_URL, PLANTED
 
-from roadmaps_api import server
+from roadmaps_api import app, server
+from tests.support import DOWN_DATABASE_URL, PLANTED
 
 API_DIR = Path(__file__).parent.parent
 DEV_ENVIRONMENT = {
@@ -116,8 +115,8 @@ def test_the_server_logs_no_query_string_or_exception_text_on_either_stream(
     lines = run.lines()
     assert all(isinstance(line, dict) for line in lines)
     access = [line for line in lines if line.get("message") == "request"]
-    assert {(line["path"], line["status"], line["request_id"]) for line in access} >= {
-        ("/api/v1/nothing", 404, not_found.headers["X-Request-ID"]),
+    assert {(line["route"], line["status"], line["request_id"]) for line in access} >= {
+        ("unmatched", 404, not_found.headers["X-Request-ID"]),
         ("/test/boom", 500, failed.headers["X-Request-ID"]),
     }
     [failure] = [line for line in lines if line.get("message") == "request.failed"]
@@ -126,12 +125,17 @@ def test_the_server_logs_no_query_string_or_exception_text_on_either_stream(
     assert any(line["logger"] == "uvicorn.error" for line in lines)
 
 
-def test_bad_settings_stop_the_server_naming_each_one_never_its_value(tmp_path: Path) -> None:
-    environment = {
-        **DEV_ENVIRONMENT,
-        "ROADMAPS_ENV": PLANTED,
-        "ROADMAPS_DATABASE_URL": f"mysql://{PLANTED}",
-    }
+BAD_DATABASE_URLS = {
+    "another driver's": f"mysql://{PLANTED}",
+    "a password with an unencoded @ and :": f"postgresql+psycopg://u:p@s:{PLANTED}@db/x",
+}
+
+
+@pytest.mark.parametrize("url", BAD_DATABASE_URLS.values(), ids=BAD_DATABASE_URLS)
+def test_bad_settings_stop_the_server_naming_each_one_never_its_value(
+    tmp_path: Path, url: str
+) -> None:
+    environment = {**DEV_ENVIRONMENT, "ROADMAPS_ENV": PLANTED, "ROADMAPS_DATABASE_URL": url}
 
     process = run_server(
         ["-m", "roadmaps_api.server", "--port", str(free_port())], environment, tmp_path
@@ -146,6 +150,7 @@ def test_bad_settings_stop_the_server_naming_each_one_never_its_value(tmp_path: 
     assert invalid["invalid_settings"] == ["ROADMAPS_ENV", "ROADMAPS_DATABASE_URL"]
 
 
+@pytest.mark.usefixtures("json_logging")
 def test_the_command_line_starts_the_server_on_its_port_with_reload(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -155,6 +160,36 @@ def test_the_command_line_starts_the_server_on_its_port_with_reload(
         monkeypatch.setenv(name, value)
 
     server.main(["--port", "8123", "--reload"])
-    logging.config.dictConfig({"version": 1, "disable_existing_loggers": False})
 
     assert started == [{"port": 8123, "reload": True}]
+
+
+@pytest.mark.usefixtures("json_logging")
+def test_the_factory_exits_logging_a_failure_s_type_never_its_text(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fail(_url: str) -> None:
+        raise ValueError(PLANTED)
+
+    for name, value in DEV_ENVIRONMENT.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setattr(app, "create_database_engine", fail)
+
+    with pytest.raises(SystemExit) as exited:
+        app.factory()
+
+    captured = capsys.readouterr()
+    [line] = [json.loads(text) for text in captured.out.splitlines()]
+    assert exited.value.code == 1
+    assert (line["message"], line["exception_type"]) == ("app.failed", "builtins.ValueError")
+    assert PLANTED not in captured.out + captured.err
+
+
+@pytest.mark.usefixtures("json_logging")
+def test_the_factory_exits_on_bad_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ROADMAPS_DATABASE_URL", raising=False)
+
+    with pytest.raises(SystemExit) as exited:
+        app.factory()
+
+    assert exited.value.code == 1

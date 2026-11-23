@@ -37,6 +37,10 @@ BAD = {
         {"ROADMAPS_DATABASE_URL": "postgresql://u:SECRET-PASSWORD@db/x"},
         ["ROADMAPS_DATABASE_URL"],
     ),
+    "a database URL SQLAlchemy cannot parse": (
+        {"ROADMAPS_DATABASE_URL": "postgresql+psycopg://u:p@s:SECRET-PASSWORD@db/x"},
+        ["ROADMAPS_DATABASE_URL"],
+    ),
     "unset allowed hosts": ({"ROADMAPS_ALLOWED_HOSTS": None}, ["ROADMAPS_ALLOWED_HOSTS"]),
     "empty allowed hosts": ({"ROADMAPS_ALLOWED_HOSTS": ""}, ["ROADMAPS_ALLOWED_HOSTS"]),
     "an empty entry among the hosts": (
@@ -85,3 +89,7 @@ def test_settings_come_from_the_environment_never_a_dotenv_file(
     monkeypatch.delenv("ROADMAPS_ENV", raising=False)
 
     assert load_settings().environment is Environment.PRODUCTION
+
+
+def test_the_settings_repr_leaves_out_the_database_url() -> None:
+    assert "SECRET-PASSWORD" not in repr(load_settings(VALID))

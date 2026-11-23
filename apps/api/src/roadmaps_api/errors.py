@@ -5,6 +5,7 @@ the same envelope here. A refusal never carries the submitted input, a traceback
 exception's text.
 """
 
+from collections.abc import Mapping
 from enum import StrEnum
 from http import HTTPStatus
 from typing import Any, Final
@@ -13,8 +14,8 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-# The one reference to it: FastAPI's routing raises it for an unknown path or method,
-# so its handler is registered here. Routes raise `ApiError`.
+# The one reference to it: FastAPI raises it for an unknown path or method and an
+# unreadable body, so its handler is registered here. Routes raise `ApiError`.
 from starlette.exceptions import HTTPException  # noqa: TID251
 
 
@@ -51,9 +52,15 @@ _ERRORS: Final[dict[ErrorCode, tuple[HTTPStatus, str]]] = {
     ),
 }
 
-_ROUTING_CODES: Final = {
-    HTTPStatus.NOT_FOUND: ErrorCode.NOT_FOUND,
-    HTTPStatus.METHOD_NOT_ALLOWED: ErrorCode.METHOD_NOT_ALLOWED,
+# The statuses FastAPI raises itself, as Starlette's HTTPException, and their codes and
+# params: a 400 is a body it could not read (not UTF-8, say), before any validation.
+_FASTAPI_REFUSALS: Final[dict[HTTPStatus, tuple[ErrorCode, dict[str, Any]]]] = {
+    HTTPStatus.BAD_REQUEST: (
+        ErrorCode.INVALID,
+        {"errors": [{"loc": ["body"], "type": "body_unreadable"}]},
+    ),
+    HTTPStatus.NOT_FOUND: (ErrorCode.NOT_FOUND, {}),
+    HTTPStatus.METHOD_NOT_ALLOWED: (ErrorCode.METHOD_NOT_ALLOWED, {}),
 }
 
 
@@ -66,11 +73,16 @@ class ApiError(Exception):
         self.params = params or {}
 
 
-def error_response(code: ErrorCode, params: dict[str, Any] | None = None) -> JSONResponse:
+def error_response(
+    code: ErrorCode,
+    params: dict[str, Any] | None = None,
+    headers: Mapping[str, str] | None = None,
+) -> JSONResponse:
     status, detail = _ERRORS[code]
     return JSONResponse(
         {"detail": detail, "code": code.value, "params": params or {}},
         status_code=status,
+        headers=headers,
     )
 
 
@@ -87,9 +99,11 @@ def register_error_handlers(app: FastAPI) -> None:
         return error_response(ErrorCode.INVALID, {"errors": errors})
 
     @app.exception_handler(HTTPException)
-    def routing_error(_request: Request, exc: HTTPException) -> JSONResponse:
-        code = _ROUTING_CODES.get(HTTPStatus(exc.status_code))
-        if code is None:
+    def fastapi_refusal(_request: Request, exc: HTTPException) -> JSONResponse:
+        refusal = _FASTAPI_REFUSALS.get(HTTPStatus(exc.status_code))
+        if refusal is None:
             # FastAPI raises no other status itself: any other is an unexpected error.
             raise exc
-        return error_response(code)
+        code, params = refusal
+        # A 405's Allow header among them (RFC 9110).
+        return error_response(code, params, exc.headers)

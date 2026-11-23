@@ -216,10 +216,10 @@ variables: they are compiled into the public JavaScript.
 From the repository root:
 
 ```sh
-pnpm typecheck      # tsc -b over app, config and E2E projects, and the root's own TypeScript
-pnpm lint           # ESLint, zero warnings allowed (includes layering, i18n and design-token rules)
-pnpm format:check   # Prettier over the whole repository (pnpm format to fix)
-pnpm test           # Vitest unit + component tests; no network, no Google
+pnpm editor:typecheck  # tsc -b over app, config and E2E projects
+pnpm editor:lint       # ESLint, zero warnings allowed (includes layering, i18n and design-token rules)
+pnpm format:check      # Prettier over the whole repository (pnpm format to fix)
+pnpm editor:test       # Vitest unit + component tests; no network, no Google
 pnpm test:docs      # the Markdown tests alone (links, agent guides)
 pnpm editor:build   # production build into apps/editor/dist/
 

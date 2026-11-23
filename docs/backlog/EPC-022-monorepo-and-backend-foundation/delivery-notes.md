@@ -23,5 +23,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   in the site's script (react, react-dom or lucide-react) runs `pnpm site:lighthouse`
   before choosing its version.
 - **FastAPI already brings `opentelemetry-api`**: FastAPI 0.163 depends on it and runs
-  each `def` route through `fastapi/telemetry/`, so the tracing story reads what that
-  emits before adding an instrumentation of its own.
+  each `def` route through `fastapi/telemetry/`, whose spans carry `url.query` once an
+  SDK is configured, so the tracing story reads what that emits, against the log
+  allow-list, before adding an instrumentation of its own.

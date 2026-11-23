@@ -6,7 +6,8 @@ import logging
 import pytest
 from starlette.types import Message, Receive, Scope, Send
 
-from roadmaps_api.middleware import BodyLimit, RequestContext
+from roadmaps_api.middleware import PROBE_PATHS, BodyLimit, RequestContext
+from roadmaps_api.routes import probes
 
 SCOPE: Scope = {"type": "http", "method": "POST", "path": "/x", "headers": []}
 
@@ -72,3 +73,7 @@ def test_the_body_limit_joins_a_streamed_body_under_the_limit() -> None:
     asyncio.run(BodyLimit(app, max_bytes=8)(SCOPE, body, send))
 
     assert received == [{"type": "http.request", "body": b"abcdef", "more_body": False}]
+
+
+def test_the_probes_without_an_access_line_are_the_probe_routes() -> None:
+    assert {getattr(route, "path", None) for route in probes.router.routes} == PROBE_PATHS

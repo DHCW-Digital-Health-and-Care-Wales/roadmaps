@@ -18,9 +18,8 @@ and `/ready`, at the root, unversioned (ADR-017's amendments).
   them). Routes stay thin and synchronous (`def`).
 - Only a service ends a transaction; a route or repository never calls `commit()`,
   `rollback()` or `begin()` on a session. `/ready` (`routes/probes.py`,
-  `services/readiness.py`, `repositories/readiness.py`) is the worked example.
-- `pnpm api:lint` enforces both: import-linter's `layers` contract
-  (`apps/api/pyproject.toml`) and `apps/api/tools/check_transactions.py`.
+  `services/readiness.py`, `repositories/readiness.py`) is the worked example, its
+  service given to the route as a dependency.
 
 ## Errors and responses
 
@@ -34,10 +33,12 @@ and `/ready`, at the root, unversioned (ADR-017's amendments).
 ## Logs (ADR-018 _Records and retention_)
 
 - Log a constant event name with allow-listed `extra` fields
-  (`ALLOWED_EXTRA_FIELDS` in `apps/api/src/roadmaps_api/logs.py`), never a value a
-  caller or a person supplied; the formatter drops any other field, and a third party's
-  message. A field joins the allow-list only when it is an ID, a code, a type, a name or
-  a number.
+  (`ALLOWED_EXTRA_FIELDS` in `apps/api/src/roadmaps_api/logs.py`); the formatter drops
+  any other field, and a third party's message. A field joins the allow-list only when
+  it is an ID, a code, a type, a name or a number.
+- Name a request in a log line by its route's template (`route_template` in
+  `apps/api/src/roadmaps_api/middleware.py`), or `unmatched`, never by the path a caller
+  sent.
 - Log an exception with `logger.exception` or `exc_info`: the line keeps its type and
   frames, never its message.
 
@@ -50,15 +51,12 @@ and `/ready`, at the root, unversioned (ADR-017's amendments).
 
 ## Commands and checks
 
-- `pnpm api:dev` and `pnpm api:test` start the slot's database themselves, in Docker
-  (`apps/api/scripts/api.sh`); `pnpm api:db:down` stops it, keeping its data.
+- The `api:` scripts need the environment `uv sync --locked` makes in `apps/api`
+  (`pnpm worktree:setup` runs it); `pnpm api:dev` and `pnpm api:test` start the slot's
+  database themselves, in Docker.
 - Run Python through uv from `apps/api` (`uv run --locked …`); add a dependency with
   `uv add`, which resolves only releases a week old.
-- `pnpm api:format` fixes what ruff can; `pnpm api:lint` runs ruff, import-linter and the
-  transaction check; `pnpm api:typecheck` runs ty; `pnpm api:test` fails under 100%
-  branch coverage.
-- Ruff selects every rule: a rule left out goes into `apps/api/pyproject.toml`'s ignore
-  list with its reason, and a `# noqa` names its rule and why.
-- Test through FastAPI's `TestClient` (`apps/api/tests/support.py` builds the app); a
+- A `# noqa` names its rule and why.
+- Test through FastAPI's `TestClient` (`serving` in `apps/api/tests/support.py`); a
   behaviour only uvicorn shows, such as its own logging, through the real server
   (`apps/api/tests/test_server.py`).

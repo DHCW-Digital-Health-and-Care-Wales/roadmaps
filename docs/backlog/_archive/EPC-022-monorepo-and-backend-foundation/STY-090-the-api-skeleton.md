@@ -115,7 +115,8 @@ page, so S5's headers hold for it unchanged (D29)
 written while serving a request carries its ID, which the API generates, never taking a
 caller's `X-Request-ID` (D6, D26, D33)
 **And** each line holds only allow-listed fields (ADR-018): an access line the method,
-the path without its query string, the status, the duration and the request ID; a 500
+the matched route's template, or `unmatched` when no route matches, never the path a
+caller sent (D35), the status, the duration and the request ID; a 500
 the exception's type and stack frames, never its message; `/ready`'s 503 warning the
 code, the exception's type and the request ID, never its message; and the engine hides
 SQL parameters. The server's own access and error loggers (uvicorn's) write nothing
@@ -302,6 +303,11 @@ the editor's Vite config. S1 is an observed run.
   `TestClient` never runs uvicorn, which logs the query string and re-raised
   exceptions; and the fallback database port is 15432, over D27's 55432, which sits in
   Linux's ephemeral range that the worktree script avoids. Changes S7, D27.
+- **D35** (owner, 2026-11-23, review question): "take the NARROWER option. The access
+  line logs the matched route template, or the literal 'unmatched' when no route
+  matches. No caller-supplied path reaches the log", over logging the path without its
+  query string, so a mistyped or probing path, or a name in it, never reaches the log;
+  redirects, mounted sub-apps and the framework's error paths included. Changes S7.
 
 ## Starting point
 
@@ -339,24 +345,44 @@ Audited at `e4117b10`:
 
 ### Departures
 
-- **S1, S3: `/ready`'s two seconds are one per wait, not one deadline** (agent): the
-  pool wait, the connection (libpq's 2-second floor) and the query
-  (`statement_timeout`) each give up after about two seconds. A database that is down,
-  silent, or whose pool is exhausted answers 503 within that (tests below); only a
-  connection that succeeds and then hangs in its query could take up to four.
-- **S4: the routing handler imports Starlette's `HTTPException`** (agent): FastAPI raises
-  it for an unknown path or method, so `errors.py` registers its handler with one
-  `noqa: TID251` and a comment, and `tests/support.py` raises one with another; the
-  banned-API rule still fails any other import. A status FastAPI never raises itself
-  answers the generic 500.
+- **S3: `/ready` checks in a thread of its own, against one deadline** (agent, from
+  review): a database that stops answering on a connection already pooled gives the
+  driver no error and no timeout, so `ReadinessService` runs the check with its own
+  session in a daemon thread and answers 503 at two seconds, leaving the thread to end
+  when the connection does. The pool wait, a new connection and the query also give up
+  after about two seconds each, so such threads stay few. Its test was written after the
+  fix and shown red by restoring the code before it (the request hung until killed).
+- **S4: FastAPI's own refusals** (agent): it raises Starlette's `HTTPException` for an
+  unknown path or method and for a body it cannot read, so `errors.py` registers its
+  handler with one `noqa: TID251` and a comment, and `tests/support.py` raises one with
+  another; the banned-API rule still fails any other import. A body that is not UTF-8
+  answers 422 `request.invalid` with `{errors: [{loc: ["body"], type: "body_unreadable"}]}`,
+  a 405 carries its `Allow` header, and a status FastAPI never raises itself answers the
+  generic 500. Both tests came after the code, shown red against it.
 - **S6: the live OpenAPI JSON is at `/api/v1/openapi.json`** (agent), under the
   contract's prefix, so the editor's dev proxy reaches it; `/openapi.json`, `/docs` and
   `/redoc` answer 404 everywhere. A database URL that is not `postgresql+psycopg://`
   is a bad setting too, failing closed rather than at the first query.
-- **S6, S7: `api:dev` checks the settings before uvicorn starts** (agent): uvicorn 0.54
-  lets a factory's exception reach the interpreter, which prints it, with its text, on
-  stderr; `python -m roadmaps_api.server` logs the bad settings' names as JSON and exits
-  1 first.
+- **S6, S7: start-up never prints an exception's text** (agent, from review): uvicorn
+  0.54 lets a factory's exception reach the interpreter, or a reload worker's process,
+  which prints it, with its text, on stderr. Its factory, `roadmaps_api.app:factory`,
+  logs a failure's type and frames and exits 1; `python -m roadmaps_api.server` checks
+  the settings first, so bad ones end the command; and a database URL SQLAlchemy cannot
+  parse (an unencoded `@` in a password) is a bad setting, not an engine error quoting
+  it. `Settings`' repr leaves the URL out.
+- **S7: the route's template as the router left it** (agent, from D35): the access line
+  reads the route Starlette and FastAPI leave in the request's scope after routing (a
+  405's partial match among them), prefixed by the templates of the mounts the request
+  passed through; a mounted app with no routes is its template and `{path:path}`. A
+  request refused before routing (a bad `Host`, a body over the limit), an unknown path
+  and a redirect to the path with or without its trailing slash are `unmatched`. The
+  test came after the code, shown red by logging the path instead.
+- **Residuals S4 and S5 leave** (agent, from review): a 422's `loc` names the key it
+  failed on, which a caller chooses for a model that forbids extra keys or takes a
+  dictionary (no route has one yet); and uvicorn answers a request it cannot parse (a
+  bad header line, a non-numeric `Content-Length`) with its own fixed `400` text, before
+  the middleware, so without S5's headers or a request ID: the edge's to normalise
+  (EPC-023).
 - **S7: another library's log message is dropped, not only its arguments** (agent):
   uvicorn formats some exceptions into its messages (`"Error loading ASGI app. %s" %
 exc`), so a line from a logger outside `roadmaps_api` carries only its time, level,
@@ -385,10 +411,12 @@ exc`), so a line from a logger outside `roadmaps_api` carries only its time, lev
 - **Layers**: `roadmaps_api.routes`, `.services`, `.repositories` under import-linter's
   contract in `apps/api/pyproject.toml`, with `roadmaps_api.app` (the composition root)
   above them; `tools/check_transactions.py` reads `routes/` and `repositories/`. A route
-  takes `DbSession` (`roadmaps_api.database`); `app.state.engine` and
-  `app.state.sessions` hold the engine and the session factory.
+  takes its service as a dependency (`Readiness` in `services/readiness.py`), which
+  builds it from `Sessions` (`roadmaps_api.database`), the session factory on
+  `app.state.sessions`; `app.state.engine` holds the engine. uvicorn starts
+  `roadmaps_api.app:factory`.
 - **Readiness**: `ReadinessService.check()` is where STY-091 adds the Alembic-head check
-  (D21).
+  (D21), inside its deadline.
 - **Request ID**: `roadmaps_api.middleware.new_request_id()` (32 hex digits) and
   `roadmaps_api.logs.request_id_var`; STY-100 replaces the first with the trace ID.
   `PROBE_PATHS` is where STY-100 leaves successful probes untraced.
@@ -404,19 +432,19 @@ exc`), so a line from a logger outside `roadmaps_api` carries only its time, lev
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                         |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | observed run (2026-11-23, slot 32): `pnpm api:dev` started Compose project `roadmaps-slot-32` (`127.0.0.1:21325->5432`) and the API with reload on 21324; `/health` and `/ready` 200; a copy of `apps/api` with slot 98's `.env.worktree` ran beside it on 21984/21985, both `/ready` 200; `pnpm api:db:down` then `/ready` 503 in 5 ms, `/health` 200; `t3.json`'s _Start API_ |
-| S2       | `scripts/worktree/worktree.test.ts` (`writes each app's ports…`, `installs the API's locked dependencies…`, `stops, naming uv…`, `reclaims the slot… removing its database`, `worktree.sh teardown`)                                                                                                                                                                            |
-| S3       | `apps/api/tests/test_probes.py` (up, down, a silent database, an exhausted pool); `tests/test_logs.py` (`…503 logs a warning…`, `a probe that succeeds writes no access line`)                                                                                                                                                                                                  |
-| S4       | `apps/api/tests/test_errors.py` (`test_a_refusal_is_the_envelope_without_the_input`, one row per refusal, streamed and declared bodies); banned-API rule in `apps/api/pyproject.toml`                                                                                                                                                                                           |
-| S5       | `apps/api/tests/test_headers.py` (every response kind, CORS preflight, `X-Forwarded-Host`, the host table)                                                                                                                                                                                                                                                                      |
-| S6       | `apps/api/tests/test_settings.py`; `tests/test_headers.py` (docs and OpenAPI per environment); `tests/test_server.py` (`bad settings stop the server…`)                                                                                                                                                                                                                         |
-| S7       | `apps/api/tests/test_logs.py`; `tests/test_server.py` (`the server logs no query string or exception text on either stream`, uvicorn with reload, a planted query string, exception and malformed request)                                                                                                                                                                      |
-| S8       | `apps/api/tests/test_layering.py` (planted upward imports, planted `commit`/`rollback`/`begin`, the real tree passing both)                                                                                                                                                                                                                                                     |
-| S9       | `lefthook.yml` (`ruff (api)`, `typecheck`); observed: this PR's first commit, with a file left unformatted, was formatted and restaged by the hook, and its push ran ty through `pnpm typecheck`                                                                                                                                                                                |
-| S10      | `scripts/ci/classify-changes.test.ts`; `build/ci-workflow.test.ts` (`needs every job…`); `build/api-compose.test.ts` (the digest); CI's _API: verify_ on this PR; CodeQL's Python analysis: to observe once merged                                                                                                                                                              |
-| S11      | `apps/api/pyproject.toml` (`exclude-newer`, `required-version`, exact ruff and ty, the ignore list with reasons); `.github/dependabot.yml`'s uv entry                                                                                                                                                                                                                           |
-| S12      | `apps/editor/build/api-proxy.test.ts`; observed: `/api/v1/nothing` through the editor's dev port answered the API's 404 envelope, and `/api/v1/openapi.json` 200                                                                                                                                                                                                                |
-| S13      | `apps/api/AGENTS.md`, `apps/api/CLAUDE.md`, the root guide's routing row, the README's prerequisites                                                                                                                                                                                                                                                                            |
-| S14      | `.agents/skills/implement-story/references/validation.md` (the gate by app)                                                                                                                                                                                                                                                                                                     |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | observed run (2026-11-23, slot 32): `pnpm api:dev` started Compose project `roadmaps-slot-32` (`127.0.0.1:21325->5432`) and the API with reload on 21324; `/health` and `/ready` 200; a copy of `apps/api` with slot 98's `.env.worktree` ran beside it on 21984/21985, both `/ready` 200; `pnpm api:db:down` then `/ready` 503 in 5 ms, `/health` 200; `t3.json`'s _Start API_                                |
+| S2       | observed: `docker compose --project-name roadmaps-slot-98 down --volumes` run from `/`, with no Compose file, as `remove_database` runs it, removed slot 98's container and volume; `scripts/worktree/worktree.test.ts` (`writes each app's ports…`, `installs the API's locked dependencies…`, `stops, naming uv…`, `reclaims the slot… removing its database`, `worktree.sh teardown`)                       |
+| S3       | `apps/api/tests/test_probes.py` (up, down, a silent database, an exhausted pool, a pooled connection whose database stops answering); `tests/test_logs.py` (`…503 logs a warning…`, `a probe that succeeds writes no access line`)                                                                                                                                                                             |
+| S4       | `apps/api/tests/test_errors.py` (`test_a_refusal_is_the_envelope_without_the_input`, one row per refusal, streamed and declared bodies); banned-API rule in `apps/api/pyproject.toml`                                                                                                                                                                                                                          |
+| S5       | `apps/api/tests/test_headers.py` (every response kind, CORS preflight, `X-Forwarded-Host`, the host table)                                                                                                                                                                                                                                                                                                     |
+| S6       | `apps/api/tests/test_settings.py`; `tests/test_headers.py` (docs and OpenAPI per environment); `tests/test_server.py` (`bad settings stop the server…`)                                                                                                                                                                                                                                                        |
+| S7       | `apps/api/tests/test_logs.py` (`the access line names the route by its template…`: a path parameter, a mount, a mount with no routes, an unknown path, a redirect, a 405, a 422, a 413, a refused `Host`, a 500, a failing probe); `tests/test_server.py` (`the server logs no query string or exception text on either stream`, uvicorn with reload, a planted query string, exception and malformed request) |
+| S8       | `apps/api/tests/test_layering.py` (planted upward imports, planted `commit`/`rollback`/`begin`, the real tree passing both)                                                                                                                                                                                                                                                                                    |
+| S9       | `lefthook.yml` (`ruff (api)`, `typecheck`); observed: this PR's first commit, with a file left unformatted, was formatted and restaged by the hook, and its push ran ty through `pnpm typecheck`                                                                                                                                                                                                               |
+| S10      | `scripts/ci/classify-changes.test.ts`; `build/ci-workflow.test.ts` (`needs every job…`); `build/api-compose.test.ts` (the digest); CI's _API: verify_ on this PR; CodeQL's Python analysis: to observe once merged                                                                                                                                                                                             |
+| S11      | `apps/api/pyproject.toml` (`exclude-newer`, `required-version`, exact ruff and ty, the ignore list with reasons); `.github/dependabot.yml`'s uv entry                                                                                                                                                                                                                                                          |
+| S12      | `apps/editor/build/api-proxy.test.ts`; observed: `/api/v1/nothing` through the editor's dev port answered the API's 404 envelope, and `/api/v1/openapi.json` 200                                                                                                                                                                                                                                               |
+| S13      | `apps/api/AGENTS.md`, `apps/api/CLAUDE.md`, the root guide's routing row, the README's prerequisites                                                                                                                                                                                                                                                                                                           |
+| S14      | `.agents/skills/implement-story/references/validation.md` (the gate by app)                                                                                                                                                                                                                                                                                                                                    |

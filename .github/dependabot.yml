@@ -1,5 +1,6 @@
 # Keeps the SHA-pinned actions in .github/workflows, the workspace's pnpm dependencies
-# and the API's uv dependencies current: one grouped pull request a month for each. Every entry waits
+# and the API's uv dependencies and database image current: one grouped pull request a
+# month for each. Every entry waits
 # out a cooldown, so it proposes a version only once that is a week old (STY-087 D10,
 # D12); pnpm's minimumReleaseAge (pnpm-workspace.yaml) holds the transitive versions it
 # resolves beneath one for as long (CHO-031 S4), as uv's exclude-newer does for the API's
@@ -43,4 +44,17 @@ updates:
       default-days: 7
     groups:
       uv:
+        patterns: ["*"]
+
+  # The API's local database image, pinned by digest in apps/api/compose.yaml. CI's API
+  # job pins the same digest (.github/workflows/ci.yml), which this entry cannot update:
+  # build/api-compose.test.ts fails the pull request until it is copied there.
+  - package-ecosystem: docker-compose
+    directory: /apps/api
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      postgres:
         patterns: ["*"]

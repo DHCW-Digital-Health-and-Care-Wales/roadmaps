@@ -7,12 +7,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 import { ChangedTag } from "../editing/edit-controls"
+import { useContent } from "../hooks/use-content"
 import { RoadmapFacts } from "./roadmap-facts"
 import { RoadmapSwatch } from "./roadmap-swatch"
 
@@ -45,20 +45,22 @@ export function ProductDetails({
   actions,
 }: ProductDetailsProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
   const headingId = useId()
   const [open, setOpen] = useState(false)
 
-  const localised = (text: LocalisedText | null) =>
-    text && localise(text, language)
+  const content = useContent()
   const fields = [
-    { key: "vision", value: localised(roadmap.vision) },
-    { key: "serviceDescription", value: localised(roadmap.serviceDescription) },
-    { key: "family", value: localised(roadmap.family) },
-    { key: "category", value: localised(roadmap.category) },
-  ].filter((field): field is { key: ProductDetailsField; value: string } =>
-    Boolean(field.value),
-  )
+    { key: "vision", value: roadmap.vision },
+    { key: "serviceDescription", value: roadmap.serviceDescription },
+    { key: "family", value: roadmap.family },
+    { key: "category", value: roadmap.category },
+  ]
+    .filter(
+      (field): field is { key: ProductDetailsField; value: LocalisedText } =>
+        field.value !== null,
+    )
+    .map(({ key, value }) => ({ key, value: content(value) }))
+    .filter(({ value }) => value.text !== "")
 
   return (
     <Collapsible
@@ -114,8 +116,11 @@ export function ProductDetails({
                   {key === "family" && (
                     <RoadmapSwatch colour={roadmap.colour} />
                   )}
-                  <span className="min-w-0 wrap-break-word whitespace-pre-line">
-                    {value}
+                  <span
+                    lang={value.lang}
+                    className="min-w-0 wrap-break-word whitespace-pre-line"
+                  >
+                    {value.text}
                   </span>
                 </dd>
               </div>

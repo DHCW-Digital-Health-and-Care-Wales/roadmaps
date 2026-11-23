@@ -1,12 +1,11 @@
 import { Fragment, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
-import { localise } from "@/domain/roadmap/localised-text"
 import { hasOnlyTitle } from "@/domain/roadmap/new-item"
 import type { RoadmapChanges } from "@/domain/roadmap/roadmap-changes"
 import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
-import { useLanguage } from "@/i18n"
 
+import { ContentText } from "../components/content-text"
 import { FieldName } from "../components/field-name"
 import { changedParts } from "./pending-changes"
 import { hasPendingOrder } from "./pending-orders"
@@ -19,7 +18,7 @@ export interface WhatChangesProps {
 /** One line of the list: a part's name, then what changed in it. */
 interface ListedChange {
   key: string
-  name: string
+  name: ReactNode
   change: ReactNode
 }
 
@@ -30,7 +29,7 @@ interface ListedChange {
  */
 function edited(
   key: string,
-  name: string,
+  name: ReactNode,
   fields: readonly { field: string; name: ReactNode }[],
 ): ListedChange {
   return {
@@ -56,7 +55,6 @@ function edited(
  */
 export function WhatChanges({ changes }: WhatChangesProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
   const parts = changedParts(changes)
   const listed: ListedChange[] = [
     ...parts.flatMap((part) =>
@@ -86,7 +84,7 @@ export function WhatChanges({ changes }: WhatChangesProps) {
           return [
             edited(
               `item-${String(part.position)}`,
-              localise(part.item.title, language),
+              <ContentText value={part.item.title} />,
               part.fields.map((field) => ({
                 field,
                 name: (
@@ -102,7 +100,7 @@ export function WhatChanges({ changes }: WhatChangesProps) {
           return [
             {
               key: `removal-${String(part.position)}`,
-              name: localise(part.item.title, language),
+              name: <ContentText value={part.item.title} />,
               change: t("roadmaps.publish.dialog.removed"),
             },
           ]
@@ -114,7 +112,7 @@ export function WhatChanges({ changes }: WhatChangesProps) {
     // One with only a title says so, whichever way it was added (STY-082).
     ...changes.newItems.map((newItem) => ({
       key: `new-${newItem.id}`,
-      name: newItem.values.title,
+      name: <ContentText value={{ en: newItem.values.title, cy: "" }} />,
       change: hasOnlyTitle(newItem)
         ? t("roadmaps.publish.dialog.newItemTitleOnly")
         : t("roadmaps.publish.dialog.newItem"),

@@ -4,10 +4,9 @@ import { useTranslation } from "react-i18next"
 import { textLinkClasses } from "@/components/layout/text-link-classes"
 import { Button } from "@/components/ui/button"
 import type { Family } from "@/domain/roadmap/family"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useLanguage } from "@/i18n"
 
+import { ContentText } from "../components/content-text"
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RoadmapSwatch } from "../components/roadmap-swatch"
 
@@ -31,7 +30,6 @@ export function FamilyEntry({
   onChange,
 }: FamilyEntryProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
   return (
     <div className="flex items-stretch gap-3.5">
       <RoadmapSwatch colour={family.colour} />
@@ -71,7 +69,7 @@ export function FamilyEntry({
                   params={{ roadmapId: roadmap.id }}
                   className={textLinkClasses}
                 >
-                  {localise(roadmap.title, language)}
+                  <ContentText value={roadmap.title} />
                 </Link>
                 {!roadmap.published && <NotPublishedBadge />}
               </li>

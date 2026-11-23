@@ -212,15 +212,15 @@ export const cy = {
         chooseFamily: "Dewiswch ei deulu o dan Manylion y cynnyrch.",
         action: "Gwneud iddo gyfateb",
         confirm: {
-          title: "Gwneud i {{title}} gyfateb i'w deulu a'i gategori?",
+          title: "Gwneud i <title /> gyfateb i'w deulu a'i gategori?",
           description:
             "Mae'r map trywydd hwn wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn dangos y newid ar ôl ei diweddariad nesaf dros nos.",
           action: "Gwneud iddo gyfateb",
         },
         notice: {
-          matched: "Mae {{title}} bellach yn cyfateb i'w deulu a'i gategori",
+          matched: "Mae <title /> bellach yn cyfateb i'w deulu a'i gategori",
           matchedPublic:
-            "Mae {{title}} bellach yn cyfateb i'w deulu a'i gategori. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+            "Mae <title /> bellach yn cyfateb i'w deulu a'i gategori. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
           changed:
             "Newidiodd y map trywydd hwn tra oeddech chi'n edrych. Chafodd dim byd ei newid.",
           failed: "Doedd dim modd gwneud i'r map trywydd gyfateb",
@@ -257,7 +257,7 @@ export const cy = {
       failed: {
         title: "Doedd dim modd ychwanegu'r map trywydd",
       },
-      added: "Cafodd {{title}} ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
+      added: "Cafodd <title /> ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
     },
     facts: {
       name: "Manylion y map trywydd",
@@ -400,7 +400,7 @@ export const cy = {
       removed: "Wedi'i thynnu",
       undoRemoval: "Dadwneud y tynnu",
       removal: {
-        title: "Tynnu “{{title}}”?",
+        title: "Tynnu “<title />”?",
         when: {
           publish:
             "Bydd yn gadael y map trywydd cyhoeddus pan fyddwch chi'n cyhoeddi.",
@@ -627,8 +627,8 @@ export const cy = {
       },
       confirm: {
         title: {
-          publish: "Cyhoeddi {{title}}?",
-          unpublish: "Dad-gyhoeddi {{title}}?",
+          publish: "Cyhoeddi <title />?",
+          unpublish: "Dad-gyhoeddi <title />?",
         },
         note: {
           publish:
@@ -665,16 +665,16 @@ export const cy = {
       },
       notice: {
         published:
-          "Mae {{title}} wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+          "Mae <title /> wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
         savedAndPublished:
-          "Newidiadau wedi'u cadw a {{title}} wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+          "Newidiadau wedi'u cadw a <title /> wedi'i gyhoeddi. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
         unpublished:
-          "Mae {{title}} wedi'i ddad-gyhoeddi. Bydd yn diflannu o'r wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos.",
+          "Mae <title /> wedi'i ddad-gyhoeddi. Bydd yn diflannu o'r wefan gyhoeddus ar ôl ei diweddariad nesaf dros nos.",
         changed:
           "Newidiodd y map trywydd hwn tra oeddech chi'n edrych. Chafodd dim byd ei newid.",
         failed: {
-          publish: "Doedd dim modd cyhoeddi {{title}}",
-          unpublish: "Doedd dim modd dad-gyhoeddi {{title}}",
+          publish: "Doedd dim modd cyhoeddi <title />",
+          unpublish: "Doedd dim modd dad-gyhoeddi <title />",
         },
         refused: {
           description:
@@ -688,7 +688,7 @@ export const cy = {
             shortColour:
               "Mae gan ei liw {{colour}} 3 digid. Ysgrifennwch ef gyda 6, fel {{long}}.",
             idTaken:
-              "Mae “{{title}}” wedi'i gyhoeddi gyda'r un cyfeiriad gwe. Dad-gyhoeddwch ef, neu newidiwch un o'u celloedd Sheet.",
+              "Mae “<title />” wedi'i gyhoeddi gyda'r un cyfeiriad gwe. Dad-gyhoeddwch ef, neu newidiwch un o'u celloedd Sheet.",
           },
         },
       },
@@ -765,7 +765,7 @@ export const cy = {
               "Dewiswch pa un i'w gadw ar gyfer pob un, yna cyhoeddwch eto.",
             save: "Dewiswch pa un i'w gadw ar gyfer pob un, yna cadwch eto.",
           },
-          targetLead: "{{subject}}:",
+          targetLead: "<subject />:",
           yours: "Eich newid",
           theirs: "Testun presennol",
           orderField: "Trefn",
@@ -787,7 +787,7 @@ export const cy = {
             writtenAs: "Wedi'i ysgrifennu fel “{{horizon}}”",
           },
           removed:
-            "Mae rhywun arall wedi tynnu neu newid “{{title}}”, felly doedd dim modd cadw eich newidiadau iddo.",
+            "Mae rhywun arall wedi tynnu neu newid “<title />”, felly doedd dim modd cadw eich newidiadau iddo.",
           otherKept: "Mae eich newidiadau eraill wedi'u cadw yn y tab hwn.",
           review: "Adolygu'r newidiadau",
           decided: {
@@ -862,7 +862,7 @@ export const cy = {
           "Mae tab Families y daenlen ar goll neu ddim yn y fformat disgwyliedig. Gofynnwch i berchennog y daenlen ei wirio.",
       },
       form: {
-        changeTitle: "Newid {{name}}",
+        changeTitle: "Newid <name />",
         name: "Enw (Saesneg)",
         colour: "Lliw",
         colourHint: "Lliw hecs, fel #00796b.",
@@ -875,7 +875,7 @@ export const cy = {
         },
       },
       confirm: {
-        title: "Newid {{name}} ar ei fapiau trywydd?",
+        title: "Newid <name /> ar ei fapiau trywydd?",
         roadmaps_zero: "Does ganddo ddim mapiau trywydd nawr.",
         roadmaps_one: "Mae hyn yn newid {{count, number}} map trywydd:",
         roadmaps_two: "Mae hyn yn newid y ddau fap trywydd:",
@@ -919,7 +919,7 @@ export const cy = {
       organisations: {
         heading: "Sefydliadau",
         description: "Does dim modd newid sefydliadau yma eto.",
-        entry: "{{name}} ({{code}})",
+        entry: "<name /> ({{code}})",
         none: "Does dim sefydliadau wedi'u rhestru.",
       },
     },

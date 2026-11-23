@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from "react"
 import { NavigationMenuButton } from "@/components/layout/navigation-drawer"
 import { LEFT_OUT } from "@/components/layout/left-out"
 import { StickyHeader } from "@/components/layout/sticky-header"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   TABLET_WIDTH,
@@ -19,6 +20,7 @@ import { PlacementLinks } from "../placement-navigation/placement-links"
 import type { PlacementNavigation } from "../placement-navigation/use-placement-navigation"
 import type { ItemsView } from "../hooks/use-items-view"
 import { AddItemButton } from "./add-item-button"
+import { ContentText } from "./content-text"
 import { ItemsViewSwitch } from "./items-view-switch"
 import { ListMismatchBadges } from "./list-mismatch-badges"
 import { NotPublishedNotice } from "./not-published-notice"
@@ -28,7 +30,7 @@ export interface RoadmapHeaderProps {
   /** The roadmap as read. */
   roadmap: Roadmap
   /** The title as shown, pending edits applied. */
-  title: string
+  title: LocalisedText
   /** The title has a pending edit. */
   titleChanged: boolean
   /** The heading, where focus can be sent. */
@@ -231,7 +233,7 @@ export function RoadmapHeader({
                     : "text-heading-l text-pretty wrap-break-word sm:text-heading-xl",
                 )}
               >
-                {title}
+                <ContentText value={title} />
               </h1>
               {!stuck && (
                 <>

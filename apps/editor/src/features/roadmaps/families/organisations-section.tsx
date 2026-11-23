@@ -1,9 +1,10 @@
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import { useLanguage } from "@/i18n"
 
+import { ContentText } from "../components/content-text"
 import { FieldName } from "../components/field-name"
 import { sortOrganisations } from "../sort-organisations"
 
@@ -40,10 +41,13 @@ export function OrganisationsSection({
           {sortOrganisations(organisations, fullName, language).map(
             (organisation) => (
               <li key={organisation.id}>
-                {t("roadmaps.families.organisations.entry", {
-                  name: fullName(organisation),
-                  code: organisation.code,
-                })}
+                <Trans
+                  i18nKey="roadmaps.families.organisations.entry"
+                  values={{ code: organisation.code }}
+                  components={{
+                    name: <ContentText value={organisation.name} />,
+                  }}
+                />
               </li>
             ),
           )}

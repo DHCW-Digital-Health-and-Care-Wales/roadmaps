@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next"
 
 import { InsetText } from "@/components/layout/inset-text"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import {
   ITEM_TEXT_FIELDS,
@@ -16,6 +15,7 @@ import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
 import { DetailList } from "../components/detail-list"
+import { useContent } from "../hooks/use-content"
 import { EditForm, type EditFormField } from "../editing/edit-form"
 import { editFormFields } from "../editing/edit-form-fields"
 import type { TagInUse } from "../editing/item-tags"
@@ -86,6 +86,7 @@ export function ItemForm({
 }: ItemFormProps) {
   const { t } = useTranslation()
   const language = useLanguage()
+  const content = useContent()
   const text = editFormFields(
     ITEM_TEXT_FIELDS,
     (field) => itemValue(item, field),
@@ -128,7 +129,7 @@ export function ItemForm({
         fixed: {
           text:
             item.tags.length > 0 ? (
-              <TagList tags={item.tags.map((tag) => localise(tag, language))} />
+              <TagList tags={item.tags.map(content)} />
             ) : (
               t("roadmaps.edit.tags.none")
             ),

@@ -85,7 +85,12 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
     <OpeningField
       label={label}
       subject={t("roadmaps.edit.tags.subject")}
-      summary={tags.length > 0 ? <TagList tags={tags} /> : null}
+      summary={
+        tags.length > 0 ? (
+          // English, being edited: no Welsh to stand in for.
+          <TagList tags={tags.map((text) => ({ text, lang: undefined }))} />
+        ) : null
+      }
       none={t("roadmaps.edit.tags.none")}
       // Describes the button, which takes focus as the field shuts, so it is announced
       // (S11): the editor's own status line goes with the editor.

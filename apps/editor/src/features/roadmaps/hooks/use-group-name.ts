@@ -1,21 +1,22 @@
 import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 
-import { localise } from "@/domain/roadmap/localised-text"
-import { useLanguage } from "@/i18n"
-
 import type { RoadmapGroup } from "../group-roadmaps"
+import type { ShownContent } from "../shown-content"
+import { useContent } from "./use-content"
 
 /**
  * A group's name, as the roadmap list and the navigation show it: its family's in the
- * current language, or "No product family".
+ * current language, marked where it is English in Welsh, or "No product family".
  */
-export function useGroupName(): (group: RoadmapGroup) => string {
+export function useGroupName(): (group: RoadmapGroup) => ShownContent {
   const { t } = useTranslation()
-  const language = useLanguage()
+  const content = useContent()
   return useCallback(
     ({ family }: RoadmapGroup) =>
-      family ? localise(family, language) : t("roadmaps.noFamily"),
-    [t, language],
+      family
+        ? content(family)
+        : { text: t("roadmaps.noFamily"), lang: undefined },
+    [t, content],
   )
 }

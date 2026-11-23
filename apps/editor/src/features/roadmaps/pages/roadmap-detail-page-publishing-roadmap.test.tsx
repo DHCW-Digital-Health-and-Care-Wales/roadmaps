@@ -432,9 +432,15 @@ describe("publishing or unpublishing a roadmap (STY-035)", () => {
     )
 
     const alert = await main.findByRole("alert")
-    expect(
-      within(alert).getByText("Doedd dim modd cyhoeddi Product A roadmap"),
-    ).toBeVisible()
+    // The title has no Welsh: only it is marked English in the Welsh sentence (STY-098).
+    const failed = within(alert).getByText(/^Doedd dim modd cyhoeddi/)
+    expect(failed).toHaveTextContent(
+      "Doedd dim modd cyhoeddi Product A roadmap",
+    )
+    expect(within(failed).getByText("Product A roadmap")).toHaveAttribute(
+      "lang",
+      "en",
+    )
     expect(
       within(alert).getByText(
         "Mae gan ei liw #abc 3 digid. Ysgrifennwch ef gyda 6, fel #aabbcc.",

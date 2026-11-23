@@ -1,7 +1,7 @@
 import { CircleAlertIcon, CircleCheckIcon, InfoIcon } from "lucide-react"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 import type { TFunction } from "i18next"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import {
@@ -15,13 +15,14 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { canMatchLists, type MatchOutcome } from "@/domain/roadmap/list-match"
-import { localise } from "@/domain/roadmap/localised-text"
+import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { useSessionAction } from "@/features/auth/session-action"
 import { useLanguage } from "@/i18n"
 import { isAppError, type AppErrorKind } from "@/lib/errors"
 
 import { useMatchRoadmap } from "../hooks/use-match-roadmap"
+import { ContentText } from "./content-text"
 import { writeFailureMessage } from "../write-failure-message"
 
 export interface MatchListsActionProps {
@@ -39,18 +40,26 @@ const noticeLook = {
   failed: { variant: "destructive", Icon: CircleAlertIcon },
 } as const
 
-function noticeText(notice: Notice, title: string, t: TFunction): string {
+function noticeText(
+  notice: Notice,
+  title: LocalisedText,
+  t: TFunction,
+): ReactNode {
   switch (notice.kind) {
     case "failed":
       return writeFailureMessage(t, "lists", notice.error)
     case "changed":
       return t("roadmaps.lists.match.notice.changed")
     case "matched":
-      return t(
-        notice.published
-          ? "roadmaps.lists.match.notice.matchedPublic"
-          : "roadmaps.lists.match.notice.matched",
-        { title },
+      return (
+        <Trans
+          i18nKey={
+            notice.published
+              ? "roadmaps.lists.match.notice.matchedPublic"
+              : "roadmaps.lists.match.notice.matched"
+          }
+          components={{ title: <ContentText value={title} /> }}
+        />
       )
   }
 }
@@ -139,7 +148,7 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
           }}
           className="max-w-2xl"
         >
-          <p>{noticeText(notice, title, t)}</p>
+          <p>{noticeText(notice, roadmap.title, t)}</p>
         </DismissibleNotice>
       )}
       <AlertDialog
@@ -151,7 +160,10 @@ export function MatchListsAction({ roadmap }: MatchListsActionProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("roadmaps.lists.match.confirm.title", { title })}
+              <Trans
+                i18nKey="roadmaps.lists.match.confirm.title"
+                components={{ title: <ContentText value={roadmap.title} /> }}
+              />
             </AlertDialogTitle>
             <AlertDialogDescription>
               {t("roadmaps.lists.match.confirm.description")}

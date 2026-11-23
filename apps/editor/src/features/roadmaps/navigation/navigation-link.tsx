@@ -9,6 +9,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import type { ContentLanguage } from "@/domain/roadmap/localised-text"
 import { cn } from "@/lib/utils"
 
 import { RoadmapSwatch } from "../components/roadmap-swatch"
@@ -40,6 +41,8 @@ interface NavigationEntryShape {
   /** Folded to a rail: the mark, the name in a tooltip and, beyond the initials, read only. */
   rail: boolean
   name: string
+  /** The shown name's `lang`: set only for a roadmap's English title in Welsh. */
+  nameLang?: ContentLanguage | undefined
   mark: NavigationMark
 }
 
@@ -114,7 +117,7 @@ interface EntryLabelProps extends NavigationEntryShape {
  * What the entry shows: its mark and name; in a rail, its mark alone, a page's name read
  * after its icon and a roadmap's title after the initials that begin its name.
  */
-function EntryLabel({ rail, name, mark, spoken }: EntryLabelProps) {
+function EntryLabel({ rail, name, nameLang, mark, spoken }: EntryLabelProps) {
   if ("icon" in mark) {
     return (
       <>
@@ -163,6 +166,7 @@ function EntryLabel({ rail, name, mark, spoken }: EntryLabelProps) {
       ) : (
         <>
           <span
+            lang={nameLang}
             aria-hidden={unpublished || undefined}
             className="min-w-0 wrap-break-word"
           >
@@ -199,10 +203,16 @@ interface EntryItemProps extends NavigationEntryShape {
  * One destination's list entry: its mark and name in full; in a rail its mark, with its
  * name in a tooltip as it is pointed at or focused.
  */
-function EntryItem({ rail, name, mark, around }: EntryItemProps) {
+function EntryItem({ rail, name, nameLang, mark, around }: EntryItemProps) {
   const spoken = useSpokenName({ rail, name, mark })
   const entry = around(
-    <EntryLabel rail={rail} name={name} mark={mark} spoken={spoken} />,
+    <EntryLabel
+      rail={rail}
+      name={name}
+      nameLang={nameLang}
+      mark={mark}
+      spoken={spoken}
+    />,
   )
   return (
     <li className={entryClasses}>
@@ -226,6 +236,7 @@ function EntryItem({ rail, name, mark, around }: EntryItemProps) {
 function NavigationEntry({
   rail,
   name,
+  nameLang,
   mark,
   ...anchor
 }: NavigationEntryProps) {
@@ -233,6 +244,7 @@ function NavigationEntry({
     <EntryItem
       rail={rail}
       name={name}
+      nameLang={nameLang}
       mark={mark}
       around={(label) => (
         <a {...anchor} className={linkClasses(rail)}>

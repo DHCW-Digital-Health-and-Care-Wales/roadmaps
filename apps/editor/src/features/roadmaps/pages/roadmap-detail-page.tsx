@@ -6,11 +6,9 @@ import { useTranslation } from "react-i18next"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { ConnectButton } from "@/features/auth/components/connect-button"
 import { useAuth } from "@/features/auth/use-auth"
-import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
@@ -181,7 +179,6 @@ function RoadmapView({
   listFetching,
   refetchList,
 }: RoadmapViewProps) {
-  const language = useLanguage()
   const changes = useRoadmapChanges(roadmap.id)
   // The same queries the items area and the form read, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
@@ -239,7 +236,7 @@ function RoadmapView({
     addItemButtonRef.current?.focus()
   }, [])
   const addedNotice = useAddedRoadmapNotice(roadmap)
-  const title = localise(shown.title, language)
+  const title = shown.title
   const retryList = () => {
     void refetchList()
   }

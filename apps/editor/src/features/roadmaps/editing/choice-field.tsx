@@ -1,6 +1,7 @@
 import type { Ref } from "react"
 
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import type { ContentLanguage } from "@/domain/roadmap/localised-text"
 
 import { FormField } from "../components/form-field"
 import { RoadmapSwatch } from "../components/roadmap-swatch"
@@ -9,6 +10,8 @@ import { RoadmapSwatch } from "../components/roadmap-swatch"
 export interface ChoiceOption {
   value: string
   label: string
+  /** The label's `lang`: set only for a list's English name in Welsh. */
+  lang?: ContentLanguage | undefined
   /** Its colour, shown beside the field while it is chosen; `null` for none. */
   colour?: string | null
   /** Shown while the value is none, but never chosen (STY-031 S4). */
@@ -62,6 +65,7 @@ export function ChoiceField({
               <NativeSelectOption
                 key={option.value}
                 value={option.value}
+                lang={option.lang}
                 disabled={option.disabled}
               >
                 {option.label}

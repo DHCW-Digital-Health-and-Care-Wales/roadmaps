@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -10,13 +10,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
+
+import { ContentText } from "../components/content-text"
 
 import type { PublishAction } from "./pending-changes-store"
 
 export interface RemovalDialogProps {
   open: boolean
-  /** The item's title, as its card shows it. */
-  title: string
+  /** The item's title, which its card shows in the interface's language. */
+  title: LocalisedText
   /** Whether the roadmap's changes are published or saved (S9). */
   action: PublishAction
   /** Whether the item is new, so Remove drops it at once (S10). */
@@ -69,7 +72,10 @@ export function RemovalDialog({
       <DialogContent finalFocus={false} closeLabel={t("common.close")}>
         <DialogHeader>
           <DialogTitle>
-            {t("roadmaps.edit.removal.title", { title })}
+            <Trans
+              i18nKey="roadmaps.edit.removal.title"
+              components={{ title: <ContentText value={title} /> }}
+            />
           </DialogTitle>
           <DialogDescription>{description.join(" ")}</DialogDescription>
         </DialogHeader>

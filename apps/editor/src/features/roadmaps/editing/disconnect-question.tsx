@@ -14,11 +14,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useLanguage } from "@/i18n"
 import { isPlainClick } from "@/lib/plain-click"
 
+import { ContentText } from "../components/content-text"
 import { useRoadmaps } from "../hooks/use-roadmaps"
 import { useDisconnectQuestion } from "./disconnect-question-context"
 import { usePendingChanges } from "./pending-changes-context"
@@ -61,7 +60,6 @@ function useChangedRoadmaps(open: boolean): {
  */
 export function DisconnectQuestion() {
   const { t } = useTranslation()
-  const language = useLanguage()
   const { open, onKeep, onDiscard, onCancel } = useDisconnectQuestion()
   const { shown, current } = useChangedRoadmaps(open)
   const chosenRef = useRef(false)
@@ -115,7 +113,7 @@ export function DisconnectQuestion() {
                       onCancel()
                     }}
                   >
-                    {localise(roadmap.title, language)}
+                    <ContentText value={roadmap.title} />
                   </Link>
                 </li>
               ))}

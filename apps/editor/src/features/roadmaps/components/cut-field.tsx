@@ -1,11 +1,22 @@
-import { useId, useLayoutEffect, useRef, useState, type RefObject } from "react"
+import {
+  Fragment,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react"
 import { useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
-import type { DetailLine } from "@/domain/roadmap/item-details"
 import { cn } from "@/lib/utils"
 
+import type { ShownContent, ShownDetail } from "../shown-content"
+import { ShownText } from "./content-text"
 import { DetailList } from "./detail-list"
+
+/** Between a field's parts, an item's tags: as drawn, and as measured. */
+const PART_SEPARATOR = ", "
 
 /** A field shows this many lines before it is cut (STY-066). */
 const CUT_LINES = 3
@@ -135,7 +146,8 @@ export interface CutFieldProps {
    * assistive technology: "of the description of First item".
    */
   subject: string
-  children: string
+  /** The field's text, or its parts (an item's tags) read with commas between. */
+  value: readonly ShownContent[]
 }
 
 /**
@@ -146,16 +158,23 @@ export interface CutFieldProps {
  * lets the field fit, so focus on "Show less" is not lost (D9). The text keeps its line
  * breaks, which the field's own class passes on.
  */
-export function CutField({ subject, children }: CutFieldProps) {
+export function CutField({ subject, value }: CutFieldProps) {
   const id = useId()
   const valueRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const runsPast = useMeasure(valueRef, children, textRunsPastCut) !== ""
+  const text = value.map((part) => part.text).join(PART_SEPARATOR)
+  const runsPast = useMeasure(valueRef, text, textRunsPastCut) !== ""
 
   return (
     <>
       <div ref={valueRef} id={id} className={cn(!open && "line-clamp-3")}>
-        {children}
+        {value.map((part, index) => (
+          // eslint-disable-next-line @eslint-react/no-array-index-key -- Two parts may read alike, so only the place is an identity.
+          <Fragment key={index}>
+            {index > 0 && PART_SEPARATOR}
+            <ShownText content={part} />
+          </Fragment>
+        ))}
       </div>
       {(runsPast || open) && (
         <CutControl
@@ -172,7 +191,7 @@ export function CutField({ subject, children }: CutFieldProps) {
 }
 
 export interface CutDetailsProps {
-  details: readonly DetailLine[]
+  details: readonly ShownDetail[]
   /** As `CutFieldProps.subject`. */
   subject: string
 }

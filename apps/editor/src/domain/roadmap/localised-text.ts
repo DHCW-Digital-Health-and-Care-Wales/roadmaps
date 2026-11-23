@@ -7,10 +7,26 @@ export interface LocalisedText {
   cy: string
 }
 
-/** The text in `language`, or the English when it has no Welsh. */
+/** Content as shown in a language, and the language it is written in. */
+export interface ResolvedText {
+  text: string
+  language: ContentLanguage
+}
+
+/** The text in `language`, or the English, said to be English, when it has no Welsh. */
+export function resolve(
+  text: LocalisedText,
+  language: ContentLanguage,
+): ResolvedText {
+  return language === "cy" && text.cy !== ""
+    ? { text: text.cy, language: "cy" }
+    : { text: text.en, language: "en" }
+}
+
+/** The text in `language`, or the English when it has no Welsh: for an attribute or sorting. */
 export function localise(
   text: LocalisedText,
   language: ContentLanguage,
 ): string {
-  return language === "cy" && text.cy !== "" ? text.cy : text.en
+  return resolve(text, language).text
 }

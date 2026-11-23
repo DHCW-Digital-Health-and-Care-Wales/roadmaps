@@ -1,9 +1,7 @@
 import { useState } from "react"
 
 import { removeItem } from "@/domain/roadmap/item-removal"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { useLanguage } from "@/i18n"
 
 import type { ItemControl } from "./editable-item"
 import type { MarkMoved } from "./moved-mark"
@@ -81,7 +79,6 @@ export function useRemovalDialog({
   onMoved,
 }: RemovalDialogOptions): PageRemovalDialog {
   const store = usePendingChangesStore()
-  const language = useLanguage()
   const [opening, setOpening] = useState<Opening | null>(null)
   const at = opening
     ? pageItems.findIndex(({ key }) => key === opening.key)
@@ -135,7 +132,7 @@ export function useRemovalDialog({
             key: opening.count,
             props: {
               open: opening.open,
-              title: localise(asked.shown.title, language),
+              title: asked.shown.title,
               action,
               isNew: asked.newItemId !== undefined,
               offersNotDoing: placement !== null && placement !== "not-doing",

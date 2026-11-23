@@ -1,12 +1,12 @@
 import { TriangleAlertIcon } from "lucide-react"
 import type { RefObject } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { Button } from "@/components/ui/button"
-import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
-import { useLanguage } from "@/i18n"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 
+import { ContentText } from "../components/content-text"
 import type { PublishAction } from "./pending-changes-store"
 
 export interface RefusalNoticeProps {
@@ -83,15 +83,15 @@ export function RemovedItems({
   hasPendingChanges,
 }: RemovedItemsProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
   return (
     <>
       {removed.map((title, index) => (
         // eslint-disable-next-line @eslint-react/no-array-index-key -- Two removed items may share a title, so only the place is an identity.
         <p key={index}>
-          {t("roadmaps.publish.notice.refused.removed", {
-            title: localise(title, language),
-          })}
+          <Trans
+            i18nKey="roadmaps.publish.notice.refused.removed"
+            components={{ title: <ContentText value={title} /> }}
+          />
         </p>
       ))}
       {removed.length > 0 && hasPendingChanges && (

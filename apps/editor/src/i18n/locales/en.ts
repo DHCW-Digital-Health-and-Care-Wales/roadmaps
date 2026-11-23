@@ -187,7 +187,7 @@ export const en = {
       /** The link to the roadmap list, the home page (D4). */
       all: "All roadmaps",
       /** A roadmap with unpublished changes: its title, then what its dot shows (STY-055 D1). */
-      changed: "{{name}}, unpublished changes",
+      changed: "<name />, unpublished changes",
       /** The search at the top of the navigation (STY-061). */
       search: {
         /** The search box's name, and the rail's spyglass that opens it (S9). */
@@ -230,15 +230,15 @@ export const en = {
         chooseFamily: "Choose its family under Product details.",
         action: "Make it match",
         confirm: {
-          title: "Make {{title}} match its family and category?",
+          title: "Make <title /> match its family and category?",
           description:
             "This roadmap is published. The public site shows the change after its next nightly update.",
           action: "Make it match",
         },
         notice: {
-          matched: "{{title}} now matches its family and category",
+          matched: "<title /> now matches its family and category",
           matchedPublic:
-            "{{title}} now matches its family and category. The public site shows it after its next nightly update.",
+            "<title /> now matches its family and category. The public site shows it after its next nightly update.",
           changed:
             "This roadmap changed while you were looking. Nothing was changed.",
           failed: "Couldn't make the roadmap match",
@@ -277,7 +277,7 @@ export const en = {
         title: "Couldn't add the roadmap",
       },
       /** On the new roadmap's page (S5). */
-      added: "{{title}} was added. It isn't published yet.",
+      added: "<title /> was added. It isn't published yet.",
     },
     /** A roadmap's facts, on its card and under the title of its page (STY-065 S2). */
     facts: {
@@ -470,7 +470,7 @@ export const en = {
       undoRemoval: "Undo removal",
       /** The question Remove asks first, Not doing offered first (STY-049 S1). */
       removal: {
-        title: "Remove “{{title}}”?",
+        title: "Remove “<title />”?",
         /** When the item goes: published, saved, or at once for a new item (S9, S10). */
         when: {
           publish: "It leaves the public roadmap when you publish.",
@@ -725,7 +725,7 @@ export const en = {
           save: "It isn't saved until you choose “Save changes”.",
         },
         /** Announced in the dialog after "Add and start another". */
-        added: "“{{title}}” was added.",
+        added: "“<title />” was added.",
       },
       /** Heads the roadmap dialog while it edits the product details (STY-043). */
       roadmapHeading: "Edit product details",
@@ -766,8 +766,8 @@ export const en = {
       },
       confirm: {
         title: {
-          publish: "Publish {{title}}?",
-          unpublish: "Unpublish {{title}}?",
+          publish: "Publish <title />?",
+          unpublish: "Unpublish <title />?",
         },
         note: {
           publish: "It shows on the public site after its next nightly update.",
@@ -787,16 +787,16 @@ export const en = {
       },
       notice: {
         published:
-          "{{title}} is published. The public site shows it after its next nightly update.",
+          "<title /> is published. The public site shows it after its next nightly update.",
         savedAndPublished:
-          "Changes saved and {{title}} published. The public site shows it after its next nightly update.",
+          "Changes saved and <title /> published. The public site shows it after its next nightly update.",
         unpublished:
-          "{{title}} is unpublished. It leaves the public site after its next nightly update.",
+          "<title /> is unpublished. It leaves the public site after its next nightly update.",
         changed:
           "This roadmap changed while you were looking. Nothing was changed.",
         failed: {
-          publish: "Couldn't publish {{title}}",
-          unpublish: "Couldn't unpublish {{title}}",
+          publish: "Couldn't publish <title />",
+          unpublish: "Couldn't unpublish <title />",
         },
         /** Publishing refused, as the public site's nightly update would fail (S4). */
         refused: {
@@ -810,7 +810,7 @@ export const en = {
             shortColour:
               "Its colour {{colour}} has 3 digits. Write it with 6, like {{long}}.",
             idTaken:
-              "“{{title}}” is published with the same web address. Unpublish it, or change one of their Sheet cells.",
+              "“<title />” is published with the same web address. Unpublish it, or change one of their Sheet cells.",
           },
         },
       },
@@ -901,7 +901,7 @@ export const en = {
            * What leads the line naming a field to decide, before the field's name:
            * "First item:", or "Product details:" (the name is a node, for its icon).
            */
-          targetLead: "{{subject}}:",
+          targetLead: "<subject />:",
           yours: "Your change",
           theirs: "Current text",
           /** A placement's order to decide, as its field: "Now: Order" (STY-050). */
@@ -944,7 +944,7 @@ export const en = {
           },
           /** `title` is the item's title as it was loaded. */
           removed:
-            "Someone else has removed or changed “{{title}}”, so your changes to it couldn't be kept.",
+            "Someone else has removed or changed “<title />”, so your changes to it couldn't be kept.",
           otherKept: "Your other changes are kept in this tab.",
           /** Opens the review in a dialog, from the notice at the foot (STY-052 D12). */
           review: "Review the changes",
@@ -1027,7 +1027,7 @@ export const en = {
           "The spreadsheet's Families tab is missing or isn't in the expected format. Ask the spreadsheet owner to check it.",
       },
       form: {
-        changeTitle: "Change {{name}}",
+        changeTitle: "Change <name />",
         name: "Name",
         colour: "Colour",
         colourHint: "A hex colour, like #00796b.",
@@ -1041,7 +1041,7 @@ export const en = {
       },
       /** Asked before a change that rewrites roadmaps (S3). */
       confirm: {
-        title: "Change {{name}} on its roadmaps?",
+        title: "Change <name /> on its roadmaps?",
         roadmaps_zero: "It has no roadmaps now.",
         roadmaps_one: "This changes {{count, number}} roadmap:",
         roadmaps_other: "This changes all {{count, number}} roadmaps:",
@@ -1083,7 +1083,7 @@ export const en = {
       organisations: {
         heading: "Organisations",
         description: "Organisations can't be changed here yet.",
-        entry: "{{name}} ({{code}})",
+        entry: "<name /> ({{code}})",
         none: "No organisations are listed.",
       },
     },

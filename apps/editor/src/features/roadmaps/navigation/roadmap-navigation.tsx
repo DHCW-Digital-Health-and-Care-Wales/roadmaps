@@ -14,13 +14,13 @@ import type { NavigationForm } from "@/components/layout/app-shell"
 import { UnpublishedDot } from "@/components/layout/unpublished-dot"
 import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { localise } from "@/domain/roadmap/localised-text"
-import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 import { namesFamilies, type RoadmapGroup } from "../group-roadmaps"
+import { useContent } from "../hooks/use-content"
 import { useGroupName } from "../hooks/use-group-name"
 import { usePendingChanges } from "../editing/pending-changes-context"
+import { AS_PLAIN_WORDS } from "../plain-words"
 import { findIn } from "./narrow-roadmaps"
 import {
   NavigationButton,
@@ -186,7 +186,7 @@ function RoadmapGroupLinks({
   onToggle,
 }: RoadmapGroupLinksProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
+  const content = useContent()
   const groupName = useGroupName()
   const nameId = useId()
   const listId = useId()
@@ -202,13 +202,18 @@ function RoadmapGroupLinks({
           aria-expanded={!closed}
           aria-controls={closed ? undefined : listId}
           aria-label={
-            unpublished ? t("roadmaps.navigation.changed", { name }) : undefined
+            unpublished
+              ? t("roadmaps.navigation.changed", {
+                  name: name.text,
+                  ...AS_PLAIN_WORDS,
+                })
+              : undefined
           }
           onClick={onToggle}
           className="h-auto min-h-8 w-full justify-start gap-2 py-1 text-start font-bold whitespace-normal"
         >
-          <span id={nameId} className="min-w-0 wrap-anywhere">
-            {name}
+          <span id={nameId} lang={name.lang} className="min-w-0 wrap-anywhere">
+            {name.text}
           </span>
           {unpublished && (
             // As an entry's dot (`dotClasses`), the button being the group in focus.
@@ -225,13 +230,14 @@ function RoadmapGroupLinks({
           // The list's name: read with the list, not again before it.
           <p
             id={nameId}
+            lang={name.lang}
             aria-hidden="true"
             className={cn(
               "px-2 text-body-xs font-bold wrap-anywhere",
               rail && "sr-only",
             )}
           >
-            {name}
+            {name.text}
           </p>
         )
       )}
@@ -242,7 +248,7 @@ function RoadmapGroupLinks({
           className="flex flex-col gap-1"
         >
           {group.roadmaps.map((roadmap) => {
-            const title = localise(roadmap.title, language)
+            const { text: title, lang } = content(roadmap.title)
             return (
               <NavigationLink
                 key={roadmap.id}
@@ -250,6 +256,7 @@ function RoadmapGroupLinks({
                 params={{ roadmapId: roadmap.id }}
                 rail={rail}
                 name={title}
+                nameLang={lang}
                 mark={{
                   colour: roadmap.colour,
                   initials: roadmapInitials(title),

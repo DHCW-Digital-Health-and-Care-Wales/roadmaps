@@ -1,12 +1,15 @@
 import { CircleCheckIcon } from "lucide-react"
-import { useTranslation } from "react-i18next"
+import { Trans } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 
+import { ContentText } from "./content-text"
+
 export interface AddedRoadmapNoticeProps {
-  /** The roadmap's title, as shown. */
-  title: string
+  /** The roadmap's title, as shown in the interface's language. */
+  title: LocalisedText
   /** Stable between renders: the dwell starts again when it changes. */
   onDismiss: () => void
 }
@@ -19,7 +22,6 @@ export function AddedRoadmapNotice({
   title,
   onDismiss,
 }: AddedRoadmapNoticeProps) {
-  const { t } = useTranslation()
   const dwell = useNoticeDwell(true, onDismiss)
   return (
     <DismissibleNotice
@@ -30,7 +32,12 @@ export function AddedRoadmapNotice({
       className="max-w-2xl"
       {...dwell}
     >
-      <p>{t("roadmaps.add.added", { title })}</p>
+      <p>
+        <Trans
+          i18nKey="roadmaps.add.added"
+          components={{ title: <ContentText value={title} /> }}
+        />
+      </p>
     </DismissibleNotice>
   )
 }

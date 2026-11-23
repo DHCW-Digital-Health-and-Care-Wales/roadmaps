@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import {
   familyMembers,
@@ -7,11 +7,10 @@ import {
   type FamilyInput,
 } from "@/domain/roadmap/family-changes"
 import type { Family } from "@/domain/roadmap/family"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { useLanguage } from "@/i18n"
 import { toAppError, type AppError } from "@/lib/errors"
 
+import { ContentText } from "../components/content-text"
 import { useChangeFamily } from "../hooks/use-family-changes"
 import { FamilyChangeDialog } from "./family-change-dialog"
 import { FamilyConflictReview } from "./family-conflict-review"
@@ -55,7 +54,6 @@ export function ChangeFamilyForm({
   onDone,
 }: ChangeFamilyFormProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
   const titleId = useId()
   const change = useChangeFamily()
   const { problems, focusRequest, check, refuse, clearFocusRequest } =
@@ -70,7 +68,6 @@ export function ChangeFamilyForm({
   const [dialogShown, setDialogShown] = useState(false)
   const [reviewRequest, setReviewRequest] = useState<object | null>(null)
   const reviewRef = useRef<HTMLDivElement>(null)
-  const name = localise(family.name, language)
 
   useEffect(() => {
     if (reviewRequest !== null && !dialogShown) reviewRef.current?.focus()
@@ -175,7 +172,10 @@ export function ChangeFamilyForm({
   return (
     <div className="flex flex-col gap-4">
       <h3 id={titleId} className="text-heading-s">
-        {t("roadmaps.families.form.changeTitle", { name })}
+        <Trans
+          i18nKey="roadmaps.families.form.changeTitle"
+          components={{ name: <ContentText value={family.name} /> }}
+        />
       </h3>
       {conflicts.length > 0 && (
         <FamilyConflictReview
@@ -214,7 +214,7 @@ export function ChangeFamilyForm({
       />
       <FamilyChangeDialog
         open={confirming !== null}
-        name={name}
+        name={family.name}
         members={confirming?.members ?? []}
         membersChanged={confirming?.changed ?? false}
         saving={change.isPending}

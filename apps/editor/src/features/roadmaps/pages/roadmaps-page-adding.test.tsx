@@ -1072,11 +1072,10 @@ describe("adding a roadmap from the list (STY-041)", () => {
       form.getByRole("button", { name: "Ychwanegu'r map trywydd" }),
     )
     const page = await findRoadmapPage("Map trywydd Nyrsio Cymunedol roadmap")
-    expect(
-      page.getByText(
-        "Cafodd Map trywydd Nyrsio Cymunedol roadmap ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
-      ),
-    ).toBeInTheDocument()
+    // The new title is English alone, marked inside the Welsh sentence (STY-098).
+    expect(page.getByText(/^Cafodd +ei ychwanegu\./)).toHaveTextContent(
+      "Cafodd Map trywydd Nyrsio Cymunedol roadmap ei ychwanegu. Dydy e ddim wedi'i gyhoeddi eto.",
+    )
   })
 
   describe("an expired session (S11)", () => {

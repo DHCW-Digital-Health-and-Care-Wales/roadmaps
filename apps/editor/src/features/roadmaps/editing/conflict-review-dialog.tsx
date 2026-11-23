@@ -1,6 +1,6 @@
 import { UploadIcon } from "lucide-react"
 import { type ReactNode, useRef } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -23,9 +23,11 @@ import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { formatCalendarDate, useLanguage } from "@/i18n"
 
+import { ContentText, ShownText } from "../components/content-text"
 import { DetailList } from "../components/detail-list"
 import { FieldName } from "../components/field-name"
 import { useOrganisations } from "../hooks/use-organisations"
+import { AS_PLAIN_WORDS } from "../plain-words"
 import {
   describeOrganisations,
   type OpenConflict,
@@ -250,19 +252,55 @@ function Decision({
   )
 }
 
+/** A conflict's lead-in, as `conflictTarget` shows it and as plain words. */
+interface TargetLead {
+  shown: ReactNode
+  plain: string
+}
+
+/**
+ * The lead-in naming what a conflict is about, "First item:": `shown` with an item's
+ * title marked where it is English in Welsh, and `plain` the same words, for the
+ * buttons' hidden words, which can't mark a part of themselves (ADR-008).
+ */
+function useTargetLead(): (subject: LocalisedText | string) => TargetLead {
+  const { t } = useTranslation()
+  const language = useLanguage()
+  const key = "roadmaps.publish.notice.refused.targetLead"
+  return (subject) => {
+    const plain = t(key, {
+      subject:
+        typeof subject === "string" ? subject : localise(subject, language),
+      ...AS_PLAIN_WORDS,
+    })
+    return {
+      plain,
+      shown:
+        typeof subject === "string" ? (
+          plain
+        ) : (
+          <Trans
+            i18nKey={key}
+            components={{ subject: <ContentText value={subject} /> }}
+          />
+        ),
+    }
+  }
+}
+
 /**
  * What a conflict is about, as its lead-in and the name of its field make it: `shown`
  * in the line above the values, with the field's icon before the name when it has one,
  * and `plain`, the same words alone, for the buttons' hidden words (STY-079 D2, D5).
  */
-function conflictTarget(lead: string, name: string, field?: string) {
+function conflictTarget(lead: TargetLead, name: string, field?: string) {
   return {
     shown: (
       <>
-        {lead} <FieldName field={field}>{name}</FieldName>
+        {lead.shown} <FieldName field={field}>{name}</FieldName>
       </>
     ),
-    plain: `${lead} ${name}`,
+    plain: `${lead.plain} ${name}`,
   }
 }
 
@@ -304,25 +342,23 @@ function FieldConflictItem({
   onUseTheirs,
 }: DecisionProps & { open: OpenFieldConflict }) {
   const { t } = useTranslation()
-  const language = useLanguage()
+  const targetLead = useTargetLead()
   const { describe } = useRoadmapChoices(
     conflict.subject === "roadmap" && isChoiceField(conflict.field),
   )
   const itemValue = useShownItemValue()
   const shown = (value: string): ReactNode => {
     if (conflict.subject === "item") return itemValue(conflict.field, value)
-    if (isChoiceField(conflict.field)) return describe(conflict.field, value)
+    if (isChoiceField(conflict.field)) {
+      return <ShownText content={describe(conflict.field, value)} />
+    }
     if (conflict.field === "lastUpdated") {
       return formatCalendarDate(value, t) ?? value
     }
     return value
   }
   const target = conflictTarget(
-    t("roadmaps.publish.notice.refused.targetLead", {
-      subject: item
-        ? localise(item.title, language)
-        : t("roadmaps.productDetails.title"),
-    }),
+    targetLead(item ? item.title : t("roadmaps.productDetails.title")),
     conflict.subject === "item"
       ? t(`roadmaps.edit.itemFields.${conflict.field}`)
       : t(`roadmaps.edit.roadmapFields.${conflict.field}`),
@@ -427,7 +463,7 @@ function RemovalConflictItem({
   const target = localise(conflict.removal.item.title, language)
   return (
     <ConflictItem
-      target={target}
+      target={<ContentText value={conflict.removal.item.title} />}
       yours={{
         label: t("roadmaps.publish.notice.refused.yours"),
         value: t("roadmaps.publish.notice.refused.removal.yours"),
@@ -504,10 +540,9 @@ function OrderConflictItem({
   pageItems: readonly PageItem[]
 }) {
   const { t } = useTranslation()
+  const targetLead = useTargetLead()
   const target = conflictTarget(
-    t("roadmaps.publish.notice.refused.targetLead", {
-      subject: t(`roadmaps.items.placements.${conflict.placement}`),
-    }),
+    targetLead(t(`roadmaps.items.placements.${conflict.placement}`)),
     t("roadmaps.publish.notice.refused.orderField"),
   )
   const orders = reviewedOrders(conflict, pageItems)
@@ -536,13 +571,12 @@ function OrderConflictItem({
 /** A placement's items in an order, numbered: none reads "No items". */
 function OrderList({ lines }: { lines: readonly OrderLine[] }) {
   const { t } = useTranslation()
-  const language = useLanguage()
   if (lines.length === 0) return <i>{t("roadmaps.items.noneInPlacement")}</i>
   return (
     <ol className="flex list-decimal flex-col gap-1 pl-6">
       {lines.map(({ key, title }) => (
         <li key={key} className="wrap-break-word">
-          {localise(title, language)}
+          <ContentText value={title} />
         </li>
       ))}
     </ol>

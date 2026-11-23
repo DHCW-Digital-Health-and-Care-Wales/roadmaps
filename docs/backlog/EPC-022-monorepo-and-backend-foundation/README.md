@@ -1,10 +1,10 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
-  STY-088 are done; the two apps' alignment comes next (owner, 2026-11-23), beside the
-  API placeholders' acceptance criteria
-- **Progress**: 8 of 16 terminal (STY-085 to STY-088, STY-095, CHO-044, STY-096,
-  STY-097); next selectable: STY-098
+  STY-088 and the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098) are done;
+  the API placeholders' acceptance criteria come next
+- **Progress**: 9 of 16 terminal (STY-085 to STY-088, STY-095, CHO-044, STY-096 to
+  STY-098); next selectable: none, the rest being Placeholders
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -181,13 +181,13 @@ the seeder for any table it creates.
 | CHO-044 | [One dev-ports resolver](../_archive/chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                                                              | CI/CD                      | STY-095     | ✅    |
 | STY-096 | [The site's interface text in typed catalogues](../_archive/EPC-022-monorepo-and-backend-foundation/STY-096-the-public-sites-interface-text-moves-to-typed-catalogues.md) | Features/UI + i18n         | CHO-044     | ✅    |
 | STY-097 | [One version per shared dependency, one font](../_archive/EPC-022-monorepo-and-backend-foundation/STY-097-one-version-per-shared-dependency-and-one-font.md)              | Features/UI + CI/CD        | STY-096     | ✅    |
-| STY-098 | [The editor marks English in place of Welsh](STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)                                                                 | Domain + Features/UI       | STY-097     |       |
+| STY-098 | [The editor marks English in place of Welsh](../_archive/EPC-022-monorepo-and-backend-foundation/STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)             | Domain + Features/UI       | STY-097     | ✅    |
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                | STY-098     |       |
 
-_STY-085 to STY-088, STY-095, CHO-044, STY-096 and STY-097 are done. STY-090 to STY-093 are
+_STY-085 to STY-088, STY-095, CHO-044 and STY-096 to STY-098 are done. STY-090 to STY-093 are
 Placeholders until their acceptance criteria are written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
-settles what the public sees. STY-098 and STY-089 are Proposed.
+settles what the public sees. STY-089 is Proposed.
 Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
@@ -227,6 +227,8 @@ stories follow STY-093, adding their factories; the editor's adapter follows STY
 
 - [DEF-028](../_archive/defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md):
   a fresh clone got no Git hooks from `pnpm install` (Done).
+- [DEF-033](../defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md):
+  the editor leaves text it always shows in one language unmarked (Needs triage).
 
 ## Related
 

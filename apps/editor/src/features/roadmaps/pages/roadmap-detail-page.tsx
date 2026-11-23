@@ -6,11 +6,9 @@ import { useTranslation } from "react-i18next"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { ConnectButton } from "@/features/auth/components/connect-button"
 import { useAuth } from "@/features/auth/use-auth"
-import { useLanguage } from "@/i18n"
 import type { AppError } from "@/lib/errors"
 import { cn } from "@/lib/utils"
 
@@ -181,7 +179,6 @@ function RoadmapView({
   listFetching,
   refetchList,
 }: RoadmapViewProps) {
-  const language = useLanguage()
   const changes = useRoadmapChanges(roadmap.id)
   // The same queries the items area and the form read, for the page's Refresh.
   const items = useRoadmapItems(roadmap.id)
@@ -239,7 +236,6 @@ function RoadmapView({
     addItemButtonRef.current?.focus()
   }, [])
   const addedNotice = useAddedRoadmapNotice(roadmap)
-  const title = localise(shown.title, language)
   const retryList = () => {
     void refetchList()
   }
@@ -265,7 +261,7 @@ function RoadmapView({
         )}
         <RoadmapHeader
           roadmap={roadmap}
-          title={title}
+          title={shown.title}
           titleChanged={Boolean(changes?.roadmap.title)}
           heading={headingRef}
           publishedState={publishedState}
@@ -302,7 +298,7 @@ function RoadmapView({
               <PublishedStateNotice
                 ref={publishedStateNoticeRef}
                 notice={publishedState.notice}
-                title={title}
+                title={shown.title}
                 onDismiss={publishedState.dismissNotice}
               />
             )
@@ -310,7 +306,7 @@ function RoadmapView({
         />
         <PublishedStateDialog
           state={publishedState}
-          title={title}
+          title={shown.title}
           // Its own notice, or the refusal of the changes it sent (D21).
           notice={() =>
             publishedStateNoticeRef.current ?? publishNoticeRef.current
@@ -319,7 +315,10 @@ function RoadmapView({
         <RoadmapDialog {...roadmapEdit.dialog} />
         <MatchListsAction roadmap={roadmap} />
         {addedNotice.shown && (
-          <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
+          <AddedRoadmapNotice
+            title={shown.title}
+            onDismiss={addedNotice.dismiss}
+          />
         )}
       </div>
       <RoadmapItemsArea

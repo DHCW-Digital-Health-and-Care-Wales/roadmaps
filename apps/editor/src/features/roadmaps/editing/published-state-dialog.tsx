@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import {
   AlertDialog,
@@ -10,8 +10,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import { useSessionAction } from "@/features/auth/session-action"
 
+import { ContentText } from "../components/content-text"
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
 import { countChanges } from "./pending-changes"
 import { publishedStateAction } from "./published-state-action"
@@ -55,8 +57,8 @@ export function PublishRoadmapButton({ state }: PublishRoadmapButtonProps) {
 
 export interface PublishedStateDialogProps {
   state: PublishedState
-  /** The roadmap's title, as shown. */
-  title: string
+  /** The roadmap's title, as shown in the interface's language. */
+  title: LocalisedText
   /**
    * The notice saying what the write came to, where focus goes once it is confirmed: its
    * own, or the refusal of the changes it sent (STY-052 D21).
@@ -116,9 +118,10 @@ export function PublishedStateDialog({
       <AlertDialogContent finalFocus={() => outcome.finalFocus()}>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {t(`roadmaps.publishRoadmap.confirm.title.${askedVerb}`, {
-              title,
-            })}
+            <Trans
+              i18nKey={`roadmaps.publishRoadmap.confirm.title.${askedVerb}`}
+              components={{ title: <ContentText value={title} /> }}
+            />
           </AlertDialogTitle>
           <AlertDialogDescription>
             {description.join(" ")}

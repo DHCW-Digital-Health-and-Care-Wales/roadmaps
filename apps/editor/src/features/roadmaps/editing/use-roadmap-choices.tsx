@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next"
 
 import type { Category } from "@/domain/roadmap/category"
 import type { Family } from "@/domain/roadmap/family"
-import { localise } from "@/domain/roadmap/localised-text"
+import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   ROADMAP_CHOICE_FIELDS,
@@ -12,7 +12,9 @@ import {
 } from "@/domain/roadmap/roadmap-changes"
 import { useLanguage } from "@/i18n"
 
+import { useContent } from "../hooks/use-content"
 import { type RoadmapLists, useRoadmapLists } from "../hooks/use-roadmap-lists"
+import { type ShownContent, unmarked } from "../shown-content"
 import type { ChoiceOption } from "./choice-field"
 import type { EditFormField } from "./edit-form"
 
@@ -25,18 +27,27 @@ import type { EditFormField } from "./edit-form"
 export function useRoadmapChoices(needed: boolean) {
   const { t } = useTranslation()
   const language = useLanguage()
+  const content = useContent()
   const { lists, reading, refetch } = useRoadmapLists(needed)
 
   /** The name `value`, a family's or category's ID, shows as; `""` is none. */
-  const describe = (field: RoadmapChoiceField, value: string): string => {
+  const describe = (field: RoadmapChoiceField, value: string): ShownContent => {
     if (field === "familyId") {
-      if (value === "") return t("roadmaps.edit.noFamily")
-      if (value === UNLISTED_FAMILY) return t("roadmaps.lists.familyNotListed")
+      if (value === "") return unmarked(t("roadmaps.edit.noFamily"))
+      if (value === UNLISTED_FAMILY) {
+        return unmarked(t("roadmaps.lists.familyNotListed"))
+      }
     } else if (value === "") {
-      return t("roadmaps.edit.noCategory")
+      return unmarked(t("roadmaps.edit.noCategory"))
     }
     const name = listOf(lists, field)?.find(({ id }) => id === value)?.name
-    return name ? localise(name, language) : value
+    return name ? content(name) : unmarked(value)
+  }
+
+  /** A list's name as an option's label, and its `lang` where it is English in Welsh. */
+  const labelOf = (name: LocalisedText) => {
+    const { text, lang } = content(name)
+    return { label: text, lang }
   }
 
   /** "No family", then the row's unlisted family, then the list in its order. */
@@ -58,7 +69,7 @@ export function useRoadmapChoices(needed: boolean) {
       : []),
     ...families.map(({ id, name, colour }) => ({
       value: id,
-      label: localise(name, language),
+      ...labelOf(name),
       colour,
     })),
   ]
@@ -66,10 +77,7 @@ export function useRoadmapChoices(needed: boolean) {
   /** "No category", then the list in its order. */
   const categoryOptions = (categories: readonly Category[]): ChoiceOption[] => [
     { value: "", label: t("roadmaps.edit.noCategory") },
-    ...categories.map(({ id, name }) => ({
-      value: id,
-      label: localise(name, language),
-    })),
+    ...categories.map(({ id, name }) => ({ value: id, ...labelOf(name) })),
   ]
 
   /** What the form needs to show `field` of `shown`: its options once its list is read. */
@@ -101,14 +109,14 @@ export function useRoadmapChoices(needed: boolean) {
     const label = t(`roadmaps.edit.roadmapFields.${field}`)
     const { options, beingRead, name, none, colour } = choiceOf(shown, field)
     if (options) return { name: field, label, multiline: false, options }
-    const text = name ? localise(name, language) : none
+    const text = name ? content(name) : unmarked(none)
     if (beingRead) {
       const value = valueOf(shown, field)
       return {
         name: field,
         label,
         multiline: false,
-        options: [{ value, label: text, ...colour }],
+        options: [{ value, label: text.text, lang: text.lang, ...colour }],
         disabled: true,
       }
     }
@@ -117,7 +125,7 @@ export function useRoadmapChoices(needed: boolean) {
       label,
       multiline: false,
       fixed: {
-        text,
+        text: <p lang={text.lang}>{text.text}</p>,
         notice: t(`roadmaps.edit.choiceUnavailable.${field}`),
       },
     }

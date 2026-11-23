@@ -12,6 +12,8 @@ import { ChangedTag } from "../editing/edit-controls"
 import { countChanges } from "../editing/pending-changes"
 import { useRoadmapChanges } from "../editing/pending-changes-context"
 import { publishAction } from "../editing/pending-changes-store"
+import { useContent } from "../hooks/use-content"
+import { ContentText } from "./content-text"
 import { ListMismatchBadges } from "./list-mismatch-badges"
 import { NotPublishedBadge } from "./not-published-badge"
 import { RoadmapSwatch } from "./roadmap-swatch"
@@ -33,14 +35,15 @@ export interface RoadmapCardProps {
 export function RoadmapCard({ roadmap }: RoadmapCardProps) {
   const { t } = useTranslation()
   const language = useLanguage()
+  const content = useContent()
   const id = useId()
   const changed = countChanges(useRoadmapChanges(roadmap.id)) > 0
 
   const title = localise(roadmap.title, language)
-  const category = roadmap.category && localise(roadmap.category, language)
-  const status = roadmap.statusLabel && localise(roadmap.statusLabel, language)
+  const category = roadmap.category && content(roadmap.category)
+  const status = roadmap.statusLabel && content(roadmap.statusLabel)
   const summary =
-    roadmap.serviceDescription && localise(roadmap.serviceDescription, language)
+    roadmap.serviceDescription && content(roadmap.serviceDescription)
   const updated =
     roadmap.lastUpdated === null
       ? null
@@ -85,18 +88,20 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           }
           className="line-clamp-2 text-heading-xs wrap-anywhere text-link underline outline-none after:absolute after:inset-0 hover:text-link-hover hover:no-underline"
         >
-          {title}
+          <ContentText value={roadmap.title} />
         </Link>
         {/* Read as the link's description, not a second time as content. */}
         <div aria-hidden="true" className="flex flex-1 flex-col gap-2">
           {hasHeader && (
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-body-xs text-muted-foreground">
               {category !== null && (
-                <span id={`${id}-category`}>{category}</span>
+                <span id={`${id}-category`} lang={category.lang}>
+                  {category.text}
+                </span>
               )}
               {status !== null && (
-                <Badge id={`${id}-status`} variant="neutral">
-                  {status}
+                <Badge id={`${id}-status`} lang={status.lang} variant="neutral">
+                  {status.text}
                 </Badge>
               )}
               <ListMismatchBadges roadmap={roadmap} id={id} />
@@ -114,9 +119,10 @@ export function RoadmapCard({ roadmap }: RoadmapCardProps) {
           {summary !== null && (
             <p
               id={`${id}-summary`}
+              lang={summary.lang}
               className="line-clamp-3 text-body-xs text-pretty text-muted-foreground"
             >
-              {summary}
+              {summary.text}
             </p>
           )}
           {hasFooter && (

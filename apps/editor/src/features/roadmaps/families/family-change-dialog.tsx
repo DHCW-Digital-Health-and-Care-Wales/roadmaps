@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import {
   AlertDialog,
@@ -11,15 +11,16 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { localise } from "@/domain/roadmap/localised-text"
+import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import { useSessionAction } from "@/features/auth/session-action"
-import { useLanguage } from "@/i18n"
+
+import { ContentText } from "../components/content-text"
 
 export interface FamilyChangeDialogProps {
   open: boolean
-  /** The family's name as shown. */
-  name: string
+  /** The family's name, shown in the interface's language. */
+  name: LocalisedText
   /** The roadmaps the change rewrites. */
   members: readonly Roadmap[]
   /** Whether a re-read found these roadmaps different from those confirmed (S8). */
@@ -54,7 +55,6 @@ export function FamilyChangeDialog({
   onCancel,
 }: FamilyChangeDialogProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
   const published = members.some((roadmap) => roadmap.published)
   const confirm = useSessionAction(onConfirm)
 
@@ -71,7 +71,10 @@ export function FamilyChangeDialog({
       <AlertDialogContent finalFocus={returnFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {t("roadmaps.families.confirm.title", { name })}
+            <Trans
+              i18nKey="roadmaps.families.confirm.title"
+              components={{ name: <ContentText value={name} /> }}
+            />
           </AlertDialogTitle>
           <AlertDialogDescription>
             {membersChanged && (
@@ -88,7 +91,7 @@ export function FamilyChangeDialog({
               {members.map((roadmap) => (
                 <li key={roadmap.id} className="wrap-break-word">
                   <span className="font-bold">
-                    {localise(roadmap.title, language)}
+                    <ContentText value={roadmap.title} />
                   </span>
                   {roadmap.published && (
                     <>

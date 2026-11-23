@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next"
 
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
-import { formatCalendarDate, useLanguage } from "@/i18n"
+import { formatCalendarDate } from "@/i18n"
+
+import { useContent } from "../hooks/use-content"
 
 export interface RoadmapFactsProps {
   /** The roadmap as shown, pending edits applied. */
@@ -17,8 +18,8 @@ export interface RoadmapFactsProps {
  */
 export function RoadmapFacts({ roadmap }: RoadmapFactsProps) {
   const { t } = useTranslation()
-  const language = useLanguage()
-  const status = roadmap.statusLabel && localise(roadmap.statusLabel, language)
+  const content = useContent()
+  const status = roadmap.statusLabel && content(roadmap.statusLabel)
   const updated =
     roadmap.lastUpdated === null
       ? undefined
@@ -29,7 +30,9 @@ export function RoadmapFacts({ roadmap }: RoadmapFactsProps) {
       {status && (
         <li className="text-muted-foreground">
           {t("roadmaps.facts.status")}{" "}
-          <span className="font-bold text-foreground">{status}</span>
+          <span lang={status.lang} className="font-bold text-foreground">
+            {status.text}
+          </span>
         </li>
       )}
       {roadmap.productLead !== null && (

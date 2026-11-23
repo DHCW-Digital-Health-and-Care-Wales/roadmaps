@@ -1,11 +1,10 @@
 import type { FocusEventHandler, ReactNode } from "react"
 
-import { localise } from "@/domain/roadmap/localised-text"
 import type { Organisation } from "@/domain/roadmap/organisation"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
+import { ContentText } from "./content-text"
 import { HorizonFlag } from "./horizon-flag"
 import { ItemFields } from "./item-fields"
 import { STRUCK_TEXT_CLASSES } from "./struck-text"
@@ -51,7 +50,6 @@ export function RoadmapItemCard({
   travelName,
   onFocus,
 }: RoadmapItemCardProps) {
-  const language = useLanguage()
   return (
     // eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions -- onFocus only observes focus bubbling up from the card's controls.
     <li
@@ -66,7 +64,7 @@ export function RoadmapItemCard({
     >
       <div className={cn("flex flex-col gap-3", struck && STRUCK_TEXT_CLASSES)}>
         <h3 className="text-heading-xs wrap-break-word whitespace-pre-line">
-          {localise(item.title, language)}
+          <ContentText value={item.title} />
         </h3>
         {item.writtenHorizon !== null && (
           <HorizonFlag writtenHorizon={item.writtenHorizon} />

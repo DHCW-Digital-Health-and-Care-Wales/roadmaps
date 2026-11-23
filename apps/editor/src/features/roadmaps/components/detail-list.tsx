@@ -1,9 +1,8 @@
-import type { DetailLine } from "@/domain/roadmap/item-details"
-
 import { nestItemDetails, type NestedItemDetail } from "../nest-item-details"
+import type { ShownDetail } from "../shown-content"
 
 export interface DetailListProps {
-  details: readonly DetailLine[]
+  details: readonly ShownDetail[]
   /**
    * A class for the text of the detail at this place in the order it is drawn, the
    * nested ones after the one above them: how a card cuts one (STY-066).
@@ -28,7 +27,7 @@ export function DetailList({ details, textClass }: DetailListProps) {
 }
 
 /** How many details a node holds, itself and those nested in it. */
-function countDetails(node: NestedItemDetail<DetailLine>): number {
+function countDetails(node: NestedItemDetail<ShownDetail>): number {
   return 1 + node.children.reduce((sum, child) => sum + countDetails(child), 0)
 }
 
@@ -37,7 +36,7 @@ function DetailNodes({
   start,
   textClass,
 }: {
-  nodes: readonly NestedItemDetail<DetailLine>[]
+  nodes: readonly NestedItemDetail<ShownDetail>[]
   /** The place in the order drawn of the first of `nodes`. */
   start: number
   textClass: DetailListProps["textClass"]
@@ -55,7 +54,11 @@ function DetailNodes({
         return (
           // Details have no identity; their order is fixed for a render.
           <li key={own}>
-            <div data-detail="" className={textClass?.(own)}>
+            <div
+              data-detail=""
+              lang={node.detail.lang}
+              className={textClass?.(own)}
+            >
               {node.detail.text}
             </div>
             {node.children.length > 0 && (

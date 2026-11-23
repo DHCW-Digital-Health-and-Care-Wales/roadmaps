@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next"
 
 import type { Category } from "@/domain/roadmap/category"
-import { localise } from "@/domain/roadmap/localised-text"
-import { useLanguage } from "@/i18n"
+
+import { ContentText } from "../components/content-text"
 
 /** The categories in list order, read-only (S1): they can't be changed here yet. */
 export function CategoriesSection({
@@ -11,7 +11,6 @@ export function CategoriesSection({
   categories: readonly Category[] | null
 }) {
   const { t } = useTranslation()
-  const language = useLanguage()
   return (
     <section
       aria-labelledby="categories-heading"
@@ -28,7 +27,9 @@ export function CategoriesSection({
       {categories && categories.length > 0 ? (
         <ul className="flex list-disc flex-col gap-1.5 pl-5">
           {categories.map((category) => (
-            <li key={category.id}>{localise(category.name, language)}</li>
+            <li key={category.id}>
+              <ContentText value={category.name} />
+            </li>
           ))}
         </ul>
       ) : (

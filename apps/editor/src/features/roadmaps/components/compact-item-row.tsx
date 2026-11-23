@@ -15,6 +15,7 @@ import { useLanguage } from "@/i18n"
 import { TABLET_WIDTH, useMediaQuery } from "@/lib/use-media-query"
 import { cn } from "@/lib/utils"
 
+import { ContentText } from "./content-text"
 import { HorizonFlag } from "./horizon-flag"
 import { ItemFields } from "./item-fields"
 import { STRUCK_TEXT_CLASSES } from "./struck-text"
@@ -104,7 +105,6 @@ export function CompactItemRow({
   // Adjusting state while rendering, as React documents for state that follows props.
   if (reveal && !open) setOpen(true)
   const title = localise(item.title, language)
-  const description = item.description && localise(item.description, language)
   const horizon = item.writtenHorizon
   const wholeClasses = "wrap-break-word whitespace-pre-line"
   const struckClasses = struck ? STRUCK_TEXT_CLASSES : undefined
@@ -172,11 +172,11 @@ export function CompactItemRow({
                   open ? wholeClasses : "truncate",
                 )}
               >
-                {title}
+                <ContentText value={item.title} />
               </h3>
-              {!open && description && (
+              {!open && item.description && (
                 <p className="min-w-0 flex-1 basis-0 truncate text-body-xs text-muted-foreground">
-                  {description}
+                  <ContentText value={item.description} />
                 </p>
               )}
             </div>
@@ -205,7 +205,7 @@ export function CompactItemRow({
             <h3
               className={cn("text-body font-bold", wholeClasses, struckClasses)}
             >
-              {title}
+              <ContentText value={item.title} />
             </h3>
             {horizon !== null && (
               <div className={struckClasses}>

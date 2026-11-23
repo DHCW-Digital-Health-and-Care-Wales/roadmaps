@@ -12,6 +12,7 @@ import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { roadmapKeys } from "../hooks/roadmap-queries"
+import { AS_PLAIN_WORDS } from "../plain-words"
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { change } from "../testing/change-roadmap"
@@ -346,9 +347,12 @@ describe("in Welsh", () => {
   })
 
   it("names a roadmap with a dot", () => {
-    expect(t("roadmaps.navigation.changed", { name: "Product A" })).toBe(
-      "Product A, newidiadau heb eu cyhoeddi",
-    )
+    expect(
+      t("roadmaps.navigation.changed", {
+        name: "Product A",
+        ...AS_PLAIN_WORDS,
+      }),
+    ).toBe("Product A, newidiadau heb eu cyhoeddi")
   })
 })
 

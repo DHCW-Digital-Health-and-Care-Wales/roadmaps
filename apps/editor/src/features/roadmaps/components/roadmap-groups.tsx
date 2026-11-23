@@ -34,10 +34,15 @@ export function RoadmapGroups({ roadmaps }: RoadmapGroupsProps) {
     <div className="flex flex-col gap-8">
       {groups.map((group, index) => {
         const id = `${headingId}-${String(index)}`
+        const name = groupName(group)
         return (
           <div key={group.key} className="flex flex-col gap-3">
-            <h2 id={id} className="text-heading-s wrap-anywhere">
-              {groupName(group)}
+            <h2
+              id={id}
+              lang={name.lang}
+              className="text-heading-s wrap-anywhere"
+            >
+              {name.text}
             </h2>
             <RoadmapGrid roadmaps={group.roadmaps} labelledBy={id} />
           </div>

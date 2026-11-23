@@ -36,13 +36,12 @@ not post, change code, merge or message other people as part of reviewing.
 2. **Find the requirements.** Read the user's instructions and the linked
    story, defect or chore (`docs/backlog/`, ids `STY-<nnn>`, `DEF-<nnn>`, `CHO-<nnn>`) with
    its acceptance criteria, the PR body and the binding ADRs in `docs/adr/`,
-   following commit and PR references. Read the `AGENTS.md` along each changed
-   path's directory ancestry (root `AGENTS.md`, `apps/editor/AGENTS.md`, `apps/editor/tests/e2e/AGENTS.md`,
-   `docs/AGENTS.md`), the epic's `delivery-notes.md` when there is one, and
-   each _Repo contract_ below
-   the diff reaches; repo invariants outrank generic preferences. Without a
-   spec, say what could not be verified and continue with regressions and
-   contracts.
+   following commit and PR references. Read the root `AGENTS.md`, the
+   `AGENTS.md` along each changed path's directory ancestry and the shared
+   conventions files those guides point to, the epic's `delivery-notes.md`
+   when there is one, and each _Repo contract_ below the diff reaches; repo
+   invariants outrank generic preferences. Without a spec, say what could not
+   be verified and continue with regressions and contracts.
 3. **Trace behavior.** Open touched files beyond the hunks, their callers,
    hooks, providers, adapters, schemas and tests, and follow inputs through
    state, caches and rendered output. Read a definition before assuming a

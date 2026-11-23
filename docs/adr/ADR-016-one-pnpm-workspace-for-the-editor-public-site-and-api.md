@@ -8,7 +8,7 @@
   only code owner; STY-088: the shared ESLint base comes with STY-095, and
   `product-roadmaps` protected as `main` is; STY-095: a shared TypeScript base, the
   shared conventions file, one package per job; STY-096: the public site's text without
-  i18next)
+  i18next; STY-089: where shared config, data and code live)
 
 ## Context
 
@@ -190,6 +190,19 @@ From the owner's decision in STY-096 delivery (2026-11-23, STY-096 D10).
   without i18next or react-i18next, which would take its script past the 100 KB budget
   (`apps/public-site/lighthouserc.json`, `resource-summary:script:size`); ADR-008's
   _STY-096 amendments_ hold the site's form.
+
+### STY-089 amendments
+
+From the owner's STY-089 grilling (2026-11-23, STY-089 D2, D10 and D11); the rest of
+_Layout and name_ and _The public site_ stands.
+
+- **What both apps share takes the lightest home that holds it:** shared config is
+  root files (`eslint.base.ts`, `tsconfig.base.json`), shared data a root folder (the
+  spreadsheet fixtures in `fixtures/sheets/`, from STY-089), and a package under
+  `packages/` holds only code that two or more apps import and that outlives the Sheets
+  format.
+- **Code the Sheets format retires stays in each app**, duplicated rather than shared:
+  the editor's test-only CSV reader and the public site's CSV parser (ADR-015).
 
 ## Consequences
 

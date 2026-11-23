@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { BOTH } from "./tags.ts"
 
 // Compares each page's accessibility tree (roles, names and text) with the
 // YAML in e2e/__snapshots__. After an intended change, run
@@ -19,7 +20,7 @@ const pages = {
 const differsOnPhone = ["product", "product-cy"]
 
 for (const [name, path] of Object.entries(pages)) {
-  const details = differsOnPhone.includes(name) ? { tag: "@both" } : {}
+  const details = differsOnPhone.includes(name) ? BOTH : {}
   test(`${name} page structure`, details, async ({ page }) => {
     await page.goto(path)
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible()

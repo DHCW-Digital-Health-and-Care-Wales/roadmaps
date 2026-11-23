@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs"
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Locator, type Page } from "@playwright/test"
+import { BOTH, MOBILE_ONLY } from "./tags.ts"
 import { CATEGORY_SHEET_VALUES, type CategoryId } from "../src/lib/types.ts"
 
 interface SnapshotRoadmap {
@@ -23,12 +24,6 @@ const fullTitle = (roadmap: SnapshotRoadmap) =>
     ? `${roadmap.meta.family.en}: ${roadmap.meta.title.en}`
     : roadmap.meta.title.en
 const pageTitle = fullTitle(first)
-
-// Each test runs on desktop only, unless it is tagged (playwright.config.ts):
-// "@both" for what a phone changes (the menu button, the header's filter strip),
-// "@mobile-only" for what only a phone has or holds best (the menu, reflow).
-const BOTH = { tag: "@both" }
-const MOBILE_ONLY = { tag: "@mobile-only" }
 
 const h1 = (page: Page) => page.getByRole("heading", { level: 1 })
 
@@ -461,7 +456,7 @@ test.describe("mobile menu", () => {
 })
 
 test.describe("short screens, such as 400% zoom", () => {
-  test("the header scrolls away and Back to top shrinks to its icon", async ({
+  test("the header scrolls away and Back to top stays in view", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 320, height: 256 })

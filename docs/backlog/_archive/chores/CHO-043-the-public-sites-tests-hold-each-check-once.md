@@ -133,8 +133,8 @@ English (D4)
 - **The mechanism (S1, S7).** `apps/public-site/playwright.config.ts` filters by tag: the
   `desktop` project has `grepInvert: /@mobile-only/`, the `mobile` project
   `grep: /@mobile-only|@both/`, so an untagged test runs on desktop alone and nothing
-  is scheduled and skipped. `site.spec.ts` names the two tags once (`BOTH`,
-  `MOBILE_ONLY`); the guide's _Tests_ section says how to pick one.
+  is scheduled and skipped. `apps/public-site/e2e/tags.ts` names the two tags once (`BOTH`,
+  `MOBILE_ONLY`), for both specs; the guide's _Tests_ section says how to pick one.
 - **Runs.** 101 executed (102 scheduled) become 48, none skipped (10 whole tests, 20 runs; 15 mobile runs; the 320 px check's desktop run; 11 axe scans; 6 snapshots): 39 on desktop, 9 on
   mobile (the menu, the 320 px reflow, the header's two filter tests, three axe scans,
   the two product snapshots). Locally the suite takes 28.5 s before and 20.1 s after
@@ -150,7 +150,7 @@ English (D4)
   the focused link stacking over its sibling, the three things that decide whether a
   ring is cut off or covered, and drops the width, colour and box-shadow pins. `:618`
   drops the 40 px width of Back to top and keeps it visible.
-- **Vitest counts.** 445 expanded tests become 453: the tables expand to one test per
+- **Vitest counts.** 445 expanded tests become 455: the tables expand to one test per
   case (itemsStatus, countItems, formatDate, showHiddenItems), so the count rises
   while the places that state a rule fall. The audit's "about 10 groups that differ
   only in data" are `roadmap-schema.test.ts` (11 rejections), `csv.test.ts` (6),
@@ -158,6 +158,10 @@ English (D4)
   `titleWithFamily`, `countItems`, `countText` with `countInParentheses`,
   `showHiddenItems`, `itemsStatus` and `formatDate`. `roadmapsStatus`'s table now holds
   the Welsh text too, so `LandingPage.test.tsx` no longer does.
+- **Bullet lists.** `RoadmapCard` and `RoadmapListItem` each call `RichText` themselves, so each keeps one test
+  that bullet lines render as lists; `text.test.ts` holds the cases. Only the card's
+  line-break test went. The card with no description still shows the generic intro
+  (`LandingPage.test.tsx`); only the search half of its old test went, to `matchesSearch`.
 - Six identical mobile snapshot files were checked byte for byte against their desktop
   files with `cmp` before they went.
 
@@ -187,17 +191,15 @@ Each Playwright test below ran on both projects (2 runs).
 
 Vitest, in the same tables:
 
-| Cut                                                                                                                               | Held by                                                                                                                                       |
-| --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LandingPage.test.tsx` "has no Other section when every roadmap has a category"                                                   | `roadmap-helpers.test.ts` `groupByCategory`; "shows one section per non-empty category…" lists exactly the sections                           |
-| `LandingPage.test.tsx` "does not match the generic intro shown on cards with no description"                                      | `roadmap-helpers.test.ts` `matchesSearch`, the same words in both languages                                                                   |
-| `LandingPage.test.tsx` "searches and sorts by the Welsh text": the English-title search, the no-match search and the Welsh status | `matchesSearch` and `groupByCategory` (Welsh cases); `roadmapsStatus`, whose table now has the Welsh strings; the sort and one search stay    |
-| `LandingPage.test.tsx` "says when nothing matches": the status                                                                    | `roadmapsStatus`                                                                                                                              |
-| `RoadmapCard.test.tsx` "keeps line breaks from the sheet as separate paragraphs"                                                  | `text.test.ts` `parseTextBlocks`; the card's bullet test shows the paragraph                                                                  |
-| `RoadmapListItem.test.tsx` "renders bullet lines in the description and outcome as lists"                                         | `parseTextBlocks`, with `RoadmapCard.test.tsx` as the one wiring of `RichText`, which both use                                                |
-| `App.test.tsx` "shows a product roadmap, titled with its family"                                                                  | `titleWithFamily`; `RoadmapIntro.test.tsx` "keeps the family inside the h1"; `entry-server.test.tsx` (the head's title); the page-title table |
-| `App.test.tsx` "shows Welsh sheet content where there is some": the product-page half                                             | `RoadmapCard.test.tsx` "shows Welsh text, marking English fallbacks"; the landing half stays                                                  |
-| `App.test.tsx` the second landing status, `5 of 9`, the exact announcer strings and the Betsi banner string, now a fragment       | `itemsStatus` and `roadmapsStatus` tables; one full string of each stays                                                                      |
+| Cut                                                                                                                                                         | Held by                                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LandingPage.test.tsx` "has no Other section when every roadmap has a category"                                                                             | `roadmap-helpers.test.ts` `groupByCategory`; "shows one section per non-empty category…" lists exactly the sections                           |
+| `LandingPage.test.tsx` "searches and sorts by the Welsh text": the English-title search, the no-match search and the Welsh status                           | `matchesSearch` and `groupByCategory` (Welsh cases); `roadmapsStatus`, whose table now has the Welsh strings; the sort and one search stay    |
+| `LandingPage.test.tsx` "says when nothing matches": the status                                                                                              | `roadmapsStatus`                                                                                                                              |
+| `RoadmapCard.test.tsx` "keeps line breaks from the sheet as separate paragraphs"                                                                            | `text.test.ts` `parseTextBlocks`; the card's bullet test shows the paragraph                                                                  |
+| `App.test.tsx` "shows a product roadmap, titled with its family"                                                                                            | `titleWithFamily`; `RoadmapIntro.test.tsx` "keeps the family inside the h1"; `entry-server.test.tsx` (the head's title); the page-title table |
+| `App.test.tsx` "shows Welsh sheet content where there is some": the product-page half                                                                       | `RoadmapCard.test.tsx` "shows Welsh text, marking English fallbacks"; the landing half stays                                                  |
+| `App.test.tsx` the second landing status, `5 of 9`, the "Showing all 9 items" announcement (now `all 9 items`) and the Betsi banner string (now a fragment) | `itemsStatus` and `roadmapsStatus` tables; one full string of each stays                                                                      |
 
 ### Scenario evidence
 
@@ -206,7 +208,7 @@ Vitest, in the same tables:
 | S1       | `playwright test --list` shows 48 runs, 39 desktop and 9 mobile; `pnpm site:test:e2e` passes 48 with none skipped                                                                                                                                                                                                                               |
 | S2       | the cuts table; the four assertions moved down (`og:title`, each landing `href`, Back after a language switch, focus and Back after the layout switch) were each shown red by breaking the code they check: `entry-server.tsx`'s `og:title`, `ProductCard.tsx`'s `href`, `router.ts`'s `pushState` (two tests), `SiteFooter.tsx`'s layout `key` |
 | S3       | the departures above                                                                                                                                                                                                                                                                                                                            |
-| S4       | the Vitest table; `pnpm site:test` passes 453 tests; the status and count strings, the title with its family, the bullet lists, the search matching and the grouping each have their cases in the helper and one wiring test above                                                                                                              |
+| S4       | the Vitest table; `pnpm site:test` passes 455 tests; the status and count strings, the title with its family, the bullet lists, the search matching and the grouping each have their cases in the helper and one wiring test above                                                                                                              |
 | S5       | the cuts tables name where each assertion is still held; the axe scans are 14 on desktop and 3 on mobile (`--list`)                                                                                                                                                                                                                             |
 | S6       | the PR lists the cuts tables                                                                                                                                                                                                                                                                                                                    |
 | S7       | `apps/public-site/AGENTS.md`, _Tests_                                                                                                                                                                                                                                                                                                           |

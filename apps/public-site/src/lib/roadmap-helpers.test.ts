@@ -39,6 +39,8 @@ const [productA, productB] = snapshot
 const cardiff: OrgFilter = { org: "cavuhb", includeNational: true }
 const cardiffOnly: OrgFilter = { org: "cavuhb", includeNational: false }
 const allWales: OrgFilter = { org: "national", includeNational: true }
+type ItemCount = Parameters<typeof itemsStatus>[0]
+type ItemsStatusOptions = NonNullable<Parameters<typeof itemsStatus>[2]>
 
 describe("isExpandable", () => {
   it.each([
@@ -240,9 +242,7 @@ describe("organisationsWithWork", () => {
 describe("itemsStatus", () => {
   const cardiffName = "Cardiff and Vale University Health Board"
 
-  it.each<
-    [string, { shown: number; total: number }, OrgFilter, object, string]
-  >([
+  it.each<[string, ItemCount, OrgFilter, ItemsStatusOptions, string]>([
     [
       "names the organisation in full, and any all-Wales work",
       { shown: 5, total: 9 },
@@ -515,8 +515,7 @@ describe("roadmapsStatus", () => {
       "Yn dangos 12 o 14 trywydd ar gyfer Cymru gyfan",
     ],
   ])('for "%s" and %o is "%s"', (query, filter, en, cy) => {
-    const total = query || filter.org ? 12 : 14
-    expect(roadmapsStatus(total, 14, query, filter)).toEqual({ en, cy })
+    expect(roadmapsStatus(12, 14, query, filter)).toEqual({ en, cy })
   })
 })
 

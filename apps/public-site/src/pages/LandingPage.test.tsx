@@ -242,6 +242,18 @@ describe("LandingPage", () => {
     )
   })
 
+  it("shows the generic intro on a card with no description", () => {
+    const bare: Roadmap = {
+      ...uncategorised,
+      meta: { ...uncategorised.meta, serviceDescription: loc("") },
+    }
+    renderLanding([bare, ...categorised])
+    expect(
+      screen.getByRole("link", { name: "Miscellany" }).closest("li")
+        ?.textContent,
+    ).toContain("direction")
+  })
+
   it("says when nothing matches", () => {
     renderLanding(categorised)
     expect(screen.queryByText(/No roadmaps match/)).toBeNull()

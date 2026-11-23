@@ -57,8 +57,7 @@ Follow the file you are in, not `apps/editor/AGENTS.md`; the workspace's toolcha
 - A Playwright test runs on desktop alone unless it is tagged: `{ tag: "@both" }` for
   what a phone changes (the menu button, the header's filter strip), `{ tag: "@mobile-only" }`
   for what only a phone has or holds best (the menu, 320 px reflow), as
-  `apps/public-site/playwright.config.ts` filters by tag. A page whose ARIA snapshot is
-  the same on a phone has a desktop file only.
+  `apps/public-site/playwright.config.ts` filters by tag (`apps/public-site/e2e/tags.ts`).
 
 ## Commands and checks
 

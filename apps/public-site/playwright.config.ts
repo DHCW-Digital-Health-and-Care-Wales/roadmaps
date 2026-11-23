@@ -28,7 +28,7 @@ export default defineConfig({
     },
   },
   // A test runs on desktop unless it is tagged: "@both" runs it on mobile too and
-  // "@mobile-only" on mobile alone (see AGENTS.md, Tests).
+  // "@mobile-only" on mobile alone (see apps/public-site/AGENTS.md, Tests).
   projects: [
     {
       name: "desktop",

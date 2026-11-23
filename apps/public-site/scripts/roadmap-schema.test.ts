@@ -107,7 +107,7 @@ describe("roadmap snapshot schema", () => {
       },
       /Empty English text/,
     ],
-  ])("rejects %s", (_, break_, message) => {
-    expect(() => validateSnapshot(break_(valid()))).toThrow(message)
+  ])("rejects %s", (_, corrupt, message) => {
+    expect(() => validateSnapshot(corrupt(valid()))).toThrow(message)
   })
 })

@@ -418,7 +418,9 @@ describe("organisation filter", () => {
     expect(window.location.search).toBe("?org=sbuhb")
     expect(pill.getAttribute("aria-pressed")).toBe("true")
     expect(document.activeElement).toBe(pill)
-    expect(announcer?.textContent).toContain("Swansea Bay")
+    expect(announcer?.textContent).toContain(
+      "Swansea Bay University Health Board, including all-Wales work",
+    )
     expect(
       screen
         .getAllByRole("button", { name: "Filter by All Wales" })

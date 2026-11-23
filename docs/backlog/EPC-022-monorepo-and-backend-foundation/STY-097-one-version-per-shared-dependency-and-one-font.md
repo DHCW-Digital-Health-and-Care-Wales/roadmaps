@@ -32,8 +32,7 @@ lucide-react, zod, jsdom, `@testing-library/react`, `@axe-core/playwright`,
 **Then** each is a `catalog:` entry, and the lockfile resolves one version of it for
 both apps
 **And** each entry takes the newer of the two apps' resolved versions, or a later one at
-least a week old, except `@types/node`, which stays at the oldest Node the root
-`engines` supports (STY-009), so both apps move to the catalogue's
+least a week old, except `@types/node`, which follows the workspace's Node (S5)
 
 ### S2: Both apps load the variable Roboto
 
@@ -59,6 +58,16 @@ pull request with its cause
 **Then** it says the site keeps its own router: a static prerendered site served per
 path, where the editor's TanStack Router runs on hash history with no SSR (ADR-004)
 
+### S5: One Node version everywhere (D6)
+
+**Given** the workspace's Node version
+**When** a reader compares `.nvmrc`, the root `engines`, CI and the catalogue's
+`@types/node`
+**Then** each names Node 26: `engines` accepts 26 and later only, and both apps take
+`@types/node` 26 from the catalogue
+**And** both apps' checks pass on it, and ADR-007, which says `engines` still accepts
+22 and 24 for local development, is amended to match
+
 ## Decisions
 
 - **D1** (owner, 2026-11-23, STY-095 grilling round 1): split from STY-095 as one of
@@ -74,6 +83,11 @@ path, where the editor's TanStack Router runs on hash history with no SSR (ADR-0
 - **D5** (agent, 2026-11-23, from the review of this record): `@types/node` follows the
   `engines` floor, as STY-009 recorded, over the newer of the two apps' versions, which
   would type-check APIs a supported Node lacks. Gives S1's exception.
+- **D6** (owner, 2026-11-23, asked on PR #268 after D5): Node 26 is the workspace's floor,
+  matching `.nvmrc` and CI, over keeping 22 or raising to 24: Node 26 is LTS until
+  April 2029, Node 22 reaches its end of life on 30 April 2027, and CI tests no other
+  version. Changes D5: `@types/node` is 26 for both apps. Supersedes STY-009's choice of
+  22 for the oldest supported runtime. Gives S5.
 
 ## Out of scope
 

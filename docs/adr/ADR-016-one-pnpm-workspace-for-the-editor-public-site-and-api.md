@@ -162,8 +162,8 @@ _CI_ stands.
 
 ### STY-095 amendments
 
-From the owner's STY-095 grilling (2026-11-23, STY-095 D5–D8, STY-097 D2–D3); the rest
-of _Workspace tooling_ and _Agent guides_ stands.
+From the owner's STY-095 grilling (2026-11-23, STY-095 D5–D8, STY-097 D2–D3) and
+STY-097 D6; the rest of _Workspace tooling_ and _Agent guides_ stands.
 
 - **The root `eslint.base.ts` takes the stricter setting of each app**, `@eslint-react`
   included, and **a root `tsconfig.base.json`** beside it holds the compiler options
@@ -176,6 +176,9 @@ of _Workspace tooling_ and _Agent guides_ stands.
   (`@fontsource-variable/roboto`). The public site keeps its own router beside the
   editor's TanStack Router: a static site prerendered per path, which hash history
   (ADR-004) cannot serve, within a 100 KB script budget.
+- **Node 26 is the floor** (STY-097 D6): `.nvmrc`, CI, the root `engines` and the
+  catalogue's `@types/node` name the same major, so the types describe the one runtime
+  CI runs.
 
 ## Consequences
 

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useStrings } from "../i18n"
 import type { RoadmapMeta } from "../lib/types"
 import { ContentText } from "./content-text"
 
@@ -8,7 +8,7 @@ import { ContentText } from "./content-text"
  * Google Sheet's roadmap list; the section is hidden when it is empty.
  */
 export function OurValue({ meta }: { meta: RoadmapMeta }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   if (!meta.serviceDescription.en) return null
 
   return (
@@ -22,7 +22,7 @@ export function OurValue({ meta }: { meta: RoadmapMeta }) {
           id="service-description-heading"
           className="text-2xl font-bold text-heading"
         >
-          {t("roadmap.value")}
+          {strings.roadmap.value}
         </h2>
         <p className="mt-4 max-w-3xl whitespace-pre-line text-lg leading-relaxed text-ink-900">
           <ContentText value={meta.serviceDescription} />

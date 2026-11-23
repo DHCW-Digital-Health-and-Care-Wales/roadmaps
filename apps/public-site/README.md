@@ -84,7 +84,8 @@ canonical, `hreflang` and Open Graph URLs.
 Interface text (headings, links and accessible names) and the text shared by every
 roadmap (intro, Now/Next/Later definitions, section headings, and the categories' and
 organisations' names and descriptions) are in the English and Welsh catalogues in
-[src/i18n/locales/](src/i18n/locales/en.ts), rendered through react-i18next (ADR-008).
+[src/i18n/locales/](src/i18n/locales/en.ts), typed so that missing Welsh fails type
+checking, and read without an i18n library to keep the script small (ADR-008).
 The categories' icons and colours are in [src/lib/content.ts](src/lib/content.ts); the
 sheet only picks a category or an organisation. [sheets/](sheets/README.md) has example
 CSVs for bootstrapping a spreadsheet.

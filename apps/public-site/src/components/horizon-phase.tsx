@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useStrings } from "../i18n"
 import type { OrgFilter } from "../lib/types"
 import { countInParentheses, type ShownItem } from "../lib/roadmap-helpers"
 import { EmptyItems } from "./empty-items"
@@ -31,7 +31,7 @@ export function HorizonPhase({
   filter,
   headingId,
 }: HorizonPhaseProps) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   return (
     <section
       aria-labelledby={headingId}
@@ -43,7 +43,7 @@ export function HorizonPhase({
       >
         <span>{label}</span>{" "}
         <span className="text-base font-normal text-white/80">
-          {countInParentheses({ shown: items.length, total }, t)}
+          {countInParentheses({ shown: items.length, total }, strings)}
         </span>
       </h3>
       <div className="mt-4 sm:mt-0 sm:p-4">

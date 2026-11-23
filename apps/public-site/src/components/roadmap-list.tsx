@@ -1,5 +1,5 @@
+import { useStrings } from "../i18n"
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
 import type { Roadmap, OrgFilter } from "../lib/types"
 import {
   countInParentheses,
@@ -26,7 +26,7 @@ export function RoadmapList({
   roadmap: Roadmap
   filter: OrgFilter
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set())
 
   const groups = roadmapGroups(roadmap, filter).filter((g) =>
@@ -55,7 +55,7 @@ export function RoadmapList({
     >
       <div className="mx-auto max-w-content">
         <div className="max-w-3xl">
-          <nav aria-label={t("roadmap.atAGlance")}>
+          <nav aria-label={strings.roadmap.atAGlance}>
             <ul className="grid grid-cols-2 gap-2 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none">
               {groups
                 .filter((g) => g.glance)
@@ -70,12 +70,12 @@ export function RoadmapList({
                         {g.items.length < g.total ? (
                           <span className="text-base font-normal text-ink-700">
                             {" "}
-                            {t("roadmap.ofTotal", { total: g.total })}
+                            {strings.roadmap.ofTotal({ total: g.total })}
                           </span>
                         ) : null}
                       </span>
                       <span className="text-sm text-ink-700">
-                        {placementHeading(g.id, t)}
+                        {placementHeading(g.id, strings)}
                       </span>
                     </a>
                   </li>
@@ -92,7 +92,7 @@ export function RoadmapList({
                   setOpen(new Set(expandable))
                 }}
               >
-                {t("roadmap.openAll")}
+                {strings.roadmap.openAll}
               </button>
               <button
                 type="button"
@@ -101,7 +101,7 @@ export function RoadmapList({
                   setOpen(new Set())
                 }}
               >
-                {t("roadmap.closeAll")}
+                {strings.roadmap.closeAll}
               </button>
             </div>
           ) : null}
@@ -116,14 +116,14 @@ export function RoadmapList({
                 id={placementHeadingId(g.id)}
                 className="border-b-2 border-heading pb-2 text-2xl font-bold text-heading"
               >
-                {placementHeading(g.id, t)}
+                {placementHeading(g.id, strings)}
                 {filter.org ? (
                   <>
                     {" "}
                     <span className="text-lg font-normal text-ink-700">
                       {countInParentheses(
                         { shown: g.items.length, total: g.total },
-                        t,
+                        strings,
                       )}
                     </span>
                   </>

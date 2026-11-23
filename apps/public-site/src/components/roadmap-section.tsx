@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useStrings } from "../i18n"
 import type { OrgFilter } from "../lib/types"
 import type { SECTIONS } from "../lib/content"
 import {
@@ -26,21 +26,21 @@ export function RoadmapSection({
   total: number
   filter: OrgFilter
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const headingId = placementHeadingId(section.id)
 
   return (
     <section aria-labelledby={headingId} className="page-section bg-surface">
       <div className="mx-auto max-w-content">
         <h2 id={headingId} className="text-2xl font-bold text-heading">
-          {t(`sections.${section.id}.heading`)}{" "}
+          {strings.sections[section.id].heading}{" "}
           <span className="text-lg font-normal text-ink-700">
-            {countInParentheses({ shown: items.length, total }, t)}
+            {countInParentheses({ shown: items.length, total }, strings)}
           </span>
         </h2>
 
         <p className="mt-4 max-w-3xl leading-relaxed text-ink-900">
-          {t(`sections.${section.id}.description`)}
+          {strings.sections[section.id].description}
         </p>
 
         {items.length > 0 ? (

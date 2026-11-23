@@ -44,6 +44,17 @@ export default reactAppConfig(
     },
   },
   {
+    // The catalogues fill counts into their text unformatted, so the prerendered page
+    // and the browser's render give the same text.
+    files: ["src/i18n/locales/*.ts"],
+    rules: {
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        { allowNumber: true },
+      ],
+    },
+  },
+  {
     // Build-time entry, never hot-reloaded.
     files: ["src/entry-server.tsx"],
     rules: { "react-refresh/only-export-components": "off" },

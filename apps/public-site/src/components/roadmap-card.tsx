@@ -1,5 +1,5 @@
+import { useStrings } from "../i18n"
 import { ChevronRight, Layers, Tag } from "lucide-react"
-import { Trans, useTranslation } from "react-i18next"
 import type { RoadmapItem } from "../lib/types"
 import { DetailList } from "./detail-list"
 import { OrgPills } from "./org-pills"
@@ -19,7 +19,7 @@ export function RoadmapCard({
   item: RoadmapItem
   headingLevel?: 3 | 4
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const Heading = headingLevel === 3 ? "h3" : "h4"
   const labels = item.labels ?? []
   // Each footer item has its own check below; keep this in step with them so a
@@ -60,7 +60,7 @@ export function RoadmapCard({
       {item.outcome ? (
         <div className="mt-4 rounded-card bg-surface-subtle p-3">
           <p className="text-sm font-semibold text-heading">
-            {t("roadmap.outcome")}
+            {strings.roadmap.outcome}
           </p>
           <RichText
             value={item.outcome}
@@ -77,13 +77,10 @@ export function RoadmapCard({
             <details className="group mb-0 border-t border-border">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-action underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
                 <span>
-                  <Trans
-                    i18nKey="roadmap.detailsFor"
-                    components={{
-                      hidden: <span className="sr-only" />,
-                      title: <ContentText value={item.title} />,
-                    }}
-                  />
+                  {strings.roadmap.detailsFor({
+                    title: <ContentText value={item.title} />,
+                    hidden: (text) => <span className="sr-only">{text}</span>,
+                  })}
                 </span>
                 <ChevronRight
                   aria-hidden="true"
@@ -103,7 +100,7 @@ export function RoadmapCard({
                 strokeWidth={2.25}
               />
               <span>
-                <span className="sr-only">{t("roadmap.tags")} </span>
+                <span className="sr-only">{strings.roadmap.tags} </span>
                 {labels.map((label, i) => (
                   // Each dot ends the topic before it, so a wrapped line never
                   // starts with one; screen readers hear a comma instead.

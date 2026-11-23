@@ -1,6 +1,5 @@
 import type { ReactNode } from "react"
-import { Trans, useTranslation } from "react-i18next"
-import { useLanguage } from "../i18n"
+import { useLanguage, useStrings } from "../i18n"
 import type { RoadmapMeta, OrgFilter } from "../lib/types"
 import { formatDate } from "../lib/roadmap-helpers"
 import { pathFor, withOrgFilter } from "../lib/router"
@@ -31,36 +30,33 @@ export function RoadmapIntro({
   children?: ReactNode
 }) {
   const { lang } = useLanguage()
-  const { t } = useTranslation()
+  const strings = useStrings()
   const back = withOrgFilter(pathFor(lang, null), filter)
   const metaItems: { key: string; content: ReactNode }[] = []
   if (meta.statusLabel.en) {
     metaItems.push({
       key: "status",
-      content: (
-        <Trans
-          i18nKey="roadmap.status"
-          components={{ status: <ContentText value={meta.statusLabel} /> }}
-        />
-      ),
+      content: strings.roadmap.status({
+        status: <ContentText value={meta.statusLabel} />,
+      }),
     })
   }
   if (meta.lastUpdated) {
     metaItems.push({
       key: "updated",
-      content: (
-        <Trans
-          i18nKey="roadmap.lastUpdated"
-          values={{ date: formatDate(meta.lastUpdated, t) }}
-          components={{ time: <time dateTime={meta.lastUpdated} /> }}
-        />
-      ),
+      content: strings.roadmap.lastUpdated({
+        date: (
+          <time dateTime={meta.lastUpdated}>
+            {formatDate(meta.lastUpdated, strings)}
+          </time>
+        ),
+      }),
     })
   }
   if (meta.productLead) {
     metaItems.push({
       key: "lead",
-      content: t("roadmap.productLead", { name: meta.productLead }),
+      content: strings.roadmap.productLead({ name: meta.productLead }),
     })
   }
 
@@ -83,7 +79,7 @@ export function RoadmapIntro({
             href={back}
             className="float-left mr-8 xl:col-start-1 xl:row-start-1 xl:justify-self-start"
           >
-            {t("roadmap.allRoadmaps")}
+            {strings.roadmap.allRoadmaps}
           </BackLink>
           {controls ? (
             <div className="min-w-0 xl:col-start-2 xl:row-span-2 xl:row-start-1">
@@ -135,7 +131,7 @@ export function RoadmapIntro({
           {meta.vision.en ? (
             <div id="vision" className="mt-8 max-w-3xl">
               <h2 className="text-2xl font-bold text-heading">
-                {t("roadmap.vision")}
+                {strings.roadmap.vision}
               </h2>
               <p className="mt-4 whitespace-pre-line text-lg leading-relaxed text-ink-900">
                 <ContentText value={meta.vision} />
@@ -143,7 +139,7 @@ export function RoadmapIntro({
             </div>
           ) : (
             <p className="mt-6 max-w-3xl text-lg leading-relaxed text-ink-900">
-              {t("roadmap.intro")}
+              {strings.roadmap.intro}
             </p>
           )}
           {children}

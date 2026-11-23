@@ -3,6 +3,7 @@ import type { Route } from "../lib/router"
 import type { Localised } from "../lib/types"
 import type { Language } from "./languages"
 import { resolve } from "./localised"
+import { catalogues, type Strings } from "./strings"
 
 export interface LanguageContextValue {
   /** The page's language, from its URL. */
@@ -19,6 +20,11 @@ export function useLanguage(): LanguageContextValue {
     throw new Error("useLanguage must be used within a LanguageProvider")
   }
   return context
+}
+
+/** The site's text in the page's language, read by property: `strings.site.backToTop`. */
+export function useStrings(): Strings {
+  return catalogues[useLanguage().lang]
 }
 
 /**

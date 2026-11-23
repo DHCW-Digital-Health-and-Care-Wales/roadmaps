@@ -7,13 +7,13 @@ import { StrictMode } from "react"
 import { prerender } from "react-dom/static"
 import { App } from "./app"
 import { LanguageProvider } from "./components/language-provider"
-import type { TFunction } from "i18next"
 import {
-  createI18n,
+  catalogues,
   defaultLanguage,
   localise,
   supportedLanguages,
   type Language,
+  type Strings,
 } from "./i18n"
 import { INFO_PAGES } from "./lib/info-pages"
 import { roadmapSummary, titleWithFamily } from "./lib/roadmap-helpers"
@@ -50,7 +50,7 @@ const escapeHtml = (value: string) =>
 
 function head(
   siteUrl: string,
-  t: TFunction,
+  strings: Strings,
   page: {
     lang: Language
     title: string
@@ -64,7 +64,7 @@ function head(
   const meta: [string, string, string][] = [
     ["name", "description", page.description],
     ["property", "og:type", "website"],
-    ["property", "og:site_name", t("site.title")],
+    ["property", "og:site_name", strings.site.title],
     ["property", "og:title", page.title],
     ["property", "og:description", page.description],
     ["property", "og:image", new URL("Timeline.png", siteUrl).href],
@@ -116,8 +116,6 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
   const rootUrl = urlFor(BASE)
   const alternatesFor = (slug: string | null): [string, string][] =>
     supportedLanguages.map((lang) => [lang, urlFor(pathFor(lang, slug))])
-  const i18n = createI18n()
-  const tIn = (lang: Language) => i18n.getFixedT(lang)
 
   /** `title` and `description` are already in `lang`. */
   async function languagePage(
@@ -127,15 +125,15 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
     description: string,
     { hasData = false } = {},
   ): Promise<Page> {
-    const t = tIn(lang)
-    const site = t("site.title")
+    const strings = catalogues[lang]
+    const site = strings.site.title
     const url = urlFor(pathFor(lang, slug))
     return {
       file: `${lang}/${slug ? `${slug}/` : ""}index.html`,
       url,
       lang,
       route: { lang, slug: slug ?? "" },
-      head: head(siteUrl, t, {
+      head: head(siteUrl, strings, {
         lang,
         title: title ? `${title} – ${site}` : site,
         description,
@@ -151,24 +149,20 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
 
   const languagePages = await Promise.all(
     supportedLanguages.flatMap((lang) => {
-      const t = tIn(lang)
+      const strings = catalogues[lang]
       return [
-        languagePage(lang, null, null, t("landing.intro")),
-        ...INFO_PAGE_IDS.map((id) =>
-          languagePage(
-            lang,
-            id,
-            t(INFO_PAGES[id].heading),
-            t(INFO_PAGES[id].paragraphs[0]),
-          ),
-        ),
+        languagePage(lang, null, null, strings.landing.intro),
+        ...INFO_PAGE_IDS.map((id) => {
+          const { heading, paragraphs } = INFO_PAGES[id](strings)
+          return languagePage(lang, id, heading, paragraphs[0])
+        }),
         ...roadmaps.map(({ slug, meta }) => {
           const summary = roadmapSummary(meta)
           return languagePage(
             lang,
             slug,
             localise(titleWithFamily(meta), lang),
-            summary ? localise(summary, lang) : t("roadmap.intro"),
+            summary ? localise(summary, lang) : strings.roadmap.intro,
             { hasData: true },
           )
         }),
@@ -192,17 +186,17 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
     ].join("\n"),
   }
 
-  const bilingual = (key: "notFound.heading" | "notFound.generic") =>
-    `${tIn("cy")(key)} / ${tIn("en")(key)}`
+  const bilingual = (key: "heading" | "generic") =>
+    `${catalogues.cy.notFound[key]} / ${catalogues.en.notFound[key]}`
   const notFound: Page = {
     file: "404.html",
     url: null,
     lang: defaultLanguage,
     route: null,
-    head: head(siteUrl, tIn(defaultLanguage), {
+    head: head(siteUrl, catalogues[defaultLanguage], {
       lang: defaultLanguage,
-      title: bilingual("notFound.heading"),
-      description: bilingual("notFound.generic"),
+      title: bilingual("heading"),
+      description: bilingual("generic"),
       url: null,
     }),
     html: await render({ lang: defaultLanguage, slug: "" }),

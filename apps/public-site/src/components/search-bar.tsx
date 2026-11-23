@@ -1,5 +1,5 @@
+import { useStrings } from "../i18n"
 import { useEffect, useId, useState, type ReactNode } from "react"
-import { useTranslation } from "react-i18next"
 
 /** How long typing must pause before the result count is announced. */
 export const ANNOUNCE_DELAY_MS = 500
@@ -21,7 +21,7 @@ export function SearchBar({
   status: (query: string) => string
   children?: ReactNode
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const id = useId()
   // The query the count is for; each keystroke restarts the wait.
   const [announcedQuery, setAnnouncedQuery] = useState(query)
@@ -37,14 +37,14 @@ export function SearchBar({
   return (
     <div
       role="search"
-      aria-label={t("landing.search")}
+      aria-label={strings.landing.search}
       className="border-b border-border pb-6"
     >
       <label htmlFor={id} className="block font-medium text-heading">
-        {t("landing.findProduct")}
+        {strings.landing.findProduct}
       </label>
       <p id={`${id}-hint`} className="mt-0.5 text-sm text-ink-700">
-        {t("landing.findProductHint")}
+        {strings.landing.findProductHint}
       </p>
       <input
         id={id}

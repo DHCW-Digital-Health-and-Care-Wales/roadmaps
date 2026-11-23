@@ -1,10 +1,13 @@
+import type { ReactNode } from "react"
 import { CATEGORY_SHEET_VALUES } from "../../lib/types"
+import { plural } from "../plural"
+import { sentence } from "../sentence"
 
 /**
  * The public site's English text (ADR-008): its interface, and the fixed text it owns
  * about horizons, sections, categories and organisations. Roadmap content stays in the
- * sheet. The source of truth: `cy.ts` is typed against it. `{{name}}` is a value `t()`
- * fills in; `<name>` is where `<Trans>` puts an element, such as roadmap content.
+ * sheet. The source of truth: `cy.ts` is typed against it. A function fills in values,
+ * such as a count or a name, and `sentence()` places an element, such as roadmap content.
  */
 export const en = {
   site: {
@@ -80,32 +83,53 @@ export const en = {
     search: "Search roadmaps",
     findProduct: "Find a product",
     findProductHint: "Search by name, product family or description",
-    // Counts are `{{count}}`, unformatted, so the prerendered page and the
-    // browser's render give the same text.
-    roadmapCount_one: "{{count}} roadmap",
-    roadmapCount_other: "{{count}} roadmaps",
-    showingRoadmaps: "Showing {{shown}} of {{total}} roadmaps",
-    showingRoadmapsFor:
-      "Showing {{shown}} of {{total}} roadmaps for {{organisation}}",
-    showingRoadmapsForWithNational:
-      "Showing {{shown}} of {{total}} roadmaps for {{organisation}}, including all-Wales work",
+    roadmapCount: plural("en", {
+      one: (count) => `${count} roadmap`,
+      other: (count) => `${count} roadmaps`,
+    }),
+    showingRoadmaps: ({ shown, total }: { shown: number; total: number }) =>
+      `Showing ${shown} of ${total} roadmaps`,
+    showingRoadmapsFor: ({
+      shown,
+      total,
+      organisation,
+    }: {
+      shown: number
+      total: number
+      organisation: string
+    }) => `Showing ${shown} of ${total} roadmaps for ${organisation}`,
+    showingRoadmapsForWithNational: ({
+      shown,
+      total,
+      organisation,
+    }: {
+      shown: number
+      total: number
+      organisation: string
+    }) =>
+      `Showing ${shown} of ${total} roadmaps for ${organisation}, including all-Wales work`,
     noMatches: "No roadmaps match your search. Try a different word.",
-    noMatchesFor:
-      "No roadmaps match your search for {{organisation}}. Try a different word.",
+    noMatchesFor: ({ organisation }: { organisation: string }) =>
+      `No roadmaps match your search for ${organisation}. Try a different word.`,
     noRoadmaps: "No roadmaps have been published yet.",
-    noWorkFor: "No roadmaps have work for {{organisation}} yet.",
+    noWorkFor: ({ organisation }: { organisation: string }) =>
+      `No roadmaps have work for ${organisation} yet.`,
     showAllOrganisations: "Show all organisations",
     // A product card's share of items, e.g. "5 of 9" then "items for Powys".
-    countOf: "{{shown}} of {{total}}",
-    itemsFor: "items for {{organisation}}",
-    updated: "Updated <time>{{date}}</time>",
+    countOf: ({ shown, total }: { shown: number; total: number }) =>
+      `${shown} of ${total}`,
+    itemsFor: ({ organisation }: { organisation: string }) =>
+      `items for ${organisation}`,
+    updated: ({ date }: { date: ReactNode }) => sentence("Updated ", date),
     viewRoadmap: "View roadmap",
   },
   filter: {
-    // {{organisation}} is an organisation's short name, or its name where said so.
+    // `organisation` is an organisation's short name, or its name where said so.
     byOrganisation: "Filter by organisation",
-    filteredByOrganisation: "Filtered by organisation: {{organisation}}",
-    filteredBy: "Filtered by: {{organisation}}",
+    filteredByOrganisation: ({ organisation }: { organisation: string }) =>
+      `Filtered by organisation: ${organisation}`,
+    filteredBy: ({ organisation }: { organisation: string }) =>
+      `Filtered by: ${organisation}`,
     organisation: "Organisation",
     organisationHint: "Show only roadmaps and work for this organisation",
     allOrganisations: "All organisations",
@@ -118,13 +142,15 @@ export const en = {
     // Hidden text before an organisation pill's name.
     byPill: "Filter by",
     showAllItemsAgain: "Show all items again",
-    showOnlyWorkFor: "Show only work for {{organisation}}",
+    showOnlyWorkFor: ({ organisation }: { organisation: string }) =>
+      `Show only work for ${organisation}`,
   },
   roadmap: {
     allRoadmaps: "All roadmaps",
-    status: "Status: <status/>",
-    lastUpdated: "Last updated: <time>{{date}}</time>",
-    productLead: "Product lead: {{name}}",
+    status: ({ status }: { status: ReactNode }) => sentence("Status: ", status),
+    lastUpdated: ({ date }: { date: ReactNode }) =>
+      sentence("Last updated: ", date),
+    productLead: ({ name }: { name: string }) => `Product lead: ${name}`,
     vision: "Our vision",
     value: "Our value",
     intro:
@@ -137,32 +163,58 @@ export const en = {
       "Each card shows a change we're working on now, planning to take on next, or working towards later.",
     details: "What this covers",
     // The details' summary, naming the item for screen readers alone.
-    detailsFor: "What this covers<hidden>: <title/></hidden>",
+    detailsFor: ({
+      title,
+      hidden,
+    }: {
+      title: ReactNode
+      hidden: (text: ReactNode) => ReactNode
+    }) => sentence("What this covers", hidden(sentence(": ", title))),
     outcome: "Outcome",
     tags: "Tags:",
     atAGlance: "At a glance",
     openAll: "Open all",
     closeAll: "Close all",
     nothingYet: "Nothing to show here yet.",
-    nothingFor: "Nothing for {{organisation}} here.",
-    showHiddenItems_one: "Show {{count}} hidden item",
-    showHiddenItems_other: "Show {{count}} hidden items",
-    showingItemsFor:
-      "Showing {{shown}} of {{total}} items for {{organisation}}",
-    showingItemsForWithNational:
-      "Showing {{shown}} of {{total}} items for {{organisation}}, including all-Wales work",
-    showingAllItems: "Showing all {{total}} items",
+    nothingFor: ({ organisation }: { organisation: string }) =>
+      `Nothing for ${organisation} here.`,
+    showHiddenItems: plural("en", {
+      one: (count) => `Show ${count} hidden item`,
+      other: (count) => `Show ${count} hidden items`,
+    }),
+    showingItemsFor: ({
+      shown,
+      total,
+      organisation,
+    }: {
+      shown: number
+      total: number
+      organisation: string
+    }) => `Showing ${shown} of ${total} items for ${organisation}`,
+    showingItemsForWithNational: ({
+      shown,
+      total,
+      organisation,
+    }: {
+      shown: number
+      total: number
+      organisation: string
+    }) =>
+      `Showing ${shown} of ${total} items for ${organisation}, including all-Wales work`,
+    showingAllItems: ({ total }: { total: number }) =>
+      `Showing all ${total} items`,
     includesAllWales: "Includes work for all of Wales.",
     filterHelp:
       "The count next to each heading shows how many items match. Select an organisation on any card to switch to it.",
     showAllItems: "Show all items",
-    countInParentheses: "({{value}})",
+    countInParentheses: ({ value }: { value: string }) => `(${value})`,
     // After a filtered count in the list view's "At a glance", e.g. "2 of 5".
-    ofTotal: "of {{total}}",
+    ofTotal: ({ total }: { total: number }) => `of ${total}`,
   },
   notFound: {
     heading: "Roadmap not found",
-    body: "We couldn’t find a roadmap called “{{slug}}”. It may have moved or been removed.",
+    body: ({ slug }: { slug: string }) =>
+      `We couldn’t find a roadmap called “${slug}”. It may have moved or been removed.`,
     generic: "We couldn’t find that page. It may have moved or been removed.",
   },
   horizons: {
@@ -296,4 +348,4 @@ export const en = {
       short: "Performance and Improvement",
     },
   },
-} as const
+}

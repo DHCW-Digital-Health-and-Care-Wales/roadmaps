@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react"
 import { roadmaps } from "./lib/roadmaps"
-import { useTranslation } from "react-i18next"
-import { localise, useLanguage } from "./i18n"
+import { localise, useLanguage, useStrings } from "./i18n"
 import { INFO_PAGES } from "./lib/info-pages"
 import { organisationsWithWork, titleWithFamily } from "./lib/roadmap-helpers"
 import { NO_ORG_FILTER } from "./lib/types"
@@ -22,7 +21,7 @@ import { RoadmapPage } from "./pages/roadmap-page"
  */
 export function App() {
   const { lang, route } = useLanguage()
-  const { t } = useTranslation()
+  const strings = useStrings()
   const view = useView()
   const filter = useOrgFilter()
   const { slug } = route
@@ -33,13 +32,13 @@ export function App() {
   const previousSlugRef = useRef(slug)
 
   useEffect(() => {
-    const site = t("site.title")
+    const site = strings.site.title
     let page: string | undefined
     if (roadmap) page = localise(titleWithFamily(roadmap.meta), lang)
-    else if (infoPage) page = t(INFO_PAGES[infoPage].heading)
-    else if (slug !== null) page = t("notFound.heading")
+    else if (infoPage) page = INFO_PAGES[infoPage](strings).heading
+    else if (slug !== null) page = strings.notFound.heading
     document.title = page ? `${page} – ${site}` : site
-  }, [roadmap, infoPage, slug, lang, t])
+  }, [roadmap, infoPage, slug, lang, strings])
 
   // After client-side navigation, move focus to the new page's heading so
   // screen readers announce it (runs after the title update above).
@@ -73,7 +72,7 @@ export function App() {
   return (
     <>
       <a href="#main-content" className="skip-link">
-        {t("site.skipLink")}
+        {strings.site.skipLink}
       </a>
 
       <span id="top" tabIndex={-1} />

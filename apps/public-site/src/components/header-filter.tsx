@@ -1,3 +1,4 @@
+import { useStrings } from "../i18n"
 import { ListFilter, X } from "lucide-react"
 import {
   firstCardOnScreen,
@@ -6,7 +7,6 @@ import {
   openOrgFilter,
   ORG_FILTER_ID,
 } from "../lib/focus"
-import { useTranslation } from "react-i18next"
 import { setOrgFilter } from "../lib/router"
 import { type OrganisationId, NO_ORG_FILTER } from "../lib/types"
 
@@ -34,8 +34,8 @@ function clearFilter() {
  * which opens the filter, and a button to clear it.
  */
 export function FilterChip({ org }: { org: OrganisationId }) {
-  const { t } = useTranslation()
-  const short = t(`organisations.${org}.short`)
+  const strings = useStrings()
+  const short = strings.organisations[org].short
 
   return (
     <div className="hidden sm:block">
@@ -47,15 +47,15 @@ export function FilterChip({ org }: { org: OrganisationId }) {
         >
           <ListFilter aria-hidden="true" className="h-4 w-4 shrink-0" />
           <span className="sr-only">
-            {t("filter.filteredByOrganisation", { organisation: short })}
+            {strings.filter.filteredByOrganisation({ organisation: short })}
           </span>
           <span aria-hidden="true">{short}</span>
         </button>
         <button
           type="button"
           onClick={clearFilter}
-          aria-label={t("filter.clearFilter")}
-          title={t("filter.clearFilter")}
+          aria-label={strings.filter.clearFilter}
+          title={strings.filter.clearFilter}
           className="rounded-r-full border-l border-white/40 py-1.5 pl-1.5 pr-2 hover:bg-white/15"
         >
           <X aria-hidden="true" className="h-4 w-4" />
@@ -70,8 +70,8 @@ export function FilterChip({ org }: { org: OrganisationId }) {
  * of height `--filter-strip-height`, which index.css moves the page down by.
  */
 export function FilterStrip({ org }: { org: OrganisationId }) {
-  const { t } = useTranslation()
-  const short = t(`organisations.${org}.short`)
+  const strings = useStrings()
+  const short = strings.organisations[org].short
 
   return (
     <div
@@ -85,17 +85,17 @@ export function FilterStrip({ org }: { org: OrganisationId }) {
       >
         <ListFilter aria-hidden="true" className="h-4 w-4 shrink-0" />
         <span className="truncate">
-          {t("filter.filteredBy", { organisation: short })}
+          {strings.filter.filteredBy({ organisation: short })}
         </span>
       </button>
       <button
         type="button"
         onClick={clearFilter}
-        aria-label={t("filter.clearFilter")}
+        aria-label={strings.filter.clearFilter}
         className="inline-flex shrink-0 items-center gap-1 rounded-sm px-2 py-1 font-medium hover:bg-white/15"
       >
         <X aria-hidden="true" className="h-4 w-4" />
-        {t("filter.clear")}
+        {strings.filter.clear}
       </button>
     </div>
   )

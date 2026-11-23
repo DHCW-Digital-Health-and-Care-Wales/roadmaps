@@ -1,6 +1,5 @@
 import { ArrowRight, Building2 } from "lucide-react"
-import { Trans, useTranslation } from "react-i18next"
-import { useLanguage } from "../i18n"
+import { useLanguage, useStrings } from "../i18n"
 import { HORIZON_IDS, type Roadmap, type OrgFilter } from "../lib/types"
 import {
   countItems,
@@ -25,7 +24,7 @@ export function ProductCard({
   filter: OrgFilter
 }) {
   const { lang } = useLanguage()
-  const { t } = useTranslation()
+  const strings = useStrings()
   const href = withOrgFilter(pathFor(lang, roadmap.slug), filter)
   const { meta } = roadmap
   const accent = meta.colour
@@ -63,11 +62,13 @@ export function ProductCard({
                   ·
                 </span>
               ) : null}
-              <Trans
-                i18nKey="landing.updated"
-                values={{ date: formatDate(meta.lastUpdated, t) }}
-                components={{ time: <time dateTime={meta.lastUpdated} /> }}
-              />
+              {strings.landing.updated({
+                date: (
+                  <time dateTime={meta.lastUpdated}>
+                    {formatDate(meta.lastUpdated, strings)}
+                  </time>
+                ),
+              })}
             </span>
           ) : null}
         </div>
@@ -91,7 +92,7 @@ export function ProductCard({
         </h3>
 
         <p className="mt-3 line-clamp-4 leading-relaxed text-ink-900">
-          {summary ? <ContentText value={summary} /> : t("roadmap.intro")}
+          {summary ? <ContentText value={summary} /> : strings.roadmap.intro}
         </p>
 
         {/* mt-auto pins the counts and link to the bottom, so they line up across a row. */}
@@ -101,10 +102,10 @@ export function ProductCard({
               <Building2 aria-hidden="true" className="h-4 w-4 shrink-0" />
               <span>
                 <strong className="font-semibold text-heading">
-                  {countOf(countItems(roadmap, filter), t)}
+                  {countOf(countItems(roadmap, filter), strings)}
                 </strong>{" "}
-                {t("landing.itemsFor", {
-                  organisation: t(`organisations.${filter.org}.short`),
+                {strings.landing.itemsFor({
+                  organisation: strings.organisations[filter.org].short,
                 })}
               </span>
             </p>
@@ -116,7 +117,7 @@ export function ProductCard({
                   {filterItems(roadmap.items[id], filter).length}
                 </span>
                 <span className="text-ink-700">
-                  {t(`horizons.${id}.label`)}
+                  {strings.horizons[id].label}
                 </span>
                 {i < HORIZON_IDS.length - 1 ? (
                   <span aria-hidden="true" className="mx-2 text-ink-500">
@@ -132,7 +133,7 @@ export function ProductCard({
           aria-hidden="true"
           className="inline-flex items-center gap-1 pt-6 font-medium text-action"
         >
-          {t("landing.viewRoadmap")}
+          {strings.landing.viewRoadmap}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </p>
       </div>

@@ -1,6 +1,6 @@
+import { useStrings } from "../i18n"
 import { useId } from "react"
 import { ChevronDown } from "lucide-react"
-import { useTranslation } from "react-i18next"
 import type { RoadmapItem } from "../lib/types"
 import { isExpandable } from "../lib/roadmap-helpers"
 import { DetailList } from "./detail-list"
@@ -22,7 +22,7 @@ export function RoadmapListItem({
   open: boolean
   onToggle: () => void
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const panelId = useId()
   const expandable = isExpandable(item)
   const title = (
@@ -71,13 +71,13 @@ export function RoadmapListItem({
         >
           {item.outcome ? (
             <div>
-              <p className="font-bold">{t("roadmap.outcome")}</p>
+              <p className="font-bold">{strings.roadmap.outcome}</p>
               <RichText value={item.outcome} className="mt-1" />
             </div>
           ) : null}
           {item.details ? (
             <div>
-              <p className="font-bold">{t("roadmap.details")}</p>
+              <p className="font-bold">{strings.roadmap.details}</p>
               <DetailList items={item.details} className="mt-1" />
             </div>
           ) : null}

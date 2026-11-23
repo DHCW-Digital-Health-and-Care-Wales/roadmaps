@@ -1,6 +1,6 @@
+import { useStrings } from "../i18n"
 import { useEffect, useState, type MouseEvent } from "react"
 import { ChevronUp } from "lucide-react"
-import { useTranslation } from "react-i18next"
 
 /**
  * Back-to-top button (from the Figma design). Appears after scrolling and
@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next"
 export function BackToTop() {
   // Starts hidden so the prerendered HTML matches; shows on the first scroll.
   const [visible, setVisible] = useState(false)
-  const { t } = useTranslation()
+  const strings = useStrings()
 
   useEffect(() => {
     const onScroll = () => {
@@ -44,7 +44,7 @@ export function BackToTop() {
       className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full bg-heading px-4 py-3 text-sm font-medium text-white shadow-lg transition-colors hover:bg-action short:bottom-2 short:right-2 short:p-2"
     >
       <ChevronUp className="h-5 w-5" aria-hidden="true" />
-      <span className="short:sr-only">{t("site.backToTop")}</span>
+      <span className="short:sr-only">{strings.site.backToTop}</span>
     </a>
   )
 }

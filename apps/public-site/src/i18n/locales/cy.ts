@@ -1,10 +1,13 @@
 import type { Catalogue } from "../catalogue"
+import { plural } from "../plural"
+import { sentence } from "../sentence"
 import type { en } from "./en"
 
-/** Welsh plural categories (CLDR): 0, 1, 2, 3, 6 and everything else. */
-type WelshPluralCategory = "zero" | "one" | "two" | "few" | "many" | "other"
-
-/** The public site's Welsh text, typed against `en`, so a missing or extra key fails type checking. */
+/**
+ * The public site's Welsh text, typed against `en`, so a missing or extra key fails type
+ * checking, as does a count without all six Welsh plural forms (0, 1, 2, 3, 6 and
+ * everything else).
+ */
 export const cy = {
   site: {
     title: "Trywyddion IGDC",
@@ -80,33 +83,38 @@ export const cy = {
     findProduct: "Dod o hyd i gynnyrch",
     findProductHint: "Chwilio yn ôl enw, teulu cynnyrch neu ddisgrifiad",
     // Welsh uses the singular noun after a number, mutated after 2, 3 and 6.
-    roadmapCount_zero: "{{count}} trywydd",
-    roadmapCount_one: "{{count}} trywydd",
-    roadmapCount_two: "{{count}} drywydd",
-    roadmapCount_few: "{{count}} thrywydd",
-    roadmapCount_many: "{{count}} thrywydd",
-    roadmapCount_other: "{{count}} trywydd",
-    showingRoadmaps: "Yn dangos {{shown}} o {{total}} trywydd",
-    showingRoadmapsFor:
-      "Yn dangos {{shown}} o {{total}} trywydd ar gyfer {{organisation}}",
-    showingRoadmapsForWithNational:
-      "Yn dangos {{shown}} o {{total}} trywydd ar gyfer {{organisation}}, gan gynnwys gwaith Cymru gyfan",
+    roadmapCount: plural("cy", {
+      zero: (count) => `${count} trywydd`,
+      one: (count) => `${count} trywydd`,
+      two: (count) => `${count} drywydd`,
+      few: (count) => `${count} thrywydd`,
+      many: (count) => `${count} thrywydd`,
+      other: (count) => `${count} trywydd`,
+    }),
+    showingRoadmaps: ({ shown, total }) =>
+      `Yn dangos ${shown} o ${total} trywydd`,
+    showingRoadmapsFor: ({ shown, total, organisation }) =>
+      `Yn dangos ${shown} o ${total} trywydd ar gyfer ${organisation}`,
+    showingRoadmapsForWithNational: ({ shown, total, organisation }) =>
+      `Yn dangos ${shown} o ${total} trywydd ar gyfer ${organisation}, gan gynnwys gwaith Cymru gyfan`,
     noMatches:
       "Does dim trywyddion yn cyfateb i’ch chwiliad. Rhowch gynnig ar air gwahanol.",
-    noMatchesFor:
-      "Does dim trywyddion yn cyfateb i’ch chwiliad ar gyfer {{organisation}}. Rhowch gynnig ar air gwahanol.",
+    noMatchesFor: ({ organisation }) =>
+      `Does dim trywyddion yn cyfateb i’ch chwiliad ar gyfer ${organisation}. Rhowch gynnig ar air gwahanol.`,
     noRoadmaps: "Does dim trywyddion wedi’u cyhoeddi eto.",
-    noWorkFor: "Does dim trywyddion â gwaith ar gyfer {{organisation}} eto.",
+    noWorkFor: ({ organisation }) =>
+      `Does dim trywyddion â gwaith ar gyfer ${organisation} eto.`,
     showAllOrganisations: "Dangos pob sefydliad",
-    countOf: "{{shown}} o {{total}}",
-    itemsFor: "eitem ar gyfer {{organisation}}",
-    updated: "Diweddarwyd <time>{{date}}</time>",
+    countOf: ({ shown, total }) => `${shown} o ${total}`,
+    itemsFor: ({ organisation }) => `eitem ar gyfer ${organisation}`,
+    updated: ({ date }) => sentence("Diweddarwyd ", date),
     viewRoadmap: "Gweld y trywydd",
   },
   filter: {
     byOrganisation: "Hidlo yn ôl sefydliad",
-    filteredByOrganisation: "Wedi’i hidlo yn ôl sefydliad: {{organisation}}",
-    filteredBy: "Wedi’i hidlo yn ôl: {{organisation}}",
+    filteredByOrganisation: ({ organisation }) =>
+      `Wedi’i hidlo yn ôl sefydliad: ${organisation}`,
+    filteredBy: ({ organisation }) => `Wedi’i hidlo yn ôl: ${organisation}`,
     organisation: "Sefydliad",
     organisationHint:
       "Dangos trywyddion a gwaith ar gyfer y sefydliad hwn yn unig",
@@ -119,13 +127,14 @@ export const cy = {
     organisations: "Sefydliadau:",
     byPill: "Hidlo yn ôl",
     showAllItemsAgain: "Dangos pob eitem eto",
-    showOnlyWorkFor: "Dangos gwaith ar gyfer {{organisation}} yn unig",
+    showOnlyWorkFor: ({ organisation }) =>
+      `Dangos gwaith ar gyfer ${organisation} yn unig`,
   },
   roadmap: {
     allRoadmaps: "Pob trywydd",
-    status: "Statws: <status/>",
-    lastUpdated: "Diweddarwyd ddiwethaf: <time>{{date}}</time>",
-    productLead: "Arweinydd cynnyrch: {{name}}",
+    status: ({ status }) => sentence("Statws: ", status),
+    lastUpdated: ({ date }) => sentence("Diweddarwyd ddiwethaf: ", date),
+    productLead: ({ name }) => `Arweinydd cynnyrch: ${name}`,
     vision: "Ein gweledigaeth",
     value: "Ein gwerth",
     intro:
@@ -137,35 +146,39 @@ export const cy = {
     description:
       "Mae pob cerdyn yn dangos newid rydym yn gweithio arno nawr, yn bwriadu ymgymryd ag ef nesaf, neu’n gweithio tuag ato yn ddiweddarach.",
     details: "Beth mae hyn yn ei gwmpasu",
-    detailsFor: "Beth mae hyn yn ei gwmpasu<hidden>: <title/></hidden>",
+    detailsFor: ({ title, hidden }) =>
+      sentence("Beth mae hyn yn ei gwmpasu", hidden(sentence(": ", title))),
     outcome: "Canlyniad",
     tags: "Tagiau:",
     atAGlance: "Cipolwg",
     openAll: "Agor y cyfan",
     closeAll: "Cau’r cyfan",
     nothingYet: "Dim byd i’w ddangos yma eto.",
-    nothingFor: "Dim byd ar gyfer {{organisation}} yma.",
-    showHiddenItems_zero: "Dangos {{count}} eitem gudd",
-    showHiddenItems_one: "Dangos {{count}} eitem gudd",
-    showHiddenItems_two: "Dangos {{count}} eitem gudd",
-    showHiddenItems_few: "Dangos {{count}} eitem gudd",
-    showHiddenItems_many: "Dangos {{count}} eitem gudd",
-    showHiddenItems_other: "Dangos {{count}} eitem gudd",
-    showingItemsFor:
-      "Yn dangos {{shown}} o {{total}} eitem ar gyfer {{organisation}}",
-    showingItemsForWithNational:
-      "Yn dangos {{shown}} o {{total}} eitem ar gyfer {{organisation}}, gan gynnwys gwaith Cymru gyfan",
-    showingAllItems: "Yn dangos pob un o’r {{total}} eitem",
+    nothingFor: ({ organisation }) => `Dim byd ar gyfer ${organisation} yma.`,
+    showHiddenItems: plural("cy", {
+      zero: (count) => `Dangos ${count} eitem gudd`,
+      one: (count) => `Dangos ${count} eitem gudd`,
+      two: (count) => `Dangos ${count} eitem gudd`,
+      few: (count) => `Dangos ${count} eitem gudd`,
+      many: (count) => `Dangos ${count} eitem gudd`,
+      other: (count) => `Dangos ${count} eitem gudd`,
+    }),
+    showingItemsFor: ({ shown, total, organisation }) =>
+      `Yn dangos ${shown} o ${total} eitem ar gyfer ${organisation}`,
+    showingItemsForWithNational: ({ shown, total, organisation }) =>
+      `Yn dangos ${shown} o ${total} eitem ar gyfer ${organisation}, gan gynnwys gwaith Cymru gyfan`,
+    showingAllItems: ({ total }) => `Yn dangos pob un o’r ${total} eitem`,
     includesAllWales: "Mae’n cynnwys gwaith ar gyfer Cymru gyfan.",
     filterHelp:
       "Mae’r rhif wrth ymyl pob pennawd yn dangos faint o eitemau sy’n cyfateb. Dewiswch sefydliad ar unrhyw gerdyn i newid iddo.",
     showAllItems: "Dangos pob eitem",
-    countInParentheses: "({{value}})",
-    ofTotal: "o {{total}}",
+    countInParentheses: ({ value }) => `(${value})`,
+    ofTotal: ({ total }) => `o ${total}`,
   },
   notFound: {
     heading: "Heb ddod o hyd i’r trywydd",
-    body: "Ni allem ddod o hyd i drywydd o’r enw “{{slug}}”. Efallai ei fod wedi symud neu wedi’i ddileu.",
+    body: ({ slug }) =>
+      `Ni allem ddod o hyd i drywydd o’r enw “${slug}”. Efallai ei fod wedi symud neu wedi’i ddileu.`,
     generic:
       "Ni allem ddod o hyd i’r dudalen honno. Efallai ei bod wedi symud neu wedi’i dileu.",
   },
@@ -301,4 +314,4 @@ export const cy = {
       short: "Perfformiad a Gwella",
     },
   },
-} satisfies Catalogue<typeof en, WelshPluralCategory>
+} satisfies Catalogue<typeof en>

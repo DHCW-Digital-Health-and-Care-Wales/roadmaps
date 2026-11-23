@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next"
 import {
   languageEndonyms,
   storeLanguagePreference,
   supportedLanguages,
   useLanguage,
+  useStrings,
 } from "../i18n"
 import { onNavigate, pathFor, useOrgFilter, withOrgFilter } from "../lib/router"
 
@@ -15,12 +15,12 @@ import { onNavigate, pathFor, useOrgFilter, withOrgFilter } from "../lib/router"
 export function LanguageToggle() {
   const { lang, route } = useLanguage()
   const filter = useOrgFilter()
-  const { t } = useTranslation()
+  const strings = useStrings()
 
   return (
     <div
       role="group"
-      aria-label={t("site.chooseLanguage")}
+      aria-label={strings.site.chooseLanguage}
       className="inline-flex rounded-sm border border-white/40"
     >
       {supportedLanguages.map((option) => {

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useStrings } from "../i18n"
 import { categorySectionId, type CategoryGroup } from "../lib/roadmap-helpers"
 import type { OrgFilter } from "../lib/types"
 import { CategoryIcon } from "./category-icon"
@@ -12,7 +12,7 @@ export function CategorySection({
   group: CategoryGroup
   filter: OrgFilter
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const id = categorySectionId(category)
   return (
     <section
@@ -25,10 +25,10 @@ export function CategorySection({
         <CategoryIcon category={category} size="large" />
         <div>
           <h2 id={`${id}-heading`} className="text-2xl font-bold text-heading">
-            {t(`categories.${category.id}.label`)}
+            {strings.categories[category.id].label}
           </h2>
           <p className="mt-0.5 text-ink-700">
-            {t(`categories.${category.id}.description`)}
+            {strings.categories[category.id].description}
           </p>
         </div>
       </div>

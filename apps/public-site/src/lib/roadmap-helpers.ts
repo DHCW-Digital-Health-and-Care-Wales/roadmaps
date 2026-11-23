@@ -1,8 +1,7 @@
 /**
  * Presentation helpers for the roadmap.
  */
-import type { TFunction } from "i18next"
-import { localise, type Language } from "../i18n"
+import { localise, type Language, type Strings } from "../i18n"
 import {
   CATEGORIES,
   ORGANISATIONS,
@@ -42,16 +41,16 @@ const MONTHS = [
 ] as const
 
 /**
- * Format an ISO date (YYYY-MM-DD) as a readable day-month-year string in `t`'s
- * language, for example "26 June 2026", or return the raw value if it isn't
- * one. Used only for "last updated"; roadmap items never show dates. Not Intl:
+ * Format an ISO date (YYYY-MM-DD) as a readable day-month-year string in the
+ * language of `strings`, for example "26 June 2026", or return the raw value if
+ * it isn't one. Used only for "last updated"; roadmap items never show dates. Not Intl:
  * some browsers lack Welsh locale data, which would also break hydration.
  */
-export function formatDate(iso: string, t: TFunction): string {
+export function formatDate(iso: string, strings: Strings): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
   const month = match ? MONTHS[Number(match[2]) - 1] : undefined
   if (!match || !month) return iso
-  return `${String(Number(match[3]))} ${t(`site.months.${month}`)} ${String(match[1])}`
+  return `${String(Number(match[3]))} ${strings.site.months[month]} ${String(match[1])}`
 }
 
 /** Whether an item has an outcome or details to reveal. */
@@ -142,14 +141,19 @@ export function countItems(roadmap: Roadmap, filter: OrgFilter): ItemCount {
 }
 
 /** "2 of 5". */
-export const countOf = ({ shown, total }: ItemCount, t: TFunction): string =>
-  t("landing.countOf", { shown, total })
+export const countOf = (count: ItemCount, strings: Strings): string =>
+  strings.landing.countOf(count)
 
 /** A roadmap heading's count: "(2 of 5)" while some items are hidden, otherwise "(5)". */
-export const countInParentheses = (count: ItemCount, t: TFunction): string =>
-  t("roadmap.countInParentheses", {
+export const countInParentheses = (
+  count: ItemCount,
+  strings: Strings,
+): string =>
+  strings.roadmap.countInParentheses({
     value:
-      count.shown === count.total ? String(count.total) : countOf(count, t),
+      count.shown === count.total
+        ? String(count.total)
+        : countOf(count, strings),
   })
 
 /** How many of an empty section's `total` items the filter hides. */
@@ -163,13 +167,13 @@ export const hiddenCount = ({ org }: OrgFilter, total: number): number =>
 export const emptyText = (
   filter: OrgFilter,
   total: number,
-  t: TFunction,
+  strings: Strings,
 ): string =>
   filter.org && hiddenCount(filter, total) > 0
-    ? t("roadmap.nothingFor", {
-        organisation: t(`organisations.${filter.org}.short`),
+    ? strings.roadmap.nothingFor({
+        organisation: strings.organisations[filter.org].short,
       })
-    : t("roadmap.nothingYet")
+    : strings.roadmap.nothingYet
 
 /** Organisations that any item is for, in display order. */
 export function organisationsWithWork(roadmaps: Roadmap[]): OrganisationId[] {
@@ -192,21 +196,24 @@ export function organisationsWithWork(roadmaps: Roadmap[]): OrganisationId[] {
 export function itemsStatus(
   { shown, total }: ItemCount,
   filter: OrgFilter,
-  t: TFunction,
+  strings: Strings,
   { withAllWales = true } = {},
 ): string {
-  if (!filter.org) return t("roadmap.showingAllItems", { total })
-  return t(
+  if (!filter.org) return strings.roadmap.showingAllItems({ total })
+  const summary =
     withAllWales && includesAllWales(filter)
-      ? "roadmap.showingItemsForWithNational"
-      : "roadmap.showingItemsFor",
-    { shown, total, organisation: t(`organisations.${filter.org}.name`) },
-  )
+      ? strings.roadmap.showingItemsForWithNational
+      : strings.roadmap.showingItemsFor
+  return summary({
+    shown,
+    total,
+    organisation: strings.organisations[filter.org].name,
+  })
 }
 
 /** A section's heading or a horizon's name. */
-export const placementHeading = (id: Placement, t: TFunction): string =>
-  isHorizon(id) ? t(`horizons.${id}.label`) : t(`sections.${id}.heading`)
+export const placementHeading = (id: Placement, strings: Strings): string =>
+  isHorizon(id) ? strings.horizons[id].label : strings.sections[id].heading
 
 export interface PlacementGroup {
   id: Placement
@@ -352,19 +359,21 @@ export function roadmapsStatus(
   total: number,
   query: string,
   filter: OrgFilter,
-  t: TFunction,
+  strings: Strings,
 ): string {
   if (filter.org) {
-    return t(
-      includesAllWales(filter)
-        ? "landing.showingRoadmapsForWithNational"
-        : "landing.showingRoadmapsFor",
-      { shown, total, organisation: t(`organisations.${filter.org}.short`) },
-    )
+    const summary = includesAllWales(filter)
+      ? strings.landing.showingRoadmapsForWithNational
+      : strings.landing.showingRoadmapsFor
+    return summary({
+      shown,
+      total,
+      organisation: strings.organisations[filter.org].short,
+    })
   }
   return query.trim()
-    ? t("landing.showingRoadmaps", { shown, total })
-    : t("landing.roadmapCount", { count: total })
+    ? strings.landing.showingRoadmaps({ shown, total })
+    : strings.landing.roadmapCount(total)
 }
 
 /**

@@ -1,17 +1,17 @@
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import logoImage from "../assets/dhcw-logo.png"
-import { useTranslation } from "react-i18next"
-import { useLanguage } from "../i18n"
+import { useLanguage, useStrings, type Strings } from "../i18n"
 import type { OrgFilter } from "../lib/types"
 import { onNavigate, pathFor, withOrgFilter } from "../lib/router"
 import { FilterChip, FilterStrip } from "./header-filter"
 import { LanguageToggle } from "./language-toggle"
 
+/** Each label is the catalogue's `header` text of that name. */
 const NAV_LINKS = [
-  { href: "#about", label: "header.about" },
-  { href: "#roadmap", label: "header.roadmap" },
-] as const
+  { href: "#about", label: "about" },
+  { href: "#roadmap", label: "roadmap" },
+] as const satisfies readonly { href: string; label: keyof Strings["header"] }[]
 
 /**
  * Brand header: NHS Wales Blue bar with the DHCW logo (linking to all
@@ -31,7 +31,7 @@ export function SiteHeader({
   showSectionLinks?: boolean
 }) {
   const { lang } = useLanguage()
-  const { t } = useTranslation()
+  const strings = useStrings()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navLinks = showSectionLinks ? NAV_LINKS : []
   const home = withOrgFilter(pathFor(lang, null), filter)
@@ -43,11 +43,11 @@ export function SiteHeader({
           href={home}
           onClick={onNavigate(home)}
           className="flex items-center"
-          aria-label={t("site.homeLink")}
+          aria-label={strings.site.homeLink}
         >
           <img
             src={logoImage}
-            alt={t("site.organisation")}
+            alt={strings.site.organisation}
             className="h-12 w-auto object-contain sm:h-16"
           />
         </a>
@@ -55,7 +55,7 @@ export function SiteHeader({
         <div className="flex items-center gap-3">
           {navLinks.length > 0 ? (
             <nav
-              aria-label={t("header.sectionsNav")}
+              aria-label={strings.header.sectionsNav}
               className="hidden lg:block"
             >
               <ul className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export function SiteHeader({
                       href={link.href}
                       className="rounded-sm px-3 py-2 text-sm font-medium transition-colors hover:bg-white hover:text-nhs-wales-blue"
                     >
-                      {t(link.label)}
+                      {strings.header[link.label]}
                     </a>
                   </li>
                 ))}
@@ -87,7 +87,9 @@ export function SiteHeader({
               className="rounded-sm p-2 transition-colors hover:bg-white/15 lg:hidden"
             >
               <span className="sr-only">
-                {t(mobileMenuOpen ? "header.closeMenu" : "header.openMenu")}
+                {mobileMenuOpen
+                  ? strings.header.closeMenu
+                  : strings.header.openMenu}
               </span>
               {mobileMenuOpen ? (
                 <X className="h-6 w-6" aria-hidden="true" />
@@ -104,7 +106,7 @@ export function SiteHeader({
       {mobileMenuOpen && navLinks.length > 0 && (
         <nav
           id="mobile-nav"
-          aria-label={t("header.sectionsNav")}
+          aria-label={strings.header.sectionsNav}
           className="border-t border-white/20 px-4 pb-4 lg:hidden"
         >
           <ul className="flex flex-col gap-1 pt-2">
@@ -117,7 +119,7 @@ export function SiteHeader({
                   }}
                   className="block rounded-sm px-3 py-2 font-medium transition-colors hover:bg-white hover:text-nhs-wales-blue"
                 >
-                  {t(link.label)}
+                  {strings.header[link.label]}
                 </a>
               </li>
             ))}

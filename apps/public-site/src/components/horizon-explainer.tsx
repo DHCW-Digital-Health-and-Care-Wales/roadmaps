@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useStrings } from "../i18n"
 import type { View } from "../lib/router"
 import { placementHeadingId } from "../lib/roadmap-helpers"
 import { HORIZON_IDS } from "../lib/types"
@@ -15,8 +15,8 @@ const horizonLink =
  */
 export function HorizonExplainer({ view }: { view: View }) {
   const headingId = "horizons-explainer-heading"
-  const { t } = useTranslation()
-  const note = t("roadmap.horizonNote")
+  const strings = useStrings()
+  const note = strings.roadmap.horizonNote
 
   return (
     <section
@@ -27,7 +27,7 @@ export function HorizonExplainer({ view }: { view: View }) {
     >
       <div className="mx-auto max-w-content">
         <h2 id={headingId} className="text-2xl font-bold text-heading">
-          {t("roadmap.horizonsHeading")}
+          {strings.roadmap.horizonsHeading}
         </h2>
 
         {view === "list" ? (
@@ -41,11 +41,11 @@ export function HorizonExplainer({ view }: { view: View }) {
                       href={`#${placementHeadingId(id)}`}
                       className={horizonLink}
                     >
-                      {t(`horizons.${id}.label`)}
+                      {strings.horizons[id].label}
                     </a>
                   </dt>
                   <dd className="mt-1 leading-relaxed text-ink-900">
-                    {t(`horizons.${id}.definition`)}
+                    {strings.horizons[id].definition}
                   </dd>
                 </div>
               ))}
@@ -61,11 +61,11 @@ export function HorizonExplainer({ view }: { view: View }) {
                       href={`#${placementHeadingId(id)}`}
                       className={horizonLink}
                     >
-                      {t(`horizons.${id}.label`)}
+                      {strings.horizons[id].label}
                     </a>
                   </dt>
                   <dd className="mt-1 leading-relaxed text-ink-700">
-                    {t(`horizons.${id}.definition`)}
+                    {strings.horizons[id].definition}
                   </dd>
                 </div>
               ))}

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useStrings } from "../i18n"
 import { categorySectionId, type CategoryTile } from "../lib/roadmap-helpers"
 import { CategoryIcon } from "./category-icon"
 
@@ -13,13 +13,13 @@ const tileClass =
  * Nothing is shown if there are no tiles.
  */
 export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   if (tiles.length === 0) return null
 
   return (
     <nav id={NAV_ID} aria-labelledby={`${NAV_ID}-heading`} className="mt-8">
       <h2 id={`${NAV_ID}-heading`} className="sr-only">
-        {t("landing.browseCategories")}
+        {strings.landing.browseCategories}
       </h2>
       <ul className="card-gap grid sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map(({ category, count }) => {
@@ -30,13 +30,13 @@ export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
                 <span
                   className={`block text-lg font-bold text-heading ${count ? "group-hover:underline" : ""}`}
                 >
-                  {t(`categories.${category.id}.label`)}
+                  {strings.categories[category.id].label}
                 </span>
                 <span className="mt-0.5 block text-sm text-ink-700">
-                  {t(`categories.${category.id}.description`)}
+                  {strings.categories[category.id].description}
                 </span>
                 <span className="mt-1.5 block text-sm text-ink-700">
-                  {t("landing.roadmapCount", { count })}
+                  {strings.landing.roadmapCount(count)}
                 </span>
               </span>
             </>

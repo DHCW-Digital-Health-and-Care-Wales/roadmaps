@@ -1,5 +1,4 @@
-import { useTranslation } from "react-i18next"
-import { useLanguage } from "../i18n"
+import { useLanguage, useStrings } from "../i18n"
 import { INFO_PAGES } from "../lib/info-pages"
 import { pathFor, type InfoPageId } from "../lib/router"
 import { ArrowLink } from "../components/arrow-link"
@@ -12,8 +11,8 @@ import { ArrowLink } from "../components/arrow-link"
  */
 export function InfoPage({ page }: { page: InfoPageId }) {
   const { lang } = useLanguage()
-  const { t } = useTranslation()
-  const { heading, paragraphs } = INFO_PAGES[page]
+  const strings = useStrings()
+  const { heading, paragraphs } = INFO_PAGES[page](strings)
   const home = pathFor(lang, null)
 
   return (
@@ -23,18 +22,18 @@ export function InfoPage({ page }: { page: InfoPageId }) {
           tabIndex={-1}
           className="mx-auto max-w-content text-3xl font-bold text-heading"
         >
-          {t(heading)}
+          {heading}
         </h1>
       </div>
       <div className="page-body">
         <div className="mx-auto max-w-content">
           <div className="max-w-3xl space-y-4 leading-relaxed text-ink-900">
             {paragraphs.map((paragraph) => (
-              <p key={paragraph}>{t(paragraph)}</p>
+              <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
           <ArrowLink href={home} className="mt-8">
-            {t("site.viewAllRoadmaps")}
+            {strings.site.viewAllRoadmaps}
           </ArrowLink>
         </div>
       </div>

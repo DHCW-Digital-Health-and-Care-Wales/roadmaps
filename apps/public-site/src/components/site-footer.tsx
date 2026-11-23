@@ -1,7 +1,5 @@
 import logoImage from "../assets/dhcw-logo.png"
-import type { ParseKeys } from "i18next"
-import { useTranslation } from "react-i18next"
-import { useLanguage } from "../i18n"
+import { useLanguage, useStrings } from "../i18n"
 import { FEEDBACK_URL, REPO_URL } from "../lib/links"
 import {
   dataPathFor,
@@ -18,7 +16,7 @@ const opensInNewTab = { target: "_blank", rel: "noreferrer" }
 interface FooterLink {
   key: string
   href: string
-  label: ParseKeys
+  label: string
   /**
    * `app` links switch the layout in place, so they need JavaScript; `route`
    * links are real pages that JavaScript opens without a reload.
@@ -42,26 +40,26 @@ export function SiteFooter({
   filter: OrgFilter
 }) {
   const { lang } = useLanguage()
-  const { t } = useTranslation()
+  const strings = useStrings()
   const hasJs = useHasJs()
   const toList = view !== "list"
   const links: FooterLink[] = [
     {
       key: "feedback",
       href: FEEDBACK_URL,
-      label: "site.giveFeedback",
+      label: strings.site.giveFeedback,
       kind: "external",
     },
     {
       key: "accessibility",
       href: pathFor(lang, "accessibility"),
-      label: "infoPages.accessibility.heading",
+      label: strings.infoPages.accessibility.heading,
       kind: "route",
     },
     {
       key: "privacy",
       href: pathFor(lang, "privacy"),
-      label: "infoPages.privacy.heading",
+      label: strings.infoPages.privacy.heading,
       kind: "route",
     },
     ...(dataSlug
@@ -69,7 +67,7 @@ export function SiteFooter({
           {
             key: "data",
             href: dataPathFor(dataSlug),
-            label: "footer.roadmapData",
+            label: strings.footer.roadmapData,
             kind: "page",
           } satisfies FooterLink,
           ...(hasJs
@@ -80,7 +78,9 @@ export function SiteFooter({
                     `${pathFor(lang, dataSlug)}${toList ? "?view=list" : ""}`,
                     filter,
                   ),
-                  label: toList ? "footer.listView" : "footer.cardView",
+                  label: toList
+                    ? strings.footer.listView
+                    : strings.footer.cardView,
                   kind: "app",
                 } satisfies FooterLink,
               ]
@@ -90,13 +90,13 @@ export function SiteFooter({
     {
       key: "licence",
       href: `${REPO_URL}/blob/main/LICENSE`,
-      label: "footer.licence",
+      label: strings.footer.licence,
       kind: "external",
     },
     {
       key: "github",
       href: REPO_URL,
-      label: "footer.onGitHub",
+      label: strings.footer.onGitHub,
       kind: "external",
     },
   ]
@@ -106,10 +106,10 @@ export function SiteFooter({
       <div className="mx-auto max-w-content">
         <img
           src={logoImage}
-          alt={t("site.organisation")}
+          alt={strings.site.organisation}
           className="h-12 w-auto object-contain"
         />
-        <nav aria-label={t("footer.nav")} className="mt-6">
+        <nav aria-label={strings.footer.nav} className="mt-6">
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {links.map((link) => (
               <li key={link.key}>
@@ -125,14 +125,14 @@ export function SiteFooter({
                   className="text-sm underline underline-offset-4 hover:no-underline"
                   {...(link.kind === "external" ? opensInNewTab : {})}
                 >
-                  {t(link.label)}
+                  {link.label}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
         <p className="mt-6 text-sm text-white/80">
-          {t("site.organisationFooter")}
+          {strings.site.organisationFooter}
         </p>
       </div>
     </footer>

@@ -1,6 +1,6 @@
+import { useStrings } from "../i18n"
 import type { MouseEvent } from "react"
 import { Building2, Check, Map as MapIcon } from "lucide-react"
-import { useTranslation } from "react-i18next"
 import { keepInPlace } from "../lib/focus"
 import { includesAllWales } from "../lib/roadmap-helpers"
 import { setOrgFilter, useHasJs, useOrgFilter } from "../lib/router"
@@ -31,7 +31,7 @@ export function OrgPills({
   organisations: readonly OrganisationId[]
   className?: string
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const hasJs = useHasJs()
   const filter = useOrgFilter()
 
@@ -49,9 +49,9 @@ export function OrgPills({
 
   return (
     <p className={`flex flex-wrap items-center gap-1.5 ${className}`}>
-      <span className="sr-only">{t("filter.organisations")} </span>
+      <span className="sr-only">{strings.filter.organisations} </span>
       {organisations.map((id) => {
-        const short = t(`organisations.${id}.short`)
+        const short = strings.organisations[id].short
         const Icon = id === "national" ? MapIcon : Building2
         if (!hasJs) {
           return (
@@ -77,9 +77,9 @@ export function OrgPills({
             aria-pressed={pressed}
             title={
               pressed
-                ? t("filter.showAllItemsAgain")
-                : t("filter.showOnlyWorkFor", {
-                    organisation: t(`organisations.${id}.name`),
+                ? strings.filter.showAllItemsAgain
+                : strings.filter.showOnlyWorkFor({
+                    organisation: strings.organisations[id].name,
                   })
             }
             onClick={toggle(id)}
@@ -90,7 +90,7 @@ export function OrgPills({
             ) : (
               <Icon aria-hidden="true" className="h-3 w-3 shrink-0" />
             )}
-            <span className="sr-only">{t("filter.byPill")}</span> {short}
+            <span className="sr-only">{strings.filter.byPill}</span> {short}
           </button>
         )
       })}

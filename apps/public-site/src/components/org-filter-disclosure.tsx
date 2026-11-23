@@ -1,6 +1,6 @@
+import { useStrings } from "../i18n"
 import { useId, useRef, useState } from "react"
 import { ChevronDown, ListFilter } from "lucide-react"
-import { useTranslation } from "react-i18next"
 import { ORGANISATION_GROUP_IDS, ORGANISATIONS } from "../lib/content"
 import { ORG_FILTER_ID, ORG_SELECT_ID } from "../lib/focus"
 import { setOrgFilter, useHasJs } from "../lib/router"
@@ -40,7 +40,7 @@ export function OrgFilterDisclosure({
   align?: "start" | "end"
   className?: string
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const hasJs = useHasJs()
   const id = useId()
   const [open, setOpen] = useState(defaultOpen)
@@ -70,10 +70,10 @@ export function OrgFilterDisclosure({
         <ListFilter aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
         <span className={linkText}>
           {org
-            ? t("filter.filteredByOrganisation", {
-                organisation: t(`organisations.${org}.short`),
+            ? strings.filter.filteredByOrganisation({
+                organisation: strings.organisations[org].short,
               })
-            : t("filter.byOrganisation")}
+            : strings.filter.byOrganisation}
         </span>
         <ChevronDown
           aria-hidden="true"
@@ -88,10 +88,10 @@ export function OrgFilterDisclosure({
           htmlFor={ORG_SELECT_ID}
           className="block font-medium text-heading"
         >
-          {t("filter.organisation")}
+          {strings.filter.organisation}
         </label>
         <p id={`${id}-org-hint`} className="mt-0.5 text-sm text-ink-700">
-          {t("filter.organisationHint")}
+          {strings.filter.organisationHint}
         </p>
         <select
           id={ORG_SELECT_ID}
@@ -107,13 +107,13 @@ export function OrgFilterDisclosure({
           }}
           className="mt-1 w-full rounded-sm border-2 border-ink-700 bg-surface px-3 py-2 text-base"
         >
-          <option value="">{t("filter.allOrganisations")}</option>
+          <option value="">{strings.filter.allOrganisations}</option>
           {ORGANISATION_GROUP_IDS.map((group) => {
             const inGroup = options.filter((o) => o.group === group)
             return inGroup.length > 0 ? (
-              <optgroup key={group} label={t(`organisationGroups.${group}`)}>
+              <optgroup key={group} label={strings.organisationGroups[group]}>
                 {inGroup.map((o) => {
-                  const name = t(`organisations.${o.id}.name`)
+                  const name = strings.organisations[o.id].name
                   return (
                     <option key={o.id} value={o.id}>
                       {o.code ? `${name} (${o.code})` : name}
@@ -139,10 +139,10 @@ export function OrgFilterDisclosure({
             />
             <div>
               <label htmlFor={`${id}-all`} className="font-medium text-heading">
-                {t("filter.includeAllWales")}
+                {strings.filter.includeAllWales}
               </label>
               <p id={`${id}-all-hint`} className="text-sm text-ink-700">
-                {t("filter.includeAllWalesHint")}
+                {strings.filter.includeAllWalesHint}
               </p>
             </div>
           </div>
@@ -159,7 +159,7 @@ export function OrgFilterDisclosure({
               }}
               className={`text-sm font-medium text-action ${linkText}`}
             >
-              {t("filter.clearFilter")}
+              {strings.filter.clearFilter}
             </button>
           </p>
         ) : null}

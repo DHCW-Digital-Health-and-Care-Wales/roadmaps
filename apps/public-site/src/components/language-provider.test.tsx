@@ -7,20 +7,19 @@ import {
   waitFor,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { useTranslation } from "react-i18next"
-import { useLanguage } from "../i18n"
+import { useLanguage, useStrings } from "../i18n"
 import { LanguageProvider } from "./language-provider"
 import { LanguageToggle } from "./language-toggle"
 
 function Probe() {
   const { lang, route } = useLanguage()
-  const { t } = useTranslation()
+  const strings = useStrings()
   return (
     <>
       <p>
         {lang} {route.slug}
       </p>
-      <p>{t("site.backToTop")}</p>
+      <p>{strings.site.backToTop}</p>
     </>
   )
 }

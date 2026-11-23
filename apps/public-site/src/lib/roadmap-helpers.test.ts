@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { createI18n } from "../i18n"
+import { catalogues } from "../i18n"
 import {
   countInParentheses,
   countItems,
@@ -31,8 +31,7 @@ import fixture from "../../e2e/fixtures/roadmaps.json"
 
 const snapshot = fixture as Roadmap[]
 
-const en = createI18n({ language: "en" }).t
-const cy = createI18n({ language: "cy" }).t
+const { en, cy } = catalogues
 
 const loc = (en: string) => ({ en, cy: "" })
 

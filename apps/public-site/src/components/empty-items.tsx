@@ -1,5 +1,5 @@
+import { useStrings } from "../i18n"
 import { focusCard, keepInPlace } from "../lib/focus"
-import { useTranslation } from "react-i18next"
 import { emptyText, hiddenCount } from "../lib/roadmap-helpers"
 import { setOrgFilter } from "../lib/router"
 import { NO_ORG_FILTER, type OrgFilter } from "../lib/types"
@@ -22,12 +22,12 @@ export function EmptyItems({
   headingId: string
   className?: string
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const hidden = hiddenCount(filter, total)
 
   return (
     <div className={`text-ink-700 ${className}`.trim()}>
-      <p>{emptyText(filter, total, t)}</p>
+      <p>{emptyText(filter, total, strings)}</p>
       {hidden > 0 ? (
         <button
           type="button"
@@ -42,7 +42,7 @@ export function EmptyItems({
           }}
           className="mt-2 text-sm font-medium text-action underline underline-offset-4 hover:decoration-2"
         >
-          {t("roadmap.showHiddenItems", { count: hidden })}
+          {strings.roadmap.showHiddenItems(hidden)}
         </button>
       ) : null}
     </div>

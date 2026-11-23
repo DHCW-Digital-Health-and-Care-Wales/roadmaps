@@ -1,5 +1,5 @@
+import { useStrings } from "../i18n"
 import { ChevronDown } from "lucide-react"
-import { useTranslation } from "react-i18next"
 import { HORIZON_IDS, type Roadmap, type OrgFilter } from "../lib/types"
 import { filterItems, placementHeadingId } from "../lib/roadmap-helpers"
 import { HorizonPhase } from "./horizon-phase"
@@ -18,25 +18,25 @@ export function RoadmapHorizons({
   roadmap: Roadmap
   filter: OrgFilter
 }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const headingId = "roadmap-heading"
   const lastIndex = HORIZON_IDS.length - 1
 
   return (
     <section aria-labelledby={headingId}>
       <h2 id={headingId} className="text-2xl font-bold text-heading">
-        {t("roadmap.heading")}
+        {strings.roadmap.heading}
       </h2>
 
       <p className="mt-4 max-w-3xl leading-relaxed text-ink-900">
-        {t("roadmap.description")}
+        {strings.roadmap.description}
       </p>
 
       <ol className="mt-8 space-y-3">
         {HORIZON_IDS.map((id, index) => (
           <li key={id}>
             <HorizonPhase
-              label={t(`horizons.${id}.label`)}
+              label={strings.horizons[id].label}
               items={filterItems(roadmap.items[id], filter)}
               total={roadmap.items[id].length}
               filter={filter}

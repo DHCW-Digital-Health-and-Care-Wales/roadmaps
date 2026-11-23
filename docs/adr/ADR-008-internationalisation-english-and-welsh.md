@@ -2,7 +2,8 @@
 
 - Status: Accepted
 - Date: 2026-11-10 (amended in STY-004: switcher location, document sync, catalogue type, lint;
-  STY-095: the public site's catalogues, and English shown in place of Welsh marked)
+  STY-095: the public site's catalogues, and English shown in place of Welsh marked;
+  STY-096: the public site's catalogues without a runtime library)
 
 ## Context
 
@@ -64,7 +65,8 @@ and English-only pluralisation are not acceptable.
 From the owner's STY-095 grilling (2026-11-23, STY-096 D2–D4, STY-098 D1–D2); the rest
 of the decision stands.
 
-- **The public site's interface text moves to react-i18next**, from STY-096: it and the
+- **The public site's interface text moves to typed catalogues**, from STY-096
+  (react-i18next for the site was reversed there; see _STY-096 amendments_): it and the
   fixed text the site owns become typed catalogues with the six Welsh plural forms,
   while roadmap content stays data in both languages. The site's own location, its
   language toggle and its browser-language rule (Welsh when any browser language is
@@ -72,9 +74,29 @@ of the decision stands.
 - **English shown in place of Welsh is marked** (WCAG 2.2 SC 3.1.2) in both apps:
   roadmap content resolves to its text and the language it is in, and renders through
   one component that sets `lang` when that differs from the page's; content set inside
-  a sentence renders through `<Trans>`, so only it is marked; an attribute takes the
+  a sentence is placed as an element by the catalogue (`<Trans>` in the editor), so
+  only it is marked; an attribute takes the
   English unmarked, since it cannot mark part of its value. The site's half is
   STY-096, the editor's STY-098.
+
+### STY-096 amendments
+
+From the owner's decision in STY-096 delivery (2026-11-23, STY-096 D10); the editor's
+library and the rest of the decision stand.
+
+- **The public site has no runtime i18n library.** i18next and react-i18next add about
+  23 KB gzip to the site's script, past its 100 KB script budget (ADR-016), so the site
+  keeps the editor's catalogue layout under `apps/public-site/src/i18n/` without them.
+  `locales/en.ts` is the source of truth, and `locales/cy.ts` is typed against it with
+  `satisfies Catalogue<typeof en>`, so a missing or extra key fails `pnpm typecheck`.
+  Components read the page's catalogue by property (`useStrings()`), never by string
+  key; a value filled in is a typed function, and a sentence around an element, such as
+  roadmap content, is a function given that element (`sentence()`).
+- **Counts** take each language's forms through `plural()` (`plural.ts`), which chooses
+  one with `Intl.PluralRules` and requires every form the language uses: a missing Welsh
+  form is a type error, and a test holds the forms to `Intl.PluralRules`.
+- The site's tests read the catalogues directly, and `eslint-plugin-i18next`'s
+  `no-literal-string` covers `apps/public-site/src/**/*.tsx` as it does the editor.
 
 ## Consequences
 

@@ -1,8 +1,7 @@
 import { useState } from "react"
 import { type Roadmap, NO_ORG_FILTER, type OrgFilter } from "../lib/types"
 import { openOrgFilter } from "../lib/focus"
-import { useTranslation } from "react-i18next"
-import { useLanguage } from "../i18n"
+import { useLanguage, useStrings } from "../i18n"
 import {
   categoryTiles,
   filterGroups,
@@ -30,7 +29,7 @@ export function LandingPage({
   filter: OrgFilter
 }) {
   const { lang } = useLanguage()
-  const { t } = useTranslation()
+  const strings = useStrings()
   const [query, setQuery] = useState("")
   const groups = filterGroups(roadmaps, query, lang, filter)
   const shown = groups.reduce((sum, group) => sum + group.roadmaps.length, 0)
@@ -44,10 +43,10 @@ export function LandingPage({
             tabIndex={-1}
             className="text-3xl font-bold text-heading sm:text-4xl"
           >
-            {t("landing.title")}
+            {strings.landing.title}
           </h1>
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-ink-900">
-            {t("landing.intro")}
+            {strings.landing.intro}
           </p>
           <CategoryTiles tiles={categoryTiles(roadmaps, groups)} />
         </div>
@@ -66,7 +65,7 @@ export function LandingPage({
                     roadmaps.length,
                     q,
                     filter,
-                    t,
+                    strings,
                   )
                 }
               >
@@ -88,7 +87,7 @@ export function LandingPage({
             </>
           ) : (
             <p className="rounded-card border border-border bg-surface-subtle p-5 font-medium text-ink-700">
-              {t("landing.noRoadmaps")}
+              {strings.landing.noRoadmaps}
             </p>
           )}
           <section
@@ -99,12 +98,12 @@ export function LandingPage({
               id="about-roadmaps-heading"
               className="text-2xl font-bold text-heading"
             >
-              {t("landing.aboutHeading")}
+              {strings.landing.aboutHeading}
             </h2>
             <div className="mt-4 space-y-4 leading-relaxed text-ink-900">
-              <p>{t("landing.aboutOpen")}</p>
-              <p>{t("landing.aboutBeta")}</p>
-              <p>{t("landing.aboutFeedback")}</p>
+              <p>{strings.landing.aboutOpen}</p>
+              <p>{strings.landing.aboutBeta}</p>
+              <p>{strings.landing.aboutFeedback}</p>
               <p>
                 <FeedbackLink />
               </p>
@@ -118,18 +117,19 @@ export function LandingPage({
 
 /** Says nothing matches, offering to clear the filter if there is one. */
 function NoMatches({ query, filter }: { query: string; filter: OrgFilter }) {
-  const { t } = useTranslation()
+  const strings = useStrings()
   const box =
     "rounded-card border border-border bg-surface-subtle p-5 font-medium text-ink-700"
   if (!filter.org) {
-    return <p className={box}>{t("landing.noMatches")}</p>
+    return <p className={box}>{strings.landing.noMatches}</p>
   }
-  const vars = { organisation: t(`organisations.${filter.org}.short`) }
+  const organisation = strings.organisations[filter.org].short
+  const message = query.trim()
+    ? strings.landing.noMatchesFor
+    : strings.landing.noWorkFor
   return (
     <div className={box}>
-      <p>
-        {t(query.trim() ? "landing.noMatchesFor" : "landing.noWorkFor", vars)}
-      </p>
+      <p>{message({ organisation })}</p>
       <button
         type="button"
         onClick={() => {
@@ -139,7 +139,7 @@ function NoMatches({ query, filter }: { query: string; filter: OrgFilter }) {
         }}
         className="mt-3 text-action underline underline-offset-4 hover:decoration-2"
       >
-        {t("landing.showAllOrganisations")}
+        {strings.landing.showAllOrganisations}
       </button>
     </div>
   )

@@ -1,7 +1,6 @@
 # STY-088: Bring the public site into the workspace, still published at its address
 
-- **Status**: Done — S1–S3 and S8 are observed after the owner's cut-over (Scope's owner
-  steps)
+- **Status**: Done — S1–S3 and S8 observed after the cut-over, 2026-11-23 (Delivery)
 - **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
@@ -311,3 +310,35 @@ Audited at `product-roadmaps` `2548219` on 2026-11-21:
 | S6       | the root README's _Spreadsheet format_; `apps/public-site/README.md`, `apps/public-site/sheets/README.md`, `apps/public-site/AGENTS.md`, `apps/editor/AGENTS.md` and `product-roadmaps`' README link to it                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | S7       | `apps/public-site/AGENTS.md` and `CLAUDE.md`, the root guide's routing table, the root `CONTRIBUTING.md`, and `product-roadmaps`' README                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | S8       | `.github/rulesets/product-roadmaps.json` and `build/ci-workflow.test.ts` (`is main's, less the required status check`), red with a rule removed; `product-roadmaps`' workflows: actionlint 1.7.12 and zizmor 1.32.0 (`--persona auditor`, online), no findings, after naming every job and limiting the sheet check's concurrency; the comparison in `docs/operations/protecting-main.md`, run after the owner applies the ruleset                                                                                                                                                                                                                                                                    |
+
+Observed after the cut-over, on 2026-11-22 and 23. At the owner's request the delivering
+agent ran the command-line steps. It widened `main`'s ruleset to allow a merge commit for
+this pull request alone (the ruleset's squash-only rule binds the owner's bypass too,
+not just the repository setting), merged it (`c23ed2fe`, 23:48:07Z) and restored the
+ruleset at once; the owner turned merge commits on beforehand and the agent off after.
+
+- **S1**: `c23ed2fe` is a signed merge commit whose second parent is the branch's head;
+  `product-roadmaps`' `2548219` and its 41 commits, and the move commit `f6afeff`, are in
+  `main`'s history with their SHAs; `git log --follow apps/public-site/index.html`
+  reaches `485ca43`; `.git-blame-ignore-revs` names the reformat commit as it landed
+  (`e0979be`). `main`'s ruleset compared empty against `.github/rulesets/main.json`
+  afterwards, and the repository allows squash merges only again. `main`'s CI run
+  (`45085192396`) passed every job; its editor deploy skipped, as on every push since
+  CHO-031 (DEF-031).
+- **S3**: `product-roadmaps` #52 merged (`5eb45a2`, 23:48:46Z) while its `main` was still
+  at `2548219`; the repository holds the nine files S3 and D9 list, and the merge
+  triggered no deploy. Dependabot closed its five pull requests itself at 23:57Z. A
+  manual _Check the roadmap sheet_ run (`45086364768`) passed.
+- **S2**: a manual deploy there (`45086184077`) built this repository at `c23ed2fe` with
+  the sheet as it stood (23 roadmaps) and published it (deployment of `5eb45a2` to
+  `github-pages`, 00:00:29Z). The root, `en/`, `cy/`, two roadmap pages, the
+  accessibility page, a `roadmap.json` and the sitemap answer 200, the stylesheet served
+  is the one the comparison built, and the feedback link opens `product-roadmaps`'
+  template. The owner checked the landing page in English and Welsh, a roadmap page and
+  _Give feedback_.
+- **S8**: `product-roadmaps`' own `main-protection` ruleset was replaced in place with
+  `.github/rulesets/product-roadmaps.json` and compared empty against it; the rules on its
+  `main` are deletion, non-fast-forward, pull request and required signatures, beside the
+  enterprise's _Restrict Transfers_. Its default workflow token reads `read`, rebase
+  merging is off, its `github-pages` environment deploys only from `main`, and
+  `CODEOWNERS` names only the owner.

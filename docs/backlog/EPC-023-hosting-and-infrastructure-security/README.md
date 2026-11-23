@@ -126,6 +126,12 @@ lives:_
   by the invoker settings and ingress, not left open by default.
 - **Container images**: built from a minimal base, run as a non-root user, scanned,
   with an SBOM and build provenance attested.
+- **The API's image and server** (owner, 2026-11-23, STY-090 D25): the Dockerfile, the
+  production server process and the hosted `Host` values arrive here, not in STY-090; the
+  image carries the editor's build (ADR-020), and the service routes `/api/v1/*`,
+  `/health` and `/ready` to the API and the rest to the editor's files (ADR-017
+  _STY-090 amendments_). The `Host` that Cloud Run's probes send must pass the API's
+  allow-list (STY-090 S5).
 
 ### Operations
 

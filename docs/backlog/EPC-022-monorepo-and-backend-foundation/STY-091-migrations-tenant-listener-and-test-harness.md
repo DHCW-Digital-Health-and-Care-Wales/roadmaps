@@ -33,3 +33,6 @@ _Not acceptance criteria._
 - The template database, a database per worker, superuser `TRUNCATE` between tests
   (rows the migrations insert are restored after it);
   `apps/api/tests/integration/AGENTS.md`.
+- `/ready` answers 503 `service.not_ready` until the database is at the code's Alembic
+  head (owner, 2026-11-23, STY-090 D21); STY-090's `postgres:18` CI service container
+  is the one this harness grows (STY-090 D5).

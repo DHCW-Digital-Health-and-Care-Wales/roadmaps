@@ -2,8 +2,10 @@
 
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
-  the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_).
-- Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules)
+  the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
+  the owner's STY-090 grilling (_STY-090 amendments_).
+- Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
+  STY-090: URL paths, tracing after the skeleton)
 
 ## Context
 
@@ -154,6 +156,23 @@ frame-ancestors 'none'` and a same-origin resource policy; requests
   `/docs` or live OpenAPI route (ADR-020).
 - Everything else here stands.
 
+### STY-090 amendments
+
+From the owner's STY-090 grilling (2026-11-23, STY-090 D2, D8, D19 and D24); the rest of
+_Operation_ stands.
+
+- **Contract routes live under `/api/v1`.** The version names the contract the editor
+  and, later, the public read rely on. A breaking change would serve `/api/v2` beside
+  it for as long as a client still calls v1.
+- **The probes are `/health` and `/ready` at the root,** unversioned and outside
+  `/api`. The platform calls them, not a client, so they never move with the contract.
+  No probe path ends in `z`, since Cloud Run reserves some such paths. The hosted
+  service routes `/api/v1/*` and the two probes to the API, and everything else to the
+  editor's files (ADR-020).
+- **OpenTelemetry follows the skeleton** in STY-100, not in STY-090 itself. Until then
+  each log line and response carries a generated request ID, which STY-100 makes the
+  trace ID.
+
 ## Consequences
 
 - Every route, service and repository is synchronous; moving to async touches each of
@@ -161,7 +180,7 @@ frame-ancestors 'none'` and a same-origin resource policy; requests
 - ty's 0.0.x releases can change rules; a bump is a deliberate change with its fixes.
 - `docs/operations/replacing-google-sheets.md` changes with the adapter: its responses
   are parsed by the generated schemas, not hand-written ones.
-- Follow-on work (EPC-022): STY-090 (the API skeleton), STY-091 (migrations, the tenant
-  listener and the test harness), STY-092 (the OpenAPI contract and `packages/api-types`),
-  STY-093 (the seeder). The public endpoints and the licence statement arrive with the
-  public read, in EPC-022's later stories.
+- Follow-on work (EPC-022): STY-090 (the API skeleton), STY-100 (tracing), STY-091
+  (migrations, the tenant listener and the test harness), STY-092 (the OpenAPI contract
+  and `packages/api-types`), STY-093 (the seeder). The public endpoints and the licence
+  statement arrive with the public read, in EPC-022's later stories.

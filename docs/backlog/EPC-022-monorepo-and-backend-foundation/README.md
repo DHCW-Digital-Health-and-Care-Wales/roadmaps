@@ -2,10 +2,10 @@
 
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
   STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098) and STY-089 are
-  done;
-  the API placeholders' acceptance criteria come next
-- **Progress**: 10 of 16 terminal (STY-085 to STY-089, STY-095, CHO-044, STY-096 to
-  STY-098); next selectable: none, the rest being Placeholders
+  done; STY-090 is Proposed (owner, 2026-11-23); the other API placeholders'
+  acceptance criteria come next
+- **Progress**: 10 of 17 terminal (STY-085 to STY-089, STY-095, CHO-044, STY-096 to
+  STY-098); next selectable: STY-090
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -132,6 +132,19 @@ Owner answers of 2026-11-23 (STY-089 grilling), recorded in STY-089 D2–D16:
     config, data and code live: a package only for code two or more apps import that
     outlives the Sheets format.
 
+Owner answers of 2026-11-23 (STY-090 grilling), recorded in STY-090 D1–D27 and ADR-017
+_STY-090 amendments_:
+
+19. **The API's paths**: contract routes under `/api/v1`, the probes `/health` and
+    `/ready` at the root, unversioned; the editor's dev server proxies `/api` from
+    STY-090.
+20. **The skeleton's shape**: one command (`pnpm api:dev`) runs the API beside the
+    slot's database, which teardown removes with its volume; settings from environment
+    variables only, failing closed; JSON logs everywhere, with a request ID in each line
+    and in `X-Request-ID`; ADR-020's headers, a 1 MiB body limit and the `Host`
+    allow-list from the start; 100% branch coverage. Tracing follows as STY-100; the
+    image and the production server are EPC-023's.
+
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._
 
@@ -159,7 +172,8 @@ audited weekly without a change to the audit, and uv takes a 7-day `exclude-newe
 
 ### The API's conventions
 
-Every API story follows ADR-017's layering, error envelope and test harness. A story
+Every API story follows ADR-017's layering, error envelope and test harness, with its
+routes under `/api/v1` (ADR-017 _STY-090 amendments_). A story
 that adds an error code maps it in the editor's API adapter (ADR-017 _Errors_), with
 copy in English and Welsh when it needs a new `AppError` kind, and adds factories to
 the seeder for any table it creates.
@@ -184,9 +198,11 @@ the seeder for any table it creates.
 | STY-097 | [One version per shared dependency, one font](../_archive/EPC-022-monorepo-and-backend-foundation/STY-097-one-version-per-shared-dependency-and-one-font.md)              | Features/UI + CI/CD        | STY-096     | ✅    |
 | STY-098 | [The editor marks English in place of Welsh](../_archive/EPC-022-monorepo-and-backend-foundation/STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)             | Domain + Features/UI       | STY-097     | ✅    |
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                | STY-098     |       |
+| STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                                                 | API                        | STY-090     |       |
 
-_STY-085 to STY-089, STY-095, CHO-044 and STY-096 to STY-098 are done. STY-090 to STY-093 are
-Placeholders until their acceptance criteria are written: ADR-017 is accepted. STY-094
+_STY-085 to STY-089, STY-095, CHO-044 and STY-096 to STY-098 are done. STY-090 is Proposed;
+STY-091 to STY-093 and STY-100 are Placeholders until their acceptance criteria are
+written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
 settles what the public sees.
 Candidate scope, to split next: the first schema
@@ -205,7 +221,7 @@ change, with no other editor-code pull request open while it is in flight (STY-0
 D8), then STY-087, whose hooks and gate the API joins. Then two tracks run in
 parallel: the repository's (STY-088 into a protected `main`, then the alignment
 sequence STY-095, CHO-044, STY-096, STY-097 and STY-098, strictly in that order, each
-merged before the next starts, then STY-089 and the STY-099 placeholder) and the API's (STY-090, then STY-091 and STY-092 in either order, with
+merged before the next starts, then STY-089 and the STY-099 placeholder) and the API's (STY-090, then STY-091, STY-092 and STY-100 in any order, with
 STY-093 after STY-091). CHO-031 (supply-chain checks) is done, beside STY-087. The
 threat model comes before
 any identity story (ADR-018); STY-094 follows the invitation story. The schema

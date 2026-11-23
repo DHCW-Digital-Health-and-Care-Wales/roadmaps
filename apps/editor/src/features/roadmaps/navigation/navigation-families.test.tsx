@@ -208,7 +208,7 @@ describe("Close all and Open all (S3)", () => {
 describe("remembered on this device (S4)", () => {
   it("keeps the closed families across a reload, and writes nothing to the data source", async () => {
     const repository = createInMemoryRoadmapRepository(ROADMAPS, ROADMAP_ITEMS)
-    // Every method of the port that is not a read.
+    // Every method of the in-memory repository except its `list*` reads.
     const spies = (Object.keys(repository) as (keyof typeof repository)[])
       .filter((method) => !method.startsWith("list"))
       .map((method) => vi.spyOn(repository, method))

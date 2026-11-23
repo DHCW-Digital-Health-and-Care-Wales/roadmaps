@@ -93,10 +93,11 @@ English and Welsh
   them; the time after is not re-measured on CI, so the record's ~80 s stands as the
   estimate (the 60 runs took 22.6 s on this host with two workers). Line numbers below
   are those of `2bcbe692` unless a test's name or "now" says otherwise. The thirteen specs
-  go from 3,709 to 2,020 lines (1,980 deleted, 291 inserted over 12 changed specs;
-  `navigation-width.spec.ts` is untouched). Vitest gains `navigation-families.test.tsx`
-  (+26, -3), `roadmaps-page.test.tsx`, `app.test.tsx` and a new 29-line
-  `index-theme-script.test.ts`. Tests only.
+  go from 3,709 to 2,024 lines (2,041 deleted and 356 inserted by `git diff -M --numstat`,
+  which reads `navigation-changed.spec.ts` as renamed to `navigation-welsh.spec.ts`;
+  `navigation-width.spec.ts` is untouched), and `fixtures/dialogs.ts` loses 10. Vitest
+  gains `navigation-families.test.tsx` (+22, -3), `roadmaps-page.test.tsx` (+31, -6),
+  `app.test.tsx` (+16) and a new 29-line `index-theme-script.test.ts`. Tests only.
 - `shell.spec.ts`: the header's test of its service name and sideways scroll runs at 375,
   640, 768 and 1024 px in both languages (8 runs, from 12): a width each side of `sm`
   (the full name and logo against the short name and icon), `md` (the language's name
@@ -108,14 +109,15 @@ English and Welsh
   (the Welsh header is held by the loop, the footer's Welsh by `app-shell.test.tsx`). The
   order of the header's controls is cut with the other positions. The two positions of
   `:270` and `:298` are cut; the not-found page's reflow at 375 px is its own test.
-- Welsh reflow: the five set-ups (`shell-navigation.spec.ts:238`, `navigation-search.spec.ts:186`,
-  `navigation-families.spec.ts:271`, `unpublished-changes.spec.ts:270`,
-  `navigation-changed.spec.ts:246`) are two tests in `navigation-welsh.spec.ts` (`navigation-changed.spec.ts` renamed, since all its English tests went), one per
-  width where the navigation changes shape: the narrowest desktop (1024 px) and the
-  phone's drawer, each with the Welsh sample world (three roadmaps changed), a family
-  shut, the count shown and a search for a Welsh title. The drawer test also holds the
-  menu button's Welsh name with the count, and that the longest link fits. The English
-  drawer test keeps its focus checks and drops its fit.
+- Welsh reflow: the five set-ups (`shell-navigation.spec.ts:238`,
+  `navigation-search.spec.ts:186`, `navigation-families.spec.ts:271`,
+  `unpublished-changes.spec.ts:270`, `navigation-changed.spec.ts:246`) are two tests in
+  `navigation-welsh.spec.ts` (`navigation-changed.spec.ts`, renamed since all its English
+  tests went), one per width where the navigation changes shape: the narrowest desktop
+  (1024 px) and the phone's drawer, each with the Welsh sample world (three roadmaps
+  changed), a family shut, the count shown and a search for a Welsh title. The drawer test
+  also holds the menu button's Welsh name with the count, and that the count and the
+  longest link fit. The English drawer test keeps its focus checks and drops its fit.
 - `unpublished-changes.spec.ts`: the dots' colour is what a browser alone sees, so
   `:61` and `:221` keep the colour on the navigation and on the phone's menu button, and
   `:86` and `:245` stay; the text of the count, its lead, the rail, the drawer and the
@@ -148,7 +150,8 @@ English and Welsh
   the closed families across a reload, and writes nothing to the data source", each
   shown red (a `tabIndex={-1}` on Close all; a write called in the test), then
   restored; `roadmaps-page.test.tsx` "re-sorts the groups and titles when the language
-  changes" now switches the language after rendering, as the cut E2E test did;
+  changes" now switches the language after rendering, over families and titles that sort
+  the other way in Welsh, as the cut E2E test did (shown red by grouping in English);
   `app.test.tsx` "leads from the not-found page's link to the landing page" clicks the
   link; `index-theme-script.test.ts` was shown red by renaming the key in `index.html`.
 - No axe scan is in these thirteen specs, so none is dropped (the owner's rule of

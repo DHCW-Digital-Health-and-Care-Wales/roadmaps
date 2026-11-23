@@ -48,8 +48,9 @@ report in the conversation only.
    Read the root `AGENTS.md`, the `AGENTS.md` along each changed path's
    directory ancestry and the shared conventions files those guides point to,
    the epic's `delivery-notes.md` when the change belongs to an epic, and the
-   binding ADRs; cite the rule by file and line, never from memory. A docs-only diff is reviewed against `docs/AGENTS.md`
-   (the records guide). Repo rules outrank generic advice.
+   binding ADRs; cite the rule by file and line, never from memory. A
+   docs-only diff is reviewed against `docs/AGENTS.md` (the records guide).
+   Repo rules outrank generic advice.
 2. **Context.** Open the story, defect or chore (`docs/backlog/`) the change
    implements and each touched file beyond the hunk, and see how neighbours do
    the same thing before calling anything inconsistent.

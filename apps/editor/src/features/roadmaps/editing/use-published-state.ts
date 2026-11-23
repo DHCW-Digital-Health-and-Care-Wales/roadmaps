@@ -199,7 +199,10 @@ export function usePublishedState(
             action,
             kind: "refused",
             conflicts: result.conflicts,
-            removed: result.missingItems.map((entry) => entry.item.title),
+            removed: result.missingItems.map(({ item, position }) => ({
+              item,
+              position,
+            })),
           }
           break
         case "roadmap-not-found":

@@ -4,7 +4,7 @@ import { Trans, useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { Button } from "@/components/ui/button"
-import type { LocalisedText } from "@/domain/roadmap/localised-text"
+import type { ItemTarget } from "@/domain/roadmap/roadmap-changes"
 
 import { ContentText } from "../components/content-text"
 import type { PublishAction } from "./pending-changes-store"
@@ -14,8 +14,8 @@ export interface RefusalNoticeProps {
   action: PublishAction
   /** Whether a field or order someone else changed is still to decide. */
   deciding: boolean
-  /** The loaded titles of the edited items that are gone. */
-  removed: readonly LocalisedText[]
+  /** The edited items that are gone, as loaded. */
+  removed: readonly ItemTarget[]
   /** Whether any change is still pending. */
   hasPendingChanges: boolean
   /** Opens the review of what is still to decide. */
@@ -71,8 +71,8 @@ export function RefusalNotice({
 }
 
 export interface RemovedItemsProps {
-  /** The loaded titles of the edited items that are gone. */
-  removed: readonly LocalisedText[]
+  /** The edited items that are gone, as loaded. */
+  removed: readonly ItemTarget[]
   /** Whether any change is still pending, which is then said to be kept. */
   hasPendingChanges: boolean
 }
@@ -85,12 +85,13 @@ export function RemovedItems({
   const { t } = useTranslation()
   return (
     <>
-      {removed.map((title, index) => (
-        // eslint-disable-next-line @eslint-react/no-array-index-key -- Two removed items may share a title, so only the place is an identity.
-        <p key={index}>
+      {removed.map(({ item, position }) => (
+        // Known as a conflict is: by its ID, or with none by its place as loaded. Two
+        // may share a title, and an item kept from an earlier read may share a place.
+        <p key={item.id ?? `at-${String(position)}`}>
           <Trans
             i18nKey="roadmaps.publish.notice.refused.removed"
-            components={{ title: <ContentText value={title} /> }}
+            components={{ title: <ContentText value={item.title} /> }}
           />
         </p>
       ))}

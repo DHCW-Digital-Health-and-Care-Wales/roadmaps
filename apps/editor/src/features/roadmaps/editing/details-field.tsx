@@ -11,6 +11,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useState,
@@ -210,11 +211,13 @@ function DetailsEditor({
     focusNextRef.current = null
   })
   // As the field opens, focus is at the end of the detail last written in.
-  useEffect(() => {
+  const opened = useEffectEvent(() => {
     const field = fieldsRef.current.get(current)
     if (field) place({ id: current, caret: field.value.length })
     onOpened()
-    // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- Only as the editor is first drawn.
+  })
+  useEffect(() => {
+    opened()
   }, [])
 
   const indexOf = (id: number) => lines.findIndex((line) => line.id === id)

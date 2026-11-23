@@ -114,7 +114,6 @@ export function CompactItemRow({
       open={open}
       onOpenChange={setOpen}
       render={
-        // eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions -- onFocus only observes focus bubbling up from the row's controls.
         <li
           className={cn(
             // Opaque, as its list is, so it hides the rows it passes as it travels.

@@ -43,7 +43,6 @@ export function StickyHeader({ children }: StickyHeaderProps) {
 
   return (
     <div ref={placeRef} style={stuck ? { height: flowHeight } : undefined}>
-      {/* eslint-disable-next-line jsx-a11y-x/no-static-element-interactions -- onFocus only observes focus bubbling up from the controls inside; the div is not a control. */}
       <div
         ref={headerRef}
         data-slot="sticky-header"

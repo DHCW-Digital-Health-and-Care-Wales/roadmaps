@@ -51,7 +51,6 @@ export function RoadmapItemCard({
   onFocus,
 }: RoadmapItemCardProps) {
   return (
-    // eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions -- onFocus only observes focus bubbling up from the card's controls.
     <li
       className={cn(
         "flex flex-col gap-3 border bg-card p-4 text-card-foreground",

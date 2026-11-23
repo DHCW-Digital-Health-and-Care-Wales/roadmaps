@@ -1,8 +1,7 @@
 import { useState } from "react"
 import { type Roadmap, NO_ORG_FILTER, type OrgFilter } from "../lib/types"
-import { organisation } from "../lib/content"
 import { openOrgFilter } from "../lib/focus"
-import { fill, useLanguage } from "../lib/i18n"
+import { useLanguage, useStrings } from "../i18n"
 import {
   categoryTiles,
   filterGroups,
@@ -11,13 +10,11 @@ import {
   roadmapsStatus,
 } from "../lib/roadmap-helpers"
 import { setOrgFilter } from "../lib/router"
-import { UI } from "../lib/strings"
 import { CategorySection } from "../components/category-section"
 import { CategoryTiles } from "../components/category-tiles"
 import { FeedbackLink } from "../components/feedback-link"
 import { OrgFilterDisclosure } from "../components/org-filter-disclosure"
 import { SearchBar } from "../components/search-bar"
-import { T } from "../components/t"
 
 /**
  * Landing page: a short introduction, jump links to each category, a search
@@ -32,6 +29,7 @@ export function LandingPage({
   filter: OrgFilter
 }) {
   const { lang } = useLanguage()
+  const strings = useStrings()
   const [query, setQuery] = useState("")
   const groups = filterGroups(roadmaps, query, lang, filter)
   const shown = groups.reduce((sum, group) => sum + group.roadmaps.length, 0)
@@ -45,10 +43,10 @@ export function LandingPage({
             tabIndex={-1}
             className="text-3xl font-bold text-heading sm:text-4xl"
           >
-            <T value={UI.landingTitle} />
+            {strings.landing.title}
           </h1>
           <p className="mt-4 max-w-3xl text-lg leading-relaxed text-ink-900">
-            <T value={UI.landingIntro} />
+            {strings.landing.intro}
           </p>
           <CategoryTiles tiles={categoryTiles(roadmaps, groups)} />
         </div>
@@ -67,6 +65,7 @@ export function LandingPage({
                     roadmaps.length,
                     q,
                     filter,
+                    strings,
                   )
                 }
               >
@@ -88,7 +87,7 @@ export function LandingPage({
             </>
           ) : (
             <p className="rounded-card border border-border bg-surface-subtle p-5 font-medium text-ink-700">
-              <T value={UI.noRoadmaps} />
+              {strings.landing.noRoadmaps}
             </p>
           )}
           <section
@@ -99,18 +98,12 @@ export function LandingPage({
               id="about-roadmaps-heading"
               className="text-2xl font-bold text-heading"
             >
-              <T value={UI.aboutRoadmapsHeading} />
+              {strings.landing.aboutHeading}
             </h2>
             <div className="mt-4 space-y-4 leading-relaxed text-ink-900">
-              <p>
-                <T value={UI.aboutRoadmapsOpen} />
-              </p>
-              <p>
-                <T value={UI.aboutRoadmapsBeta} />
-              </p>
-              <p>
-                <T value={UI.aboutRoadmapsFeedback} />
-              </p>
+              <p>{strings.landing.aboutOpen}</p>
+              <p>{strings.landing.aboutBeta}</p>
+              <p>{strings.landing.aboutFeedback}</p>
               <p>
                 <FeedbackLink />
               </p>
@@ -124,21 +117,19 @@ export function LandingPage({
 
 /** Says nothing matches, offering to clear the filter if there is one. */
 function NoMatches({ query, filter }: { query: string; filter: OrgFilter }) {
+  const strings = useStrings()
   const box =
     "rounded-card border border-border bg-surface-subtle p-5 font-medium text-ink-700"
   if (!filter.org) {
-    return (
-      <p className={box}>
-        <T value={UI.noMatches} />
-      </p>
-    )
+    return <p className={box}>{strings.landing.noMatches}</p>
   }
-  const vars = { organisation: organisation(filter.org).short }
+  const organisation = strings.organisations[filter.org].short
+  const message = query.trim()
+    ? strings.landing.noMatchesFor
+    : strings.landing.noWorkFor
   return (
     <div className={box}>
-      <p>
-        <T value={fill(query.trim() ? UI.noMatchesFor : UI.noWorkFor, vars)} />
-      </p>
+      <p>{message({ organisation })}</p>
       <button
         type="button"
         onClick={() => {
@@ -148,7 +139,7 @@ function NoMatches({ query, filter }: { query: string; filter: OrgFilter }) {
         }}
         className="mt-3 text-action underline underline-offset-4 hover:decoration-2"
       >
-        <T value={UI.showAllOrganisations} />
+        {strings.landing.showAllOrganisations}
       </button>
     </div>
   )

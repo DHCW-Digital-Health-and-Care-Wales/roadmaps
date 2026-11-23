@@ -1,6 +1,6 @@
 ---
 name: copywriter
-description: The product's voice and copy rules, in English and Welsh. Use whenever a task adds or edits a string in `apps/editor/src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
+description: The product's voice and copy rules, in English and Welsh, for the editor and the public site. Use whenever a task adds or edits a string in either app's `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
 user-invocable: true
 ---
 
@@ -13,7 +13,8 @@ They come to get a job done: move an item, sharpen its outcome, fix a tag. The
 interface copy should be nearly invisible, earning attention only when
 something needs a decision or has gone wrong. What the Product Lead publishes is shown
 on a separate public site, so the interface also helps them write it well: field
-labels, hints and examples are copy too.
+labels, hints and examples are copy too. The public site's own copy follows
+the same rules in the register _The public site_ sets.
 
 **Two things carry the rules, and this is only one of them.** The type system
 and the linter hold the mechanics: `pnpm typecheck` fails on a missing or extra
@@ -108,17 +109,18 @@ from the shape rather than from a blank line.
 
 ## Working order
 
-1. Write the English first, in `apps/editor/src/i18n/locales/en.ts`. It is the source of
+1. Write the English first, in the app's `src/i18n/locales/en.ts`. It is the source of
    truth (ADR-008). Keys are camelCase, grouped by feature. Map codes with
-   template keys (``t(`errors.${error.kind}`)``) so `satisfies Record<…>` makes
-   a new kind without copy a type error.
-2. Add the Welsh to `apps/editor/src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
+   template keys (in the editor, ``t(`errors.${error.kind}`)``) so
+   `satisfies Record<…>` makes a new kind without copy a type error.
+2. Add the Welsh to the app's `src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
    fails until you do. The voice rules apply unchanged. Reuse the established
    terms: roadmap = _map trywydd_, spreadsheet = _taenlen_, connect = _cysylltu_
    (and see the existing strings for the rest).
-3. Plurals: `foo_one`/`foo_other` in English (optional `foo_zero`); Welsh needs
-   all six of `foo_zero`, `foo_one`, `foo_two`, `foo_few`, `foo_many`,
+3. Plurals, in the editor: `foo_one`/`foo_other` in English (optional `foo_zero`);
+   Welsh needs all six of `foo_zero`, `foo_one`, `foo_two`, `foo_few`, `foo_many`,
    `foo_other`. Call `t("foo", { count })` and format with `{{count, number}}`.
+   The public site writes them its own way (_The public site_).
    Welsh also mutates the noun after some numerals (_dau fap_, not _dau map_);
    `roadmaps.count_*` in `cy.ts` shows the pattern.
 4. `pnpm typecheck` (key parity and plural forms), then `pnpm lint` (no literal
@@ -145,6 +147,28 @@ English spelling.
 Welsh runs longer than English. When Welsh cannot fit, shorten the English too
 rather than let one language spill. Mobile hides some labels (`common.shortAppName`);
 a string that must fit a 375px header needs a short form.
+
+## The public site
+
+`apps/public-site/src/i18n/locales/en.ts` and `cy.ts` hold the public site's
+interface and the fixed text it owns about horizons, sections, categories and
+organisations; roadmap content is sheet data, never catalogue text. The
+working order holds, in this register and with the site's own catalogue shape:
+
+- **Typed objects, read by property** (ADR-008, _STY-096 amendments_):
+  components read `useStrings()`, with no i18n library. A value filled in is a
+  typed function (`({ organisation }) => …`), and a count is
+  `plural("cy", { … })` with all six Welsh forms, unformatted; `cy.ts` must give
+  each the same arguments.
+- **Write for the public reader**: health boards, Welsh Government
+  stakeholders, DHCW staff, patients and the public, who come to see what DHCW
+  plans, not to do a job. Say what a page shows in their words, with none of
+  the editor's vocabulary (Product Lead, publish, pending, spreadsheet).
+- **Keep plans provisional**: roadmaps carry no dates and are not fixed
+  plans, so no string promises when or whether something is delivered.
+- **Roadmap is _trywydd_** here (plural _trywyddion_), with the singular
+  after a number and its mutation (_2 drywydd_, _3 thrywydd_);
+  `landing.roadmapCount` in `cy.ts` shows the pattern.
 
 ## The authority
 

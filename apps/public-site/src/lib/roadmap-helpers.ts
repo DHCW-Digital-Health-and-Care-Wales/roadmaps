@@ -1,23 +1,20 @@
 /**
  * Presentation helpers for the roadmap.
  */
+import { localise, type Language, type Strings } from "../i18n"
 import {
   CATEGORIES,
-  HORIZONS,
   ORGANISATIONS,
   OTHER_CATEGORY,
-  ROADMAP_INTRO,
   SECTIONS,
-  organisation,
   type Category,
 } from "./content"
-import { fill, t, type Lang } from "./i18n"
-import { UI } from "./strings"
 import { compareText, fold } from "./text"
 import {
   HORIZON_IDS,
   PLACEMENT_IDS,
   type CategoryId,
+  type Horizon,
   type Localised,
   type OrganisationId,
   type Placement,
@@ -28,48 +25,32 @@ import {
   type OrgFilter,
 } from "./types"
 
-// Not Intl: some browsers lack Welsh locale data, which would also break hydration.
-const MONTHS = {
-  en: [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ],
-  cy: [
-    "Ionawr",
-    "Chwefror",
-    "Mawrth",
-    "Ebrill",
-    "Mai",
-    "Mehefin",
-    "Gorffennaf",
-    "Awst",
-    "Medi",
-    "Hydref",
-    "Tachwedd",
-    "Rhagfyr",
-  ],
-}
+const MONTHS = [
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december",
+] as const
 
 /**
  * Format an ISO date (YYYY-MM-DD) as a readable day-month-year string in the
- * active language, for example "26 June 2026", or return the raw value if it
- * isn't one. Used only for "last updated"; roadmap items never show dates.
+ * language of `strings`, for example "26 June 2026", or return the raw value if
+ * it isn't one. Used only for "last updated"; roadmap items never show dates. Not Intl:
+ * some browsers lack Welsh locale data, which would also break hydration.
  */
-export function formatDate(iso: string, lang: "cy" | "en"): string {
+export function formatDate(iso: string, strings: Strings): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
-  const month = match ? MONTHS[lang][Number(match[2]) - 1] : undefined
+  const month = match ? MONTHS[Number(match[2]) - 1] : undefined
   if (!match || !month) return iso
-  return `${String(Number(match[3]))} ${month} ${String(match[1])}`
+  return `${String(Number(match[3]))} ${strings.site.months[month]} ${String(match[1])}`
 }
 
 /** Whether an item has an outcome or details to reveal. */
@@ -84,10 +65,10 @@ export function titleWithFamily({
   title,
   family,
 }: Pick<RoadmapMeta, "title" | "family">): Localised {
-  const join = (lang: Lang) => {
-    const name = t(title, lang)
+  const join = (lang: Language) => {
+    const name = localise(title, lang)
     // Like the landing page card, a family needs English to be shown.
-    const prefix = family.en ? t(family, lang) : ""
+    const prefix = family.en ? localise(family, lang) : ""
     return prefix ? `${prefix}: ${name}` : name
   }
   return {
@@ -96,11 +77,13 @@ export function titleWithFamily({
   }
 }
 
+/** Whether a placement is one of the horizons, not one of the sections. */
+export const isHorizon = (id: Placement): id is Horizon =>
+  (HORIZON_IDS as readonly Placement[]).includes(id)
+
 /** The id of a horizon's or section's heading, the same in both layouts. */
 export function placementHeadingId(id: Placement): string {
-  return (HORIZON_IDS as readonly Placement[]).includes(id)
-    ? `horizon-${id}`
-    : `section-${id}`
+  return isHorizon(id) ? `horizon-${id}` : `section-${id}`
 }
 
 /**
@@ -108,7 +91,7 @@ export function placementHeadingId(id: Placement): string {
  * with no items at all is left out, but one the filter has emptied stays.
  */
 export const showsPlacement = (id: Placement, total: number): boolean =>
-  total > 0 || (HORIZON_IDS as readonly Placement[]).includes(id)
+  total > 0 || isHorizon(id)
 
 /**
  * Whether an item is for the filter's organisation. All-Wales items are for
@@ -157,24 +140,17 @@ export function countItems(roadmap: Roadmap, filter: OrgFilter): ItemCount {
   }
 }
 
-const countVars = ({ shown, total }: ItemCount) => ({
-  shown: String(shown),
-  total: String(total),
-})
-
-/** "2 of 5". */
-export const countOf = (count: ItemCount): Localised =>
-  fill(UI.countOf, countVars(count))
-
-/** "2 of 5" while some items are hidden, otherwise just "5". */
-export const countText = (count: ItemCount): Localised =>
-  count.shown === count.total
-    ? { en: String(count.total), cy: String(count.total) }
-    : countOf(count)
-
-/** A roadmap heading's count, e.g. "(2)" or "(2 of 5)". */
-export const countInParentheses = (count: ItemCount): Localised =>
-  fill(UI.countInParentheses, { count: countText(count) })
+/** A roadmap heading's count: "(2 of 5)" while some items are hidden, otherwise "(5)". */
+export const countInParentheses = (
+  count: ItemCount,
+  strings: Strings,
+): string =>
+  strings.roadmap.countInParentheses({
+    value:
+      count.shown === count.total
+        ? String(count.total)
+        : strings.landing.countOf(count),
+  })
 
 /** How many of an empty section's `total` items the filter hides. */
 export const hiddenCount = ({ org }: OrgFilter, total: number): number =>
@@ -184,16 +160,16 @@ export const hiddenCount = ({ org }: OrgFilter, total: number): number =>
  * What an empty section or horizon says: naming the filter's organisation when
  * the filter hides its items, otherwise that there's nothing yet.
  */
-export const emptyText = (filter: OrgFilter, total: number): Localised =>
+export const emptyText = (
+  filter: OrgFilter,
+  total: number,
+  strings: Strings,
+): string =>
   filter.org && hiddenCount(filter, total) > 0
-    ? fill(UI.nothingFor, { organisation: organisation(filter.org).short })
-    : UI.nothingYet
-
-/** The button that shows the items the filter hides in an empty section. */
-export const showHiddenItems = (count: number): Localised =>
-  count === 1
-    ? UI.showHiddenItemsOne
-    : fill(UI.showHiddenItems, { count: String(count) })
+    ? strings.roadmap.nothingFor({
+        organisation: strings.organisations[filter.org].short,
+      })
+    : strings.roadmap.nothingYet
 
 /** Organisations that any item is for, in display order. */
 export function organisationsWithWork(roadmaps: Roadmap[]): OrganisationId[] {
@@ -214,24 +190,29 @@ export function organisationsWithWork(roadmaps: Roadmap[]): OrganisationId[] {
  * filter.
  */
 export function itemsStatus(
-  count: ItemCount,
+  { shown, total }: ItemCount,
   filter: OrgFilter,
+  strings: Strings,
   { withAllWales = true } = {},
-): Localised {
-  if (!filter.org) {
-    return fill(UI.showingAllItems, { total: String(count.total) })
-  }
-  return fill(
+): string {
+  if (!filter.org) return strings.roadmap.showingAllItems({ total })
+  const summary =
     withAllWales && includesAllWales(filter)
-      ? UI.showingItemsForWithNational
-      : UI.showingItemsFor,
-    { ...countVars(count), organisation: organisation(filter.org).name },
-  )
+      ? strings.roadmap.showingItemsForWithNational
+      : strings.roadmap.showingItemsFor
+  return summary({
+    shown,
+    total,
+    organisation: strings.organisations[filter.org].name,
+  })
 }
+
+/** A section's heading or a horizon's name. */
+export const placementHeading = (id: Placement, strings: Strings): string =>
+  isHorizon(id) ? strings.horizons[id].label : strings.sections[id].heading
 
 export interface PlacementGroup {
   id: Placement
-  heading: Localised
   /** The items that match the filter. */
   items: ShownItem[]
   /** The number of items before filtering. */
@@ -245,38 +226,33 @@ export function roadmapGroups(
   roadmap: Roadmap,
   filter: OrgFilter = NO_ORG_FILTER,
 ): PlacementGroup[] {
-  const group = (id: Placement, heading: Localised, glance: boolean) => ({
+  const group = (id: Placement, glance: boolean) => ({
     id,
-    heading,
     items: filterItems(roadmap.items[id], filter),
     total: roadmap.items[id].length,
     glance,
   })
   const sectionGroups = (placement: "before" | "after") =>
     SECTIONS.filter((s) => s.placement === placement).map((s) =>
-      group(s.id, s.heading, placement === "before"),
+      group(s.id, placement === "before"),
     )
   return [
     ...sectionGroups("before"),
-    ...HORIZONS.map((h) => group(h.id, h.label, true)),
+    ...HORIZON_IDS.map((id) => group(id, true)),
     ...sectionGroups("after"),
   ]
 }
 
-/** The landing page card summary: the service description, or the intro. */
-export const roadmapSummary = (roadmap: Roadmap): Localised =>
-  roadmap.meta.serviceDescription.en
-    ? roadmap.meta.serviceDescription
-    : ROADMAP_INTRO
+/**
+ * A roadmap's summary, for its landing page card and its pages' description:
+ * the service description, or null without one, when the generic intro
+ * (`roadmap.intro`) stands in.
+ */
+export const roadmapSummary = (meta: RoadmapMeta): Localised | null =>
+  meta.serviceDescription.en ? meta.serviceDescription : null
 
 export const categorySectionId = (category: Category) =>
   `category-${category.id}`
-
-/** "1 roadmap" or "{count} roadmaps", in both languages. */
-export const roadmapCount = (count: number): Localised =>
-  count === 1
-    ? UI.roadmapCountOne
-    : fill(UI.roadmapCount, { count: String(count) })
 
 export interface CategoryGroup {
   category: Category
@@ -297,10 +273,13 @@ export interface CategoryTile {
  */
 export function groupByCategory(
   roadmaps: Roadmap[],
-  lang: Lang,
+  lang: Language,
 ): CategoryGroup[] {
   const sorted = roadmaps
-    .map((roadmap) => ({ roadmap, title: fold(t(roadmap.meta.title, lang)) }))
+    .map((roadmap) => ({
+      roadmap,
+      title: fold(localise(roadmap.meta.title, lang)),
+    }))
     .sort(
       (a, b) =>
         compareText(a.title, b.title) ||
@@ -326,17 +305,18 @@ export function groupByCategory(
 export function matchesSearch(
   roadmap: Roadmap,
   query: string,
-  lang: Lang,
+  lang: Language,
 ): boolean {
   const words = fold(query).split(/\s+/).filter(Boolean)
   if (words.length === 0) return true
   const { title, family, serviceDescription } = roadmap.meta
-  // Not roadmapSummary(): its generic fallback text would match every roadmap
-  // without a description. A family needs English to be shown, so to match.
+  // Not roadmapSummary(): the generic intro that stands in for a missing
+  // description would match every roadmap without one. A family needs English
+  // to be shown, so to match.
   const fields = family.en
     ? [title, family, serviceDescription]
     : [title, serviceDescription]
-  const text = fold(fields.map((v) => t(v, lang)).join(" "))
+  const text = fold(fields.map((v) => localise(v, lang)).join(" "))
   return words.every((word) => text.includes(word))
 }
 
@@ -347,7 +327,7 @@ export function matchesSearch(
 export const filterRoadmaps = (
   roadmaps: Roadmap[],
   query: string,
-  lang: Lang,
+  lang: Language,
   filter: OrgFilter = NO_ORG_FILTER,
 ): Roadmap[] =>
   roadmaps.filter(
@@ -360,7 +340,7 @@ export const filterRoadmaps = (
 export const filterGroups = (
   roadmaps: Roadmap[],
   query: string,
-  lang: Lang,
+  lang: Language,
   filter: OrgFilter = NO_ORG_FILTER,
 ): CategoryGroup[] =>
   groupByCategory(filterRoadmaps(roadmaps, query, lang, filter), lang)
@@ -375,17 +355,21 @@ export function roadmapsStatus(
   total: number,
   query: string,
   filter: OrgFilter,
-): Localised {
-  const counts = countVars({ shown, total })
+  strings: Strings,
+): string {
   if (filter.org) {
-    return fill(
-      includesAllWales(filter)
-        ? UI.showingRoadmapsForWithNational
-        : UI.showingRoadmapsFor,
-      { ...counts, organisation: organisation(filter.org).short },
-    )
+    const summary = includesAllWales(filter)
+      ? strings.landing.showingRoadmapsForWithNational
+      : strings.landing.showingRoadmapsFor
+    return summary({
+      shown,
+      total,
+      organisation: strings.organisations[filter.org].short,
+    })
   }
-  return query.trim() ? fill(UI.showingRoadmaps, counts) : roadmapCount(total)
+  return query.trim()
+    ? strings.landing.showingRoadmaps({ shown, total })
+    : strings.landing.roadmapCount(total)
 }
 
 /**

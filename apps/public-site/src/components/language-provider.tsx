@@ -1,13 +1,12 @@
 import { useEffect, useMemo } from "react"
 import type { ReactNode } from "react"
-import type { Localised } from "../lib/types"
-import { DEFAULT_LANGUAGE, LanguageContext, t } from "../lib/i18n"
+import { defaultLanguage, LanguageContext } from "../i18n"
 import { useRoute, type Route } from "../lib/router"
 
 /**
- * Provides the current route, its language (from the URL path) and a
- * translation helper, and keeps the document `lang` attribute in sync. The
- * prerender passes `serverRoute` because there is no URL to read.
+ * Provides the current route and its language (from the URL path), from which
+ * `useStrings()` reads the page's text, and keeps the document `lang` attribute
+ * in sync. The prerender passes `serverRoute` because there is no URL to read.
  */
 export function LanguageProvider({
   serverRoute,
@@ -17,20 +16,13 @@ export function LanguageProvider({
   children: ReactNode
 }) {
   const route = useRoute(serverRoute)
-  const lang = route.lang ?? DEFAULT_LANGUAGE
+  const lang = route.lang ?? defaultLanguage
 
   useEffect(() => {
     document.documentElement.lang = lang
   }, [lang])
 
-  const value = useMemo(
-    () => ({
-      lang,
-      route,
-      tr: (localised: Localised) => t(localised, lang),
-    }),
-    [lang, route],
-  )
+  const value = useMemo(() => ({ lang, route }), [lang, route])
 
   return <LanguageContext value={value}>{children}</LanguageContext>
 }

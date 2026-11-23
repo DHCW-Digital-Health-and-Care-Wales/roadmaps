@@ -1,8 +1,5 @@
+import { useStrings } from "../i18n"
 import { useEffect, useId, useState, type ReactNode } from "react"
-import { useLanguage } from "../lib/i18n"
-import { UI } from "../lib/strings"
-import type { Localised } from "../lib/types"
-import { T } from "./t"
 
 /** How long typing must pause before the result count is announced. */
 export const ANNOUNCE_DELAY_MS = 500
@@ -21,10 +18,10 @@ export function SearchBar({
   query: string
   onQueryChange: (query: string) => void
   /** The result count for a query. */
-  status: (query: string) => Localised
+  status: (query: string) => string
   children?: ReactNode
 }) {
-  const { tr } = useLanguage()
+  const strings = useStrings()
   const id = useId()
   // The query the count is for; each keystroke restarts the wait.
   const [announcedQuery, setAnnouncedQuery] = useState(query)
@@ -40,14 +37,14 @@ export function SearchBar({
   return (
     <div
       role="search"
-      aria-label={tr(UI.searchRoadmaps)}
+      aria-label={strings.landing.search}
       className="border-b border-border pb-6"
     >
       <label htmlFor={id} className="block font-medium text-heading">
-        <T value={UI.findProduct} />
+        {strings.landing.findProduct}
       </label>
       <p id={`${id}-hint`} className="mt-0.5 text-sm text-ink-700">
-        <T value={UI.findProductHint} />
+        {strings.landing.findProductHint}
       </p>
       <input
         id={id}
@@ -62,7 +59,7 @@ export function SearchBar({
       />
       {children}
       <p role="status" className="mt-4 text-sm text-ink-700">
-        <T value={status(announcedQuery)} />
+        {status(announcedQuery)}
       </p>
     </div>
   )

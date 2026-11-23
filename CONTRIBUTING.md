@@ -37,9 +37,9 @@ at the next run of `product-roadmaps`' deploy, nightly at 02:00 UTC or by hand.
   usable with a keyboard, and don't rely on colour alone. Lint includes `jsx-a11y` rules
   and the tests run axe, but automated checks find only some problems, so check UI
   changes by hand too.
-- **Welsh**: every piece of interface text has English and Welsh: the editor's in its
-  catalogues (`apps/editor/src/i18n/locales/`), the public site's in
-  [`strings.ts`](apps/public-site/src/lib/strings.ts). If you can't provide the Welsh,
+- **Welsh**: every piece of interface text has English and Welsh, in each app's
+  catalogues (`apps/editor/src/i18n/locales/`, `apps/public-site/src/i18n/locales/`);
+  type checking fails while a Welsh string is missing. If you can't provide the Welsh,
   say so in the pull request so it can be translated before merging.
 - **Tests**: add or update tests for changed behaviour. Each app's README says where
   they live.

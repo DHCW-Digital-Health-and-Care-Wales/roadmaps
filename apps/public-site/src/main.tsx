@@ -9,7 +9,7 @@ import "@fontsource/roboto/700.css"
 import "./index.css"
 import { App } from "./app.tsx"
 import { LanguageProvider } from "./components/language-provider"
-import { preferredLang } from "./lib/i18n"
+import { resolveLanguage } from "./i18n"
 import {
   orgFilterFromSearch,
   pathFor,
@@ -38,7 +38,7 @@ const route = routeFromPath(window.location.pathname)
 const { lang, slug } = rootElement.dataset
 const { search, hash } = window.location
 if (route.lang === null && route.slug === null) {
-  window.location.replace(`${pathFor(preferredLang(), null)}${search}${hash}`)
+  window.location.replace(`${pathFor(resolveLanguage(), null)}${search}${hash}`)
 } else if (
   lang === route.lang &&
   slug === (route.slug ?? "") &&

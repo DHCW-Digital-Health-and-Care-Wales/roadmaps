@@ -27,13 +27,14 @@ next run. The spreadsheet format it reads is the root README's _Spreadsheet form
 - **Accessibility**: aim for WCAG 2.2 AA. Use semantic HTML, keep everything usable with
   a keyboard, and never rely on colour alone. Automated checks find only some problems,
   so check a UI change by hand at 320 px wide and 400% zoom too.
-- **Welsh**: put every piece of interface text in `apps/public-site/src/lib/strings.ts`
-  with English and Welsh, rendered with `<T value={…} />` (or `tr()` for attributes); a
-  test fails when Welsh is missing. Without the Welsh, say in the pull request what still
-  needs translating.
+- **Welsh**: put interface text in the catalogues `apps/public-site/src/i18n/locales/en.ts`
+  and `cy.ts`, read by property through `useStrings()`, and write it with the
+  `copywriter` skill. The site carries no i18n library, to keep within its 100 KB script
+  budget (ADR-008, _STY-096 amendments_). Roadmap content stays sheet data, rendered with
+  `<ContentText>`, which marks English shown in place of Welsh.
 - **Privacy**: add no cookies, analytics or calls to third-party services. The one
   exception is the Simple Analytics script in `apps/public-site/index.html`, which the
-  privacy note in `strings.ts` describes; keep the two in step.
+  privacy note (`infoPages.privacy` in the catalogues) describes; keep the two in step.
 - **Dependencies**: prefer none.
 
 ## Code conventions

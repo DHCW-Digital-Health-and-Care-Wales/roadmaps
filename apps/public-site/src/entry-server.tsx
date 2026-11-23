@@ -7,14 +7,17 @@ import { StrictMode } from "react"
 import { prerender } from "react-dom/static"
 import { App } from "./app"
 import { LanguageProvider } from "./components/language-provider"
-import { ROADMAP_INTRO } from "./lib/content"
-import { DEFAULT_LANGUAGE, LANGUAGES, t, type Lang } from "./lib/i18n"
+import {
+  catalogues,
+  defaultLanguage,
+  localise,
+  supportedLanguages,
+  type Language,
+} from "./i18n"
 import { INFO_PAGES } from "./lib/info-pages"
-import { titleWithFamily } from "./lib/roadmap-helpers"
+import { roadmapSummary, titleWithFamily } from "./lib/roadmap-helpers"
 import { roadmaps } from "./lib/roadmaps"
 import { dataPathFor, INFO_PAGE_IDS, pathFor, type Route } from "./lib/router"
-import { UI } from "./lib/strings"
-import type { Localised } from "./lib/types"
 
 export interface Page {
   /** Output file relative to the build directory. */
@@ -22,9 +25,9 @@ export interface Page {
   /** Canonical URL, or null for 404.html. */
   url: string | null
   /** The `lang` attribute for `<html>`. */
-  lang: Lang
+  lang: Language
   /** `data-lang` and `data-slug` for #root, or null when the page can't hydrate. */
-  route: { lang: Lang; slug: string } | null
+  route: { lang: Language; slug: string } | null
   head: string
   html: string
 }
@@ -34,7 +37,7 @@ const BASE = import.meta.env.BASE_URL
 /** Each roadmap's data is published once, at `<slug>/roadmap.json`. */
 const JSON_FILE = "roadmap.json"
 
-const LOCALES: Record<Lang, string> = { en: "en_GB", cy: "cy_GB" }
+const LOCALES: Record<Language, string> = { en: "en_GB", cy: "cy_GB" }
 
 const escapeHtml = (value: string) =>
   value
@@ -47,7 +50,7 @@ const escapeHtml = (value: string) =>
 function head(
   siteUrl: string,
   page: {
-    lang: Lang
+    lang: Language
     title: string
     description: string
     url: string | null
@@ -59,7 +62,7 @@ function head(
   const meta: [string, string, string][] = [
     ["name", "description", page.description],
     ["property", "og:type", "website"],
-    ["property", "og:site_name", t(UI.siteTitle, page.lang)],
+    ["property", "og:site_name", catalogues[page.lang].site.title],
     ["property", "og:title", page.title],
     ["property", "og:description", page.description],
     ["property", "og:image", new URL("Timeline.png", siteUrl).href],
@@ -110,16 +113,18 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
     new URL(path.slice(BASE.length), siteUrl).href
   const rootUrl = urlFor(BASE)
   const alternatesFor = (slug: string | null): [string, string][] =>
-    LANGUAGES.map(({ value }) => [value, urlFor(pathFor(value, slug))])
+    supportedLanguages.map((lang) => [lang, urlFor(pathFor(lang, slug))])
 
+  /** `title` and `description` are already in `lang`. */
   async function languagePage(
-    lang: Lang,
+    lang: Language,
     slug: string | null,
-    title: Localised | null,
-    description: Localised,
+    title: string | null,
+    description: string,
     { hasData = false } = {},
   ): Promise<Page> {
-    const site = t(UI.siteTitle, lang)
+    const strings = catalogues[lang]
+    const site = strings.site.title
     const url = urlFor(pathFor(lang, slug))
     return {
       file: `${lang}/${slug ? `${slug}/` : ""}index.html`,
@@ -128,8 +133,8 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
       route: { lang, slug: slug ?? "" },
       head: head(siteUrl, {
         lang,
-        title: title ? `${t(title, lang)} – ${site}` : site,
-        description: t(description, lang),
+        title: title ? `${title} – ${site}` : site,
+        description,
         url,
         alternates: slug
           ? alternatesFor(slug)
@@ -141,57 +146,58 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
   }
 
   const languagePages = await Promise.all(
-    LANGUAGES.flatMap(({ value: lang }) => [
-      languagePage(lang, null, null, UI.landingIntro),
-      ...INFO_PAGE_IDS.map((id) =>
-        languagePage(
-          lang,
-          id,
-          INFO_PAGES[id].heading,
-          INFO_PAGES[id].paragraphs[0],
-        ),
-      ),
-      ...roadmaps.map(({ slug, meta }) =>
-        languagePage(
-          lang,
-          slug,
-          titleWithFamily(meta),
-          meta.serviceDescription.en ? meta.serviceDescription : ROADMAP_INTRO,
-          { hasData: true },
-        ),
-      ),
-    ]),
+    supportedLanguages.flatMap((lang) => {
+      const strings = catalogues[lang]
+      return [
+        languagePage(lang, null, null, strings.landing.intro),
+        ...INFO_PAGE_IDS.map((id) => {
+          const { heading, paragraphs } = INFO_PAGES[id](strings)
+          return languagePage(lang, id, heading, paragraphs[0])
+        }),
+        ...roadmaps.map(({ slug, meta }) => {
+          const summary = roadmapSummary(meta)
+          return languagePage(
+            lang,
+            slug,
+            localise(titleWithFamily(meta), lang),
+            summary ? localise(summary, lang) : strings.roadmap.intro,
+            { hasData: true },
+          )
+        }),
+      ]
+    }),
   )
 
   // The site root shows the default landing page; src/main.tsx redirects with
   // JavaScript, and the <noscript> refresh does so without.
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the default language always has its landing page.
   const landing = languagePages.find(
-    (page) => page.file === `${DEFAULT_LANGUAGE}/index.html`,
+    (page) => page.file === `${defaultLanguage}/index.html`,
   )!
   const root: Page = {
     ...landing,
     file: "index.html",
     route: null,
     head: [
-      `    <noscript><meta http-equiv="refresh" content="0; url=${pathFor(DEFAULT_LANGUAGE, null)}" /></noscript>`,
+      `    <noscript><meta http-equiv="refresh" content="0; url=${pathFor(defaultLanguage, null)}" /></noscript>`,
       landing.head,
     ].join("\n"),
   }
 
-  const bilingual = (value: Localised) => `${value.cy} / ${value.en}`
+  const bilingual = (key: "heading" | "generic") =>
+    `${catalogues.cy.notFound[key]} / ${catalogues.en.notFound[key]}`
   const notFound: Page = {
     file: "404.html",
     url: null,
-    lang: DEFAULT_LANGUAGE,
+    lang: defaultLanguage,
     route: null,
     head: head(siteUrl, {
-      lang: DEFAULT_LANGUAGE,
-      title: bilingual(UI.notFoundHeading),
-      description: bilingual(UI.notFoundGeneric),
+      lang: defaultLanguage,
+      title: bilingual("heading"),
+      description: bilingual("generic"),
       url: null,
     }),
-    html: await render({ lang: DEFAULT_LANGUAGE, slug: "" }),
+    html: await render({ lang: defaultLanguage, slug: "" }),
   }
 
   return [root, ...languagePages, notFound]

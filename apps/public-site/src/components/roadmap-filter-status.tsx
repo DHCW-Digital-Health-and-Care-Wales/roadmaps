@@ -1,13 +1,12 @@
 import { useState } from "react"
+import { useStrings } from "../i18n"
 import {
   countItems,
   includesAllWales,
   itemsStatus,
 } from "../lib/roadmap-helpers"
 import { setOrgFilter } from "../lib/router"
-import { UI } from "../lib/strings"
 import { type Roadmap, NO_ORG_FILTER, type OrgFilter } from "../lib/types"
-import { T } from "./t"
 
 /**
  * Under a filtered roadmap's intro: how many items are shown, and a button to
@@ -20,24 +19,21 @@ export function FilterBanner({
   roadmap: Roadmap
   filter: OrgFilter
 }) {
+  const strings = useStrings()
   if (!filter.org) return null
 
   return (
     <div className="mt-6 max-w-3xl rounded-card border border-l-4 border-border border-l-action bg-surface p-4">
       <p className="font-bold text-heading">
-        <T
-          value={itemsStatus(countItems(roadmap, filter), filter, {
-            withAllWales: false,
-          })}
-        />
+        {itemsStatus(countItems(roadmap, filter), filter, strings, {
+          withAllWales: false,
+        })}
       </p>
       <p className="mt-1 text-sm text-ink-700">
         {includesAllWales(filter) ? (
-          <>
-            <T value={UI.includesAllWales} />{" "}
-          </>
+          <>{strings.roadmap.includesAllWales} </>
         ) : null}
-        <T value={UI.filterHelp} />
+        {strings.roadmap.filterHelp}
       </p>
       <button
         type="button"
@@ -48,7 +44,7 @@ export function FilterBanner({
         }}
         className="mt-3 text-sm font-medium text-action underline underline-offset-4 hover:decoration-2"
       >
-        <T value={UI.showAllItems} />
+        {strings.roadmap.showAllItems}
       </button>
     </div>
   )
@@ -66,15 +62,16 @@ export function FilterAnnouncer({
   roadmap: Roadmap
   filter: OrgFilter
 }) {
+  const strings = useStrings()
   const [initial] = useState(filter)
   const [changed, setChanged] = useState(false)
   if (!changed && filter !== initial) setChanged(true)
 
   return (
     <p role="status" className="sr-only">
-      {changed ? (
-        <T value={itemsStatus(countItems(roadmap, filter), filter)} />
-      ) : null}
+      {changed
+        ? itemsStatus(countItems(roadmap, filter), filter, strings)
+        : null}
     </p>
   )
 }

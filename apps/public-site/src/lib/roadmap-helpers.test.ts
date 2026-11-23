@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest"
+import { catalogues } from "../i18n"
 import {
   countInParentheses,
   countItems,
-  countText,
   emptyText,
-  showHiddenItems,
   filterGroups,
   filterItems,
   formatDate,
@@ -14,6 +13,7 @@ import {
   itemsStatus,
   matchesSearch,
   organisationsWithWork,
+  placementHeading,
   placementHeadingId,
   roadmapGroups,
   roadmapsStatus,
@@ -31,6 +31,8 @@ import fixture from "../../e2e/fixtures/roadmaps.json"
 
 const snapshot = fixture as Roadmap[]
 
+const { en, cy } = catalogues
+
 const loc = (en: string) => ({ en, cy: "" })
 
 // In the fixture, ProductA has 5 of its 9 items for Cardiff and Vale counting
@@ -42,7 +44,7 @@ const cardiff: OrgFilter = { org: "cavuhb", includeNational: true }
 const cardiffOnly: OrgFilter = { org: "cavuhb", includeNational: false }
 const allWales: OrgFilter = { org: "national", includeNational: true }
 type ItemCount = Parameters<typeof itemsStatus>[0]
-type ItemsStatusOptions = NonNullable<Parameters<typeof itemsStatus>[2]>
+type ItemsStatusOptions = NonNullable<Parameters<typeof itemsStatus>[3]>
 
 describe("isExpandable", () => {
   it.each([
@@ -109,6 +111,15 @@ describe("placementHeadingId", () => {
   it("prefixes horizons and sections differently", () => {
     expect(placementHeadingId("now")).toBe("horizon-now")
     expect(placementHeadingId("not-doing")).toBe("section-not-doing")
+  })
+})
+
+describe("placementHeading", () => {
+  it("names a horizon by its label and a section by its heading", () => {
+    expect(placementHeading("now", en)).toBe("Now")
+    expect(placementHeading("not-doing", cy)).toBe(
+      "Ddim yn cael ei wneud ar hyn o bryd",
+    )
   })
 })
 
@@ -184,47 +195,30 @@ describe("countItems", () => {
   )
 })
 
-describe("countText and countInParentheses", () => {
+describe("countInParentheses", () => {
   it.each([
-    [
-      { shown: 5, total: 5 },
-      { en: "5", cy: "5" },
-      { en: "(5)", cy: "(5)" },
-    ],
-    [
-      { shown: 2, total: 5 },
-      { en: "2 of 5", cy: "2 o 5" },
-      { en: "(2 of 5)", cy: "(2 o 5)" },
-    ],
+    [{ shown: 5, total: 5 }, "(5)", "(5)"],
+    [{ shown: 2, total: 5 }, "(2 of 5)", "(2 o 5)"],
   ])(
-    "show the total only when items are hidden: %o",
-    (count, text, parenthesised) => {
-      expect(countText(count)).toEqual(text)
-      expect(countInParentheses(count)).toEqual(parenthesised)
+    "shows the total only when items are hidden: %o",
+    (count, english, welsh) => {
+      expect(countInParentheses(count, en)).toBe(english)
+      expect(countInParentheses(count, cy)).toBe(welsh)
     },
   )
 })
 
 describe("emptyText", () => {
   it("names the organisation while the filter hides items", () => {
-    expect(emptyText(NO_ORG_FILTER, 0).en).toBe("Nothing to show here yet.")
-    expect(emptyText(cardiff, 2)).toEqual({
-      en: "Nothing for Cardiff and Vale here.",
-      cy: "Dim byd ar gyfer Caerdydd a’r Fro yma.",
-    })
+    expect(emptyText(NO_ORG_FILTER, 0, en)).toBe("Nothing to show here yet.")
+    expect(emptyText(cardiff, 2, en)).toBe("Nothing for Cardiff and Vale here.")
+    expect(emptyText(cardiff, 2, cy)).toBe(
+      "Dim byd ar gyfer Caerdydd a’r Fro yma.",
+    )
   })
 
   it("says there is nothing yet when there are no items to hide", () => {
-    expect(emptyText(cardiff, 0).en).toBe("Nothing to show here yet.")
-  })
-})
-
-describe("showHiddenItems", () => {
-  it.each([
-    [1, { en: "Show 1 hidden item", cy: "Dangos 1 eitem gudd" }],
-    [3, { en: "Show 3 hidden items", cy: "Dangos 3 eitem gudd" }],
-  ])("counts %i hidden, in the singular for one", (count, text) => {
-    expect(showHiddenItems(count)).toEqual(text)
+    expect(emptyText(cardiff, 0, en)).toBe("Nothing to show here yet.")
   })
 })
 
@@ -281,11 +275,11 @@ describe("itemsStatus", () => {
       "Showing all 9 items",
     ],
   ])("%s", (_, count, filter, options, expected) => {
-    expect(itemsStatus(count, filter, options).en).toBe(expected)
+    expect(itemsStatus(count, filter, en, options)).toBe(expected)
   })
 
   it("is in Welsh too", () => {
-    expect(itemsStatus({ shown: 9, total: 9 }, NO_ORG_FILTER).cy).toBe(
+    expect(itemsStatus({ shown: 9, total: 9 }, NO_ORG_FILTER, cy)).toBe(
       "Yn dangos pob un o’r 9 eitem",
     )
   })
@@ -308,7 +302,7 @@ describe("formatDate", () => {
     ["returns an impossible date unchanged", "2026-13-01", "en", "2026-13-01"],
     ["returns other text unchanged", "soon", "cy", "soon"],
   ] as const)("%s", (_, date, lang, expected) => {
-    expect(formatDate(date, lang)).toBe(expected)
+    expect(formatDate(date, { en, cy }[lang])).toBe(expected)
   })
 })
 
@@ -516,8 +510,9 @@ describe("roadmapsStatus", () => {
       "Showing 12 of 14 roadmaps for All Wales",
       "Yn dangos 12 o 14 trywydd ar gyfer Cymru gyfan",
     ],
-  ])('for "%s" and %o is "%s"', (query, filter, en, cy) => {
-    expect(roadmapsStatus(12, 14, query, filter)).toEqual({ en, cy })
+  ])('for "%s" and %o is "%s"', (query, filter, english, welsh) => {
+    expect(roadmapsStatus(12, 14, query, filter, en)).toBe(english)
+    expect(roadmapsStatus(12, 14, query, filter, cy)).toBe(welsh)
   })
 })
 

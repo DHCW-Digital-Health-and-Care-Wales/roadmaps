@@ -1,22 +1,22 @@
+import type { Strings } from "../i18n"
 import type { InfoPageId } from "./router"
-import { UI } from "./strings"
-import type { Localised } from "./types"
 
 /**
  * Accessibility statement (UK public sector sites need one) and privacy note
  * (no cookies, cookie-free Simple Analytics, self-hosted fonts, so nothing to
- * consent to), each on its own page.
+ * consent to), each on its own page: its heading and paragraphs from the
+ * catalogue. The privacy note describes the analytics script in index.html.
  */
 export const INFO_PAGES: Record<
   InfoPageId,
-  { heading: Localised; paragraphs: [Localised, ...Localised[]] }
+  (strings: Strings) => { heading: string; paragraphs: [string, ...string[]] }
 > = {
-  accessibility: {
-    heading: UI.accessibilityHeading,
-    paragraphs: [UI.accessibilityTarget],
-  },
-  privacy: {
-    heading: UI.privacyHeading,
-    paragraphs: [UI.privacyTracking, UI.privacyFonts],
-  },
+  accessibility: ({ infoPages: { accessibility } }) => ({
+    heading: accessibility.heading,
+    paragraphs: [accessibility.target],
+  }),
+  privacy: ({ infoPages: { privacy } }) => ({
+    heading: privacy.heading,
+    paragraphs: [privacy.tracking, privacy.fonts],
+  }),
 }

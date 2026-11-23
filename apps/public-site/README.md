@@ -81,12 +81,14 @@ canonical, `hreflang` and Open Graph URLs.
 
 ## Text shared by every roadmap
 
-Text shared by every roadmap (intro, Now/Next/Later definitions, section headings), and
-the categories' and organisations' Welsh names, descriptions, icons and colours, is in
-[src/lib/content.ts](src/lib/content.ts); the sheet only picks a category or an
-organisation. Interface text (headings, links and accessible names) is in
-[src/lib/strings.ts](src/lib/strings.ts). [sheets/](sheets/README.md) has example CSVs
-for bootstrapping a spreadsheet.
+Interface text (headings, links and accessible names) and the text shared by every
+roadmap (intro, Now/Next/Later definitions, section headings, and the categories' and
+organisations' names and descriptions) are in the English and Welsh catalogues in
+[src/i18n/locales/](src/i18n/locales/en.ts), typed so that missing Welsh fails type
+checking, and read without an i18n library to keep the script small (ADR-008).
+The categories' icons and colours are in [src/lib/content.ts](src/lib/content.ts); the
+sheet only picks a category or an organisation. [sheets/](sheets/README.md) has example
+CSVs for bootstrapping a spreadsheet.
 
 ## Analytics
 
@@ -95,8 +97,8 @@ service that sets no cookies and collects no personal data, to count visits. The
 is loaded from `scripts.simpleanalyticscdn.com` by the async `<script>` at the end of the
 `<body>` in [index.html](index.html), so it is on every prerendered page. It also needs a
 Simple Analytics website entry for the deployed domain; visits from `localhost` are
-ignored. The privacy note in [src/lib/strings.ts](src/lib/strings.ts) describes this, so
-keep the two in step. Nothing else is loaded from a third party.
+ignored. The privacy note (`infoPages.privacy` in [src/i18n/locales/](src/i18n/locales/en.ts))
+describes this, so keep the two in step. Nothing else is loaded from a third party.
 
 ## Sync and deploy
 

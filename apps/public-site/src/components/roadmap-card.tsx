@@ -1,11 +1,10 @@
 import { ChevronRight, Layers, Tag } from "lucide-react"
-import { DETAILS_HEADING } from "../lib/content"
-import { UI } from "../lib/strings"
+import { useStrings } from "../i18n"
 import type { RoadmapItem } from "../lib/types"
 import { DetailList } from "./detail-list"
 import { OrgPills } from "./org-pills"
 import { RichText } from "./rich-text"
-import { T } from "./t"
+import { ContentText } from "./content-text"
 
 /**
  * A single roadmap item. Shows the phase, title, description and outcome, then
@@ -20,6 +19,7 @@ export function RoadmapCard({
   item: RoadmapItem
   headingLevel?: 3 | 4
 }) {
+  const strings = useStrings()
   const Heading = headingLevel === 3 ? "h3" : "h4"
   const labels = item.labels ?? []
   // Each footer item has its own check below; keep this in step with them so a
@@ -41,7 +41,7 @@ export function RoadmapCard({
             className="h-4 w-4 shrink-0"
             strokeWidth={2.25}
           />
-          <T value={item.phase} />
+          <ContentText value={item.phase} />
         </p>
       ) : null}
       <Heading
@@ -49,7 +49,7 @@ export function RoadmapCard({
         tabIndex={-1}
         className="text-lg leading-snug font-bold text-heading"
       >
-        <T value={item.title} />
+        <ContentText value={item.title} />
       </Heading>
       {item.description.en ? (
         <RichText
@@ -60,7 +60,7 @@ export function RoadmapCard({
       {item.outcome ? (
         <div className="mt-4 rounded-card bg-surface-subtle p-3">
           <p className="text-sm font-semibold text-heading">
-            <T value={UI.outcome} />
+            {strings.roadmap.outcome}
           </p>
           <RichText
             value={item.outcome}
@@ -77,10 +77,10 @@ export function RoadmapCard({
             <details className="group mb-0 border-t border-border">
               <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold text-action underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
                 <span>
-                  <T value={DETAILS_HEADING} />
-                  <span className="sr-only">
-                    : <T value={item.title} />
-                  </span>
+                  {strings.roadmap.detailsFor({
+                    title: <ContentText value={item.title} />,
+                    hidden: (text) => <span className="sr-only">{text}</span>,
+                  })}
                 </span>
                 <ChevronRight
                   aria-hidden="true"
@@ -100,15 +100,13 @@ export function RoadmapCard({
                 strokeWidth={2.25}
               />
               <span>
-                <span className="sr-only">
-                  <T value={UI.tags} />{" "}
-                </span>
+                <span className="sr-only">{strings.roadmap.tags} </span>
                 {labels.map((label, i) => (
                   // Each dot ends the topic before it, so a wrapped line never
                   // starts with one; screen readers hear a comma instead.
                   <span key={label.en}>
                     <span className="inline-block max-w-full">
-                      <T value={label} />
+                      <ContentText value={label} />
                       {i < labels.length - 1 ? (
                         <>
                           <span className="sr-only">,</span>

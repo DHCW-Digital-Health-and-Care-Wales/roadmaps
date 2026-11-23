@@ -1,9 +1,9 @@
+import { useStrings } from "../i18n"
 import { FEEDBACK_URL } from "../lib/links"
-import { UI } from "../lib/strings"
-import { T } from "./t"
 
 /** "Give feedback" in body text, opening the feedback issue form. */
 export function FeedbackLink() {
+  const strings = useStrings()
   return (
     <a
       href={FEEDBACK_URL}
@@ -11,7 +11,7 @@ export function FeedbackLink() {
       rel="noreferrer"
       className="font-medium text-action underline underline-offset-4 hover:no-underline"
     >
-      <T value={UI.giveFeedback} />
+      {strings.site.giveFeedback}
     </a>
   )
 }

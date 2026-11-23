@@ -1,6 +1,6 @@
+import { useStrings } from "../i18n"
 import type { RoadmapMeta } from "../lib/types"
-import { UI } from "../lib/strings"
-import { T } from "./t"
+import { ContentText } from "./content-text"
 
 /**
  * "Our value" section, placed directly beneath the intro (which holds "Our
@@ -8,6 +8,7 @@ import { T } from "./t"
  * Google Sheet's roadmap list; the section is hidden when it is empty.
  */
 export function OurValue({ meta }: { meta: RoadmapMeta }) {
+  const strings = useStrings()
   if (!meta.serviceDescription.en) return null
 
   return (
@@ -21,10 +22,10 @@ export function OurValue({ meta }: { meta: RoadmapMeta }) {
           id="service-description-heading"
           className="text-2xl font-bold text-heading"
         >
-          <T value={UI.value} />
+          {strings.roadmap.value}
         </h2>
         <p className="mt-4 max-w-3xl whitespace-pre-line text-lg leading-relaxed text-ink-900">
-          <T value={meta.serviceDescription} />
+          <ContentText value={meta.serviceDescription} />
         </p>
       </div>
     </section>

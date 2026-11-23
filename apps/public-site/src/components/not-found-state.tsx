@@ -1,8 +1,11 @@
-import { fill, LANGUAGES, useLanguage } from "../lib/i18n"
+import {
+  catalogues,
+  supportedLanguages,
+  useLanguage,
+  useStrings,
+} from "../i18n"
 import { pathFor } from "../lib/router"
-import { UI } from "../lib/strings"
 import { ArrowLink } from "./arrow-link"
-import { T } from "./t"
 
 /**
  * An empty `slug` gives the generic message for the prerendered 404.html, in
@@ -11,41 +14,42 @@ import { T } from "./t"
  */
 export function NotFoundState({ slug }: { slug: string }) {
   const { lang } = useLanguage()
+  const strings = useStrings()
 
   return (
     <section className="bg-surface-subtle px-4 pb-16 pt-6 sm:px-6">
       <div className="mx-auto max-w-content">
         <h1 tabIndex={-1} className="text-3xl font-bold text-heading">
           {slug ? (
-            <T value={UI.notFoundHeading} />
+            strings.notFound.heading
           ) : (
             <>
-              <span lang="cy">{UI.notFoundHeading.cy}</span> /{" "}
-              <span lang="en">{UI.notFoundHeading.en}</span>
+              <span lang="cy">{catalogues.cy.notFound.heading}</span> /{" "}
+              <span lang="en">{catalogues.en.notFound.heading}</span>
             </>
           )}
         </h1>
         {slug ? (
           <>
             <p className="mt-4 max-w-3xl text-lg leading-relaxed text-ink-900">
-              <T value={fill(UI.notFoundBody, { slug })} />
+              {strings.notFound.body({ slug })}
             </p>
             <ArrowLink href={pathFor(lang, null)} className="mt-6">
-              <T value={UI.viewAllRoadmaps} />
+              {strings.site.viewAllRoadmaps}
             </ArrowLink>
           </>
         ) : (
-          LANGUAGES.map(({ value }) => (
+          supportedLanguages.map((value) => (
             <div key={value} lang={value} className="mt-8">
               <p className="max-w-3xl text-lg leading-relaxed text-ink-900">
-                {UI.notFoundGeneric[value]}
+                {catalogues[value].notFound.generic}
               </p>
               <ArrowLink
                 href={pathFor(value, null)}
                 clientSide={false}
                 className="mt-6"
               >
-                {UI.viewAllRoadmaps[value]}
+                {catalogues[value].site.viewAllRoadmaps}
               </ArrowLink>
             </div>
           ))

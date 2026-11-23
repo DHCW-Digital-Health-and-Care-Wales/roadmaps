@@ -1,3 +1,4 @@
+import { useStrings } from "../i18n"
 import type { OrgFilter } from "../lib/types"
 import type { SECTIONS } from "../lib/content"
 import {
@@ -7,7 +8,6 @@ import {
 } from "../lib/roadmap-helpers"
 import { EmptyItems } from "./empty-items"
 import { RoadmapCard } from "./roadmap-card"
-import { T } from "./t"
 
 /**
  * One of the fixed sections around the horizons: "Recently delivered", "Other
@@ -26,20 +26,21 @@ export function RoadmapSection({
   total: number
   filter: OrgFilter
 }) {
+  const strings = useStrings()
   const headingId = placementHeadingId(section.id)
 
   return (
     <section aria-labelledby={headingId} className="page-section bg-surface">
       <div className="mx-auto max-w-content">
         <h2 id={headingId} className="text-2xl font-bold text-heading">
-          <T value={section.heading} />{" "}
+          {strings.sections[section.id].heading}{" "}
           <span className="text-lg font-normal text-ink-700">
-            <T value={countInParentheses({ shown: items.length, total })} />
+            {countInParentheses({ shown: items.length, total }, strings)}
           </span>
         </h2>
 
         <p className="mt-4 max-w-3xl leading-relaxed text-ink-900">
-          <T value={section.description} />
+          {strings.sections[section.id].description}
         </p>
 
         {items.length > 0 ? (

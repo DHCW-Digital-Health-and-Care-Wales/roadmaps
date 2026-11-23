@@ -1,22 +1,15 @@
 import { useId, useRef, useState } from "react"
 import { ChevronDown, ListFilter } from "lucide-react"
-import {
-  ORGANISATION_GROUPS,
-  ORGANISATION_GROUP_IDS,
-  ORGANISATIONS,
-  organisation,
-} from "../lib/content"
+import { useStrings } from "../i18n"
+import { ORGANISATION_GROUP_IDS, ORGANISATIONS } from "../lib/content"
 import { ORG_FILTER_ID, ORG_SELECT_ID } from "../lib/focus"
-import { fill, useLanguage } from "../lib/i18n"
 import { setOrgFilter, useHasJs } from "../lib/router"
-import { UI } from "../lib/strings"
 import {
   isOrganisationId,
   type OrganisationId,
   NO_ORG_FILTER,
   type OrgFilter,
 } from "../lib/types"
-import { T } from "./t"
 
 const linkText = "underline underline-offset-4 hover:decoration-2"
 
@@ -47,7 +40,7 @@ export function OrgFilterDisclosure({
   align?: "start" | "end"
   className?: string
 }) {
-  const { tr } = useLanguage()
+  const strings = useStrings()
   const hasJs = useHasJs()
   const id = useId()
   const [open, setOpen] = useState(defaultOpen)
@@ -76,15 +69,11 @@ export function OrgFilterDisclosure({
       >
         <ListFilter aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" />
         <span className={linkText}>
-          <T
-            value={
-              org
-                ? fill(UI.filteredByOrganisation, {
-                    organisation: organisation(org).short,
-                  })
-                : UI.filterByOrganisation
-            }
-          />
+          {org
+            ? strings.filter.filteredByOrganisation({
+                organisation: strings.organisations[org].short,
+              })
+            : strings.filter.byOrganisation}
         </span>
         <ChevronDown
           aria-hidden="true"
@@ -99,10 +88,10 @@ export function OrgFilterDisclosure({
           htmlFor={ORG_SELECT_ID}
           className="block font-medium text-heading"
         >
-          <T value={UI.organisationLabel} />
+          {strings.filter.organisation}
         </label>
         <p id={`${id}-org-hint`} className="mt-0.5 text-sm text-ink-700">
-          <T value={UI.organisationHint} />
+          {strings.filter.organisationHint}
         </p>
         <select
           id={ORG_SELECT_ID}
@@ -118,16 +107,19 @@ export function OrgFilterDisclosure({
           }}
           className="mt-1 w-full rounded-sm border-2 border-ink-700 bg-surface px-3 py-2 text-base"
         >
-          <option value="">{tr(UI.allOrganisations)}</option>
+          <option value="">{strings.filter.allOrganisations}</option>
           {ORGANISATION_GROUP_IDS.map((group) => {
             const inGroup = options.filter((o) => o.group === group)
             return inGroup.length > 0 ? (
-              <optgroup key={group} label={tr(ORGANISATION_GROUPS[group])}>
-                {inGroup.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.code ? `${tr(o.name)} (${o.code})` : tr(o.name)}
-                  </option>
-                ))}
+              <optgroup key={group} label={strings.organisationGroups[group]}>
+                {inGroup.map((o) => {
+                  const name = strings.organisations[o.id].name
+                  return (
+                    <option key={o.id} value={o.id}>
+                      {o.code ? `${name} (${o.code})` : name}
+                    </option>
+                  )
+                })}
               </optgroup>
             ) : null
           })}
@@ -147,10 +139,10 @@ export function OrgFilterDisclosure({
             />
             <div>
               <label htmlFor={`${id}-all`} className="font-medium text-heading">
-                <T value={UI.includeAllWales} />
+                {strings.filter.includeAllWales}
               </label>
               <p id={`${id}-all-hint`} className="text-sm text-ink-700">
-                <T value={UI.includeAllWalesHint} />
+                {strings.filter.includeAllWalesHint}
               </p>
             </div>
           </div>
@@ -167,7 +159,7 @@ export function OrgFilterDisclosure({
               }}
               className={`text-sm font-medium text-action ${linkText}`}
             >
-              <T value={UI.clearFilter} />
+              {strings.filter.clearFilter}
             </button>
           </p>
         ) : null}

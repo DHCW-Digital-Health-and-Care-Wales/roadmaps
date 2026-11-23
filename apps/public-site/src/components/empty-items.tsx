@@ -1,8 +1,8 @@
+import { useStrings } from "../i18n"
 import { focusCard, keepInPlace } from "../lib/focus"
-import { emptyText, hiddenCount, showHiddenItems } from "../lib/roadmap-helpers"
+import { emptyText, hiddenCount } from "../lib/roadmap-helpers"
 import { setOrgFilter } from "../lib/router"
 import { NO_ORG_FILTER, type OrgFilter } from "../lib/types"
-import { T } from "./t"
 
 /**
  * What a section or horizon with no items to show says. When the filter hides
@@ -22,13 +22,12 @@ export function EmptyItems({
   headingId: string
   className?: string
 }) {
+  const strings = useStrings()
   const hidden = hiddenCount(filter, total)
 
   return (
     <div className={`text-ink-700 ${className}`.trim()}>
-      <p>
-        <T value={emptyText(filter, total)} />
-      </p>
+      <p>{emptyText(filter, total, strings)}</p>
       {hidden > 0 ? (
         <button
           type="button"
@@ -43,7 +42,7 @@ export function EmptyItems({
           }}
           className="mt-2 text-sm font-medium text-action underline underline-offset-4 hover:decoration-2"
         >
-          <T value={showHiddenItems(hidden)} />
+          {strings.roadmap.showHiddenItems(hidden)}
         </button>
       ) : null}
     </div>

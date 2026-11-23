@@ -1,9 +1,8 @@
 import { ChevronDown } from "lucide-react"
-import type { Roadmap, OrgFilter } from "../lib/types"
-import { HORIZONS, ROADMAP_DESCRIPTION, ROADMAP_HEADING } from "../lib/content"
+import { useStrings } from "../i18n"
+import { HORIZON_IDS, type Roadmap, type OrgFilter } from "../lib/types"
 import { filterItems, placementHeadingId } from "../lib/roadmap-helpers"
 import { HorizonPhase } from "./horizon-phase"
-import { T } from "./t"
 
 /**
  * The roadmap itself: a heading, followed by the three horizons stacked as a
@@ -19,28 +18,29 @@ export function RoadmapHorizons({
   roadmap: Roadmap
   filter: OrgFilter
 }) {
+  const strings = useStrings()
   const headingId = "roadmap-heading"
-  const lastIndex = HORIZONS.length - 1
+  const lastIndex = HORIZON_IDS.length - 1
 
   return (
     <section aria-labelledby={headingId}>
       <h2 id={headingId} className="text-2xl font-bold text-heading">
-        <T value={ROADMAP_HEADING} />
+        {strings.roadmap.heading}
       </h2>
 
       <p className="mt-4 max-w-3xl leading-relaxed text-ink-900">
-        <T value={ROADMAP_DESCRIPTION} />
+        {strings.roadmap.description}
       </p>
 
       <ol className="mt-8 space-y-3">
-        {HORIZONS.map((horizon, index) => (
-          <li key={horizon.id}>
+        {HORIZON_IDS.map((id, index) => (
+          <li key={id}>
             <HorizonPhase
-              label={horizon.label}
-              items={filterItems(roadmap.items[horizon.id], filter)}
-              total={roadmap.items[horizon.id].length}
+              label={strings.horizons[id].label}
+              items={filterItems(roadmap.items[id], filter)}
+              total={roadmap.items[id].length}
               filter={filter}
-              headingId={placementHeadingId(horizon.id)}
+              headingId={placementHeadingId(id)}
             />
             {index < lastIndex ? (
               <div

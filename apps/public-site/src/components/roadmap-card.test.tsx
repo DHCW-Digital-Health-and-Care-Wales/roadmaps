@@ -104,6 +104,26 @@ describe("RoadmapCard", () => {
     expect(container.querySelector("summary")?.textContent).toBe(
       "What this covers: Search tool",
     )
+    expect(container.querySelector("summary .sr-only")?.textContent).toBe(
+      ": Search tool",
+    )
+  })
+
+  it("marks only the English title in the Welsh details summary", () => {
+    window.history.replaceState(null, "", "/product-roadmaps/cy/")
+    const { container } = renderCard({
+      title: loc("Search tool"),
+      description: loc(""),
+      details: [{ text: loc("One"), level: 0 }],
+    })
+    const summary = container.querySelector("summary")
+    expect(summary?.textContent).toBe("Beth mae hyn yn ei gwmpasu: Search tool")
+    expect(
+      [...(summary?.querySelectorAll("[lang]") ?? [])].map((el) => [
+        el.getAttribute("lang"),
+        el.textContent,
+      ]),
+    ).toEqual([["en", "Search tool"]])
   })
 
   it("puts the details, then labels, then organisations in the footer", () => {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { RoadmapMeta } from "../lib/types"
-import { T } from "./t"
+import { ContentText } from "./content-text"
 
 /**
  * A roadmap's family name beside a swatch in the roadmap's colour, shared by
@@ -28,7 +28,7 @@ export function FamilyLabel({
         style={{ backgroundColor: meta.colour }}
       />
       <span>
-        <T value={meta.family} />
+        <ContentText value={meta.family} />
         {children}
       </span>
     </Tag>

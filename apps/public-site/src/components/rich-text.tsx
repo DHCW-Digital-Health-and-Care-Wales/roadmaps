@@ -1,10 +1,10 @@
-import { useResolved } from "../lib/i18n"
+import { useResolved } from "../i18n"
 import { parseTextBlocks } from "../lib/text"
 import type { Localised } from "../lib/types"
 
 /**
  * Sheet text as paragraphs and bullet lists (see `parseTextBlocks`), marking
- * English fallbacks with `lang="en"` like `<T>`.
+ * English fallbacks with `lang="en"` like `<ContentText>`.
  */
 export function RichText({
   value,

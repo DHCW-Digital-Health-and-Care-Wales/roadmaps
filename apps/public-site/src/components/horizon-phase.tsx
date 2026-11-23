@@ -1,11 +1,11 @@
-import type { Localised, OrgFilter } from "../lib/types"
+import { useStrings } from "../i18n"
+import type { OrgFilter } from "../lib/types"
 import { countInParentheses, type ShownItem } from "../lib/roadmap-helpers"
 import { EmptyItems } from "./empty-items"
 import { RoadmapCard } from "./roadmap-card"
-import { T } from "./t"
 
 interface HorizonPhaseProps {
-  label: Localised
+  label: string
   /** The items that match the organisation filter. */
   items: ShownItem[]
   /** The number of items before filtering. */
@@ -31,6 +31,7 @@ export function HorizonPhase({
   filter,
   headingId,
 }: HorizonPhaseProps) {
+  const strings = useStrings()
   return (
     <section
       aria-labelledby={headingId}
@@ -40,11 +41,9 @@ export function HorizonPhase({
         id={headingId}
         className="rounded-card bg-heading px-4 py-3 text-lg font-bold text-white sm:rounded-none"
       >
-        <span>
-          <T value={label} />
-        </span>{" "}
+        <span>{label}</span>{" "}
         <span className="text-base font-normal text-white/80">
-          <T value={countInParentheses({ shown: items.length, total })} />
+          {countInParentheses({ shown: items.length, total }, strings)}
         </span>
       </h3>
       <div className="mt-4 sm:mt-0 sm:p-4">

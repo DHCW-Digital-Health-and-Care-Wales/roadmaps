@@ -1,3 +1,4 @@
+import i18next from "eslint-plugin-i18next"
 import { globalIgnores } from "eslint/config"
 import globals from "globals"
 
@@ -19,6 +20,45 @@ export default reactAppConfig(
       "@typescript-eslint/prefer-nullish-coalescing": [
         "error",
         { ignorePrimitives: { string: true } },
+      ],
+    },
+  },
+  {
+    // All interface text comes from the catalogues (ADR-008): no literal JSX text or
+    // literal user-facing attributes. Tests are exempt.
+    files: ["src/**/*.tsx"],
+    ignores: ["src/**/*.test.tsx"],
+    plugins: { i18next },
+    rules: {
+      "i18next/no-literal-string": [
+        "error",
+        {
+          mode: "jsx-only",
+          "jsx-attributes": {
+            include: [
+              "^(aria-label|aria-description|aria-roledescription|aria-valuetext|title|alt|placeholder|label)$",
+            ],
+          },
+        },
+      ],
+    },
+  },
+  {
+    // The catalogues fill counts into their text unformatted, so the prerendered page
+    // and the browser's render give the same text. Only numbers are allowed: the
+    // other options are the strict config's.
+    files: ["src/i18n/locales/*.ts"],
+    rules: {
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        {
+          allowNumber: true,
+          allowAny: false,
+          allowBoolean: false,
+          allowNever: false,
+          allowNullish: false,
+          allowRegExp: false,
+        },
       ],
     },
   },

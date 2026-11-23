@@ -1,8 +1,8 @@
+import { useStrings } from "../i18n"
 import { categorySectionId, type CategoryGroup } from "../lib/roadmap-helpers"
 import type { OrgFilter } from "../lib/types"
 import { CategoryIcon } from "./category-icon"
 import { ProductCard } from "./product-card"
-import { T } from "./t"
 
 /** One category's heading and roadmap cards. */
 export function CategorySection({
@@ -12,6 +12,7 @@ export function CategorySection({
   group: CategoryGroup
   filter: OrgFilter
 }) {
+  const strings = useStrings()
   const id = categorySectionId(category)
   return (
     <section
@@ -24,10 +25,10 @@ export function CategorySection({
         <CategoryIcon category={category} size="large" />
         <div>
           <h2 id={`${id}-heading`} className="text-2xl font-bold text-heading">
-            <T value={category.label} />
+            {strings.categories[category.id].label}
           </h2>
           <p className="mt-0.5 text-ink-700">
-            <T value={category.description} />
+            {strings.categories[category.id].description}
           </p>
         </div>
       </div>

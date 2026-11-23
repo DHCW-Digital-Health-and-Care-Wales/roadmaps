@@ -7,7 +7,8 @@
   requests only, one gate check, a Repository job on every pull request, the owner the
   only code owner; STY-088: the shared ESLint base comes with STY-095, and
   `product-roadmaps` protected as `main` is; STY-095: a shared TypeScript base, the
-  shared conventions file, one package per job)
+  shared conventions file, one package per job; STY-096: the public site's text without
+  i18next)
 
 ## Context
 
@@ -179,6 +180,16 @@ STY-097 D6; the rest of _Workspace tooling_ and _Agent guides_ stands.
 - **Node 26 is the floor** (STY-097 D6): `.nvmrc`, CI, the root `engines` and the
   catalogue's `@types/node` name the same major, so the types describe the one runtime
   CI runs.
+
+### STY-096 amendments
+
+From the owner's decision in STY-096 delivery (2026-11-23, STY-096 D10).
+
+- **The public site's text does not share the editor's i18n package.** Both apps keep
+  typed English and Welsh catalogues in the same layout, but the site renders its own
+  without i18next or react-i18next, which would take its script past the 100 KB budget
+  (`apps/public-site/lighthouserc.json`, `resource-summary:script:size`); ADR-008's
+  _STY-096 amendments_ hold the site's form.
 
 ## Consequences
 

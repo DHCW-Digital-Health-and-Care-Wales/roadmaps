@@ -48,8 +48,9 @@ server
 **Then** it claims `API_PORT` and `DB_PORT` in the slot beside the existing four ports,
 and runs `uv sync --locked` in `apps/api`, which fetches the pinned Python 3.15
 **And** without uv it fails with a message naming the prerequisite, and `pnpm
-worktree:teardown` runs `docker compose down --volumes` for the slot's project, so a
-reused slot starts with an empty database (D9, D11)
+worktree:teardown` runs `docker compose down --volumes` for the slot's project, as does
+the reaper that frees the slot of a worktree deleted without teardown, so a reused slot
+starts with an empty database (D9, D11, D33)
 
 ### S3: The probes answer for the process and the database
 
@@ -59,7 +60,7 @@ reused slot starts with an empty database (D9, D11)
 200 once a `SELECT 1` succeeds, through a route, a readiness service and a repository
 (D3, D8)
 **And** with the database down, `/ready` answers 503 `service.not_ready` within about
-two seconds and logs a warning, while a probe that succeeds writes no access-log line
+two seconds, waiting for a pooled connection included, and logs a warning, while a probe that succeeds writes no access-log line
 (D20)
 
 ### S4: Every refusal is the envelope, with a stable code
@@ -69,17 +70,18 @@ two seconds and logs a warning, while a probe that succeeds writes no access-log
 **Then** the response is `{detail, code, params}` with the status and code shown, and
 never includes the submitted input, a traceback or exception text (D14, D17, D23):
 
-| Request                                   | Status | `code`                       | `params`                     |
-| ----------------------------------------- | ------ | ---------------------------- | ---------------------------- |
-| An unknown path                           | 404    | `request.not_found`          | `{}`                         |
-| A known path with the wrong method        | 405    | `request.method_not_allowed` | `{}`                         |
-| A body or query that fails validation     | 422    | `request.invalid`            | `{errors: [{loc, type}, …]}` |
-| A body over 1 MiB, refused before parsing | 413    | `request.body_too_large`     | `{}`                         |
-| A `Host` header the settings do not list  | 400    | `request.host_not_allowed`   | `{}`                         |
-| A route raising an unexpected error       | 500    | `server.internal_error`      | `{}`                         |
+| Request                                  | Status | `code`                       | `params`                     |
+| ---------------------------------------- | ------ | ---------------------------- | ---------------------------- |
+| An unknown path                          | 404    | `request.not_found`          | `{}`                         |
+| A known path with the wrong method       | 405    | `request.method_not_allowed` | `{}`                         |
+| A body or query that fails validation    | 422    | `request.invalid`            | `{errors: [{loc, type}, …]}` |
+| A body over 1 MiB, declared or streamed  | 413    | `request.body_too_large`     | `{}`                         |
+| A `Host` header the settings do not list | 400    | `request.host_not_allowed`   | `{}`                         |
+| A route raising an unexpected error      | 500    | `server.internal_error`      | `{}`                         |
 
-**And** ruff's banned-API rule fails any import of `HTTPException`, and the 500's
-traceback is logged with the request's ID
+**And** a body over 1 MiB is refused before it is read whole, with or without a
+`Content-Length`; ruff's banned-API rule fails any import of `HTTPException`; and the
+500 is logged with its request ID, as S7 sets (D28)
 
 ### S5: Every response carries ADR-020's headers
 
@@ -96,20 +98,28 @@ traceback is logged with the request's ID
 **Given** the API started with no `ROADMAPS_ENV`
 **When** it starts
 **Then** production rules apply: no `/docs` and no live OpenAPI route, and start-up
-stops with a message naming each missing setting when the database URL or the allowed
-hosts are unset (D12)
+stops with a message naming each bad setting, never its value, when the database URL or
+the allowed hosts are unset or empty, when `ROADMAPS_ENV` is other than `local`, `test`
+or `production`, or when the allowed hosts hold a wildcard outside local (D12, D33)
 **And** settings come from environment variables only, with no `.env` file read;
 `pnpm api:dev` sets `ROADMAPS_ENV=local`, the database URL and the allowed hosts from
-the slot, and only a local environment serves the API's docs
+the slot, and only a local environment serves the live OpenAPI JSON, with no Swagger UI
+page, so S5's headers hold for it unchanged (D29)
 
 ### S7: Logs are JSON lines tied to the response
 
 **Given** the API serving requests, locally or in CI
 **When** it logs
-**Then** every line on stdout is one JSON object, in every environment, carrying the
-request's ID (D6)
-**And** every response carries that ID in `X-Request-ID`, so a reported 500 finds its
-log line (D15, D26)
+**Then** every line on stdout is one JSON object, in every environment, and every line
+written while serving a request carries its ID, which the API generates, never taking a
+caller's `X-Request-ID` (D6, D26, D33)
+**And** each line holds only allow-listed fields (ADR-018): an access line the method,
+the path without its query string, the status, the duration and the request ID; a 500
+the exception's type and stack frames, never its message; and the engine hides SQL
+parameters. A test plants a query string and an exception value and finds neither in
+the log (D30)
+**And** every response carries the request ID in `X-Request-ID`, so a reported 500
+finds its log line (D15)
 
 ### S8: The layering is enforced in lint
 
@@ -136,10 +146,12 @@ delegates its `typecheck` to uv (D4)
 **When** CI runs
 **Then** `classify-changes` outputs `api=true`, with a test row, and `--all` includes it,
 and the API's job runs ruff (format and lint), import-linter, the transaction check, ty
-and pytest, against a `postgres:18` service container, failing under 100% branch
-coverage (D5, D7)
+and pytest, against a `postgres:18` service container pinned by digest, the same
+digest as the Compose file's, failing under 100% branch coverage (D5, D7, D33)
 **And** the job is in _CI result_'s `needs`, which `build/ci-workflow.test.ts` checks,
 and a pull request touching only the editor or the site skips it
+**And** CodeQL's default setup analyses the API's Python, observed once after the change
+lands (CHO-031 S3)
 
 ### S11: Python dependencies wait a week, like pnpm's
 
@@ -155,9 +167,11 @@ rule listed beside the selection with its reason (D18)
 
 **Given** `pnpm editor:dev` and `pnpm api:dev` running in one worktree
 **When** the browser requests `/api/v1/…` from the editor's port
-**Then** Vite proxies it to the same slot's `API_PORT`, as ADR-020 sets for local running
-(D10)
+**Then** Vite proxies it to the same slot's `API_PORT`, as ADR-020 sets for local
+running, rewriting the `Host` to the target's so it passes the API's allow-list (D10,
+D31)
 **And** one wiring test checks that the proxy's target comes from the worktree's ports
+and that it rewrites the `Host`
 
 ### S13: The API has its guide
 
@@ -167,10 +181,23 @@ rule listed beside the selection with its reason (D18)
 codes, settings, commands and checks, and the root guide's routing table names it
 **And** the README lists uv and Docker as prerequisites beside Node
 
+### S14: The gate before a PR runs only the apps a change touches (D32)
+
+**Given** a change to the public site alone
+**When** its delivery runs the gate before a PR
+**Then** implement-story's `references/validation.md` has it run the root's `repo:`
+checks and the site's prefixed scripts, as CI's classifier picks jobs, so it needs no
+database
+**And** a change under `apps/api/`, or to a root file that runs every app's jobs, runs
+the API's too, where `api:test` starts the slot's database itself, as `api:dev` does
+
 ## Tests
 
-pytest with FastAPI's `TestClient` holds S3 to S7; S3's database cases run against CI's
-service container, and STY-091's harness later replaces the connection set-up. S8's
+pytest with FastAPI's `TestClient` holds S3 to S7; S3's database cases run against the
+slot's database locally and CI's service container, and STY-091's harness later replaces
+the connection set-up. S4's 422 and 500 rows use a route mounted on the test app only,
+since the probes take no input. A test over `apps/api/compose.yaml` checks that every
+published port binds 127.0.0.1 and that its image digest is CI's. S8's
 checks have their own planted-violation tests. S2's port and teardown rules extend
 `scripts/worktree/worktree.test.ts`, S10's `classify-changes.test.ts`, S12 one test of
 the editor's Vite config. S1 is an observed run.
@@ -230,7 +257,7 @@ the editor's Vite config. S1 is an observed run.
 - **D22** (owner, round 6): the transaction check is a small AST script with its own
   tests, over a semgrep rule. Gives S8.
 - **D23** (owner, round 6): requests are capped at 1 MiB, one setting, over 256 KiB or
-  leaving it to the edge; a route that needs more raises it. Gives S4.
+  leaving it to the edge. Gives S4.
 - **D24** (owner, round 7): OpenTelemetry, the shared Jaeger and probes left untraced
   move to [STY-100](STY-100-the-api-traces-requests-locally.md), over one large pull
   request or splitting out the local running instead.
@@ -242,8 +269,31 @@ the editor's Vite config. S1 is an observed run.
   STY-100. Gives S7.
 - **D27** (agent, 2026-11-23, confirmed by the owner in round 8): the package is
   `roadmaps_api` in a `src/` layout; the Compose file is `apps/api/compose.yaml`;
-  outside a worktree the ports are 8000 and 55432; PostgreSQL binds to 127.0.0.1;
-  `/ready`'s query times out after about two seconds. Gives S1, S3.
+  outside a worktree the ports are 8000 and 15432; PostgreSQL binds to 127.0.0.1;
+  `/ready`'s query times out after about two seconds. Gives S1, S3. The fallback was
+  55432 when confirmed; the review moved it out of Linux's ephemeral range, which the
+  worktree script avoids.
+- **D28** (agent, 2026-11-23, review): a `Host` the settings do not list gets 400, as
+  Starlette's `TrustedHostMiddleware` answers, and a body limit counts bytes read, not
+  only a declared `Content-Length`. Gives S4.
+- **D29** (owner, 2026-11-23, review question): locally the API serves only its live
+  OpenAPI JSON, over Swagger UI under a local-only CSP or with vendored assets, so S5's
+  `default-src 'none'` holds with no exception and no CDN script. Changes S6.
+- **D30** (owner, 2026-11-23, review question): ADR-018's field allow-list applies to the
+  logger now, with a 500 logging the exception's type and stack frames but not its
+  message, over keeping messages or deferring to the identity stories. Changes D14's
+  logged traceback. Changes S4, S7.
+- **D31** (agent, 2026-11-23, review): the dev proxy rewrites `Host` (Vite's
+  `changeOrigin`), over listing the editor's dev host in the API's allow-list. Gives
+  S12.
+- **D32** (owner, 2026-11-23, review question): the gate before a PR runs the root's
+  checks and those of each app a change touches, as CI does, and `api:test` starts the
+  slot's database, over leaving the API out of the root commands or every gate needing
+  Docker. Changes implement-story's `references/validation.md` in delivery. Adds S14.
+- **D33** (agent, 2026-11-23, security review): fail closed on what the owner's rules
+  leave open: an unknown `ROADMAPS_ENV`, an empty setting or a wildcard host stops
+  start-up; a caller's `X-Request-ID` is never used; images are pinned by digest; the
+  slot reaper removes the database as teardown does. Changes S2, S6, S7, S10.
 
 ## Starting point
 
@@ -273,5 +323,6 @@ Audited at `e4117b10`:
   STY-092, which starts that table with S4's codes.
 - Same-origin proof for state-changing requests: the first state-changing route,
   ADR-018's sign-in.
-- A container image, the production server, serving the editor's files and hosted
-  hosts: EPC-023.
+- A container image, the production server and hosted hosts: EPC-023.
+- Serving the editor's built files with their document headers (ADR-020): a later
+  EPC-022 story, in its candidate scope.

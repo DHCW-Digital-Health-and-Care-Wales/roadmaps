@@ -142,8 +142,9 @@ _STY-090 amendments_:
     slot's database, which teardown removes with its volume; settings from environment
     variables only, failing closed; JSON logs everywhere, with a request ID in each line
     and in `X-Request-ID`; ADR-020's headers, a 1 MiB body limit and the `Host`
-    allow-list from the start; 100% branch coverage. Tracing follows as STY-100; the
-    image and the production server are EPC-023's.
+    allow-list from the start; logs hold only ADR-018's allow-listed fields; 100%
+    branch coverage; the gate before a PR runs only the apps a change touches. Tracing
+    follows as STY-100; the image and the production server are EPC-023's.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._
@@ -210,7 +211,8 @@ and its enforcement suite; people, identities, memberships, roles, assignments a
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
 Google and the mock provider, sessions and signing out (ADR-018); the scratch, draft,
 save, publish and restore path; the API's endpoints for the roadmap repository's calls
-and for the public read; the import of the spreadsheet's data; and the editor's API
+and for the public read; serving the editor's built files with their document headers
+(ADR-020); the import of the spreadsheet's data; and the editor's API
 adapter with its build-time switch, signing in through the API. Entra, with its spike,
 is a later story._
 

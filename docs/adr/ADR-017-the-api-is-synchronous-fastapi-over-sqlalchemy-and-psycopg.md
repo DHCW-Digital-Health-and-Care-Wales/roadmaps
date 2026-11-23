@@ -166,9 +166,7 @@ _Operation_ stands.
   it for as long as a client still calls v1.
 - **The probes are `/health` and `/ready` at the root,** unversioned and outside
   `/api`. The platform calls them, not a client, so they never move with the contract.
-  No probe path ends in `z`, since Cloud Run reserves some such paths. The hosted
-  service routes `/api/v1/*` and the two probes to the API, and everything else to the
-  editor's files (ADR-020).
+  No probe path ends in `z`, since Cloud Run reserves some such paths.
 - **OpenTelemetry follows the skeleton** in STY-100, not in STY-090 itself. Until then
   each log line and response carries a generated request ID, which STY-100 makes the
   trace ID.

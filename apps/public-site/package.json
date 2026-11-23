@@ -19,30 +19,30 @@
     "sync": "node scripts/sync-roadmaps.ts"
   },
   "dependencies": {
-    "@fontsource/roboto": "^5.3.0",
-    "lucide-react": "^1.35.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "@fontsource-variable/roboto": "catalog:",
+    "lucide-react": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
+    "@axe-core/playwright": "catalog:",
     "@lhci/cli": "0.16.1",
     "@playwright/test": "catalog:",
-    "@tailwindcss/vite": "^4.3.3",
-    "@testing-library/react": "^16.3.3",
-    "@types/node": "^24.19.1",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
+    "@tailwindcss/vite": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
     "axe-core": "^4.14.0",
     "eslint": "catalog:",
-    "eslint-plugin-i18next": "^6.1.5",
+    "eslint-plugin-i18next": "catalog:",
     "globals": "catalog:",
-    "jsdom": "^30.1.2",
-    "tailwindcss": "^4.3.3",
+    "jsdom": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "^8.3.8",
+    "vite": "catalog:",
     "vitest": "catalog:",
-    "zod": "^4.6.7"
+    "zod": "catalog:"
   }
 }

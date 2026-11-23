@@ -4,16 +4,33 @@ packages:
 # A version more than one package uses is named once here and referenced as `catalog:`
 # (ADR-016 Workspace tooling).
 catalog:
+  "@axe-core/playwright": ^4.14.0
   "@eslint/js": ^10.0.1
+  "@fontsource-variable/roboto": ^5.3.0
   # Exact: each app's E2E job runs in the Playwright image of this version (ci.yml).
   "@playwright/test": 1.64.1
-  "@types/node": ^22.20.5
+  "@tailwindcss/vite": ^4.3.5
+  "@testing-library/react": ^16.3.3
+  # The workspace's Node major (.nvmrc, the root engines), so the types describe the
+  # one runtime CI runs (STY-097 D6).
+  "@types/node": ^26.6.6
+  "@types/react": ^19.3.0
+  "@types/react-dom": ^19.3.0
+  "@vitejs/plugin-react": ^6.2.1
   eslint: ^10.15.0
   eslint-config-prettier: ^10.1.8
+  eslint-plugin-i18next: ^6.1.5
   globals: ^17.14.0
+  jsdom: ^31.0.0
+  lucide-react: ^1.70.0
+  react: ^19.3.1
+  react-dom: ^19.3.1
+  tailwindcss: ^4.3.5
   typescript: ~6.0.3
   typescript-eslint: ^8.72.1
+  vite: ^8.3.8
   vitest: ^5.1.0
+  zod: ^4.6.7
 
 # minimatch below 11.0.1 has a denial of service through glob patterns
 # (GHSA-g3hv-75wg-m249). These dependents have no release that takes minimatch 11, or

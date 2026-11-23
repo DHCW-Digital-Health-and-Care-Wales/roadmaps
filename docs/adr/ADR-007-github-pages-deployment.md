@@ -5,7 +5,7 @@
   SHA-pinned actions, Node 26; STY-009: vendor chunks; later: docs-only PRs run a Docs job;
   STY-085: the base path `/roadmaps/`; STY-087: CI as jobs per app behind one gate, in
   place of the Docs job; STY-088: the public site's jobs, and its publishing from
-  `product-roadmaps`)
+  `product-roadmaps`; STY-097: `engines` accepts Node 26 and later only)
 
 ## Decision
 
@@ -65,7 +65,8 @@
   `actions/setup-node` are kept over the newer all-in-one `pnpm/setup` for now; both are
   maintained.
 - **Node**: CI uses `.nvmrc`, which tracks the Active LTS line (26 since 2026-10-28).
-  `engines` still accepts 22.22+/24.15+ for local development.
+  The root `engines` accepts that major and later only (STY-097 D6), so local
+  development, CI and the catalogue's `@types/node` name one Node.
 
 ### STY-009 amendment
 

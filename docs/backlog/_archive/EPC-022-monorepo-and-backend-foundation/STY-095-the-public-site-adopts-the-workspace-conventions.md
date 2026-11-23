@@ -158,7 +158,7 @@ blocks)` in `eslint.base.ts`, so Prettier's block stays last after each app's ow
   table-driven test is an `it.each`", which both apps' seams lines carried, moves there
   from both (agent).
 - **S5**: the host was loaded, so the E2E suite (ARIA snapshots included) and Lighthouse
-  ran in the pull request's CI, not locally (agent).
+  are left to the pull request's CI, not run locally (agent).
 
 ### Contract for dependents
 

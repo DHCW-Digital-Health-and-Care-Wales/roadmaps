@@ -10,7 +10,7 @@
 - **Binding ADRs**: ADR-002, ADR-006
 - **Suggested model**: Sonnet — each pair of tests is compared case by case before one
   goes
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #261](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/261)
 
 ## Summary
 

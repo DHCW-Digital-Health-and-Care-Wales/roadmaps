@@ -7,7 +7,7 @@
  * breaks. In development we collect which strings are still missing Welsh so
  * the translation work is easy to complete later.
  */
-import { createContext, useContext } from "react"
+import { createContext, use } from "react"
 import type { Route } from "./router"
 import type { Localised } from "./types"
 
@@ -30,7 +30,7 @@ export const LANG_STORAGE_KEY = "dhcw-product-roadmaps-lang"
 
 const missingWelsh = new Set<string>()
 
-export function isLang(value: string | null): value is Lang {
+export function isLang(value: string | null | undefined): value is Lang {
   return value === "cy" || value === "en"
 }
 
@@ -121,7 +121,7 @@ export const LanguageContext = createContext<LanguageContextValue | null>(null)
 
 /** Access the active language and translation helper. */
 export function useLanguage(): LanguageContextValue {
-  const context = useContext(LanguageContext)
+  const context = use(LanguageContext)
   if (!context) {
     throw new Error("useLanguage must be used within a LanguageProvider")
   }

@@ -69,7 +69,7 @@ export function formatDate(iso: string, lang: "cy" | "en"): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
   const month = match ? MONTHS[lang][Number(match[2]) - 1] : undefined
   if (!match || !month) return iso
-  return `${Number(match[3])} ${month} ${match[1]}`
+  return `${String(Number(match[3]))} ${month} ${String(match[1])}`
 }
 
 /** Whether an item has an outcome or details to reveal. */

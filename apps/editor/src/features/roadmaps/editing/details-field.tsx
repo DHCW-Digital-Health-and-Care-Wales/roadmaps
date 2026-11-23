@@ -194,28 +194,28 @@ function DetailsEditor({
   const say = (message: DetailsMessage | null) => {
     setSaid((last) => message && { serial: (last?.serial ?? 0) + 1, message })
   }
-  const fields = useRef(new Map<number, HTMLTextAreaElement>())
+  const fieldsRef = useRef(new Map<number, HTMLTextAreaElement>())
   // Where the caret was in the current detail when focus last left its text (S23).
-  const caret = useRef(0)
+  const caretRef = useRef(0)
 
   // Focus is moved once the change that asked for it has been drawn.
-  const focusNext = useRef<FocusTarget | null>(null)
+  const focusNextRef = useRef<FocusTarget | null>(null)
   const place = ({ id, caret: at }: FocusTarget) => {
-    const field = fields.current.get(id)
+    const field = fieldsRef.current.get(id)
     field?.focus()
     field?.setSelectionRange(at, at)
   }
   useLayoutEffect(() => {
-    if (focusNext.current) place(focusNext.current)
-    focusNext.current = null
+    if (focusNextRef.current) place(focusNextRef.current)
+    focusNextRef.current = null
   })
   // As the field opens, focus is at the end of the detail last written in.
   useEffect(() => {
-    const field = fields.current.get(current)
+    const field = fieldsRef.current.get(current)
     if (field) place({ id: current, caret: field.value.length })
     onOpened()
     // Only as the editor is first drawn.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- Runs once as the editor opens.
   }, [])
 
   const indexOf = (id: number) => lines.findIndex((line) => line.id === id)
@@ -231,7 +231,7 @@ function DetailsEditor({
   ) => {
     onApply(next, selected)
     say(message)
-    if (focus) focusNext.current = focus
+    if (focus) focusNextRef.current = focus
   }
   const refuse = (why: Refusal, focus?: FocusTarget) => {
     say({ kind: "refused", why })
@@ -439,7 +439,9 @@ function DetailsEditor({
     // Chosen with a pointer, the caret goes back to the detail's text where it was;
     // chosen with the keyboard, focus stays on the button (S23).
     const focus =
-      event.detail > 0 ? { id: selected.id, caret: caret.current } : undefined
+      event.detail > 0
+        ? { id: selected.id, caret: caretRef.current }
+        : undefined
     switch (name) {
       case "moveOut":
         moveOut(currentIndex, selected.id, focus)
@@ -511,8 +513,8 @@ function DetailsEditor({
               />
               <textarea
                 ref={(field) => {
-                  if (field) fields.current.set(line.id, field)
-                  else fields.current.delete(line.id)
+                  if (field) fieldsRef.current.set(line.id, field)
+                  else fieldsRef.current.delete(line.id)
                 }}
                 rows={1}
                 value={line.text}
@@ -536,7 +538,7 @@ function DetailsEditor({
                 }}
                 onBlur={(event) => {
                   if (line.id === current) {
-                    caret.current = event.currentTarget.selectionStart
+                    caretRef.current = event.currentTarget.selectionStart
                   }
                 }}
                 onChange={(event) => {
@@ -560,9 +562,9 @@ function DetailsEditor({
         // Not every browser moves focus to a button pressed with a pointer (Safari),
         // so the text may never blur: the caret is read before the button acts (S23).
         onPointerDown={() => {
-          const field = selected && fields.current.get(selected.id)
+          const field = selected && fieldsRef.current.get(selected.id)
           if (field && field === document.activeElement) {
-            caret.current = field.selectionStart
+            caretRef.current = field.selectionStart
           }
         }}
       >

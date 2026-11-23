@@ -94,11 +94,11 @@ export function ConflictReviewDialog({
   const choosing = conflicts.some(
     (each) => each.kind !== "field" || !each.conflict.gainedWelsh,
   )
-  const publish = useRef<HTMLButtonElement>(null)
-  const close = useRef<HTMLButtonElement>(null)
+  const publishRef = useRef<HTMLButtonElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
   const focus = useDecisionFocus(
     conflicts,
-    () => publish.current ?? close.current,
+    () => publishRef.current ?? closeRef.current,
   )
   const decision = (each: OpenConflict) => ({
     firstButton: focus.keepMineRef(each.key),
@@ -195,13 +195,13 @@ export function ConflictReviewDialog({
         </DialogBody>
         <DialogFooter>
           {!deciding && hasPendingChanges && (
-            <Button ref={publish} onClick={onPublish}>
+            <Button ref={publishRef} onClick={onPublish}>
               <UploadIcon data-icon="inline-start" aria-hidden="true" />
               {t(`roadmaps.publish.action.${action}`)}
             </Button>
           )}
           <DialogClose
-            ref={close}
+            ref={closeRef}
             variant={!deciding && !hasPendingChanges ? "default" : "secondary"}
           >
             {t("common.close")}

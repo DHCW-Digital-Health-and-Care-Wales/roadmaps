@@ -22,38 +22,39 @@ export function useLeaveAfterPress(
   onLeave: () => void,
 ): LeaveHandlers {
   // The field, once it has had focus.
-  const field = useRef<HTMLElement | null>(null)
-  const pressing = useRef(false)
+  const fieldRef = useRef<HTMLElement | null>(null)
+  const pressingRef = useRef(false)
   // Whether the last press since the field had focus began outside it.
-  const pressedOutside = useRef(false)
+  const pressedOutsideRef = useRef(false)
   // Whether Tab is moving focus, in the task of its key press.
-  const tabbing = useRef(false)
+  const tabbingRef = useRef(false)
   // A leave waiting for the press under way to end.
-  const leaveAtRelease = useRef<(() => void) | null>(null)
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const latestOnLeave = useRef(onLeave)
+  const leaveAtReleaseRef = useRef<(() => void) | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const latestOnLeaveRef = useRef(onLeave)
   useLayoutEffect(() => {
-    latestOnLeave.current = onLeave
+    latestOnLeaveRef.current = onLeave
   })
   useEffect(() => {
     if (!watching) return
     const press = (event: PointerEvent) => {
-      pressing.current = true
-      pressedOutside.current = !(
-        event.target instanceof Node && field.current?.contains(event.target)
+      pressingRef.current = true
+      pressedOutsideRef.current = !(
+        event.target instanceof Node && fieldRef.current?.contains(event.target)
       )
     }
     const release = () => {
-      pressing.current = false
-      const leave = leaveAtRelease.current
-      leaveAtRelease.current = null
+      pressingRef.current = false
+      const leave = leaveAtReleaseRef.current
+      leaveAtReleaseRef.current = null
       leave?.()
     }
     const key = (event: KeyboardEvent) => {
       if (event.key !== "Tab") return
-      tabbing.current = true
+      tabbingRef.current = true
+      // eslint-disable-next-line @eslint-react/web-api-no-leaked-timeout -- Fire and forget: it only clears a flag, so nothing needs cleaning up.
       setTimeout(() => {
-        tabbing.current = false
+        tabbingRef.current = false
       })
     }
     window.addEventListener("pointerdown", press, true)
@@ -65,18 +66,18 @@ export function useLeaveAfterPress(
       window.removeEventListener("pointerup", release, true)
       window.removeEventListener("pointercancel", release, true)
       window.removeEventListener("keydown", key, true)
-      pressing.current = false
-      pressedOutside.current = false
-      leaveAtRelease.current = null
-      clearTimeout(timer.current)
+      pressingRef.current = false
+      pressedOutsideRef.current = false
+      leaveAtReleaseRef.current = null
+      clearTimeout(timerRef.current)
     }
   }, [watching])
 
   return {
     onFocus: (event) => {
-      field.current = event.currentTarget
+      fieldRef.current = event.currentTarget
       // The press that opened the field, or one before focus came back, left nothing.
-      if (!pressing.current) pressedOutside.current = false
+      if (!pressingRef.current) pressedOutsideRef.current = false
     },
     onBlur: (event) => {
       const left = event.currentTarget
@@ -84,14 +85,14 @@ export function useLeaveAfterPress(
       if (to instanceof Node && left.contains(to)) return
       // The window lost focus, not the field, which has it back on return.
       if (!document.hasFocus()) return
-      if (!pressedOutside.current && !tabbing.current) return
+      if (!pressedOutsideRef.current && !tabbingRef.current) return
       const leaveSoon = () => {
-        clearTimeout(timer.current)
-        timer.current = setTimeout(() => {
-          if (!left.contains(document.activeElement)) latestOnLeave.current()
+        clearTimeout(timerRef.current)
+        timerRef.current = setTimeout(() => {
+          if (!left.contains(document.activeElement)) latestOnLeaveRef.current()
         })
       }
-      if (pressing.current) leaveAtRelease.current = leaveSoon
+      if (pressingRef.current) leaveAtReleaseRef.current = leaveSoon
       else leaveSoon()
     },
   }

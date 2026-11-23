@@ -49,7 +49,7 @@ export function NavigationSearchProvider({
   const [said, setSaid] = useState({ text: "", times: 0 })
   // Whether the count was pressed; `onlyChanged` says whether it narrows.
   const [pressed, setPressed] = useState(false)
-  const focusOnShow = useRef<NavigationFocusTarget | null>(null)
+  const focusOnShowRef = useRef<NavigationFocusTarget | null>(null)
   const { changes } = usePendingChanges()
   // Fewer than two roadmaps with changes leave nothing to narrow to (STY-063 S4).
   if (pressed && changes.size < 2) setPressed(false)
@@ -137,11 +137,11 @@ export function NavigationSearchProvider({
       families.toggleAll()
     },
     requestFocus: (target) => {
-      focusOnShow.current = target
+      focusOnShowRef.current = target
     },
     takeFocusRequest: (target) => {
-      const takes = focusOnShow.current === target
-      if (takes) focusOnShow.current = null
+      const takes = focusOnShowRef.current === target
+      if (takes) focusOnShowRef.current = null
       return takes
     },
   }

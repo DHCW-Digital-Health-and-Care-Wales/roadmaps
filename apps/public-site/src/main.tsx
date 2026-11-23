@@ -7,8 +7,8 @@ import "@fontsource/roboto/400.css"
 import "@fontsource/roboto/500.css"
 import "@fontsource/roboto/700.css"
 import "./index.css"
-import App from "./App.tsx"
-import { LanguageProvider } from "./components/LanguageProvider"
+import { App } from "./app.tsx"
+import { LanguageProvider } from "./components/language-provider"
 import { preferredLang } from "./lib/i18n"
 import {
   orgFilterFromSearch,
@@ -49,7 +49,9 @@ if (route.lang === null && route.slug === null) {
 } else {
   // The browser's own fragment scroll can run before this render adds the target.
   // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the target must exist before scrolling
-  flushSync(() => createRoot(rootElement).render(app))
+  flushSync(() => {
+    createRoot(rootElement).render(app)
+  })
   if (hash.length > 1) {
     // Instant, like the browser's own jump; the page's smooth scrolling would animate from the top.
     document

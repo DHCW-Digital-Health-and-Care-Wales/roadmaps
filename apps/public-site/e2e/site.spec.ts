@@ -17,6 +17,7 @@ const roadmaps = JSON.parse(
   readFileSync(new URL("fixtures/roadmaps.json", import.meta.url), "utf8"),
 ) as SnapshotRoadmap[]
 const [first] = roadmaps
+if (!first) throw new Error("The example data has no roadmap")
 const title = first.meta.title.en
 // Roadmap pages put the family in front of the title.
 const fullTitle = (roadmap: SnapshotRoadmap) =>
@@ -197,9 +198,10 @@ test.describe("keyboard", () => {
       await expect(link).toHaveCSS("outline-style", "solid")
       expect(
         await link.evaluate((element) => {
-          const sibling = Array.from(element.parentElement!.children).find(
-            (child) => child !== element,
-          )!
+          const sibling = Array.from(
+            element.parentElement?.children ?? [],
+          ).find((child) => child !== element)
+          if (!sibling) throw new Error("The link has no sibling")
           return (
             getComputedStyle(element).position === "relative" &&
             Number(getComputedStyle(element).zIndex) >
@@ -303,9 +305,9 @@ test.describe("organisation filter", () => {
       .getByRole("button", { name: "Filter by Cardiff and Vale" })
       .first()
     // Below the sticky header, with filtered-out items above it.
-    await pill.evaluate((element) =>
-      element.scrollIntoView({ block: "center", behavior: "instant" }),
-    )
+    await pill.evaluate((element) => {
+      element.scrollIntoView({ block: "center", behavior: "instant" })
+    })
     const before = await top(pill)
 
     await pill.click()
@@ -333,9 +335,9 @@ test.describe("organisation filter", () => {
     const show = section.getByRole("button", { name: "Show 1 hidden item" })
     // The button just below the header, with the section's heading above the
     // screen and filtered-out items above that.
-    await show.evaluate((element) =>
-      element.scrollIntoView({ block: "start", behavior: "instant" }),
-    )
+    await show.evaluate((element) => {
+      element.scrollIntoView({ block: "start", behavior: "instant" })
+    })
     expect(await top(section.getByRole("heading").first())).toBeLessThan(0)
     const before = await top(section)
 
@@ -370,11 +372,9 @@ test.describe("organisation filter", () => {
     async ({ page }) => {
       await page.goto(`en/${first.slug}/?org=cavuhb`)
       await withoutScrollAnchoring(page)
-      await page
-        .locator("#roadmap")
-        .evaluate((element) =>
-          element.scrollIntoView({ block: "start", behavior: "instant" }),
-        )
+      await page.locator("#roadmap").evaluate((element) => {
+        element.scrollIntoView({ block: "start", behavior: "instant" })
+      })
       // The first card on screen, which the filtered-out item above would move.
       const card = page.getByRole("article").filter({
         has: page.getByRole("heading", {
@@ -404,8 +404,9 @@ test.describe("organisation filter", () => {
         // The strip under the header doesn't cover the top of the page.
         expect(
           await page.evaluate(() => {
-            const header = document.querySelector("header")!
-            const intro = document.querySelector("main section")!
+            const header = document.querySelector("header")
+            const intro = document.querySelector("main section")
+            if (!header || !intro) throw new Error("The page has no header")
             return (
               intro.getBoundingClientRect().top +
                 parseFloat(getComputedStyle(intro).paddingTop) >
@@ -463,7 +464,8 @@ test.describe("short screens, such as 400% zoom", () => {
     // With the filter strip, whose taller-header offsets this overrides.
     await page.goto(`en/${first.slug}/?org=cavuhb`)
     const roadmapTop = await page.evaluate(() => {
-      const roadmap = document.getElementById("roadmap")!
+      const roadmap = document.getElementById("roadmap")
+      if (!roadmap) throw new Error("The page has no roadmap")
       roadmap.scrollIntoView({ behavior: "instant" })
       return roadmap.getBoundingClientRect().top
     })

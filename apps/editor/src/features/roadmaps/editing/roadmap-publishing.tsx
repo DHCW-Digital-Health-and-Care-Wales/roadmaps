@@ -76,8 +76,8 @@ export function RoadmapPublishing({
   // Open until closed, though deciding the last field drops the refusal it reviews.
   const [reviewing, setReviewing] = useState(false)
   // "Publish changes" in the review: the publish dialog opens once the review has gone.
-  const publishAfterReview = useRef(false)
-  const publishButton = useRef<HTMLButtonElement>(null)
+  const publishAfterReviewRef = useRef(false)
+  const publishButtonRef = useRef<HTMLButtonElement>(null)
 
   const changes = snapshot.changes.get(roadmap.id)
   const count = countChanges(changes)
@@ -161,7 +161,7 @@ export function RoadmapPublishing({
             <PendingBar
               action={action}
               count={count}
-              publishButton={publishButton}
+              publishButton={publishButtonRef}
               publishHeld={publishing || deciding}
               publishing={publishing}
               discardHeld={!canDiscard}
@@ -181,7 +181,9 @@ export function RoadmapPublishing({
         // Undecided, back to "Review the changes"; decided, to Publish, or to the
         // roadmap's title once nothing is left (D16, D18, D22).
         finalFocus={() =>
-          deciding ? true : (publishButton.current ?? heading.current ?? true)
+          deciding
+            ? true
+            : (publishButtonRef.current ?? heading.current ?? true)
         }
         action={action}
         conflicts={open}
@@ -191,13 +193,13 @@ export function RoadmapPublishing({
         onKeepMine={decide(keepMine)}
         onUseTheirs={decide(takeTheirs)}
         onPublish={() => {
-          publishAfterReview.current = true
+          publishAfterReviewRef.current = true
           setReviewing(false)
         }}
         onClosed={() => {
-          if (!publishAfterReview.current) return
-          publishAfterReview.current = false
-          ask(publishButton.current)
+          if (!publishAfterReviewRef.current) return
+          publishAfterReviewRef.current = false
+          ask(publishButtonRef.current)
         }}
       />
       <PublishDialog
@@ -208,7 +210,7 @@ export function RoadmapPublishing({
         markUpdated={markUpdated}
         onMarkUpdatedChange={setMarkUpdated}
         notice={() => outcomeNotice.current}
-        returnTo={() => publishButton.current}
+        returnTo={() => publishButtonRef.current}
         onConfirm={confirm}
         onCancel={() => {
           setConfirming(false)

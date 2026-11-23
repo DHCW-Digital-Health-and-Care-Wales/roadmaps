@@ -25,7 +25,7 @@ export function NavigationSearchBox({
 }: NavigationSearchBoxProps) {
   const { t } = useTranslation()
   const search = useNavigationSearch()
-  const input = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   if (search.groups === null) return null
 
   if (form === "rail") {
@@ -47,7 +47,7 @@ export function NavigationSearchBox({
 
   const clear = () => {
     search.clear()
-    input.current?.focus()
+    inputRef.current?.focus()
   }
   return (
     <div className="relative min-w-0 flex-1">
@@ -57,7 +57,7 @@ export function NavigationSearchBox({
       />
       <Input
         ref={(element) => {
-          input.current = element
+          inputRef.current = element
           if (element && search.takeFocusRequest("search")) element.focus()
         }}
         type="search"

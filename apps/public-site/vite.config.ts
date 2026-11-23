@@ -28,15 +28,22 @@ function roadmapsData(file: string): Plugin {
     configureServer(server) {
       const route = /^\/product-roadmaps\/([^/]+)\/roadmap\.json$/
       server.middlewares.use((req, res, next) => {
-        const slug = route.exec((req.url ?? "").split("?")[0])?.[1]
-        if (!slug || !existsSync(file)) return next()
+        const [path = ""] = (req.url ?? "").split("?")
+        const slug = route.exec(path)?.[1]
+        if (!slug || !existsSync(file)) {
+          next()
+          return
+        }
         const roadmaps = JSON.parse(readFileSync(file, "utf8")) as {
           slug: string
         }[]
         const roadmap = roadmaps.find(
           (r) => r.slug === decodeURIComponent(slug),
         )
-        if (!roadmap) return next()
+        if (!roadmap) {
+          next()
+          return
+        }
         res.setHeader("Content-Type", "application/json")
         res.end(`${JSON.stringify(roadmap, null, 2)}\n`)
       })
@@ -53,18 +60,25 @@ function pagesNotFound(): Plugin {
       const dist = resolve(server.config.root, server.config.build.outDir)
       const { base } = server.config
       server.middlewares.use((req, res, next) => {
-        const path = (req.url ?? "").split("?")[0]
-        if (!path.startsWith(base)) return next()
+        const [path = ""] = (req.url ?? "").split("?")
+        if (!path.startsWith(base)) {
+          next()
+          return
+        }
         let file: string
         try {
           file = resolve(dist, decodeURIComponent(path.slice(base.length)))
         } catch {
-          return next()
+          next()
+          return
         }
         const exists =
           existsSync(file) &&
           (statSync(file).isFile() || existsSync(join(file, "index.html")))
-        if (exists || !file.startsWith(dist)) return next()
+        if (exists || !file.startsWith(dist)) {
+          next()
+          return
+        }
         res.statusCode = 404
         res.setHeader("Content-Type", "text/html")
         res.end(readFileSync(join(dist, "404.html")))

@@ -159,11 +159,11 @@ export function EditableItem({
   const editable = changeable && !removal
   // A removal sent can't be called back, so "Undo removal" waits too.
   const droppable = removal ? !publishing : changeable
-  const ownEditButton = useRef<HTMLButtonElement>(null)
-  const editButton = dialogOpener ?? ownEditButton
-  const moveButton = useRef<HTMLButtonElement>(null)
-  const removeButton = useRef<HTMLButtonElement>(null)
-  const undoRemovalButton = useRef<HTMLButtonElement>(null)
+  const ownEditButtonRef = useRef<HTMLButtonElement>(null)
+  const editButton = dialogOpener ?? ownEditButtonRef
+  const moveButtonRef = useRef<HTMLButtonElement>(null)
+  const removeButtonRef = useRef<HTMLButtonElement>(null)
+  const undoRemovalButtonRef = useRef<HTMLButtonElement>(null)
   const title = localise(shown.title, language)
   const pending = isNew ? "new" : removal ? "removed" : entry && "changed"
   // A layout effect, so focus lands before the shell would rescue it to `<main>`.
@@ -171,9 +171,9 @@ export function EditableItem({
     if (focusRequest === undefined) return
     const control = {
       edit: editButton,
-      move: moveButton,
-      remove: removeButton,
-      "undo-removal": undoRemovalButton,
+      move: moveButtonRef,
+      remove: removeButtonRef,
+      "undo-removal": undoRemovalButtonRef,
     }[focusRequest]
     // Focus on Move follows a move, whose mark scrolls the page to the item, gliding.
     control.current?.focus({ preventScroll: focusRequest === "move" })
@@ -181,28 +181,28 @@ export function EditableItem({
   }, [focusRequest, editButton, onFocused])
   // The page scrolls to each mark once, as focus first comes to the item, and stops
   // following the bars once the item no longer carries it.
-  const revealing = useRef<Revealing | null>(null)
+  const revealingRef = useRef<Revealing | null>(null)
   // A move that travels is drawn a moment after it is chosen, and the menu may have
   // handed focus back to Move by then: focus comes to the item before its mark does, so
   // the mark starts the reveal (STY-072). After the focus request, which reveals once
   // it moves focus.
   useLayoutEffect(() => {
-    const item = moveButton.current?.closest("li")
+    const item = moveButtonRef.current?.closest("li")
     if (mark && item?.contains(document.activeElement))
-      startReveal(revealing, mark, item)
+      startReveal(revealingRef, mark, item)
   }, [mark])
   useEffect(
     () => () => {
       // Its own reveal only: the next mark's may have started before this runs.
-      if (mark && revealing.current?.mark === mark) {
-        revealing.current.stop()
-        revealing.current = null
+      if (mark && revealingRef.current?.mark === mark) {
+        revealingRef.current.stop()
+        revealingRef.current = null
       }
     },
     [mark],
   )
   const reveal = (event: FocusEvent<HTMLLIElement>) => {
-    if (mark) startReveal(revealing, mark, event.currentTarget)
+    if (mark) startReveal(revealingRef, mark, event.currentTarget)
   }
   const label = (shortens: boolean) =>
     mark && <MovedLabel move={mark.move} shortens={shortens} />
@@ -266,7 +266,7 @@ export function EditableItem({
       position={
         order && order.count > 1 ? { ...order, held: publishing } : undefined
       }
-      button={moveButton}
+      button={moveButtonRef}
       disabled={!editable}
       iconOnly={iconOnly}
       onMove={move}
@@ -281,11 +281,11 @@ export function EditableItem({
       subject={title}
       disabled={publishing}
       size="sm"
-      button={removeButton}
+      button={removeButtonRef}
       onRemove={remove}
     />
   )
-  const dropButton = removal ? undoRemovalButton : undefined
+  const dropButton = removal ? undoRemovalButtonRef : undefined
 
   if (view === "compact") {
     return (

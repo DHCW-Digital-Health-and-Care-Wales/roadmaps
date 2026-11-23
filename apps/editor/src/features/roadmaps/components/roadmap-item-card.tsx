@@ -53,6 +53,7 @@ export function RoadmapItemCard({
 }: RoadmapItemCardProps) {
   const language = useLanguage()
   return (
+    // eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions -- onFocus only observes focus bubbling up from the card's controls.
     <li
       className={cn(
         "flex flex-col gap-3 border bg-card p-4 text-card-foreground",
@@ -72,7 +73,7 @@ export function RoadmapItemCard({
         )}
         <ItemFields item={item} organisations={organisations} />
       </div>
-      {actions && <div className="mt-auto pt-1">{actions}</div>}
+      {Boolean(actions) && <div className="mt-auto pt-1">{actions}</div>}
     </li>
   )
 }

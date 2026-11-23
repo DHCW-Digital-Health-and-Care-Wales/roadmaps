@@ -24,6 +24,7 @@ export function useRowIcons(
       const [buttons = 0, ...names] = [...probe.children].map((part) =>
         Math.ceil(part.getBoundingClientRect().width),
       )
+      // eslint-disable-next-line @eslint-react/set-state-in-effect -- Measures the laid-out list, which only exists after render.
       setIcons(names.some((name) => name + ROW_GAP + buttons > room))
     }
     fit()

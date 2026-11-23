@@ -58,13 +58,14 @@ Rules no lint catches:
 
 ## Conventions
 
-- TypeScript strict: no `any`; a non-null assertion carries a comment justifying it.
-- Named exports, kebab-case file names, one concept per module, function components.
-- Tests sit beside the code as `*.test.ts(x)`; E2E lives in `apps/editor/tests/e2e/`.
-  Every file in `apps/editor/src/routes/` becomes a route, so route tests live
-  elsewhere; commit the generated `apps/editor/src/routeTree.gen.ts` when routes change.
+Follow `apps/typescript-react-conventions.md`, the TypeScript and React conventions both
+apps share, and these, the editor's own:
+
+- E2E lives in `apps/editor/tests/e2e/`. Every file in `apps/editor/src/routes/` becomes
+  a route, so route tests live elsewhere; commit the generated
+  `apps/editor/src/routeTree.gen.ts` when routes change.
 - The seams of the root guide's test rule, lowest first: a domain or editing-state
-  function, a component, a page, the app; a table-driven test is an `it.each`. A rule
+  function, a component, a page, the app. A rule
   every repository adapter must honour keeps all its cases in the repository contract
   (ADR-002), whatever a domain test also holds. What earns a Playwright spec is
   `apps/editor/tests/e2e/AGENTS.md` (_What earns an E2E test_).
@@ -73,8 +74,6 @@ Rules no lint catches:
 - Route every user-facing string (text, aria-labels, notices, titles) through `t()`, in
   English and Welsh (ADR-008); invoke the `copywriter` skill before writing copy.
   Domain and infrastructure emit codes, never copy.
-- Put a `{" "}` text node before a `sr-only` span that continues a visible name: name
-  computation drops a leading space inside the span ("Edit Minimal card").
 - Style only with the semantic tokens of `apps/editor/src/styles/globals.css`
   (ADR-010), and read `apps/editor/src/styles/AGENTS.md` before adding a token. Focus is
   `focus-visible:focus-fill` (buttons, button-styled links, menu items), `focus-ring`

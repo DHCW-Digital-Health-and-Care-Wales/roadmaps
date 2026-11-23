@@ -69,7 +69,7 @@ export function usePlacementNavigation(
     [summaries],
   )
   const top = usePinnedHeight("top")
-  const lastJump = useRef<Jump | null>(null)
+  const lastJumpRef = useRef<Jump | null>(null)
   const [current, setCurrent] = useState<JumpTarget | null>(null)
 
   useEffect(() => {
@@ -79,14 +79,14 @@ export function usePlacementNavigation(
       frame = requestAnimationFrame(() => {
         // A scroll that moved the page from where a jump left it ends the jump, as
         // does its target leaving the page (the unplaced items, once placed).
-        const jumped = lastJump.current
+        const jumped = lastJumpRef.current
         if (
           jumped?.scrollY !== window.scrollY ||
           !targets.includes(jumped.target)
         ) {
-          lastJump.current = null
+          lastJumpRef.current = null
         }
-        setCurrent(lastJump.current?.target ?? targetAtTop(targets, top))
+        setCurrent(lastJumpRef.current?.target ?? targetAtTop(targets, top))
       })
     }
     follow()
@@ -101,14 +101,14 @@ export function usePlacementNavigation(
 
   // The stuck header's height is known, or has changed: the jump's heading goes under it.
   useLayoutEffect(() => {
-    const jump = lastJump.current
-    if (jump) lastJump.current = alignHeading(jump.target, top)
+    const jump = lastJumpRef.current
+    if (jump) lastJumpRef.current = alignHeading(jump.target, top)
   }, [top])
 
   const align = useCallback(
     (target: JumpTarget) => {
-      lastJump.current = alignHeading(target, top)
-      if (lastJump.current) setCurrent(target)
+      lastJumpRef.current = alignHeading(target, top)
+      if (lastJumpRef.current) setCurrent(target)
     },
     [top],
   )

@@ -47,6 +47,7 @@ export function travel(kind: TravelKind, update: () => void): void {
   root.setAttribute(TRAVELLING, "")
   const transition = document.startViewTransition({
     update: () => {
+      // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- The view transition captures the new state, so the DOM must update synchronously.
       flushSync(update)
     },
     types: [TRAVEL_TYPES[kind]],

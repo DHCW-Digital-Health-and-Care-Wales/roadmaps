@@ -84,15 +84,15 @@ export function usePublishRoadmapChanges(
  */
 export function useReadAgain(roadmapId: string) {
   const queryClient = useQueryClient()
-  const read = useRef(true)
+  const readRef = useRef(true)
   return {
     readAgain: async () => {
-      read.current = await readBackAfterWrite(
+      readRef.current = await readBackAfterWrite(
         queryClient,
         roadmapPageReads(roadmapId),
       )
     },
-    readBack: () => read.current,
+    readBack: () => readRef.current,
   }
 }
 

@@ -3,7 +3,7 @@ import {
   type MouseEvent,
   type ReactNode,
   type RefObject,
-  useContext,
+  use,
   useRef,
 } from "react"
 import { useTranslation } from "react-i18next"
@@ -42,8 +42,8 @@ export interface NavigationMenuButtonProps {
  */
 export function NavigationMenuButton({ variant }: NavigationMenuButtonProps) {
   const { t } = useTranslation()
-  const drawer = useContext(NavigationDrawerContext)
-  const unpublished = useContext(UnpublishedRoadmapsContext)
+  const drawer = use(NavigationDrawerContext)
+  const unpublished = use(UnpublishedRoadmapsContext)
   if (!drawer) return null
   return (
     <SheetTrigger
@@ -113,20 +113,20 @@ export function NavigationDrawer({
   children,
 }: NavigationDrawerProps) {
   const { t } = useTranslation()
-  const chosen = useRef(false)
-  const closeButton = useRef<HTMLButtonElement>(null)
+  const chosenRef = useRef(false)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   // Back to the menu button that opened it, unless a link was chosen. Read more than once
   // as it closes, so the choice clears only as it opens. Base UI would move on from
   // `<main>` to its first tabbable element, so focus is moved to the page once closed.
-  const returnToMenuButton = () => !chosen.current
+  const returnToMenuButton = () => !chosenRef.current
   return (
     <Sheet
       handle={handle}
       onOpenChange={(open) => {
-        if (open) chosen.current = false
+        if (open) chosenRef.current = false
       }}
       onOpenChangeComplete={(open) => {
-        if (!open && chosen.current)
+        if (!open && chosenRef.current)
           page.current?.focus({ preventScroll: true })
       }}
     >
@@ -134,10 +134,10 @@ export function NavigationDrawer({
         className="border-r border-sidebar-border bg-sidebar text-sidebar-foreground"
         onClick={(event) => {
           if (!isPlainLinkClick(event)) return
-          chosen.current = true
+          chosenRef.current = true
           handle.close()
         }}
-        initialFocus={closeButton}
+        initialFocus={closeButtonRef}
         finalFocus={returnToMenuButton}
       >
         <SheetTitle className="sr-only">
@@ -148,7 +148,7 @@ export function NavigationDrawer({
             <>
               {search}
               <SheetClose
-                ref={closeButton}
+                ref={closeButtonRef}
                 render={
                   <Button
                     variant="header"

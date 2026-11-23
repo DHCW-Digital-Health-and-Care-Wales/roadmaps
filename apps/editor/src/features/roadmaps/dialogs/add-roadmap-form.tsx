@@ -67,11 +67,11 @@ export function AddRoadmapForm({
     .map(({ name }) => name)
   if (unoffered.length > 0) form.dropChoices(unoffered)
 
-  const controls = useRef(new Map<RefusableField, HTMLElement>())
+  const controlsRef = useRef(new Map<RefusableField, HTMLElement>())
   const controlRef =
     (field: RefusableField) => (control: HTMLElement | null) => {
-      if (control) controls.current.set(field, control)
-      else controls.current.delete(field)
+      if (control) controlsRef.current.set(field, control)
+      else controlsRef.current.delete(field)
     }
   // Again once the field asked for is shown as it is, its list gone: the select that
   // had focus went with the list.
@@ -79,7 +79,7 @@ export function AddRoadmapForm({
     ({ name, fixed }) => name === focusRequest?.field && fixed !== undefined,
   )
   useEffect(() => {
-    if (focusRequest) controls.current.get(focusRequest.field)?.focus()
+    if (focusRequest) controlsRef.current.get(focusRequest.field)?.focus()
   }, [focusRequest, requestedIsFixed])
 
   const add = useSessionAction(form.submit)

@@ -22,12 +22,12 @@ export interface OpeningFieldProps {
   /** Said of the field under its label, shut or open (STY-038 S5). */
   hint?: string | undefined
   /**
-   * The field's controls, drawn only while it is open; `focusOnOpen` is the `ref` of
+   * The field's controls, drawn only while it is open; `setControl` is the `ref` of
    * the one that takes focus as it opens, which is whenever that control is first
    * drawn, so give it to one that stays for as long as the field is open. What the
    * controls change is the caller's to hold, so shutting the field keeps it.
    */
-  children: (focusOnOpen: (control: HTMLElement | null) => void) => ReactNode
+  children: (setControl: (control: HTMLElement | null) => void) => ReactNode
   /**
    * Called as the field is shut by its button, for a field that holds more than its
    * controls show as kept, such as text typed but not yet added (STY-037 S19).
@@ -58,9 +58,9 @@ export function OpeningField({
   const labelId = `${id}-label`
   const hintId = hint ? `${id}-hint` : undefined
   const [open, setOpen] = useState(false)
-  const button = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   // The control is drawn only while the field is open, so it arrives as the field opens.
-  const [control, focusOnOpen] = useState<HTMLElement | null>(null)
+  const [control, setControl] = useState<HTMLElement | null>(null)
   useEffect(() => {
     control?.focus()
   }, [control])
@@ -74,7 +74,7 @@ export function OpeningField({
           onShut?.()
           // Not every browser focuses a button it is pressed with (Safari), and the
           // control that held focus is about to go.
-          button.current?.focus()
+          buttonRef.current?.focus()
         }
         setOpen(opening)
       }}
@@ -87,7 +87,7 @@ export function OpeningField({
         <CollapsibleTrigger
           render={
             <Button
-              ref={button}
+              ref={buttonRef}
               type="button"
               variant="secondary"
               size="sm"
@@ -119,7 +119,7 @@ export function OpeningField({
           />
         }
       >
-        {children(focusOnOpen)}
+        {children(setControl)}
       </CollapsibleContent>
     </Collapsible>
   )

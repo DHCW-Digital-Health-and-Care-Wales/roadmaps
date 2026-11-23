@@ -1,0 +1,23 @@
+// The compiler options every TypeScript config in the workspace shares, the editor's
+// and the public site's among them (ADR-016, STY-095 amendments). Each config extends
+// it and adds its own target, libraries, module resolution and types.
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Type checking */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "erasableSyntaxOnly": true
+  }
+}

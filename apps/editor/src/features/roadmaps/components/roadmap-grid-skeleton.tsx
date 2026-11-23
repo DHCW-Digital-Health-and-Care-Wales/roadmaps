@@ -18,7 +18,7 @@ export function RoadmapGridSkeleton() {
       <CardGrid aria-hidden="true" evenRows>
         {nameWidthClasses.map((widthClasses, index) => (
           <li
-            // Static placeholders: the index is a stable key.
+            // eslint-disable-next-line @eslint-react/no-array-index-key -- Static placeholders: the index is a stable key.
             key={index}
             className="flex min-h-18 items-stretch gap-3.5 border bg-card p-4 shadow-card-bar"
           >

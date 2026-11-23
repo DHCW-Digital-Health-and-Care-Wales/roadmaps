@@ -42,7 +42,7 @@ export function PlacementHeading({
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const snapshot = usePendingChanges()
-  const heading = useRef<HTMLHeadingElement>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
   const name = t(`roadmaps.items.placements.${placement}`)
   const reordered = hasPendingOrder(
     snapshot.changes.get(roadmapId)?.orders,
@@ -57,7 +57,7 @@ export function PlacementHeading({
     travel("within", () => {
       store.update(roadmapId, (changes) => undoOrder(changes, placement))
       onUndone(placement)
-      heading.current?.focus()
+      headingRef.current?.focus()
       onAnnounce(t("roadmaps.edit.order.undone", { placement: name }))
     })
   }
@@ -66,7 +66,7 @@ export function PlacementHeading({
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
       <h2
         id={id}
-        ref={heading}
+        ref={headingRef}
         tabIndex={-1}
         className="text-heading-m outline-none focus-visible:focus-ring"
       >

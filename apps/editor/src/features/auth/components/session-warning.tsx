@@ -78,7 +78,7 @@ function SessionWarningContent({
   onDisconnect,
 }: SessionWarningContentProps) {
   const { t } = useTranslation()
-  const stay = useRef<HTMLButtonElement>(null)
+  const stayRef = useRef<HTMLButtonElement>(null)
   useReturnFocus()
   // Opening reads the title and description, the time included, so nothing is announced
   // until the next moment. Then the time left as that moment was reached, which a
@@ -93,7 +93,7 @@ function SessionWarningContent({
   }
 
   return (
-    <AlertDialogContent initialFocus={stay} finalFocus={false}>
+    <AlertDialogContent initialFocus={stayRef} finalFocus={false}>
       <AlertDialogHeader className="pr-8">
         <AlertDialogTitle>{t("auth.sessionWarning.title")}</AlertDialogTitle>
         <AlertDialogDescription>
@@ -110,7 +110,7 @@ function SessionWarningContent({
           })}
       </p>
       <AlertDialogFooter>
-        <Button ref={stay} onClick={onStay}>
+        <Button ref={stayRef} onClick={onStay}>
           {t("auth.sessionWarning.stayConnected")}
         </Button>
         <Button variant="secondary" onClick={onDisconnect}>

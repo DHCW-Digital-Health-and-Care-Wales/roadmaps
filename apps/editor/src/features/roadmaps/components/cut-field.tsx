@@ -81,6 +81,7 @@ function useMeasure(
     if (!current) return
     let ended = false
     const read = () => {
+      // eslint-disable-next-line @eslint-react/set-state-in-effect -- Measures the laid-out element, which only exists after render.
       if (!ended) setMeasured(measure(current))
     }
     read()
@@ -147,13 +148,13 @@ export interface CutFieldProps {
  */
 export function CutField({ subject, children }: CutFieldProps) {
   const id = useId()
-  const value = useRef<HTMLDivElement>(null)
+  const valueRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const runsPast = useMeasure(value, children, textRunsPastCut) !== ""
+  const runsPast = useMeasure(valueRef, children, textRunsPastCut) !== ""
 
   return (
     <>
-      <div ref={value} id={id} className={cn(!open && "line-clamp-3")}>
+      <div ref={valueRef} id={id} className={cn(!open && "line-clamp-3")}>
         {children}
       </div>
       {(runsPast || open) && (
@@ -186,15 +187,15 @@ export interface CutDetailsProps {
  */
 export function CutDetails({ details, subject }: CutDetailsProps) {
   const id = useId()
-  const list = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const cuts = useMeasure(list, JSON.stringify(details), detailCuts)
+  const cuts = useMeasure(listRef, JSON.stringify(details), detailCuts)
   const cutAtThree = cuts !== "" && !open
 
   return (
     <>
       <div
-        ref={list}
+        ref={listRef}
         id={id}
         className={cn(cutAtThree && "max-h-[calc(3*1lh)] overflow-hidden")}
       >

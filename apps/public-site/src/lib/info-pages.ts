@@ -9,7 +9,7 @@ import type { Localised } from "./types"
  */
 export const INFO_PAGES: Record<
   InfoPageId,
-  { heading: Localised; paragraphs: Localised[] }
+  { heading: Localised; paragraphs: [Localised, ...Localised[]] }
 > = {
   accessibility: {
     heading: UI.accessibilityHeading,

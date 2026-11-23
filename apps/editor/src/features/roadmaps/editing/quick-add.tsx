@@ -86,29 +86,29 @@ export function QuickAdd({
   const [title, setTitle] = useState("")
   // Bumped by each item added, so the field is brought into view again below it.
   const [added, setAdded] = useState(0)
-  const entry = useRef<HTMLLIElement>(null)
-  const field = useRef<HTMLInputElement>(null)
-  const control = useRef<HTMLButtonElement>(null)
+  const entryRef = useRef<HTMLLIElement>(null)
+  const fieldRef = useRef<HTMLInputElement>(null)
+  const controlRef = useRef<HTMLButtonElement>(null)
   // Whether the control takes focus back as the field closes: not when it was left.
-  const returnFocus = useRef(false)
+  const returnFocusRef = useRef(false)
   const placementName = t(`roadmaps.items.placements.${placement}`)
 
   useEffect(() => {
     if (open) {
-      field.current?.focus()
-    } else if (returnFocus.current) {
-      returnFocus.current = false
-      control.current?.focus()
+      fieldRef.current?.focus()
+    } else if (returnFocusRef.current) {
+      returnFocusRef.current = false
+      controlRef.current?.focus()
     }
   }, [open])
   useEffect(() => {
     // On a phone the keyboard covers the foot of the screen: the title, Add and Cancel
     // come into view above it (S7).
-    if (open) entry.current?.scrollIntoView({ block: "nearest" })
+    if (open) entryRef.current?.scrollIntoView({ block: "nearest" })
   }, [open, added])
 
   const close = (focusControl: boolean) => {
-    returnFocus.current = focusControl
+    returnFocusRef.current = focusControl
     setTitle("")
     setOpen(false)
   }
@@ -123,7 +123,7 @@ export function QuickAdd({
     setTitle("")
     setAdded((count) => count + 1)
     // Back in the title for the next, as after Add chosen by keyboard.
-    field.current?.focus()
+    fieldRef.current?.focus()
     onAnnounce(
       t("roadmaps.items.quickAdd.added", {
         title: tidied,
@@ -133,9 +133,9 @@ export function QuickAdd({
   }
   const expand = () => {
     // Back from a dialog that added nothing, the cursor is at the title's end (S4).
-    field.current?.setSelectionRange(title.length, title.length)
+    fieldRef.current?.setSelectionRange(title.length, title.length)
     // The dialog goes back to the field, else to the control once the field has closed.
-    onExpand(firstMounted(field, control), {
+    onExpand(firstMounted(fieldRef, controlRef), {
       start: { title: tidyTitle(title), placement },
       onAdded: () => {
         close(false)
@@ -147,7 +147,7 @@ export function QuickAdd({
   })
   // A press anywhere in the field but its title keeps focus in the title.
   const keepFocus = (event: SyntheticEvent) => {
-    if (event.target !== field.current) event.preventDefault()
+    if (event.target !== fieldRef.current) event.preventDefault()
   }
 
   const cards = view === "cards"
@@ -160,7 +160,7 @@ export function QuickAdd({
         )}
       >
         <button
-          ref={control}
+          ref={controlRef}
           type="button"
           className={cn(
             "flex flex-1 cursor-pointer items-center text-muted-foreground outline-none hover:text-foreground focus-visible:focus-ring",
@@ -195,7 +195,7 @@ export function QuickAdd({
     // buttons alike; each of those is a control a keyboard reaches.
     // eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions
     <li
-      ref={entry}
+      ref={entryRef}
       className={cn(
         cards
           ? "border border-dashed border-input bg-card p-4"
@@ -220,7 +220,7 @@ export function QuickAdd({
       >
         <div className={cn("relative", !cards && "md:flex-1")}>
           <Input
-            ref={field}
+            ref={fieldRef}
             value={title}
             aria-label={t("roadmaps.items.quickAdd.field", {
               placement: placementName,

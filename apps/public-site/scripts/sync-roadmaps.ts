@@ -40,7 +40,7 @@ async function fetchTab(name?: string): Promise<Worksheet> {
   const type = response.headers.get("content-type") ?? ""
   if (!response.ok || !type.includes("text/csv")) {
     throw new Error(
-      `Unexpected ${response.status} (${type}) from ${url.href}; is the sheet shared as "Anyone with the link can view"?`,
+      `Unexpected ${String(response.status)} (${type}) from ${url.href}; is the sheet shared as "Anyone with the link can view"?`,
     )
   }
   return {
@@ -50,7 +50,9 @@ async function fetchTab(name?: string): Promise<Worksheet> {
 }
 
 const markdownCell = (text: string) =>
-  text.replace(/[&<>|]/g, (c) => (c === "|" ? "\\|" : `&#${c.charCodeAt(0)};`))
+  text.replace(/[&<>|]/g, (c) =>
+    c === "|" ? "\\|" : `&#${String(c.charCodeAt(0))};`,
+  )
 
 /**
  * Lists sheet warnings in the workflow run summary. GitHub only shows the
@@ -60,7 +62,7 @@ function reportWarnings() {
   const warnings = takeWarnings()
   if (warnings.length === 0 || !process.env.GITHUB_ACTIONS) return
   console.log(
-    `::warning title=Sheet check::${warnings.length} sheet warning(s); see the run summary`,
+    `::warning title=Sheet check::${String(warnings.length)} sheet warning(s); see the run summary`,
   )
   const summary = process.env.GITHUB_STEP_SUMMARY
   if (!summary) return
@@ -73,7 +75,7 @@ function reportWarnings() {
       "| --- | --- | --- |",
       ...warnings.map(
         (w) =>
-          `| ${markdownCell(w.sheet)} | ${w.row ?? ""} | ${markdownCell(w.message)} |`,
+          `| ${markdownCell(w.sheet)} | ${String(w.row ?? "")} | ${markdownCell(w.message)} |`,
       ),
       "",
     ].join("\n"),
@@ -107,7 +109,7 @@ try {
   mkdirSync(new URL("./", OUTPUT), { recursive: true })
   writeFileSync(OUTPUT, json)
   console.log(
-    `Wrote ${roadmaps.length} roadmaps: ${roadmaps.map((r) => r.sheetName).join(", ")}`,
+    `Wrote ${String(roadmaps.length)} roadmaps: ${roadmaps.map((r) => r.sheetName).join(", ")}`,
   )
 } finally {
   reportWarnings()

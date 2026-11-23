@@ -7,7 +7,7 @@
 import { spawnSync } from "node:child_process"
 import { resolveDevPorts } from "./dev-ports.ts"
 
-const base = `http://localhost:${resolveDevPorts().preview}/product-roadmaps/`
+const base = `http://localhost:${String(resolveDevPorts().preview)}/product-roadmaps/`
 const pages = ["en/", "cy/producta/"]
 
 const { status, error } = spawnSync(

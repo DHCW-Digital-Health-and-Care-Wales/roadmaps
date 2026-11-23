@@ -5,8 +5,8 @@
  */
 import { StrictMode } from "react"
 import { prerender } from "react-dom/static"
-import App from "./App"
-import { LanguageProvider } from "./components/LanguageProvider"
+import { App } from "./app"
+import { LanguageProvider } from "./components/language-provider"
 import { ROADMAP_INTRO } from "./lib/content"
 import { DEFAULT_LANGUAGE, LANGUAGES, t, type Lang } from "./lib/i18n"
 import { INFO_PAGES } from "./lib/info-pages"
@@ -165,6 +165,7 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
 
   // The site root shows the default landing page; src/main.tsx redirects with
   // JavaScript, and the <noscript> refresh does so without.
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the default language always has its landing page.
   const landing = languagePages.find(
     (page) => page.file === `${DEFAULT_LANGUAGE}/index.html`,
   )!

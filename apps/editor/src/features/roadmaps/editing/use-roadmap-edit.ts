@@ -29,7 +29,7 @@ export function useRoadmapEdit(roadmap: Roadmap, shown: Roadmap): RoadmapEdit {
     read: Roadmap
     shown: Roadmap
   } | null>(null)
-  const opener = useRef<HTMLElement>(null)
+  const openerRef = useRef<HTMLElement>(null)
 
   const close = () => {
     setOpened(null)
@@ -51,10 +51,10 @@ export function useRoadmapEdit(roadmap: Roadmap, shown: Roadmap): RoadmapEdit {
         close()
       },
       onClose: close,
-      opener,
+      opener: openerRef,
     },
     open: (from) => {
-      opener.current = from
+      openerRef.current = from
       setOpened({ read: roadmap, shown })
     },
   }

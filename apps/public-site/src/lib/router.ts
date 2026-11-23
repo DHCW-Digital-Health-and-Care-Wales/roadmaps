@@ -79,9 +79,13 @@ export function useView(): View {
       : viewFromSearch(window.location.search),
   )
   useEffect(() => {
-    const onPop = () => setView(viewFromSearch(window.location.search))
+    const onPop = () => {
+      setView(viewFromSearch(window.location.search))
+    }
     window.addEventListener("popstate", onPop)
-    return () => window.removeEventListener("popstate", onPop)
+    return () => {
+      window.removeEventListener("popstate", onPop)
+    }
   }, [])
   return view
 }
@@ -128,7 +132,9 @@ const sameOrgFilter = (a: OrgFilter, b: OrgFilter) =>
 
 const subscribePopState = (onChange: () => void) => {
   window.addEventListener("popstate", onChange)
-  return () => window.removeEventListener("popstate", onChange)
+  return () => {
+    window.removeEventListener("popstate", onChange)
+  }
 }
 
 // useSyncExternalStore needs the same object until the filter changes.
@@ -224,7 +230,9 @@ export function useRoute(server?: Route): Route {
       )
     }
     window.addEventListener("popstate", onPop)
-    return () => window.removeEventListener("popstate", onPop)
+    return () => {
+      window.removeEventListener("popstate", onPop)
+    }
   }, [])
   return route
 }

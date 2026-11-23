@@ -23,30 +23,32 @@ export function useDecisionFocus(
   open: readonly OpenConflict[],
   after: () => HTMLElement | null,
 ): DecisionFocus {
-  const keepMineButtons = useRef(new Map<string, HTMLButtonElement>())
-  const decidedAt = useRef<number | null>(null)
+  const keepMineButtonsRef = useRef(new Map<string, HTMLButtonElement>())
+  const decidedAtRef = useRef<number | null>(null)
 
   // Runs after the render the decision causes, once the conflict has closed.
   useLayoutEffect(() => {
-    const index = decidedAt.current
+    const index = decidedAtRef.current
     if (index === null) return
-    decidedAt.current = null
+    decidedAtRef.current = null
     const next = open[Math.min(index, open.length - 1)]
-    const target = next ? keepMineButtons.current.get(next.key) : after()
+    const target = next ? keepMineButtonsRef.current.get(next.key) : after()
     target?.focus()
   })
 
   return {
     keepMineRef: (key) => (button) => {
-      if (button) keepMineButtons.current.set(key, button)
-      else keepMineButtons.current.delete(key)
+      if (button) keepMineButtonsRef.current.set(key, button)
+      else keepMineButtonsRef.current.delete(key)
     },
     decided: (conflict) => {
-      decidedAt.current = open.findIndex((each) => each.conflict === conflict)
+      decidedAtRef.current = open.findIndex(
+        (each) => each.conflict === conflict,
+      )
     },
     firstOpen: () => {
       const [first] = open
-      return (first && keepMineButtons.current.get(first.key)) ?? null
+      return (first && keepMineButtonsRef.current.get(first.key)) ?? null
     },
   }
 }

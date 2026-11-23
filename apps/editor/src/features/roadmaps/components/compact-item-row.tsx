@@ -114,6 +114,7 @@ export function CompactItemRow({
       open={open}
       onOpenChange={setOpen}
       render={
+        // eslint-disable-next-line jsx-a11y-x/no-noninteractive-element-interactions -- onFocus only observes focus bubbling up from the row's controls.
         <li
           className={cn(
             // Opaque, as its list is, so it hides the rows it passes as it travels.
@@ -192,7 +193,7 @@ export function CompactItemRow({
                 <HorizonFlag writtenHorizon={horizon} cut={!open} />
               </div>
             )}
-            {(mark ?? tag) && (
+            {Boolean(mark ?? tag) && (
               <div className={cn("flex shrink-0 gap-2", ON_THE_LINE_CLASSES)}>
                 {mark}
                 {tag}
@@ -211,7 +212,7 @@ export function CompactItemRow({
                 <HorizonFlag writtenHorizon={horizon} />
               </div>
             )}
-            {(mark ?? tag) && (
+            {Boolean(mark ?? tag) && (
               <div className="flex flex-wrap gap-2">
                 {mark}
                 {tag}

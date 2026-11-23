@@ -169,15 +169,15 @@ export function EditForm<F extends string>({
   const [errors, setErrors] = useState<Partial<Record<F, FieldError>>>({})
   // Draws the form again, so a date field's limit is today's when its picker opens.
   const [, redraw] = useReducer((count: number) => count + 1, 0)
-  const controls = useRef(new Map<F, FieldControl>())
+  const controlsRef = useRef(new Map<F, FieldControl>())
   const controlRef = (name: F) => (control: FieldControl | null) => {
-    if (control) controls.current.set(name, control)
-    else controls.current.delete(name)
+    if (control) controlsRef.current.set(name, control)
+    else controlsRef.current.delete(name)
   }
   const firstField = fields[0]?.name
   useEffect(() => {
     if (takesFocus && firstField !== undefined) {
-      controls.current.get(firstField)?.focus()
+      controlsRef.current.get(firstField)?.focus()
     }
   }, [takesFocus, firstField])
 
@@ -195,7 +195,7 @@ export function EditForm<F extends string>({
           value: trimmed[field.name],
           opened: opened[field.name].trim(),
           badInput:
-            controls.current.get(field.name)?.validity.badInput ?? false,
+            controlsRef.current.get(field.name)?.validity.badInput ?? false,
         })
         return error ? [[field.name, error]] : []
       }),
@@ -203,7 +203,7 @@ export function EditForm<F extends string>({
     setErrors(found)
     const invalid = fields.find(({ name }) => found[name])
     if (invalid) {
-      controls.current.get(invalid.name)?.focus()
+      controlsRef.current.get(invalid.name)?.focus()
       return null
     }
     return Object.fromEntries(

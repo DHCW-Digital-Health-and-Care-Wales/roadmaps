@@ -1,6 +1,6 @@
 # DEF-031: A push to main no longer deploys the editor
 
-- **Status**: Proposed — owner triaged it a priority on 2026-11-23 (D1)
+- **Status**: Done
 - **Severity**: High — no change merged to `main` reaches Product Leads: the editor on
   GitHub Pages stays at the last commit deployed before CHO-031
 - **Area**: CI/CD
@@ -74,3 +74,25 @@ on a `deploy` condition that could run it past a failed gate
 
 - **D1** (owner, 2026-11-23, raised during STY-088's cut-over): "That roadmap site
   deploy is a priority issue": fix it first, in its own thread.
+
+## Delivery
+
+### Departures
+
+None. The Cause section's suspicion held: a scratch run reproduced it (S1's evidence).
+
+### Contract for dependents
+
+- `deploy`'s `if:` is a conjunction of `!cancelled()`, `needs.<job>.result == 'success'`
+  for each job it needs, and the event and ref. A job added to its `needs` adds its own
+  term; `build/ci-workflow.test.ts` (_ci.yml's deploy_) fails without it, on an `||`,
+  `always()` or `failure()`, and without `!cancelled()`.
+- A job before the gate may skip by its event or paths without holding back a deploy;
+  the gate alone judges the jobs it needs.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `build/ci-workflow.test.ts` (`runs though a job before it skips by its event or paths`), red on `ci.yml` before the fix. The cause, and the fix's effect, observed in run [45087443622](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/actions/runs/45087443622), a throwaway workflow of `ci.yml`'s job graph on a scratch branch, since deleted: with the gate needing a job skipped by its event, main's condition skipped its deploy job, the same condition ran when the gate needed no skipped job, and the fixed condition ran. A deploy from `main` itself is observed once a push to `main` carries this change |
+| S2       | `build/ci-workflow.test.ts` (`runs only once every job it needs has passed`), red on `ci.yml` before the fix, and red again with the fixed condition broken each way: `always()` for `!cancelled()`, the gate's term dropped, an `\|\|` clause, `\|\| failure()`. Run 45087443622: the fixed condition skipped its deploy job behind a gate needing a failed job, and behind one needing a job cancelled by its timeout                                                                                                                                                                                                                  |

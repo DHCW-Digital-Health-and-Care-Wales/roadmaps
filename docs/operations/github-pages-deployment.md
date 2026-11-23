@@ -53,8 +53,11 @@ changes ──┤                    │
   (`docker pull mcr.microsoft.com/playwright:v<version>-noble` prints the digest); the job's
   check step fails with that instruction when the image lacks the Chromium the installed
   Playwright needs.
-- `deploy` runs only after `ci-result` passes, and only for pushes to `main`. It does
-  not check out or install anything; it publishes the artifact `editor-verify` uploaded. It alone has
+- `deploy` runs only after `ci-result` and `editor-verify` pass, and only for pushes to
+  `main`. Its condition names their results, with `!cancelled()`: with no status
+  function GitHub's implicit `success()` skips a job whenever one before it skipped, as
+  `dependency-review` does on a push (DEF-031). It does not check out or install
+  anything; it publishes the artifact `editor-verify` uploaded. It alone has
   `pages: write` and `id-token: write`; everything else is read-only.
 - A new push to a pull request cancels its running checks. On `main` a running workflow
   is never cancelled; a newer push replaces one that is still waiting, so the latest

@@ -60,13 +60,47 @@ describe("ci.yml's CI result gate", () => {
   it("runs whatever the jobs it needs did", () => {
     expect(gate?.if).toBe("always()")
   })
+})
 
-  it("passes before deploy publishes anything", () => {
-    const deploy = workflow.jobs.deploy
+/**
+ * deploy runs only once every job it needs has passed, the gate among them, so nothing
+ * publishes past a failed or cancelled check. A push to main skips a job the gate needs
+ * (Dependency review), and a condition with no status function takes GitHub's implicit
+ * success(), which fails on a skipped job anywhere before it, so deploy never ran
+ * (DEF-031). Its condition names the result of each job it needs instead.
+ */
+describe("ci.yml's deploy", () => {
+  const deploy = workflow.jobs.deploy
+  const needs = [deploy?.needs ?? []].flat()
+  const terms = (deploy?.if ?? "").split("&&").map((term) => term.trim())
 
-    expect([deploy?.needs ?? []].flat()).toContain(GATE)
-    // A status function such as always() would run deploy past a failed gate.
-    expect(deploy?.if).not.toMatch(/always\(|failure\(|cancelled\(/)
+  it("needs the gate", () => {
+    expect(needs).toContain(GATE)
+  })
+
+  it("runs only once every job it needs has passed", () => {
+    // An `||` could run deploy whatever the jobs it needs did; always() or failure()
+    // in place of !cancelled() would run it in a run cancelled after the gate passed.
+    expect(deploy?.if).not.toMatch(/\|\||always\(|failure\(/)
+    for (const job of needs) {
+      const term = `needs.${job}.result == 'success'`
+      expect(
+        terms,
+        `Add \`&& ${term}\` to deploy's if: in .github/workflows/ci.yml.`,
+      ).toContain(term)
+    }
+  })
+
+  it("runs only on a push to main", () => {
+    expect(terms).toContain("github.event_name == 'push'")
+    expect(terms).toContain("github.ref == 'refs/heads/main'")
+  })
+
+  it("runs even when a job before it skips by its event or paths", () => {
+    expect(
+      terms,
+      "Without a status function, deploy is skipped whenever a job the gate needs is.",
+    ).toContain("!cancelled()")
   })
 })
 

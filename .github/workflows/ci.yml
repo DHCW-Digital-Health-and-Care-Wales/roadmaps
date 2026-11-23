@@ -373,10 +373,17 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    # CI result passes only when every check did, and on a push to main only Dependency
-    # review, which compares a change with main, skips.
+    # Runs once CI result has passed, and with it every check. The condition names each
+    # result it needs: without a status function, GitHub's implicit success() would skip
+    # deploy whenever a job before it skipped, as Dependency review does on every push to
+    # main (DEF-031). build/ci-workflow.test.ts holds it to that.
     needs: [editor-verify, ci-result]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      !cancelled()
+      && needs.editor-verify.result == 'success'
+      && needs.ci-result.result == 'success'
+      && github.event_name == 'push'
+      && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

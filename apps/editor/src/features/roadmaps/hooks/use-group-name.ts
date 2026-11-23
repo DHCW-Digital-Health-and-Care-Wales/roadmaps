@@ -2,7 +2,7 @@ import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { RoadmapGroup } from "../group-roadmaps"
-import type { ShownContent } from "../shown-content"
+import { type ShownContent, unmarked } from "../shown-content"
 import { useContent } from "./use-content"
 
 /**
@@ -14,9 +14,7 @@ export function useGroupName(): (group: RoadmapGroup) => ShownContent {
   const content = useContent()
   return useCallback(
     ({ family }: RoadmapGroup) =>
-      family
-        ? content(family)
-        : { text: t("roadmaps.noFamily"), lang: undefined },
+      family ? content(family) : unmarked(t("roadmaps.noFamily")),
     [t, content],
   )
 }

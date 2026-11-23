@@ -74,19 +74,23 @@ the language switcher's names of the languages.
   categories and organisations, each dialog and notice that names a roadmap, item or
   family, the conflict review's titles and names, "What changes", and a family's or
   category's option in the roadmap form (`<option lang>`) (agent).
-- **S1**: a new item's title in "What changes" is English alone, so it is marked in
-  Welsh as a fallback is; an organisation's short name is English in both languages
-  (ADR-014) and stays unmarked (agent).
-- **S3**: words that only complete a control's name stay plain with the attributes: a
-  button's hidden words ("Tynnu First now", "Show the rest of …", the conflict's
-  "Keep mine …"), the navigation's "…, unpublished changes" and its rail tooltip, and an
-  option that is a sentence ("… (not listed)") (agent).
-- **S3**: the conflict review's lead-in ("First now:") is one catalogue entry for the
-  marked line and the buttons' plain words: the plain words read it with i18next's
-  per-call interpolation markers `<` and ` />` (agent).
+- **S1**: a new item's title in "What changes" and in the add-item dialog's "added"
+  line is English alone, so it is marked in Welsh as a fallback is; an organisation's
+  short name is English in both languages (ADR-014) and stays unmarked (agent).
+- **S3**: words that only complete a button's name stay plain with the attributes ("Tynnu
+  First now", "Show the rest of …", the conflict's "Keep mine …"), as does an option
+  that is a sentence ("… (not listed)"). The navigation's words for a roadmap with
+  unpublished changes, which stand in for its hidden title, and a folded rail's words
+  and tooltip keep an English title marked, since they are what a screen reader reads
+  there (agent, review round 1).
+- **S3**: one catalogue entry serves a marked sentence and its plain words (the conflict
+  review's lead-in "First now:" and its buttons' hidden words; the navigation's
+  unpublished words and a family button's `aria-label`): the plain words read it through
+  `AS_PLAIN_WORDS`, i18next's per-call interpolation markers `<` and `/>` (agent).
 - Text the editor shows in one language whatever the interface's (the families page's
-  English and Welsh names, a family notice's English name, a conflict's "In Welsh: …")
-  is no fallback and stays unmarked; DEF-033 records it (agent).
+  English and Welsh names, a family notice's English name, organisations' short names,
+  the tags being edited, a conflict's English values and "In Welsh: …") is no fallback
+  and stays unmarked; DEF-033 records it (agent).
 
 ### Contract for dependents
 
@@ -97,23 +101,25 @@ the language switcher's names of the languages.
   Welsh. An attribute, sort or search takes `localise()`; `resolve()` in the domain
   gives the text and its language.
 - A catalogue sentence naming content places it as `<title />`, `<name />` or
-  `<subject />` and is read through `<Trans>` only: `t()` returns the tag as text. The
-  keys: `roadmaps.edit.removal.title`, `roadmaps.publish.notice.refused.removed` and
+  `<subject />` and is read through `<Trans>`, or as plain words through `t()` with
+  `AS_PLAIN_WORDS` (`plain-words.ts`); a bare `t()` returns the tag as text. The keys: `roadmaps.edit.removal.title`, `roadmaps.publish.notice.refused.removed` and
   `.targetLead`, `roadmaps.publishRoadmap.confirm.title.*`, `.notice.published`,
   `.savedAndPublished`, `.unpublished`, `.failed.*` and `.refused.problems.idTaken`,
-  `roadmaps.add.added`, `roadmaps.lists.match.confirm.title`, `.notice.matched` and
+  `roadmaps.add.added`, `roadmaps.edit.addItem.added`, `roadmaps.navigation.changed`,
+  `roadmaps.lists.match.confirm.title`, `.notice.matched` and
   `.matchedPublic`, `roadmaps.families.form.changeTitle`, `.confirm.title` and
   `.organisations.entry`.
+- Text shown with no `lang` of its own is `unmarked(text)` (`shown-content.ts`).
 - `CutField` takes `value: ShownContent[]`, `DetailList` and `CutDetails` take
-  `ShownDetail` (a `DetailLine` with an optional `lang`), `TagList` takes
+  `ShownDetail` (`shown-content.ts`, a `DetailLine` with an optional `lang`), `TagList` takes
   `ShownContent[]`, and `RemovalDialog`, `PublishedStateDialog`,
   `PublishedStateNotice`, `AddedRoadmapNotice`, `RoadmapHeader` and
   `FamilyChangeDialog` take the title or name as `LocalisedText`.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `apps/editor/src/domain/roadmap/localised-text.test.ts` (`resolve`, red against the base's `localise` before `resolve` existed); `apps/editor/src/features/roadmaps/shown-content.test.ts` (the four cases, red when `lang` is always the resolved language); `components/content-text.test.tsx` and `pages/roadmap-detail-page-english-in-welsh.test.tsx` (the page's title, cards, navigation, compact view and removal question in Welsh; nothing marked in English), red when `ShownText` never marks |
-| S2       | `components/content-text.test.tsx` (`marks only the English inside a Welsh sentence`); `pages/roadmap-detail-page-english-in-welsh.test.tsx` (the removal question); `pages/roadmap-detail-page-publishing-roadmap.test.tsx` (`speaks Welsh throughout`, the failed notice's title), each red when `ShownText` never marks                                                                                                                                                                                |
-| S3       | `pages/roadmap-detail-page-english-in-welsh.test.tsx` (the Remove button's name holds the English unmarked); sorting, search and the document title still call `localise()` and `syncDocumentLanguage`, unchanged, under their existing tests (`group-roadmaps`, `narrow-roadmaps`, `create-i18n`)                                                                                                                                                                                                        |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/editor/src/domain/roadmap/localised-text.test.ts` (`resolve`, red against the base's `localise` before `resolve` existed); `apps/editor/src/features/roadmaps/shown-content.test.ts` (the four cases, red when `lang` is always the resolved language); `components/content-text.test.tsx` and `pages/roadmap-detail-page-english-in-welsh.test.tsx` (the page's title, cards, navigation, compact view and removal question in Welsh; nothing marked in English), red when `ShownText` never marks; the same page test's navigation words for unpublished changes, red when the navigation's spoken name drops its `lang` |
+| S2       | `components/content-text.test.tsx` (`marks only the English inside a Welsh sentence`); `pages/roadmap-detail-page-english-in-welsh.test.tsx` (the removal question); `pages/roadmap-detail-page-publishing-roadmap.test.tsx` (`speaks Welsh throughout`, the failed notice's title), each red when `ShownText` never marks; `plain-words.test.ts` (both spellings of an element read as plain words, red with the marker ` />`)                                                                                                                                                                                                  |
+| S3       | `pages/roadmap-detail-page-english-in-welsh.test.tsx` (the Remove button's name holds the English unmarked); sorting, search and the document title still call `localise()` and `syncDocumentLanguage`, unchanged, under their existing tests (`group-roadmaps`, `narrow-roadmaps`, `create-i18n`)                                                                                                                                                                                                                                                                                                                               |

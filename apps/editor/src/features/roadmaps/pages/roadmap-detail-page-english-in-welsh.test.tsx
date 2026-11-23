@@ -12,6 +12,7 @@ import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { confirmRemoval } from "../testing/removal-dialog"
 
 // English shown in place of empty Welsh, marked `lang="en"` where the page shows it
 // (STY-098). Which content is marked, and how a sentence carries the mark, are held by
@@ -100,6 +101,26 @@ describe("in Welsh, English shown in place of Welsh (S1)", () => {
       name: "Tynnu “First now”?",
     })
     expect(marked(dialog)).toEqual(["en: First now"])
+  })
+})
+
+describe("in Welsh, the navigation's words for unpublished changes (S1, S2)", () => {
+  it("keep the English title marked in their Welsh sentence", async () => {
+    const { user } = await renderPage("cy")
+
+    await confirmRemoval(user, "First now", { language: "cy" })
+
+    // The entry's shown title is hidden then: these words name it to a screen reader.
+    const navigation = screen.getByRole("navigation", {
+      name: "Mapiau trywydd",
+    })
+    const spoken = await within(navigation).findByText(
+      /^, newidiadau heb eu cyhoeddi$/,
+    )
+    expect(spoken).toHaveTextContent(
+      "Product A roadmap, newidiadau heb eu cyhoeddi",
+    )
+    expect(marked(spoken)).toEqual(["en: Product A roadmap"])
   })
 })
 

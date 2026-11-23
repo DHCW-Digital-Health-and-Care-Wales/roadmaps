@@ -39,6 +39,7 @@ import { type OrderLine, reviewedOrders } from "./order-review"
 import type { PageItem } from "./page-items"
 import type { PublishAction } from "./pending-changes-store"
 import { RemovedItems } from "./refusal-notice"
+import { AS_PLAIN_WORDS } from "../plain-words"
 import { useDecisionFocus } from "./use-decision-focus"
 import { useRoadmapChoices } from "./use-roadmap-choices"
 
@@ -267,12 +268,10 @@ function useTargetLead(): (subject: LocalisedText | string) => TargetLead {
   const language = useLanguage()
   const key = "roadmaps.publish.notice.refused.targetLead"
   return (subject) => {
-    // The catalogue places the subject as an element, `<subject />`; as plain words,
-    // its text stands there.
     const plain = t(key, {
       subject:
         typeof subject === "string" ? subject : localise(subject, language),
-      interpolation: { prefix: "<", suffix: " />" },
+      ...AS_PLAIN_WORDS,
     })
     return {
       plain,

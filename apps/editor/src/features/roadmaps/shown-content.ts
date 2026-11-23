@@ -1,3 +1,4 @@
+import type { DetailLine } from "@/domain/roadmap/item-details"
 import {
   type ContentLanguage,
   type LocalisedText,
@@ -24,4 +25,14 @@ export function showContent(
     text: resolved.text,
     lang: resolved.language === language ? undefined : resolved.language,
   }
+}
+
+/** Text with no `lang` of its own: interface copy, or a value shown as written. */
+export function unmarked(text: string): ShownContent {
+  return { text, lang: undefined }
+}
+
+/** A detail as shown: its `lang` set where it is English in a Welsh interface. */
+export interface ShownDetail extends DetailLine {
+  lang?: ContentLanguage | undefined
 }

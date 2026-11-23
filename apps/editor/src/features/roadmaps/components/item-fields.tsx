@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 
 import { useContent } from "../hooks/use-content"
 import { localiseDetails } from "../localise-details"
-import type { ShownContent } from "../shown-content"
+import { type ShownContent, unmarked } from "../shown-content"
 import { shortNamesOf } from "../sort-organisations"
 import { CutDetails, CutField } from "./cut-field"
 import { FieldName } from "./field-name"
@@ -72,10 +72,7 @@ export function ItemFields({
   // Short names are English in both languages (ADR-014): no Welsh stands in.
   const named = shortNamesOf(organisations, item.organisationIds, language)
   if (named.length > 0) {
-    addText(
-      "organisations",
-      named.map((text) => ({ text, lang: undefined })),
-    )
+    addText("organisations", named.map(unmarked))
   }
   if (item.details.length > 0) {
     fields.push({

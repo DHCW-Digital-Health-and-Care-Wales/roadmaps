@@ -187,7 +187,7 @@ export const en = {
       /** The link to the roadmap list, the home page (D4). */
       all: "All roadmaps",
       /** A roadmap with unpublished changes: its title, then what its dot shows (STY-055 D1). */
-      changed: "{{name}}, unpublished changes",
+      changed: "<name />, unpublished changes",
       /** The search at the top of the navigation (STY-061). */
       search: {
         /** The search box's name, and the rail's spyglass that opens it (S9). */
@@ -725,7 +725,7 @@ export const en = {
           save: "It isn't saved until you choose “Save changes”.",
         },
         /** Announced in the dialog after "Add and start another". */
-        added: "“{{title}}” was added.",
+        added: "“<title />” was added.",
       },
       /** Heads the roadmap dialog while it edits the product details (STY-043). */
       roadmapHeading: "Edit product details",

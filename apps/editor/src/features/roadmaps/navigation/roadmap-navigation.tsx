@@ -20,6 +20,7 @@ import { namesFamilies, type RoadmapGroup } from "../group-roadmaps"
 import { useContent } from "../hooks/use-content"
 import { useGroupName } from "../hooks/use-group-name"
 import { usePendingChanges } from "../editing/pending-changes-context"
+import { AS_PLAIN_WORDS } from "../plain-words"
 import { findIn } from "./narrow-roadmaps"
 import {
   NavigationButton,
@@ -202,7 +203,10 @@ function RoadmapGroupLinks({
           aria-controls={closed ? undefined : listId}
           aria-label={
             unpublished
-              ? t("roadmaps.navigation.changed", { name: name.text })
+              ? t("roadmaps.navigation.changed", {
+                  name: name.text,
+                  ...AS_PLAIN_WORDS,
+                })
               : undefined
           }
           onClick={onToggle}

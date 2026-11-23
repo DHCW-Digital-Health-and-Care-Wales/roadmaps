@@ -11,9 +11,12 @@ import { useTranslation } from "react-i18next"
 import { textLinkClasses } from "@/components/layout/text-link-classes"
 import { cn } from "@/lib/utils"
 
-import type { ShownContent } from "../shown-content"
+import type { ShownContent, ShownDetail } from "../shown-content"
 import { ShownText } from "./content-text"
-import { DetailList, type ShownDetail } from "./detail-list"
+import { DetailList } from "./detail-list"
+
+/** Between a field's parts, an item's tags: as drawn, and as measured. */
+const PART_SEPARATOR = ", "
 
 /** A field shows this many lines before it is cut (STY-066). */
 const CUT_LINES = 3
@@ -159,7 +162,7 @@ export function CutField({ subject, value }: CutFieldProps) {
   const id = useId()
   const valueRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const text = value.map((part) => part.text).join(", ")
+  const text = value.map((part) => part.text).join(PART_SEPARATOR)
   const runsPast = useMeasure(valueRef, text, textRunsPastCut) !== ""
 
   return (
@@ -168,7 +171,7 @@ export function CutField({ subject, value }: CutFieldProps) {
         {value.map((part, index) => (
           // eslint-disable-next-line @eslint-react/no-array-index-key -- Two parts may read alike, so only the place is an identity.
           <Fragment key={index}>
-            {index > 0 && ", "}
+            {index > 0 && PART_SEPARATOR}
             <ShownText content={part} />
           </Fragment>
         ))}

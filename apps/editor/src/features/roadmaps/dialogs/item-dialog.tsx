@@ -1,6 +1,6 @@
 import { CircleCheckIcon } from "lucide-react"
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import type { ItemValues } from "@/domain/roadmap/roadmap-changes"
@@ -9,6 +9,7 @@ import {
   type RoadmapPlacement,
 } from "@/domain/roadmap/roadmap-placement"
 
+import { ContentText } from "../components/content-text"
 import { blankItem } from "../editing/pending-changes"
 import type { PublishAction } from "../editing/pending-changes-store"
 import { FormDialog, type FormDialogProps } from "./form-dialog"
@@ -96,7 +97,6 @@ function AddItemForms({
   ...fields
 }: AddingItems &
   Pick<ItemFormProps, "labelledBy" | "tagsInUse" | "organisations">) {
-  const { t } = useTranslation()
   const [last, setLast] = useState<LastAdded | null>(null)
   // No horizon is chosen to start with, unless quick add chose one; the next form keeps
   // the last one's (D4, D5).
@@ -134,7 +134,13 @@ function AddItemForms({
             className="mb-4 pinned:mx-6 pinned:mt-4 pinned:mb-0 pinned:w-auto"
           >
             <p className="pinned:line-clamp-3 pinned:wrap-anywhere">
-              {t("roadmaps.edit.addItem.added", { title: last.title })}
+              {/* A new item's title is English alone. */}
+              <Trans
+                i18nKey="roadmaps.edit.addItem.added"
+                components={{
+                  title: <ContentText value={{ en: last.title, cy: "" }} />,
+                }}
+              />
             </p>
           </DismissibleNotice>
         )}

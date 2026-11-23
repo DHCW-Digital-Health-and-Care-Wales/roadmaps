@@ -1,8 +1,7 @@
 import type { ContentLanguage } from "@/domain/roadmap/localised-text"
 import type { RoadmapItemDetail } from "@/domain/roadmap/roadmap-item"
 
-import type { ShownDetail } from "./components/detail-list"
-import { showContent } from "./shown-content"
+import { showContent, type ShownDetail } from "./shown-content"
 
 /**
  * An item's details as an element in a `language` interface shows them, each at the

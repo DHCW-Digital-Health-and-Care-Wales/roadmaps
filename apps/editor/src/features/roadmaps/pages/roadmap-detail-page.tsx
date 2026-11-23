@@ -236,7 +236,6 @@ function RoadmapView({
     addItemButtonRef.current?.focus()
   }, [])
   const addedNotice = useAddedRoadmapNotice(roadmap)
-  const title = shown.title
   const retryList = () => {
     void refetchList()
   }
@@ -262,7 +261,7 @@ function RoadmapView({
         )}
         <RoadmapHeader
           roadmap={roadmap}
-          title={title}
+          title={shown.title}
           titleChanged={Boolean(changes?.roadmap.title)}
           heading={headingRef}
           publishedState={publishedState}
@@ -299,7 +298,7 @@ function RoadmapView({
               <PublishedStateNotice
                 ref={publishedStateNoticeRef}
                 notice={publishedState.notice}
-                title={title}
+                title={shown.title}
                 onDismiss={publishedState.dismissNotice}
               />
             )
@@ -307,7 +306,7 @@ function RoadmapView({
         />
         <PublishedStateDialog
           state={publishedState}
-          title={title}
+          title={shown.title}
           // Its own notice, or the refusal of the changes it sent (D21).
           notice={() =>
             publishedStateNoticeRef.current ?? publishNoticeRef.current
@@ -316,7 +315,10 @@ function RoadmapView({
         <RoadmapDialog {...roadmapEdit.dialog} />
         <MatchListsAction roadmap={roadmap} />
         {addedNotice.shown && (
-          <AddedRoadmapNotice title={title} onDismiss={addedNotice.dismiss} />
+          <AddedRoadmapNotice
+            title={shown.title}
+            onDismiss={addedNotice.dismiss}
+          />
         )}
       </div>
       <RoadmapItemsArea

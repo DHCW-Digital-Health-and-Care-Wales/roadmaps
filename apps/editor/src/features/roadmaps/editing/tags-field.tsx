@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
+import { unmarked } from "../shown-content"
 import {
   addTags,
   asOneName,
@@ -88,7 +89,7 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
       summary={
         tags.length > 0 ? (
           // English, being edited: no Welsh to stand in for.
-          <TagList tags={tags.map((text) => ({ text, lang: undefined }))} />
+          <TagList tags={tags.map(unmarked)} />
         ) : null
       }
       none={t("roadmaps.edit.tags.none")}

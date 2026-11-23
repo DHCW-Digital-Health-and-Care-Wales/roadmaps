@@ -15,8 +15,10 @@
 STY-098 marks English shown in place of empty Welsh. Some text the editor shows in one
 language on purpose, whatever the interface's, is still unmarked: the families page
 heads each family with its English name and gives its Welsh name as "Welsh: …", a
-family's notices name it in English, and a removal conflict gives an item's Welsh as
-"In Welsh: …". In the other interface language a screen reader reads that text with the
+family's notices name it in English, an item shows its organisations by their English
+short names ("All Wales"), the tags field shows the English tags being edited, and the
+conflict review gives a field's English values and a removed item's Welsh as "In
+Welsh: …". In the other interface language a screen reader reads that text with the
 wrong pronunciation (WCAG 2.2 SC 3.1.2, Language of Parts). Sighted Product Leads see
 no difference.
 
@@ -35,15 +37,21 @@ the page is marked.
 
 ## Cause
 
-Verified: these sites render `LocalisedText.en` or `.cy` directly, not through
-`ContentText`, so no `lang` is set where the text's language differs from the
-interface's.
+Verified: these sites show text in one language (a `LocalisedText`'s `.en` or `.cy`,
+or English as written) with no `lang` of its own, so nothing is marked where its
+language differs from the interface's.
 
 - `rg -n 'name\.en\b|name\.cy\b|notes\.welsh' apps/editor/src/features --glob '*.tsx' --glob '!*.test.tsx'`
   — the shown sites: `families/family-entry.tsx` (the heading and the "Welsh: …" line),
   `families/change-family-form.tsx` and `families/add-family-form.tsx` (the name their
   notices give), `editing/conflict-review-dialog.tsx` (a removal conflict's "In
   Welsh: …").
+- `rg -n 'unmarked\(' apps/editor/src/features --glob '!*.test.*'` — the sites STY-098
+  leaves unmarked on purpose; of them, text in one language: `components/item-fields.tsx`
+  (organisations' short names, English in both languages, ADR-014) and
+  `editing/tags-field.tsx` (the English tags being edited). The rest are interface copy.
+- `rg -n 'useShownItemValue' apps/editor/src/features` — the conflict review's values of
+  an item's field (`editing/conflict-review-dialog.tsx`), the English column as written.
 
 ## Acceptance criteria
 

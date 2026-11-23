@@ -168,7 +168,7 @@ export const cy = {
     noFamily: "Dim teulu cynnyrch",
     navigation: {
       all: "Pob map trywydd",
-      changed: "{{name}}, newidiadau heb eu cyhoeddi",
+      changed: "<name />, newidiadau heb eu cyhoeddi",
       search: {
         label: "Chwilio mapiau trywydd",
         placeholder: "Chwilio",
@@ -595,7 +595,7 @@ export const cy = {
             "Bydd yn aros heb ei chyhoeddi nes i chi ddewis “Cyhoeddi'r newidiadau”.",
           save: "Fydd hi ddim yn cael ei chadw nes i chi ddewis “Cadw'r newidiadau”.",
         },
-        added: "Ychwanegwyd “{{title}}”.",
+        added: "Ychwanegwyd “<title />”.",
       },
       roadmapHeading: "Golygu manylion y cynnyrch",
       roadmapFields: {

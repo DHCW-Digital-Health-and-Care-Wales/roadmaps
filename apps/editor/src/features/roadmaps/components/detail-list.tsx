@@ -1,12 +1,5 @@
-import type { DetailLine } from "@/domain/roadmap/item-details"
-import type { ContentLanguage } from "@/domain/roadmap/localised-text"
-
 import { nestItemDetails, type NestedItemDetail } from "../nest-item-details"
-
-/** A detail as shown: its `lang` set where it is English in a Welsh interface. */
-export interface ShownDetail extends DetailLine {
-  lang?: ContentLanguage | undefined
-}
+import type { ShownDetail } from "../shown-content"
 
 export interface DetailListProps {
   details: readonly ShownDetail[]

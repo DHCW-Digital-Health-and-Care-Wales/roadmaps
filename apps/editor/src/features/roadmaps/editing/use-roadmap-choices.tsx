@@ -1,4 +1,3 @@
-import { createElement } from "react"
 import { useTranslation } from "react-i18next"
 
 import type { Category } from "@/domain/roadmap/category"
@@ -15,7 +14,7 @@ import { useLanguage } from "@/i18n"
 
 import { useContent } from "../hooks/use-content"
 import { type RoadmapLists, useRoadmapLists } from "../hooks/use-roadmap-lists"
-import type { ShownContent } from "../shown-content"
+import { type ShownContent, unmarked } from "../shown-content"
 import type { ChoiceOption } from "./choice-field"
 import type { EditFormField } from "./edit-form"
 
@@ -30,21 +29,19 @@ export function useRoadmapChoices(needed: boolean) {
   const language = useLanguage()
   const content = useContent()
   const { lists, reading, refetch } = useRoadmapLists(needed)
-  /** Interface copy, or a value shown as written: no `lang` of its own. */
-  const copy = (text: string): ShownContent => ({ text, lang: undefined })
 
   /** The name `value`, a family's or category's ID, shows as; `""` is none. */
   const describe = (field: RoadmapChoiceField, value: string): ShownContent => {
     if (field === "familyId") {
-      if (value === "") return copy(t("roadmaps.edit.noFamily"))
+      if (value === "") return unmarked(t("roadmaps.edit.noFamily"))
       if (value === UNLISTED_FAMILY) {
-        return copy(t("roadmaps.lists.familyNotListed"))
+        return unmarked(t("roadmaps.lists.familyNotListed"))
       }
     } else if (value === "") {
-      return copy(t("roadmaps.edit.noCategory"))
+      return unmarked(t("roadmaps.edit.noCategory"))
     }
     const name = listOf(lists, field)?.find(({ id }) => id === value)?.name
-    return name ? content(name) : copy(value)
+    return name ? content(name) : unmarked(value)
   }
 
   /** A list's name as an option's label, and its `lang` where it is English in Welsh. */
@@ -112,7 +109,7 @@ export function useRoadmapChoices(needed: boolean) {
     const label = t(`roadmaps.edit.roadmapFields.${field}`)
     const { options, beingRead, name, none, colour } = choiceOf(shown, field)
     if (options) return { name: field, label, multiline: false, options }
-    const text = name ? content(name) : copy(none)
+    const text = name ? content(name) : unmarked(none)
     if (beingRead) {
       const value = valueOf(shown, field)
       return {
@@ -128,7 +125,7 @@ export function useRoadmapChoices(needed: boolean) {
       label,
       multiline: false,
       fixed: {
-        text: createElement("p", { lang: text.lang }, text.text),
+        text: <p lang={text.lang}>{text.text}</p>,
         notice: t(`roadmaps.edit.choiceUnavailable.${field}`),
       },
     }

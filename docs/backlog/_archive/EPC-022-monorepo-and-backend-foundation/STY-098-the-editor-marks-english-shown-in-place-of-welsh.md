@@ -7,6 +7,7 @@
 - **Depends on**: STY-097 (hard; the sequence is strict, STY-095 D4)
 - **Binding ADRs**: ADR-008
 - **Suggested model**: Opus — a rendering change at every place roadmap content shows
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/279
 
 ## Summary
 

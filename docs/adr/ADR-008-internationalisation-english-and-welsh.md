@@ -88,13 +88,14 @@ library and the rest of the decision stand.
   23 KB gzip to the site's script, past its 100 KB script budget (ADR-016), so the site
   keeps the editor's catalogue layout under `apps/public-site/src/i18n/` without them.
   `locales/en.ts` is the source of truth, and `locales/cy.ts` is typed against it with
-  `satisfies Catalogue<typeof en>`, so a missing or extra key fails `pnpm typecheck`.
+  `satisfies Catalogue<typeof en, "cy">`, so a missing or extra key fails `pnpm typecheck`.
   Components read the page's catalogue by property (`useStrings()`), never by string
   key; a value filled in is a typed function, and a sentence around an element, such as
   roadmap content, is a function given that element (`sentence()`).
 - **Counts** take each language's forms through `plural()` (`plural.ts`), which chooses
-  one with `Intl.PluralRules` and requires every form the language uses: a missing Welsh
-  form is a type error, and a test holds the forms to `Intl.PluralRules`.
+  one with `Intl.PluralRules` and requires every form the language uses. A count
+  carries its language, so a missing Welsh form, or a Welsh count in English forms, is
+  a type error; a test holds each language's forms to `Intl.PluralRules`.
 - The site's tests read the catalogues directly, and `eslint-plugin-i18next`'s
   `no-literal-string` covers `apps/public-site/src/**/*.tsx` as it does the editor.
 

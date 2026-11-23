@@ -45,12 +45,20 @@ export default reactAppConfig(
   },
   {
     // The catalogues fill counts into their text unformatted, so the prerendered page
-    // and the browser's render give the same text.
+    // and the browser's render give the same text. Only numbers are allowed: the
+    // other options are the strict config's.
     files: ["src/i18n/locales/*.ts"],
     rules: {
       "@typescript-eslint/restrict-template-expressions": [
         "error",
-        { allowNumber: true },
+        {
+          allowNumber: true,
+          allowAny: false,
+          allowBoolean: false,
+          allowNever: false,
+          allowNullish: false,
+          allowRegExp: false,
+        },
       ],
     },
   },

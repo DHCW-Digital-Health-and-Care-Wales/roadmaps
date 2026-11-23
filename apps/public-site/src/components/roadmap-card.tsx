@@ -1,5 +1,5 @@
-import { useStrings } from "../i18n"
 import { ChevronRight, Layers, Tag } from "lucide-react"
+import { useStrings } from "../i18n"
 import type { RoadmapItem } from "../lib/types"
 import { DetailList } from "./detail-list"
 import { OrgPills } from "./org-pills"

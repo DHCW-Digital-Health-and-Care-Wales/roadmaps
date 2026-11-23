@@ -11,15 +11,16 @@ export const pluralCategories = {
 
 type PluralForm = (count: number) => string
 
-/** Every plural form `language` uses, each a count's text. */
+/** Every plural form `L` uses, each a count's text. */
 export type PluralForms<L extends Language> = Readonly<
   Record<(typeof pluralCategories)[L][number] | "other", PluralForm>
 >
 
-/** A count's text, in the form its language's plural rules choose; `forms` is for tests. */
-export type Plural = PluralForm & {
-  readonly forms: Readonly<Partial<Record<Intl.LDMLPluralRule, PluralForm>>>
-}
+/**
+ * A count's text, in the form `L`'s plural rules choose. It carries its language, so
+ * a catalogue's type can require its own language's forms (`Catalogue`).
+ */
+export type Plural<L extends Language> = PluralForm & { readonly language: L }
 
 /**
  * A count's text in `language`, from its plural forms, which type checking requires in
@@ -29,10 +30,10 @@ export type Plural = PluralForm & {
 export function plural<L extends Language>(
   language: L,
   forms: PluralForms<L>,
-): Plural {
+): Plural<L> {
   const rules = new Intl.PluralRules(language)
-  const byCategory: Plural["forms"] = forms
+  const byCategory: Partial<Record<Intl.LDMLPluralRule, PluralForm>> = forms
   const choose = (count: number) =>
     (byCategory[rules.select(count)] ?? forms.other)(count)
-  return Object.assign(choose, { forms: byCategory })
+  return Object.assign(choose, { language })
 }

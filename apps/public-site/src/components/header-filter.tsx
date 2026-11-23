@@ -1,5 +1,5 @@
-import { useStrings } from "../i18n"
 import { ListFilter, X } from "lucide-react"
+import { useStrings } from "../i18n"
 import {
   firstCardOnScreen,
   focusCard,

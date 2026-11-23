@@ -1,6 +1,6 @@
-import { useStrings } from "../i18n"
 import { useId, useRef, useState } from "react"
 import { ChevronDown, ListFilter } from "lucide-react"
+import { useStrings } from "../i18n"
 import { ORGANISATION_GROUP_IDS, ORGANISATIONS } from "../lib/content"
 import { ORG_FILTER_ID, ORG_SELECT_ID } from "../lib/focus"
 import { setOrgFilter, useHasJs } from "../lib/router"

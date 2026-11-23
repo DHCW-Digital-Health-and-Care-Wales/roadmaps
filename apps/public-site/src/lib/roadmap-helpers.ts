@@ -140,10 +140,6 @@ export function countItems(roadmap: Roadmap, filter: OrgFilter): ItemCount {
   }
 }
 
-/** "2 of 5". */
-export const countOf = (count: ItemCount, strings: Strings): string =>
-  strings.landing.countOf(count)
-
 /** A roadmap heading's count: "(2 of 5)" while some items are hidden, otherwise "(5)". */
 export const countInParentheses = (
   count: ItemCount,
@@ -153,7 +149,7 @@ export const countInParentheses = (
     value:
       count.shown === count.total
         ? String(count.total)
-        : countOf(count, strings),
+        : strings.landing.countOf(count),
   })
 
 /** How many of an empty section's `total` items the filter hides. */

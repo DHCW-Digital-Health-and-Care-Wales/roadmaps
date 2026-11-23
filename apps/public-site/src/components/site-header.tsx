@@ -1,17 +1,11 @@
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
 import logoImage from "../assets/dhcw-logo.png"
-import { useLanguage, useStrings, type Strings } from "../i18n"
+import { useLanguage, useStrings } from "../i18n"
 import type { OrgFilter } from "../lib/types"
 import { onNavigate, pathFor, withOrgFilter } from "../lib/router"
 import { FilterChip, FilterStrip } from "./header-filter"
 import { LanguageToggle } from "./language-toggle"
-
-/** Each label is the catalogue's `header` text of that name. */
-const NAV_LINKS = [
-  { href: "#about", label: "about" },
-  { href: "#roadmap", label: "roadmap" },
-] as const satisfies readonly { href: string; label: keyof Strings["header"] }[]
 
 /**
  * Brand header: NHS Wales Blue bar with the DHCW logo (linking to all
@@ -33,7 +27,12 @@ export function SiteHeader({
   const { lang } = useLanguage()
   const strings = useStrings()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const navLinks = showSectionLinks ? NAV_LINKS : []
+  const navLinks = showSectionLinks
+    ? [
+        { href: "#about", label: strings.header.about },
+        { href: "#roadmap", label: strings.header.roadmap },
+      ]
+    : []
   const home = withOrgFilter(pathFor(lang, null), filter)
 
   return (
@@ -65,7 +64,7 @@ export function SiteHeader({
                       href={link.href}
                       className="rounded-sm px-3 py-2 text-sm font-medium transition-colors hover:bg-white hover:text-nhs-wales-blue"
                     >
-                      {strings.header[link.label]}
+                      {link.label}
                     </a>
                   </li>
                 ))}
@@ -119,7 +118,7 @@ export function SiteHeader({
                   }}
                   className="block rounded-sm px-3 py-2 font-medium transition-colors hover:bg-white hover:text-nhs-wales-blue"
                 >
-                  {strings.header[link.label]}
+                  {link.label}
                 </a>
               </li>
             ))}

@@ -1,5 +1,5 @@
-import { useStrings } from "../i18n"
 import { ChevronDown } from "lucide-react"
+import { useStrings } from "../i18n"
 import { HORIZON_IDS, type Roadmap, type OrgFilter } from "../lib/types"
 import { filterItems, placementHeadingId } from "../lib/roadmap-helpers"
 import { HorizonPhase } from "./horizon-phase"

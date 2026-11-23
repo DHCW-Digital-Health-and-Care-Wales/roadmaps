@@ -111,8 +111,8 @@ from the shape rather than from a blank line.
 
 1. Write the English first, in the app's `src/i18n/locales/en.ts`. It is the source of
    truth (ADR-008). Keys are camelCase, grouped by feature. Map codes with
-   template keys (``t(`errors.${error.kind}`)``) so `satisfies Record<…>` makes
-   a new kind without copy a type error.
+   template keys (in the editor, ``t(`errors.${error.kind}`)``) so
+   `satisfies Record<…>` makes a new kind without copy a type error.
 2. Add the Welsh to the app's `src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
    fails until you do. The voice rules apply unchanged. Reuse the established
    terms: roadmap = _map trywydd_, spreadsheet = _taenlen_, connect = _cysylltu_
@@ -156,10 +156,10 @@ organisations; roadmap content is sheet data, never catalogue text. The
 working order holds, in this register and with the site's own catalogue shape:
 
 - **Typed objects, read by property** (ADR-008, _STY-096 amendments_):
-  components read `useStrings()`, with no i18n library. A value filled in is a typed function
-  (`({ organisation }) => …`), and a count is `plural("cy", { … })` with all
-  six Welsh forms, unformatted; `cy.ts` must give each the same arguments.
-
+  components read `useStrings()`, with no i18n library. A value filled in is a
+  typed function (`({ organisation }) => …`), and a count is
+  `plural("cy", { … })` with all six Welsh forms, unformatted; `cy.ts` must give
+  each the same arguments.
 - **Write for the public reader**: health boards, Welsh Government
   stakeholders, DHCW staff, patients and the public, who come to see what DHCW
   plans, not to do a job. Say what a page shows in their words, with none of

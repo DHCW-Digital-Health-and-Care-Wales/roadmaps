@@ -1,6 +1,6 @@
-import { useStrings } from "../i18n"
 import { useId } from "react"
 import { ChevronDown } from "lucide-react"
+import { useStrings } from "../i18n"
 import type { RoadmapItem } from "../lib/types"
 import { isExpandable } from "../lib/roadmap-helpers"
 import { DetailList } from "./detail-list"

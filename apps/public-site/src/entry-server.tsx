@@ -13,7 +13,6 @@ import {
   localise,
   supportedLanguages,
   type Language,
-  type Strings,
 } from "./i18n"
 import { INFO_PAGES } from "./lib/info-pages"
 import { roadmapSummary, titleWithFamily } from "./lib/roadmap-helpers"
@@ -50,7 +49,6 @@ const escapeHtml = (value: string) =>
 
 function head(
   siteUrl: string,
-  strings: Strings,
   page: {
     lang: Language
     title: string
@@ -64,7 +62,7 @@ function head(
   const meta: [string, string, string][] = [
     ["name", "description", page.description],
     ["property", "og:type", "website"],
-    ["property", "og:site_name", strings.site.title],
+    ["property", "og:site_name", catalogues[page.lang].site.title],
     ["property", "og:title", page.title],
     ["property", "og:description", page.description],
     ["property", "og:image", new URL("Timeline.png", siteUrl).href],
@@ -133,7 +131,7 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
       url,
       lang,
       route: { lang, slug: slug ?? "" },
-      head: head(siteUrl, strings, {
+      head: head(siteUrl, {
         lang,
         title: title ? `${title} – ${site}` : site,
         description,
@@ -193,7 +191,7 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
     url: null,
     lang: defaultLanguage,
     route: null,
-    head: head(siteUrl, catalogues[defaultLanguage], {
+    head: head(siteUrl, {
       lang: defaultLanguage,
       title: bilingual("heading"),
       description: bilingual("generic"),

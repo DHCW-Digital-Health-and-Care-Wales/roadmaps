@@ -3,7 +3,6 @@ import { useLanguage, useStrings } from "../i18n"
 import { HORIZON_IDS, type Roadmap, type OrgFilter } from "../lib/types"
 import {
   countItems,
-  countOf,
   filterItems,
   formatDate,
   roadmapSummary,
@@ -102,7 +101,7 @@ export function ProductCard({
               <Building2 aria-hidden="true" className="h-4 w-4 shrink-0" />
               <span>
                 <strong className="font-semibold text-heading">
-                  {countOf(countItems(roadmap, filter), strings)}
+                  {strings.landing.countOf(countItems(roadmap, filter))}
                 </strong>{" "}
                 {strings.landing.itemsFor({
                   organisation: strings.organisations[filter.org].short,

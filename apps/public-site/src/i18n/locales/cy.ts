@@ -5,8 +5,8 @@ import type { en } from "./en"
 
 /**
  * The public site's Welsh text, typed against `en`, so a missing or extra key fails type
- * checking, as does a count without all six Welsh plural forms (0, 1, 2, 3, 6 and
- * everything else).
+ * checking, as does a count that is not `plural("cy", …)` with all six Welsh forms (0,
+ * 1, 2, 3, 6 and everything else).
  */
 export const cy = {
   site: {
@@ -314,4 +314,4 @@ export const cy = {
       short: "Perfformiad a Gwella",
     },
   },
-} satisfies Catalogue<typeof en>
+} satisfies Catalogue<typeof en, "cy">

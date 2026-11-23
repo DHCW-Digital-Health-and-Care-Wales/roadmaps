@@ -15,21 +15,27 @@ const blankArguments = new Proxy(
   { get: (_, key) => (key === "hidden" ? (text: ReactNode) => text : "") },
 )
 
+/** Counts that reach every plural form of both languages. */
+const sampleCounts = [0, 1, 2, 3, 6, 7]
+
 const text = (node: ReactNode) =>
   renderToStaticMarkup(createElement(Fragment, null, node))
 
-const isPlural = (value: unknown): value is Plural =>
-  typeof value === "function" && "forms" in value
+const isPlural = (value: unknown): value is Plural<Language> =>
+  typeof value === "function" && "language" in value
 
-/** Flattens to `[dotted key, text]` pairs: each plural form, and each function's text. */
+/**
+ * Flattens to `[dotted key, text]` pairs: each string, each count's text without its
+ * number, and each other function's own words.
+ */
 function entries(node: object, prefix = ""): [string, string][] {
   return Object.entries(node).flatMap(([key, value]): [string, string][] => {
     const path = `${prefix}${key}`
     if (typeof value === "string") return [[path, value]]
     if (isPlural(value)) {
-      return Object.entries(value.forms).map(([category, form]) => [
-        `${path}.${category}`,
-        form(1).replace("1", ""),
+      return sampleCounts.map((count) => [
+        `${path}(${String(count)})`,
+        value(count).replace(String(count), ""),
       ])
     }
     if (typeof value === "function") {
@@ -40,21 +46,10 @@ function entries(node: object, prefix = ""): [string, string][] {
   })
 }
 
-/** The keys, with a plural's forms folded into it. */
-const keys = (language: Language) =>
-  entries(catalogues[language])
-    .map(([key]) => key.replace(/\.(zero|one|two|few|many|other)$/, ""))
-    .filter((key, index, all) => all.indexOf(key) === index)
-    .sort()
-
 describe("catalogues", () => {
   it.each(supportedLanguages)("%s has no empty values", (language) => {
     for (const [key, value] of entries(catalogues[language])) {
       expect(value.trim(), key).not.toBe("")
     }
-  })
-
-  it.each(supportedLanguages)("%s has the same keys as en", (language) => {
-    expect(keys(language)).toEqual(keys("en"))
   })
 })

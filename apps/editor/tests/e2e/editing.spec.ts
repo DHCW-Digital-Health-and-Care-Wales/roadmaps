@@ -15,7 +15,7 @@ import {
   type FakeTab,
   withTabRows,
 } from "./fixtures/fake-sheets"
-import { boxesOf } from "./fixtures/layout"
+import { boxesOf, scrollsSideways } from "./fixtures/layout"
 import {
   productDetailsField,
   goToList,
@@ -235,15 +235,8 @@ test("edits an unplaced item on a phone, every form and dialog fitting the width
       "Horizon “Someday” isn't recognised",
     ),
   ).toBeVisible()
-  const overflow = () =>
-    page.evaluate(
-      () =>
-        document.documentElement.scrollWidth -
-        document.documentElement.clientWidth,
-    )
-
   const form = await openEditItemDialog(page, "Minimal card")
-  expect(await overflow()).toBe(0)
+  expect(await scrollsSideways(page)).toBe(false)
   await form.getByRole("textbox", { name: "Title" }).fill("A placed card, soon")
   await form.getByRole("button", { name: "Done" }).click()
   await expect(
@@ -255,7 +248,7 @@ test("edits an unplaced item on a phone, every form and dialog fitting the width
     .getByRole("button", { name: "Publish changes" })
     .click()
   await expect(page.getByRole("alertdialog")).toBeVisible()
-  expect(await overflow()).toBe(0)
+  expect(await scrollsSideways(page)).toBe(false)
 })
 
 /**
@@ -710,13 +703,7 @@ test.describe("reordering a placement's items (STY-050)", () => {
       ).toBeVisible()
       await expect(main.getByText("Changed", { exact: true })).toHaveCount(0)
       await expect(main.getByText("1 unpublished change")).toBeVisible()
-      expect(
-        await page.evaluate(
-          () =>
-            document.documentElement.scrollWidth <=
-            document.documentElement.clientWidth,
-        ),
-      ).toBe(true)
+      expect(await scrollsSideways(page)).toBe(false)
       expect(sheets.writes).toEqual([])
 
       await main.getByRole("button", { name: "Publish changes" }).click()
@@ -825,13 +812,7 @@ test.describe("reordering a placement's items (STY-050)", () => {
       } else {
         expect(theirsBox.x).toBeGreaterThan(yoursBox.right)
       }
-      expect(
-        await page.evaluate(
-          () =>
-            document.documentElement.scrollWidth <=
-            document.documentElement.clientWidth,
-        ),
-      ).toBe(true)
+      expect(await scrollsSideways(page)).toBe(false)
       expect(sheets.writes).toHaveLength(1)
       // The decision and the second publish are the same at either width: the desktop's
       // run holds them, this one only the phone's layout.
@@ -989,25 +970,18 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
     await page.setViewportSize({ width: 375, height: 812 })
     await openRoadmap(page, "producta", ITEM)
     const form = await openForm(page, ITEM)
-    const sideways = () =>
-      page.evaluate(
-        () =>
-          document.documentElement.scrollWidth -
-          document.documentElement.clientWidth,
-      )
-
     await form.getByRole("combobox", { name: "Horizon or section" }).focus()
     await page.keyboard.press("Tab")
     const change = form.getByRole("button", { name: "Change organisations" })
     await expect(change).toBeFocused()
-    expect(await sideways()).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
 
     await page.keyboard.press("Enter")
     const first = form.getByRole("checkbox", { name: "All Wales (National)" })
     await expect(first).toBeFocused()
     await page.keyboard.press("Space")
     await expect(first).toBeChecked()
-    expect(await sideways()).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
 
     await page.keyboard.press("Shift+Tab")
     await expect(
@@ -1041,13 +1015,6 @@ test.describe("editing an item's tags (STY-037)", () => {
   /** The tags the open field shows, in order. */
   const rows = (field: Locator) =>
     field.getByRole("list", { name: "Tags on this item" }).getByRole("listitem")
-
-  const sideways = (page: Page) =>
-    page.evaluate(
-      () =>
-        document.documentElement.scrollWidth -
-        document.documentElement.clientWidth,
-    )
 
   test("adds a Labels column to a roadmap with none, and an empty cell for no tags (S12)", async ({
     page,
@@ -1125,14 +1092,14 @@ test.describe("editing an item's tags (STY-037)", () => {
       wrapped.locator("span").first(),
     )
     expect(wrappedBox.height).toBeGreaterThan(shortBox.height)
-    expect(await sideways(page)).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
 
     // A rename keeps the icons, and its field and buttons fit too.
     await short.getByRole("button", { name: "Rename Service Y" }).click()
     await expect(
       field.getByRole("button", { name: "Update Service Y" }),
     ).toHaveAttribute("title", "Update")
-    expect(await sideways(page)).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
     await page.keyboard.press("Escape")
     await expect(form.getByRole("button", { name: "Done" })).toBeVisible()
   })
@@ -1185,13 +1152,6 @@ test.describe("editing an item's details (STY-039)", () => {
    * waits out, though it can still be chosen (S23).
    */
   const chooseRefused = (button: Locator) => button.click({ force: true })
-
-  const sideways = (page: Page) =>
-    page.evaluate(
-      () =>
-        document.documentElement.scrollWidth -
-        document.documentElement.clientWidth,
-    )
 
   test("details written another way show as the public site shows them, and are written only once they change (S20)", async ({
     page,
@@ -1255,7 +1215,7 @@ test.describe("editing an item's details (STY-039)", () => {
       await longDetail.evaluate((box) => box.scrollHeight <= box.clientHeight),
     ).toBe(true)
     expect(longBox.right).toBeLessThanOrEqual(PHONE_WIDTH)
-    expect(await sideways(page)).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
 
     await longDetail.click()
     const buttons = field
@@ -1274,7 +1234,7 @@ test.describe("editing an item's details (STY-039)", () => {
     await expect(field.getByRole("status")).toHaveText(
       "It is already nested under the detail above.",
     )
-    expect(await sideways(page)).toBe(0)
+    expect(await scrollsSideways(page)).toBe(false)
   })
 })
 

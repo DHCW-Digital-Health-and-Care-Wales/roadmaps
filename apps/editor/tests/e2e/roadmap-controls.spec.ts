@@ -8,7 +8,7 @@ import {
   reconnectDialog,
 } from "./fixtures/dialogs"
 import { escapeFrom } from "./fixtures/keyboard"
-import { boxOf } from "./fixtures/layout"
+import { boxOf, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
@@ -359,11 +359,7 @@ test("pins nothing on a screen too short to spare it, as at 400% zoom, with no s
     main.getByRole("heading", { level: 1, name: "Product A roadmap" }),
   ).not.toBeInViewport()
   await expect(main.getByText("1 unpublished change")).not.toBeInViewport()
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true)
+  expect(await scrollsSideways(page)).toBe(false)
 })
 
 test("fits the pinned controls in Cymraeg on a 375px phone, cutting no label (S7)", async ({
@@ -397,11 +393,7 @@ test("fits the pinned controls in Cymraeg on a 375px phone, cutting no label (S7
     name: "Product A roadmap",
   })
   await expect(title).toHaveCSS("-webkit-line-clamp", "2")
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
-  ).toBe(true)
+  expect(await scrollsSideways(page)).toBe(false)
 })
 
 test("keeps the count and Publish in view once the session has expired, Publish asking to reconnect (S8)", async ({

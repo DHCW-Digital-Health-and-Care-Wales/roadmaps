@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test"
 
 import { addItem } from "./fixtures/dialogs"
 import type { FakeSheets } from "./fixtures/fake-sheets"
-import { boxesOf } from "./fixtures/layout"
+import { boxesOf, scrollsSideways } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
 import { connect, expect, test } from "./fixtures/test"
@@ -86,13 +86,6 @@ async function openChangedWorld(page: Page, sheets: FakeSheets) {
   await page.goto("./#/families")
 }
 
-const horizontalOverflow = (page: Page) =>
-  page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth,
-  )
-
 test("at the narrowest desktop, a Welsh family shut, the count pressed and a search fit with no sideways scroll (STY-063 S8)", async ({
   page,
   sheets,
@@ -107,7 +100,7 @@ test("at the narrowest desktop, a Welsh family shut, the count pressed and a sea
   await count(page).click()
   await expect(count(page)).toHaveAttribute("aria-pressed", "true")
   await expect(roadmap(page, COPY.other)).toBeHidden()
-  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+  expect(await scrollsSideways(page)).toBe(false)
 
   // A Welsh title found in the shut family, the placeholder cut short to fit.
   await expect(searchBox(page)).toHaveAttribute("placeholder", "Chwilio")
@@ -116,7 +109,7 @@ test("at the narrowest desktop, a Welsh family shut, the count pressed and a sea
   await expect(roadmap(page, COPY.plans)).toBeVisible()
   await expect(roadmap(page, COPY.carers)).toBeVisible()
   await expect(roadmap(page, COPY.other)).toBeHidden()
-  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+  expect(await scrollsSideways(page)).toBe(false)
 })
 
 test("on a phone, the Welsh menu button, a family shut, the count and a search fit in the drawer with no sideways scroll (STY-063 S8, STY-055 D4)", async ({
@@ -129,7 +122,7 @@ test("on a phone, the Welsh menu button, a family shut, the count and a search f
     .getByRole("banner")
     .getByRole("button", { name: `${COPY.menu}, ${COPY.count}` })
   await expect(menu).toBeVisible()
-  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+  expect(await scrollsSideways(page)).toBe(false)
 
   await menu.click()
   const drawer = page.getByRole("dialog", { name: COPY.menu })
@@ -152,5 +145,5 @@ test("on a phone, the Welsh menu button, a family shut, the count and a search f
   )
   expect(families.right).toBeLessThanOrEqual(box.right)
   expect(plans.right).toBeLessThanOrEqual(box.right)
-  expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
+  expect(await scrollsSideways(page)).toBe(false)
 })

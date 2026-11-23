@@ -5,7 +5,7 @@ import {
   editRoadmapDialog,
   openEditRoadmapDialogFromMore,
 } from "./fixtures/dialogs"
-import { boxOf } from "./fixtures/layout"
+import { boxOf, scrollsSideways } from "./fixtures/layout"
 import { withTabItems } from "./fixtures/fake-sheets"
 import { THEMES, tokenColour, useLanguage, useTheme } from "./fixtures/look"
 import {
@@ -275,10 +275,5 @@ test("an empty roadmap's page in Welsh fits a phone (STY-042 S4)", async ({
     page.getByRole("main").getByRole("heading", { name: "Dim eitemau eto" }),
   ).toBeVisible()
   await openProductDetails(page, "cy")
-  const overflow = await page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth,
-  )
-  expect(overflow).toBe(0)
+  expect(await scrollsSideways(page)).toBe(false)
 })

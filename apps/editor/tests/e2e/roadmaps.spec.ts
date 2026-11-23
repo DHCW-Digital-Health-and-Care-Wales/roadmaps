@@ -6,7 +6,7 @@ import {
   roadmapRow,
   withRoadmapIndex,
 } from "./fixtures/fake-sheets"
-import { boxesOf, boxOf } from "./fixtures/layout"
+import { boxesOf, boxOf, scrollsSideways } from "./fixtures/layout"
 import { useLanguage } from "./fixtures/look"
 import {
   productDetailsField,
@@ -167,12 +167,7 @@ test.describe("on a phone", () => {
     await connect(page)
     await expect(roadmapCards(page)).toHaveCount(2)
 
-    const overflow = await page.evaluate(
-      () =>
-        document.documentElement.scrollWidth -
-        document.documentElement.clientWidth,
-    )
-    expect(overflow).toBeLessThanOrEqual(0)
+    expect(await scrollsSideways(page)).toBe(false)
     const [badge, box] = await boxesOf(
       page.getByText(/^In private beta/),
       card(page, "A roadmap with a very long title"),
@@ -398,11 +393,7 @@ test.describe("the top of the roadmap list (STY-058)", () => {
     const [a, r] = await boxesOf(add, refresh)
     expect(r.y).toBeCloseTo(a.y, 0)
     expect(r.right).toBeLessThanOrEqual(375)
-    expect(
-      await page.evaluate(
-        () => document.documentElement.scrollWidth - window.innerWidth,
-      ),
-    ).toBeLessThanOrEqual(0)
+    expect(await scrollsSideways(page)).toBe(false)
 
     await add.focus()
     await page.keyboard.press("Tab")

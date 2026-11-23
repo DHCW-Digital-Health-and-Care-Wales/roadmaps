@@ -86,13 +86,28 @@ None. The Cause section's suspicion held: a scratch run reproduced it (S1's evid
 - `deploy`'s `if:` is a conjunction of `!cancelled()`, `needs.<job>.result == 'success'`
   for each job it needs, and the event and ref. A job added to its `needs` adds its own
   term; `build/ci-workflow.test.ts` (_ci.yml's deploy_) fails without it, on an `||`,
-  `always()` or `failure()`, and without `!cancelled()`.
+  `always()` or `failure()`, and without `!cancelled()` or the event and ref terms.
 - A job before the gate may skip by its event or paths without holding back a deploy;
   the gate alone judges the jobs it needs.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `build/ci-workflow.test.ts` (`runs though a job before it skips by its event or paths`), red on `ci.yml` before the fix. The cause, and the fix's effect, observed in run [45087443622](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/actions/runs/45087443622), a throwaway workflow of `ci.yml`'s job graph on a scratch branch, since deleted: with the gate needing a job skipped by its event, main's condition skipped its deploy job, the same condition ran when the gate needed no skipped job, and the fixed condition ran. A deploy from `main` itself is observed once a push to `main` carries this change |
-| S2       | `build/ci-workflow.test.ts` (`runs only once every job it needs has passed`), red on `ci.yml` before the fix, and red again with the fixed condition broken each way: `always()` for `!cancelled()`, the gate's term dropped, an `\|\|` clause, `\|\| failure()`. Run 45087443622: the fixed condition skipped its deploy job behind a gate needing a failed job, and behind one needing a job cancelled by its timeout                                                                                                                                                                                                                  |
+| Scenario | Held by                                                                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `build/ci-workflow.test.ts` (`runs even when a job before it skips by its event or paths`), red before the fix; observed run 45087443622 |
+| S2       | `build/ci-workflow.test.ts` (`runs only once every job it needs has passed`), red before the fix; observed run 45087443622               |
+
+Run [45087443622](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/actions/runs/45087443622)
+ran a throwaway workflow of `ci.yml`'s job graph on a scratch branch, since deleted. With
+the gate needing a job skipped by its event, main's condition skipped its deploy job; the
+same condition ran when the gate needed no skipped job, so the skip is the cause. The
+fixed condition ran behind the first gate, and skipped behind a gate needing a failed job
+and one needing a job cancelled by its timeout.
+
+S2's test also went red with the fixed condition broken each way: `always()` for
+`!cancelled()`, the gate's term dropped, an `||` clause, `|| failure()`.
+
+S1 on `main` itself shows in the first CI/CD run of a push to `main` carrying this change:
+"Deploy to GitHub Pages" runs and the editor's live build moves past `1f351cf3`. The owner
+checks that run; the observation goes into this Delivery in a later commit, and a skip
+there is a new defect.

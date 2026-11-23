@@ -79,15 +79,24 @@ describe("ci.yml's deploy", () => {
   })
 
   it("runs only once every job it needs has passed", () => {
-    // An `||` could run deploy whatever the jobs it needs did, and always() or
-    // failure() past a failed or cancelled one.
+    // An `||` could run deploy whatever the jobs it needs did; always() or failure()
+    // in place of !cancelled() would run it in a run cancelled after the gate passed.
     expect(deploy?.if).not.toMatch(/\|\||always\(|failure\(/)
     for (const job of needs) {
-      expect(terms).toContain(`needs.${job}.result == 'success'`)
+      const term = `needs.${job}.result == 'success'`
+      expect(
+        terms,
+        `Add \`&& ${term}\` to deploy's if: in .github/workflows/ci.yml.`,
+      ).toContain(term)
     }
   })
 
-  it("runs though a job before it skips by its event or paths", () => {
+  it("runs only on a push to main", () => {
+    expect(terms).toContain("github.event_name == 'push'")
+    expect(terms).toContain("github.ref == 'refs/heads/main'")
+  })
+
+  it("runs even when a job before it skips by its event or paths", () => {
     expect(
       terms,
       "Without a status function, deploy is skipped whenever a job the gate needs is.",

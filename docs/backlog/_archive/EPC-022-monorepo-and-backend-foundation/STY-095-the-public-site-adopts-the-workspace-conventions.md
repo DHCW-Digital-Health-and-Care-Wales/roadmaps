@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-016 §Workspace tooling, §Agent guides, §STY-095 amendments
 - **Suggested model**: Opus — renames across the site, lint and compiler settings shared
   by both apps, and a guide lift
-- **Delivered**: <PR URL>
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/269
 
 ## Summary
 

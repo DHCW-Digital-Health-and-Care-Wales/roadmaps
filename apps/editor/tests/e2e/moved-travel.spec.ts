@@ -230,7 +230,7 @@ test.describe("a long placement (S1, STY-071 S4)", () => {
 test.describe("a move to another placement travels the whole way (S2)", () => {
   test.use({ reducedMotion: "no-preference" })
 
-  test("to Later, below the screen: the page scrolls as it travels, in about 0.7 seconds; it lands last there, marked, in the room between the bars", async ({
+  test("to Later, below the screen: the page scrolls as it travels, in about 0.7 seconds; it lands in the room between the bars", async ({
     page,
   }) => {
     await recordTravels(page)
@@ -498,6 +498,7 @@ test.describe("no travel where none is wanted (S4)", () => {
     const card = itemOf(page, "A minimal card")
     await expect(card.getByText("Moved from Now")).toBeVisible()
     await expect.poll(() => inRoom(card)).toBe(true)
+    await expect(moveButton(page, "A minimal card")).toBeFocused()
     expect(await travels(page)).toEqual([])
   })
 

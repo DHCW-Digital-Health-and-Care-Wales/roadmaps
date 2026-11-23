@@ -141,7 +141,7 @@ test("a roadmap's items appear under its six placements, in order (S1, S2)", asy
   ])
 })
 
-test("Product details holds “Changed” beside its disclosure while closed, and beside “Undo changes” and Edit once open, which returns focus to Edit (STY-042 S1, STY-065 S3)", async ({
+test("Product details holds “Changed” beside its disclosure while closed, and with “Undo changes” and Edit once open, Undo returning focus to Edit (STY-042 S1, STY-065 S3)", async ({
   page,
 }) => {
   await openProductA(page)
@@ -214,7 +214,7 @@ for (const theme of THEMES) {
     await expect(edit).toBeFocused()
   })
 
-  test(`a roadmap with no items shows a compact dashed panel, which holds "Add an item", in the ${theme} theme (STY-042 S2, S4; STY-046 S8)`, async ({
+  test(`a roadmap with no items shows a dashed panel, which holds "Add an item", in the ${theme} theme (STY-042 S2, S4; STY-046 S8)`, async ({
     page,
     sheets,
   }) => {

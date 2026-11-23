@@ -21,16 +21,16 @@ import { expect, test } from "./fixtures/test"
  * Add an item shares a row with "Jump to" and "Compact view" (STY-067 S2).
  */
 
-// A width each side of 768px, where the header takes its tablet layout: 1024 and 1280px take
-// 820px's branch with more room.
+// A width each side of 768px, where the header takes its tablet layout: 1280px takes 820px's
+// branch with more room, and 1024px has 768px's beside the navigation.
 const WIDTHS = [
   ["a phone", 375],
   ["an iPad", 820],
 ] as const
 
 /**
- * The Welsh page's widths, as the validation table sets (S10): the narrowest of each layout,
- * 375px and 768px, where its longer copy has the least room. A notice, which wraps with no
+ * The Welsh page's widths, narrowed (CHO-038) from the six of STY-065 S10 to the narrowest of
+ * each layout, 375px and 768px, where its longer copy has the least room. A notice, which wraps with no
  * breakpoint, is checked at the phone and once on a tablet.
  */
 const WELSH_RUNS = [

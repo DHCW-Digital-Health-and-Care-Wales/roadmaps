@@ -30,12 +30,10 @@ const COPY = {
   en: {
     jumpTo: "Jump to",
     more: "More",
-    later: "Later",
   },
   cy: {
     jumpTo: "Neidio i",
     more: "Mwy",
-    later: "Hwyrach",
   },
 } as const satisfies Record<Language, Record<string, string>>
 
@@ -63,7 +61,6 @@ async function jumpFromMenu(
 function openSmallRoadmap(
   page: Page,
   sheets: { spreadsheet: readonly FakeTab[] },
-  language: Language = "en",
 ) {
   return openRoadmapIn(page, sheets, {
     spreadsheet: withTabItems(
@@ -79,7 +76,6 @@ function openSmallRoadmap(
     ),
     tab: "ProductA",
     lastCard: "Later item",
-    language,
   })
 }
 
@@ -108,7 +104,14 @@ for (const [device, size] of [
         .getByRole("link", { name: /^Later,/ })
         .click()
     } else {
-      await jumpFromMenu(page, "Later")
+      // By keyboard, the one run that does: Base UI gives focus back to "Jump to" as
+      // the menu closes, which the heading must take after (jsdom has no animation to
+      // race it).
+      await jumpTo(page).focus()
+      await page.keyboard.press("Enter")
+      await page.getByRole("menuitem", { name: /^Later,/ }).focus()
+      await page.keyboard.press("Enter")
+      await expect(page.getByRole("menu")).toBeHidden()
     }
 
     const later = placementHeading(page, "Later")

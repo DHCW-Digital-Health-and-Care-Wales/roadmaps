@@ -83,8 +83,8 @@ branch a choice takes
   CHO-036 merged): the twelve specs take 232 runs and 337.5 s summed on CI there. After:
   153 runs, 79 fewer. The 90 test names that are gone took 119.8 s on CI there; the 11
   names that replace or trim them (below) take about 19 s locally, so about 100 s
-  summed go, against the record's ~120 s. The specs go from 4,973 to 4,271 lines (1,160
-  deleted, 458 inserted); the Vitest tests gain 39 lines (two tests). Tests only.
+  summed go, against the record's ~120 s. The specs go from 4,973 to 4,276 lines (1,168
+  deleted, 471 inserted); the Vitest tests gain 39 lines (two tests). Tests only.
 - `moved-travel.spec.ts`: the 8 runs of "a move within a placement travels" (four
   Move choices in two views) become 2, "To the top" in cards and "Down one" in
   compact: every choice takes one code path (`editable-item.tsx` calls `travel`
@@ -99,28 +99,35 @@ branch a choice takes
   keyboard run's Move focus assertion, so `:256` is cut.
 - `moved-travel.spec.ts` "to Later, below the screen" keeps its travel, scroll and
   in-the-room assertions and drops the order, the mark, Move's focus and the position of
-  the two tags (held by `item-tags.spec.ts`, which asserts the same pair side by side
-  at a card's foot).
+  the two tags (the order and the mark are held by `roadmap-detail-page-moved-mark.test.tsx`
+  "A move to another placement"; Move's focus by `moved-mark.spec.ts` and the reduced-motion
+  test below; the pair side by side at a card's foot by `item-tags.spec.ts`).
 - `moved-mark.spec.ts`: the reduced-motion run of the Move-to-Later test is cut (the
   reduced-motion move is `moved-travel.spec.ts`'s "where the system asks for reduced
-  motion", which also asserts no travel). The no-preference run stays: it moves an
+  motion", which also asserts no travel, and now Move's focus, the one thing the cut run
+  held that it did not). The no-preference run stays: it moves an
   item with no ID, which travels with no name, a branch no other test takes.
 - `roadmap-items-cut.spec.ts`: the loop that opened the ten-item page 16 times (eight
   tests at 1280 and 375 px) is two tests at 375 px, text fields and details. Nothing in
   the card has a breakpoint, so the clamp does not change with width; 1280 px stays in
-  the test of the navigation's fold and the axe scans.
+  the test of the navigation's fold and the axe scans. The merged tests drop the
+  `aria-expanded` assertions, held by `roadmap-item-card.test.tsx`.
 - `control-row.spec.ts` "shows one jump control" runs 5 of 12 (English at 375, 640 and
   768 px, Welsh at 640 and 768); 375 px in Welsh is held by the Welsh phone tests of the
-  same file, and 820, 1024 and 1280 px take 768 px's branch. Its top-of-page position
+  same file, 820 and 1280 px take 768 px's branch and 1024 px has its room beside the
+  navigation. Its top-of-page position
   check (links under More) is trimmed: `roadmap-header.spec.ts` holds it. "The count,
   Publish and Discard" runs 3 of 6: English at 375 and 640 (in place of 820, since 640
   is where Publish gains its icon) and Welsh at 375.
 - `roadmap-items-compact.spec.ts` "the switch beside a long title" runs 5 of 10, the
   same widths as `control-row`; "remembers the view" is cut (the view's storage key and
-  its restore are two page tests, below).
+  its restore are two page tests, below). Welsh at 375 px is cut: `roadmap-header.spec.ts`
+  holds the top of the page there in Welsh and `control-row.spec.ts` the stuck strip's
+  Jump to; the Compact toggle beside a long title in Welsh at 375 px, stuck, is the one
+  state no surviving run holds, at a width where the row shows icons.
 - `roadmap-header.spec.ts`: 1280 px is dropped from the two tests that ran at a phone, an
-  iPad and a desktop (the header's tablet layout starts at 768 px; 1024 and 1280 px
-  add room, not a branch). Welsh "fits N px" runs 4 of 12: ProductA at 375 and 768,
+  iPad and a desktop (the header's tablet layout starts at 768 px; 1280 px adds room,
+  not a branch, and 1024 px has 768 px's room beside the navigation). Welsh "fits N px" runs 4 of 12: ProductA at 375 and 768,
   ProductC (the notice) at 375 and 768. The first placement on the first screen runs
   for the tallest header, ProductC, in each language: 2 of 4. The record's 4 runs of
   "fits" stand; the audit saw 3 would do, since a notice wraps with no breakpoint.
@@ -131,6 +138,10 @@ branch a choice takes
   limit is 200 px now. The dark runs of the two theme tests stay, as the record says.
   The Welsh empty-roadmap test keeps the heading to settle on, the open details and
   the 375 px reflow check.
+- `placement-navigation.spec.ts`: "jumps to Later" on a phone now chooses from Jump to
+  by keyboard, the one browser run that does, since Base UI hands focus back to the
+  trigger as the menu closes, a race jsdom has no animation to run. The Welsh keyboard
+  test is cut once Vitest holds ArrowDown and Enter in the Welsh menu.
 - `side-panel.spec.ts` ":206" is cut: Cancel, Escape and the close button share the
   dialog's `FormDialog` whichever surface shows it, and `closing-a-dialog.spec.ts`
   runs the click outside each form dialog, the item's among them.
@@ -147,25 +158,25 @@ branch a choice takes
 
 ### Cuts and the test that holds each (S2; CHO-014 S5, S9)
 
-| Cut                                                                                                                                                   | Held by                                                                                                                                                                                                                               |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `moved-travel.spec.ts` six of the eight runs per choice and view; the passed item's place, the mark, Move's focus                                     | the two runs left; `roadmap-detail-page-moved-mark.test.tsx` "A move within a placement" (each choice's mark), `-ordering.test.tsx` (each choice's order and Move's focus)                                                            |
-| `moved-travel.spec.ts` four of the six "long placement" runs; the mark; the late-close fixture test                                                   | the cards' keyboard run with the late close, and the compact's pointer run                                                                                                                                                            |
-| `moved-travel.spec.ts` "a mark on an item elsewhere stays"                                                                                            | `-moved-mark.test.tsx` "is kept by “Undo order” on another placement" (the branch of `moved-mark.ts` `orderUndone`, shown red by breaking it)                                                                                         |
-| `moved-travel.spec.ts` the tags' position after a move to Later                                                                                       | `item-tags.spec.ts` "shows “Moved from Now”, then “Changed”, side by side at its foot"                                                                                                                                                |
-| `moved-mark.spec.ts` the reduced-motion run                                                                                                           | `moved-travel.spec.ts` "where the system asks for reduced motion, the move shows at once, marked"                                                                                                                                     |
-| `roadmap-items-cut.spec.ts` the 1280 px half of the loop (8 tests) and the 375 px loop's six other tests (folded into two)                            | the two tests at 375 px; the fold at 1280 px                                                                                                                                                                                          |
-| `last-updated.spec.ts` the date from the roadmap dialog, Today and the refusal, today ticked with the changes                                         | `roadmap-detail-page-last-updated.test.tsx` (each, through the in-memory repository); the cell as `YYYY-MM-DD` text by the Sheets adapter's test; the round trip by "writes today's date with Enabled when ticked on Publish roadmap" |
-| `control-row.spec.ts` seven runs of the jump control, the phone's and the iPad's rows of controls, three runs of the foot bar                         | the runs left; `roadmap-header.spec.ts` "opens on the title with its controls" at 375 and 820 px in both languages                                                                                                                    |
-| `roadmap-items-compact.spec.ts` five runs of the switch; "remembers the view"                                                                         | the runs left; `roadmap-detail-page-compact.test.tsx` "keeps a choice for the next page" and "opens the next page in the view last chosen"                                                                                            |
-| `roadmap-header.spec.ts` the 1280 px runs (two tests), the status and facts in English and Welsh, "publishes the roadmap from its notice", Welsh runs | `roadmap-facts.test.tsx` and `-header.test.tsx`; `-publishing-roadmap.test.tsx` and `publishing-roadmap.spec.ts`; the runs left                                                                                                       |
-| `roadmap-page.spec.ts` "columns in a different order", the unplaced items, Refresh, a retryable failure, a tab with no title column                   | the Sheets half by `roadmap-tab-parser.test.ts` (S9); the rest by `roadmap-detail-page-items.test.tsx`; the unknown-error copy by its new test "says something went wrong, with Retry"                                                |
-| `roadmap-page.spec.ts` the position and size checks, the empty Welsh page's copy                                                                      | `-editing.test.tsx` and `product-details.test.tsx` (order); `-adding.test.tsx` and `-items.test.tsx` (the copy)                                                                                                                       |
-| `roadmap-errors.spec.ts` the permission error, the unreadable index in English and Welsh                                                              | `roadmaps-page.test.tsx` (the copy, no Retry) and `query-client.test.ts`; the Sheets half by `google-sheets-roadmap-repository.test.ts`                                                                                               |
-| `side-panel.spec.ts` ":206" Cancel, Escape and close; the Welsh menu                                                                                  | `-editing.test.tsx`, `form-dialog.test.tsx` and `closing-a-dialog.spec.ts`; `edit-surface-menu-item.test.tsx` "names both ways in Welsh"                                                                                              |
-| `placement-navigation.spec.ts` the count in the links and in Jump to; the unplaced half of the reach test; the first placement on the first screen    | `roadmap-detail-page-placement-navigation.test.tsx`; `roadmap-header.spec.ts` (ProductC at 1280 px)                                                                                                                                   |
-| `placement-navigation.spec.ts` the Welsh keyboard test                                                                                                | the new `-placement-navigation.test.tsx` "is used by keyboard alone in Welsh"; the tab order by `roadmap-header.spec.ts`; the Welsh phone's reflow by `control-row.spec.ts`                                                           |
-| `roadmap-controls.spec.ts` the More menu's list                                                                                                       | `roadmap-detail-page-header.test.tsx` "lists Edit product details, then Refresh, then Unpublish roadmap"                                                                                                                              |
+| Cut                                                                                                                                                   | Held by                                                                                                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `moved-travel.spec.ts` six of the eight runs per choice and view; the passed item's place, the mark, Move's focus                                     | the two runs left; `roadmap-detail-page-moved-mark.test.tsx` "A move within a placement" (each choice's mark), `-ordering.test.tsx` (each choice's order and Move's focus)                                                                                   |
+| `moved-travel.spec.ts` four of the six "long placement" runs; the mark; the late-close fixture test                                                   | the cards' keyboard run with the late close, and the compact's pointer run                                                                                                                                                                                   |
+| `moved-travel.spec.ts` "a mark on an item elsewhere stays"                                                                                            | `-moved-mark.test.tsx` "is kept by “Undo order” on another placement" (the branch of `moved-mark.ts` `orderUndone`, shown red by breaking it)                                                                                                                |
+| `moved-travel.spec.ts` "to Later": the order, the mark, Move's focus and the tags' position                                                           | `-moved-mark.test.tsx` "A move to another placement"; Move's focus by `moved-mark.spec.ts` and the reduced-motion test; `item-tags.spec.ts` "shows “Moved from Now”, then “Changed”, side by side at its foot"                                               |
+| `moved-mark.spec.ts` the reduced-motion run                                                                                                           | `moved-travel.spec.ts` "where the system asks for reduced motion, the move shows at once, marked" (now asserting Move's focus too)                                                                                                                           |
+| `roadmap-items-cut.spec.ts` the 1280 px half of the loop (8 tests), the 375 px loop's six other tests (folded into two), and `aria-expanded`          | the two tests at 375 px; the fold at 1280 px; `roadmap-item-card.test.tsx` "cuts a description past three lines…" and "shows the rest in place…"                                                                                                             |
+| `last-updated.spec.ts` the date from the roadmap dialog, Today and the refusal, today ticked with the changes                                         | `roadmap-detail-page-last-updated.test.tsx` (each, through the in-memory repository); the cell as `YYYY-MM-DD` text by the Sheets adapter's test; the round trip by "writes today's date with Enabled when ticked on Publish roadmap"                        |
+| `control-row.spec.ts` seven runs of the jump control, the phone's and the iPad's rows of controls, three runs of the foot bar                         | the runs left; `roadmap-header.spec.ts` "opens on the title with its controls" at 375 and 820 px in both languages                                                                                                                                           |
+| `roadmap-items-compact.spec.ts` five runs of the switch; "remembers the view"                                                                         | the runs left; `roadmap-detail-page-compact.test.tsx` "keeps a choice for the next page" and "opens the next page in the view last chosen"                                                                                                                   |
+| `roadmap-header.spec.ts` the 1280 px runs (two tests), the status and facts in English and Welsh, "publishes the roadmap from its notice", Welsh runs | `roadmap-facts.test.tsx` and `-header.test.tsx`; `-publishing-roadmap.test.tsx` and `publishing-roadmap.spec.ts`; the runs left                                                                                                                              |
+| `roadmap-page.spec.ts` "columns in a different order", the unplaced items, Refresh, a retryable failure, a tab with no title column                   | the Sheets half by `roadmap-tab-parser.test.ts` (S9); the rest by `roadmap-detail-page-items.test.tsx`; the unknown-error copy by its new test "says something went wrong, with Retry"                                                                       |
+| `roadmap-page.spec.ts` the position and size checks, the empty Welsh page's copy                                                                      | `-editing.test.tsx` and `product-details.test.tsx` (order); `-adding.test.tsx` and `-items.test.tsx` (the copy)                                                                                                                                              |
+| `roadmap-errors.spec.ts` the permission error, the unreadable index in English and Welsh                                                              | `roadmaps-page.test.tsx` (the copy, no Retry) and `query-client.test.ts`; the Sheets half by `google-sheets-roadmap-repository.test.ts`                                                                                                                      |
+| `side-panel.spec.ts` ":206" Cancel, Escape and close; the Welsh menu                                                                                  | `-editing.test.tsx`, `form-dialog.test.tsx` and `closing-a-dialog.spec.ts`; `edit-surface-menu-item.test.tsx` "names both ways in Welsh"                                                                                                                     |
+| `placement-navigation.spec.ts` the count in the links and in Jump to; the unplaced half of the reach test; the first placement on the first screen    | `roadmap-detail-page-placement-navigation.test.tsx`; `roadmap-header.spec.ts` (ProductC at 1280 px)                                                                                                                                                          |
+| `placement-navigation.spec.ts` the Welsh keyboard test                                                                                                | the new `-placement-navigation.test.tsx` "is used by keyboard alone in Welsh" (ArrowDown, Enter); the browser's keyboard choice by "jumps to Later" on a phone; the tab order by `roadmap-header.spec.ts`; the Welsh phone's reflow by `control-row.spec.ts` |
+| `roadmap-controls.spec.ts` the More menu's list                                                                                                       | `roadmap-detail-page-header.test.tsx` "lists Edit product details, then Refresh, then Unpublish roadmap"                                                                                                                                                     |
 
 Each holder runs against the in-memory repository or through the fakes, so it outlives
 the switch from Google Sheets; only a cell shape or a column order rests on the Sheets

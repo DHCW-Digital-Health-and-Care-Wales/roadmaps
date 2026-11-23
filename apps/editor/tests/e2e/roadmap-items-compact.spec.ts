@@ -451,9 +451,10 @@ test("leaves the page where it is when the view in use is pressed, as the stuck 
 
 test.describe("the switch beside a long title (S1, S2, S13)", () => {
   // The row takes one branch below 768px and another from it, and 640px is where a stuck
-  // strip stops showing icons; 1024 and 1280px take 768px's. Welsh runs at the two widths
-  // where its longer copy has the least room, since `roadmap-header.spec.ts` holds the top of
-  // the page at 375px in it.
+  // strip stops showing icons; 1024px has 768px's room beside the navigation and 1280px
+  // takes its branch. Welsh runs at the two widths where its longer copy has the least room,
+  // since `roadmap-header.spec.ts` holds the top of the page at 375px in it and
+  // `control-row.spec.ts` the stuck strip's Jump to there.
   for (const [language, width] of [
     ["en", 375],
     ["en", 640],

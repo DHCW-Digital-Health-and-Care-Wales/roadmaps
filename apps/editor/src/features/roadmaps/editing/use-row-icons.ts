@@ -5,15 +5,15 @@ import { useMeasure } from "@/lib/use-measure"
 /** The gap between a row's tag and its buttons, in pixels (`gap-2`). */
 const ROW_GAP = 8
 
-/** "icons" when a tag in the list's `RowProbe` is too wide to sit beside the buttons. */
-function rowsNeedIcons(list: HTMLElement): string {
+/** Whether a tag in the list's `RowProbe` is too wide to sit beside the buttons. */
+function rowsNeedIcons(list: HTMLElement): boolean {
   const room = list.clientWidth
   const probe = list.querySelector("[data-tag-probe]")
-  if (room === 0 || !probe) return ""
+  if (room === 0 || !probe) return false
   const [buttons = 0, ...names] = [...probe.children].map((part) =>
     Math.ceil(part.getBoundingClientRect().width),
   )
-  return names.some((name) => name + ROW_GAP + buttons > room) ? "icons" : ""
+  return names.some((name) => name + ROW_GAP + buttons > room)
 }
 
 /**
@@ -26,5 +26,5 @@ export function useRowIcons(
   rowsRef: RefObject<HTMLUListElement | null>,
   tags: readonly string[],
 ): boolean {
-  return useMeasure(rowsRef, tags.join("\n"), rowsNeedIcons) === "icons"
+  return useMeasure(rowsRef, tags.join("\n"), rowsNeedIcons, false)
 }

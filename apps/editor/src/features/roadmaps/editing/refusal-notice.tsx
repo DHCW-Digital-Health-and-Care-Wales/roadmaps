@@ -86,8 +86,9 @@ export function RemovedItems({
   return (
     <>
       {removed.map(({ item, position }) => (
-        // Two removed items may share a title; each has its own place as loaded.
-        <p key={position}>
+        // Known as a conflict is: by its ID, or with none by its place as loaded. Two
+        // may share a title, and an item kept from an earlier read may share a place.
+        <p key={item.id ?? `at-${String(position)}`}>
           <Trans
             i18nKey="roadmaps.publish.notice.refused.removed"
             components={{ title: <ContentText value={item.title} /> }}

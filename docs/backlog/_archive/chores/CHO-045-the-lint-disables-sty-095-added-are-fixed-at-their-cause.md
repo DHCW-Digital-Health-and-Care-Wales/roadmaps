@@ -12,18 +12,11 @@
 
 ## Summary
 
-STY-095 put one ESLint base under both apps and added 14 `eslint-disable-next-line`
-lines, each with a reason. An audit of each against its rule's documentation and source
-found that 10 silence a finding the code can meet:
-
-- Two hide a ref from `@eslint-react/set-state-in-effect`, whose ref exemption works by
-  name.
-- Three are caused by jsx-a11y strict counting `onFocus`.
-- Three each have a form React or the rule documents.
-- Two give an index key to items that have an identity of their own (D3).
-
-The other 4 stay. Done: those 10 are gone, with behaviour kept and nothing else
-disabled in their place.
+STY-095's ESLint base came with 14 reasoned `eslint-disable-next-line` lines. Read
+against each rule's documentation and source, 10 silence a finding the code can meet: a
+ref hidden from a rule by its name, jsx-a11y strict counting `onFocus`, a form React or
+the rule documents, or an index key on items with an identity of their own. Done: those
+10 are gone, with behaviour kept and nothing disabled in their place; the other 4 stay.
 
 ## Measurement
 
@@ -107,22 +100,28 @@ with no disable
 - **S1**: in the Tags field, a list with no width, or one whose probe is missing, now
   answers "words" rather than keeping its last answer. Only a hidden list has no width,
   and it is measured again as it shows (agent).
-- **S2**: the option lists strict's own handlers without `onFocus` and `onBlur`, and
-  keeps strict's `onLoad`/`onError` allowance on `body`, `iframe` and `img`, which
-  setting the option would otherwise drop (agent).
+- **S1**: `useMeasure` returns whatever primitive its `measure` does, from an
+  `unmeasured` value, so the cut and the rows' icons are booleans and only a detail
+  list's cuts a string (agent, from review).
+- **S2**: the option takes each rule's own default handlers without `onFocus` and
+  `onBlur` (`withoutFocusHandlers`), and keeps strict's `onLoad`/`onError` allowance on
+  `body`, `iframe` and `img`, which setting the option would otherwise drop (agent).
+- **S4**: a removed item is keyed as a conflict is, by its ID, or with none by its place
+  as loaded: an item kept from an earlier read keeps its old place, which an item moved
+  since can share (agent, from review).
 
 ### Contract for dependents
 
 A hook that measures a laid-out element uses `useMeasure` from
-`apps/editor/src/lib/use-measure.ts`. `TagList` takes an item's tags as `LocalisedText`
-and keys each by its English name. A refused publish's notice holds each removed item
-as an `ItemTarget`.
+`apps/editor/src/lib/use-measure.ts`, with a module function as `measure`. `TagList`
+takes an item's tags as `LocalisedText` and keys each by its English name. A refused
+publish's notice holds each removed item as an `ItemTarget`, keyed by its ID or place.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                     |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `pnpm lint` with no disable. Feeding the files to `eslint --stdin` with the old names (`element`, `rows`) reports `set-state-in-effect` at `cut-field.tsx:84` and `use-row-icons.ts:27`. The cut-field and tags-field component tests pass. jsdom cannot lay out, so the E2E card and tags specs hold the measuring itself. |
-| S2       | `eslint --print-config` shows both rules' `handlers` without `onFocus` and `onBlur`; `pnpm lint` passes with the three disables gone                                                                                                                                                                                        |
-| S3       | `pnpm lint` with no disable; the details-field, leave-after-press and entry-server tests pass                                                                                                                                                                                                                               |
-| S4       | `pnpm lint` with no disable; the refusal notice, conflict review, item form and tags field tests pass, the pending-changes store's with an `ItemTarget`                                                                                                                                                                     |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/editor/src/lib/use-measure.test.ts` (the first read, a single read with no `ResizeObserver`, a read again on a content change, a resize and the fonts ready, none once gone; each case shown red by breaking the hook). `pnpm lint` passes with no disable; with the old parameter names, `eslint --stdin` reported `set-state-in-effect` at `cut-field.tsx:84` and `use-row-icons.ts:27` before CHO-046. `roadmap-item-card.test.tsx` and `roadmap-detail-page-tags.test.tsx` pass. jsdom cannot lay out, so the E2E card and tags specs hold the measurements themselves |
+| S2       | `eslint --print-config` shows both rules' `handlers` without `onFocus` and `onBlur`; `pnpm lint` passes with the three disables gone                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| S3       | `pnpm lint` with no disable; `roadmap-detail-page-details.test.tsx`, `roadmap-detail-page-quick-add.test.tsx` (Tab leaving the field, S5) and `apps/public-site/src/entry-server.test.tsx` pass                                                                                                                                                                                                                                                                                                                                                                                  |
+| S4       | `refusal-notice.test.tsx` (two removed items at one place, both named with no duplicate key; red with the key by place alone); `roadmap-detail-page-editing.test.tsx`, `roadmap-detail-page-tags.test.tsx` and `pending-changes-store.test.ts` pass                                                                                                                                                                                                                                                                                                                              |

@@ -35,12 +35,12 @@ function lineHeightOf(element: HTMLElement): number | undefined {
  * Read from `scrollHeight`, which holds the whole content however much of it the cut
  * hides, so the answer is the same cut or open and the control never changes it.
  */
-function textRunsPastCut(element: HTMLElement): string {
+function textRunsPastCut(element: HTMLElement): boolean {
   const lineHeight = lineHeightOf(element)
-  return lineHeight !== undefined &&
+  return (
+    lineHeight !== undefined &&
     element.scrollHeight > lineHeight * (CUT_LINES + 0.5)
-    ? "cut"
-    : ""
+  )
 }
 
 /**
@@ -122,7 +122,7 @@ export function CutField({ subject, value }: CutFieldProps) {
   const valueRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
   const text = value.map((part) => part.text).join(PART_SEPARATOR)
-  const runsPast = useMeasure(valueRef, text, textRunsPastCut) !== ""
+  const runsPast = useMeasure(valueRef, text, textRunsPastCut, false)
 
   return (
     <>
@@ -167,7 +167,7 @@ export function CutDetails({ details, subject }: CutDetailsProps) {
   const id = useId()
   const listRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
-  const cuts = useMeasure(listRef, JSON.stringify(details), detailCuts)
+  const cuts = useMeasure(listRef, JSON.stringify(details), detailCuts, "")
   const cutAtThree = cuts !== "" && !open
 
   return (

@@ -48,10 +48,10 @@ apps share.
   `apps/public-site/scripts/` or a helper in `apps/public-site/src/lib/`, a component, a
   page, `App`, then `entry-server` for the prerendered HTML.
 - A Playwright spec holds only what a built site in a browser shows: pages with
-  JavaScript off, navigation and the base path, the fonts rendered, focus and its ring,
-  what is in view and what stays in place as the page scrolls or filters, controls that
-  show only at some widths, reflow at 320 px and 400% zoom, errors in the console, the
-  axe scans and the ARIA snapshots. Lighthouse holds performance.
+  JavaScript off, navigation and the base path, focus and its ring, what is in view and
+  what stays in place as the page scrolls or filters, controls that show only at some
+  widths, reflow at 320 px and 400% zoom, errors in the console, the axe scans and the
+  ARIA snapshots. Lighthouse holds performance.
 - A Playwright test runs on desktop alone unless it is tagged: `{ tag: "@both" }` for
   what a phone changes (the menu button, the header's filter strip), `{ tag: "@mobile-only" }`
   for what only a phone has or holds best (the menu, 320 px reflow), as

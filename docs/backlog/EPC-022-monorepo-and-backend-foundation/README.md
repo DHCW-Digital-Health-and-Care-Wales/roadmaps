@@ -4,7 +4,7 @@
   STY-088 are done; the two apps' alignment comes next (owner, 2026-11-23), beside the
   API placeholders' acceptance criteria
 - **Progress**: 8 of 16 terminal (STY-085 to STY-088, STY-095, CHO-044, STY-096,
-  STY-097); next selectable: STY-098 once STY-097 merges
+  STY-097); next selectable: STY-098
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary

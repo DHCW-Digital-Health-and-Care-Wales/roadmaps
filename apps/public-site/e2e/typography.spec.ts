@@ -43,7 +43,9 @@ test("text is the self-hosted variable Roboto, with Welsh ŵ and ŷ", async ({
       expect(font).toEqual({ familyName: "Roboto", isCustomFont: true })
     }
   }
+  // The variable files are named `-wght-`, the static weights `-400-` and so on.
   expect(fontRequests.some((url) => url.includes("latin-ext"))).toBe(true)
+  expect(fontRequests.every((url) => url.includes("-wght-"))).toBe(true)
   const origin = new URL(page.url()).origin
   expect(fontRequests.every((url) => new URL(url).origin === origin)).toBe(true)
 })

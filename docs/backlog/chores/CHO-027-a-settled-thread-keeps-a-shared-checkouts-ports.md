@@ -70,7 +70,7 @@ or 4173; a main checkout and CI keep the canonical ports
     and `orchestrate`'s handover and run summary say so. The repo changes one line. It
     relies on the owner remembering it mid-run, and a thread idle for 3 days in the
     shared checkout still auto-settles unless it is pinned.
-- **Q2**: Should `apps/editor/build/resolve-dev-ports.ts` refuse the canonical ports in a linked
+- **Q2**: Should `scripts/worktree/dev-ports.ts` refuse the canonical ports in a linked
   worktree that has no `.env.worktree` (S2)? That would catch a teardown of any cause.
   It would also stop a worktree that T3 did not create (`git worktree add` by hand, a
   Claude Code `isolation: "worktree"` agent) until someone runs `pnpm worktree:setup`.

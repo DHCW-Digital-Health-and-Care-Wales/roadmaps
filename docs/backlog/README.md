@@ -84,7 +84,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-041](_archive/chores/CHO-041-the-vitest-suite-asserts-each-rule-once-at-its-lowest-seam.md)                 | The Vitest suite asserts each rule once, at its lowest seam (part of CHO-014)                                                       | Done           |
 | [CHO-042](_archive/chores/CHO-042-every-sideways-scroll-check-uses-one-helper.md)                                | Every sideways-scroll check uses one helper (part of CHO-014)                                                                       | Done           |
 | [CHO-043](_archive/chores/CHO-043-the-public-sites-tests-hold-each-check-once.md)                                | The public site's tests hold each check once, where it can fail alone                                                               | Done           |
-| [CHO-044](chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                                | One dev-ports resolver serves both apps (EPC-022's alignment sequence, after STY-095)                                               | Proposed       |
+| [CHO-044](_archive/chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                       | One dev-ports resolver serves both apps (EPC-022's alignment sequence, after STY-095)                                               | Done           |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

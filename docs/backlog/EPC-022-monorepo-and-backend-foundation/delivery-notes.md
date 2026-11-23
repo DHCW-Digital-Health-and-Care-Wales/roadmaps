@@ -19,5 +19,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   the site merges as the run allows.
 - **The site's script has about 2.4 KB to spare**: Lighthouse counts 97,605 of the
   100,000 bytes `apps/public-site/lighthouserc.json` allows, Simple Analytics' 6 KB
-  included, so a story that bumps or adds a package in the site's script (STY-097's
-  react, react-dom, lucide-react or zod) runs `pnpm site:lighthouse` before choosing.
+  included (its `latest.js` can grow unasked), so a story that bumps or adds a package
+  in the site's script (STY-097's react, react-dom or lucide-react) runs
+  `pnpm site:lighthouse` before choosing its version.

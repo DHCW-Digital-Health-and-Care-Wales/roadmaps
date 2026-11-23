@@ -1,6 +1,6 @@
 # DEF-032: A quick add test still misses the field coming back, after expanding again
 
-- **Status**: Needs triage — found by DEF-031 delivery (`main`'s CI after PR #254)
+- **Status**: Done
 - **Severity**: Low — the editor's unit run fails now and then on a change that does not
   touch quick add, failing _CI result_ and holding back that push's deploy until the next
   push or a re-run; no user is affected
@@ -9,7 +9,7 @@
 - **Depends on**: none
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one test's timing, shown red by a delayed render
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/257
 
 ## Summary
 
@@ -57,9 +57,52 @@ a key pressed before a Base UI popup's deferred first focus lands.
 
 ## Acceptance criteria
 
-### S1: Expanding again waits for the dialog before closing it
+### S1: Expanding again waits for the dialog before closing it ✅
 
 **Given** the add-item dialog takes focus one render or more after "Add more details"
 is pressed
 **When** the test closes it with Escape and checks the field
 **Then** it waits for the dialog to be ready before pressing Escape, and passes
+
+## Decisions
+
+- **D1** (owner, 2026-11-23, a request in the delivery session): fix it now, with
+  DEF-030, on the PR that raised it (#257).
+
+## Delivery
+
+The cause was as suspected. Base UI's `FloatingFocusManager` focuses the dialog's title
+through `enqueueFocus`, a `requestAnimationFrame` after the dialog renders, and the
+field's `keepFocus` holds focus in its title until then. An Escape pressed in that frame
+reaches the field's `onKeyDown`, which closes the field and drops its title, and closes
+the dialog as well.
+
+`expand` in `roadmap-detail-page-quick-add.test.tsx` now waits, through
+`expectOpeningFocus`, for the dialog's title to take focus before it returns. All nine
+of its callers wait, the three that discard the dialog it returns among them: "does
+nothing on a click outside the dialog" clicked at once too.
+
+The sweep for the same race in other tests is DEF-030's: a key pressed in a menu or
+dialog straight after it opens. The edit dialog's Escape in
+`roadmap-detail-page-compact.test.tsx` is pressed before the dialog's first focus too,
+but focus is then on the row's Edit, which has no key handler of its own, and the
+dialog closes either way.
+
+### Departures
+
+- **Red by a delayed frame, test-first** (agent): S1 has no regression test of its own,
+  since the fix is to the test. Its red is the test as it stood, with
+  `requestAnimationFrame` delayed by 150 ms: `Unable to find role="textbox" and name
+"Title of a new item in Next"`, after the 3-second timeout, as CI saw it. With the
+  wait, under the same delay, it passes. The delay was not committed.
+- **No screenshots** (agent): no visible UI changes.
+
+### Contract for dependents
+
+As DEF-030's: a key pressed in a dialog just opened waits first for its opening focus.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `roadmap-detail-page-quick-add.test.tsx`, "can be expanded again, and Enter in the field back adds the title as quick add does". With `requestAnimationFrame` delayed by 150 ms and no wait in `expand`, it fails as CI did. With the wait, under the same delay, it passes, as do "does nothing on a click outside the dialog" and the S2 test of the opened form. The full run's counts are in the PR. |

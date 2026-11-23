@@ -506,11 +506,18 @@ function moreDetails() {
   return main().getByRole("button", { name: "Add more details" })
 }
 
-/** Opens Next's field, types `typed` and chooses "Add more details". */
+/**
+ * Opens Next's field, types `typed`, chooses "Add more details" and waits for the
+ * dialog's title to take focus. The dialog focuses it a frame after it renders, and a
+ * key pressed before then reaches the field instead.
+ */
 async function expand(user: User, typed = TYPED) {
   const input = await openField(user, "Next")
   if (typed) await user.type(input, typed)
   await user.click(moreDetails())
+  await expectOpeningFocus(() =>
+    addItemDialog().getByRole("textbox", { name: "Title" }),
+  )
   return addItemDialog()
 }
 

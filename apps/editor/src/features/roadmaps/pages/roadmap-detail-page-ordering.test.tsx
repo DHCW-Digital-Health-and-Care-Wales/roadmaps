@@ -264,7 +264,11 @@ describe("Choosing a position (S2)", () => {
     main().getByRole("button", { name: "Move Delta" }).focus()
 
     await user.keyboard("{Enter}")
-    await screen.findByRole("menu")
+    const menu = await screen.findByRole("menu")
+    // The menu focuses its first choice a frame after it renders.
+    await expectOpeningFocus(() =>
+      within(menu).getByRole("menuitem", { name: "To the top" }),
+    )
     await user.keyboard("{ArrowDown}{Enter}")
 
     // "To the top" is first, so one step down is "Up one".

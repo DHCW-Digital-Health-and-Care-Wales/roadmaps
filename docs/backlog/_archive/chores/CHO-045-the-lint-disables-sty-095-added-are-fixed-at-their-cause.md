@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-016
 - **Suggested model**: Opus — each disable needs the rule's own exemptions read against
   the code before it is removed
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/278
 
 ## Summary
 

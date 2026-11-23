@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-016
 - **Suggested model**: Sonnet — one config block in `eslint.base.ts`, then each new
   finding fixed or disabled as CHO-045 did
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/278
 
 ## Summary
 

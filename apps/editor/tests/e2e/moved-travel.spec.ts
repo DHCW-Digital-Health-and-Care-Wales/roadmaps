@@ -486,7 +486,7 @@ test.describe("“Undo order” with no travel where none is wanted (STY-073 S2)
 })
 
 test.describe("no travel where none is wanted (S4)", () => {
-  test("where the system asks for reduced motion, the move shows at once, marked", async ({
+  test("where the system asks for reduced motion, the move shows at once, marked, focus on its Move", async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })

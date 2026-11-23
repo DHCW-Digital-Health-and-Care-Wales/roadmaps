@@ -90,9 +90,10 @@ async function scrollInto(page: Page, name: string) {
 }
 
 // A width each side of 768px, where the page offers the placement links in place of Jump to,
-// and 640px, where its stuck strip shows labelled buttons in place of icons; 820px and 1280px
-// take the branch 768px does, and 1024px has its room beside the navigation. Welsh, whose copy is the longer, runs at the two widths
-// where a row has least room; 375px in Welsh is held by the Welsh phone tests below.
+// and 640px, where its stuck strip shows labelled buttons in place of icons; 820px and
+// 1280px take the branch 768px does, and 1024px has its room beside the navigation. Welsh,
+// whose copy is the longer, runs at the two widths where a row has least room; 375px in
+// Welsh is held by the Welsh phone tests below.
 for (const [language, width] of [
   ["en", 375],
   ["en", 640],

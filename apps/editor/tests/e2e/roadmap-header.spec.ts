@@ -29,9 +29,9 @@ const WIDTHS = [
 ] as const
 
 /**
- * The Welsh page's widths, narrowed (CHO-038) from the six of STY-065 S10 to the narrowest of
- * each layout, 375px and 768px, where its longer copy has the least room. A notice, which wraps with no
- * breakpoint, is checked at the phone and once on a tablet.
+ * The Welsh page's widths, narrowed (CHO-038) from the six of STY-065 S10 to the narrowest
+ * of each layout, 375px and 768px, where its longer copy has the least room. A notice,
+ * which wraps with no breakpoint, is checked at the phone and once on a tablet.
  */
 const WELSH_RUNS = [
   ["ProductA", 375],

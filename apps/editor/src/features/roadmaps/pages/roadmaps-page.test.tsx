@@ -169,20 +169,45 @@ describe("RoadmapsPage", () => {
     })
 
     it("re-sorts the groups and titles when the language changes, naming families in Welsh (S8)", async () => {
-      await renderWithProviders({
+      // Welsh names that sort the other way round: the groups, and the titles in one.
+      const reversed: Roadmap[] = [
+        createTestRoadmap("zebra", "Zebra roadmap", {
+          title: { en: "Zebra roadmap", cy: "Ysgol" },
+          family: family("Single Record", "Cofnod Sengl"),
+        }),
+        createTestRoadmap("alpha", "Alpha roadmap", {
+          title: { en: "Alpha roadmap", cy: "Zwyn" },
+          family: family("Single Record", "Cofnod Sengl"),
+        }),
+        createTestRoadmap("productb", "Product B roadmap", {
+          family: family(
+            "Medicines & Diagnostics",
+            "Meddyginiaethau a Diagnosteg",
+          ),
+        }),
+      ]
+      const { i18n } = await renderWithProviders({
         authState: connected,
-        roadmaps: example,
-        language: "cy",
+        roadmaps: reversed,
       })
+      expect(await main().findByText(/^3 roadmaps/)).toBeInTheDocument()
+      expect(groups()).toEqual([
+        { heading: "Medicines & Diagnostics", titles: ["Product B roadmap"] },
+        {
+          heading: "Single Record",
+          titles: ["Alpha roadmap", "Zebra roadmap"],
+        },
+      ])
+
+      await act(() => i18n.changeLanguage("cy"))
 
       expect(await main().findByText(/^3 map trywydd/)).toBeInTheDocument()
       expect(groups()).toEqual([
+        { heading: "Cofnod Sengl", titles: ["Ysgol", "Zwyn"] },
         {
           heading: "Meddyginiaethau a Diagnosteg",
-          titles: ["Trywydd Cynnyrch B"],
+          titles: ["Product B roadmap"],
         },
-        { heading: "Single Record", titles: ["Product A roadmap"] },
-        { heading: "Dim teulu cynnyrch", titles: ["Product C roadmap"] },
       ])
     })
 

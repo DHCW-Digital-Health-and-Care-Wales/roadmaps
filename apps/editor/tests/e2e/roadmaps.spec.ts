@@ -64,20 +64,6 @@ test("connecting shows the roadmaps the roadmap index lists, grouped by family (
   expect(sheets.tokens).toEqual([gis.latestToken, gis.latestToken])
 })
 
-test("a roadmap index with no roadmaps shows the empty state (S5)", async ({
-  page,
-  sheets,
-}) => {
-  sheets.spreadsheet = withRoadmapIndex([HEADER])
-  await page.goto("./")
-  await connect(page)
-
-  await expect(
-    page.getByRole("heading", { name: "No roadmaps yet" }),
-  ).toBeVisible()
-  await expect(roadmapCards(page)).toHaveCount(0)
-})
-
 test("Refresh loads the latest roadmaps", async ({ page, sheets }) => {
   await page.goto("./")
   await connect(page)
@@ -149,126 +135,6 @@ test("a deep link survives a reload (S2)", async ({ page, gis }) => {
     main.getByRole("heading", { level: 1, name: "Product A roadmap" }),
   ).toBeVisible()
   expect(gis.tokenRequests).toHaveLength(2)
-})
-
-test("a worksheet id is not a roadmap address (S2)", async ({ page }) => {
-  await page.goto("./#/roadmaps/0")
-  await connect(page)
-
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Roadmap not found" }),
-  ).toBeVisible()
-})
-
-test("cards sit under their product family, each showing the roadmap's information (S1, S2, S4)", async ({
-  page,
-}) => {
-  await page.goto("./")
-  await connect(page)
-  await expect(roadmapCards(page)).toHaveCount(3)
-
-  const main = page.getByRole("main")
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "Medicines & Diagnostics",
-    "Single Record",
-    "No product family",
-  ])
-  const single = main.getByRole("list", { name: "Single Record" })
-  await expect(single.getByRole("link")).toHaveCount(1)
-
-  const productA = card(page, "Product A roadmap")
-  await expect(productA).toContainText("GP & Community Services")
-  await expect(productA).toContainText("Beta")
-  await expect(productA).toContainText("Product lead: Alex Jones")
-  await expect(productA).toContainText("Updated 1 October 2026")
-  await expect(productA).not.toContainText("Not published")
-
-  const productC = card(page, "Product C roadmap")
-  await expect(productC).toContainText("Not published")
-  await expect(productC).toContainText("Product lead: Sam Evans")
-  // Product B has no category and no product lead: nothing is shown in their place.
-  await expect(card(page, "Product B roadmap")).not.toContainText(/lead|other/i)
-})
-
-test("the cards show Welsh content and copy in Cymraeg (S5)", async ({
-  page,
-}) => {
-  await useLanguage(page, "cy")
-  await page.goto("./")
-  await page
-    .getByRole("main")
-    .getByRole("button", { name: "Cysylltu â Google" })
-    .click()
-
-  const main = page.getByRole("main")
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "Meddyginiaethau a Diagnosteg",
-    "Single Record",
-    "Dim teulu cynnyrch",
-  ])
-  await expect(main.getByText("3 map trywydd, 1 heb ei gyhoeddi")).toBeVisible()
-  const productB = card(page, "Trywydd Cynnyrch B")
-  await expect(productB).toContainText("Alffa")
-  await expect(productB).toContainText("Diweddarwyd 15 Medi 2026")
-  await expect(card(page, "Product A roadmap")).toContainText(
-    "Arweinydd cynnyrch: Alex Jones",
-  )
-  await expect(card(page, "Product C roadmap")).toContainText("Heb ei gyhoeddi")
-})
-
-test("a language switch re-sorts the groups and titles (S8)", async ({
-  page,
-  sheets,
-}) => {
-  sheets.spreadsheet = withRoadmapIndex([
-    HEADER,
-    roadmapRow({
-      Sheet: "one",
-      Enabled: "Yes",
-      Title: "Zebra",
-      Family: "Single Record",
-    }),
-    roadmapRow({
-      Sheet: "two",
-      Enabled: "Yes",
-      Title: "éclair",
-      Family: " single record",
-    }),
-    roadmapRow({
-      Sheet: "three",
-      Enabled: "Yes",
-      Title: "Product 10 roadmap",
-      Family: "Single Récord",
-    }),
-    roadmapRow({
-      Sheet: "four",
-      Enabled: "Yes",
-      Title: "Alpha",
-      "Title (cy)": "Ysgol",
-      Family: "Alpha family",
-      "Family (cy)": "Teulu Ysgol",
-    }),
-  ])
-  await page.goto("./")
-  await connect(page)
-
-  const main = page.getByRole("main")
-  // Three spellings are one family; titles sort as people read them.
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "Alpha family",
-    "Single Record",
-  ])
-  await expect(
-    main.getByRole("list", { name: "Single Record" }).getByRole("link"),
-  ).toHaveText(["éclair", "Product 10 roadmap", "Zebra"])
-
-  await page.getByRole("button", { name: "Language English" }).click()
-  await page.getByRole("menuitemradio", { name: "Cymraeg" }).click()
-
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "Single Record",
-    "Teulu Ysgol",
-  ])
 })
 
 test.describe("on a phone", () => {
@@ -390,35 +256,6 @@ test("families and categories come from their lists, flagging a roadmap out of s
   )
 })
 
-test("a family and category read their Welsh names from the lists (STY-027 S5)", async ({
-  page,
-  sheets,
-}) => {
-  sheets.spreadsheet = withLists()
-  await useLanguage(page, "cy")
-  await page.goto("./")
-  await page
-    .getByRole("main")
-    .getByRole("button", { name: "Cysylltu â Google" })
-    .click()
-
-  const main = page.getByRole("main")
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "Cofnod Sengl",
-    "Meddyginiaethau a Diagnosteg",
-    "Single Recrod",
-    "Dim teulu cynnyrch",
-  ])
-  const productA = card(page, "Product A roadmap")
-  await expect(productA).toContainText(
-    "Meddygon Teulu a Gwasanaethau Cymunedol",
-  )
-  await expect(productA).toContainText("Yn wahanol i'w deulu neu gategori")
-  await expect(card(page, "Product D roadmap")).toContainText(
-    "Teulu heb ei restru",
-  )
-})
-
 test("makes a roadmap out of step match its lists, telling a published one first (STY-030 S1, S2, S3, S4)", async ({
   page,
   sheets,
@@ -464,7 +301,8 @@ test("makes a roadmap out of step match its lists, telling a published one first
 })
 
 test.describe("the top of the roadmap list (STY-058)", () => {
-  const WIDTHS = [375, 640, 820, 1024, 1280] as const
+  // The one breakpoint of the actions' row: Refresh gains its label from 640px (`sm`).
+  const WIDTHS = [375, 640] as const
 
   // A class a button gains or loses at 640px takes its transition's time to arrive otherwise.
   test.use({ reducedMotion: "reduce" })

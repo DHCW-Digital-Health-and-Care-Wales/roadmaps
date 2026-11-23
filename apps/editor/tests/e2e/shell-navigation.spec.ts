@@ -3,7 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { escapeFrom } from "./fixtures/keyboard"
 import { boxesOf, boxOf } from "./fixtures/layout"
-import { tokenColour, type Language, useLanguage } from "./fixtures/look"
+import { tokenColour } from "./fixtures/look"
 import { EXAMPLE_SPREADSHEET, type FakeTab } from "./fixtures/fake-sheets"
 import { openLongRoadmap, openRoadmapIn } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
@@ -20,33 +20,22 @@ const DESKTOP = { width: 1280, height: 800 }
 const PHONE = { width: 375, height: 812 }
 
 const COPY = {
-  en: {
-    navigation: "Roadmaps",
-    all: "All roadmaps",
-    families: "Families, categories and organisations",
-    menu: "Menu",
-    closeMenu: "Close menu",
-    fold: "Fold the navigation",
-    unfold: "Open the navigation",
-  },
-  cy: {
-    navigation: "Mapiau trywydd",
-    all: "Pob map trywydd",
-    families: "Teuluoedd, categorïau a sefydliadau",
-    menu: "Dewislen",
-    closeMenu: "Cau'r ddewislen",
-    fold: "Plygu'r llywio",
-    unfold: "Agor y llywio",
-  },
-} as const satisfies Record<Language, Record<string, string>>
+  navigation: "Roadmaps",
+  all: "All roadmaps",
+  families: "Families, categories and organisations",
+  menu: "Menu",
+  closeMenu: "Close menu",
+  fold: "Fold the navigation",
+  unfold: "Open the navigation",
+} as const
 
-function navigation(page: Page, language: Language = "en"): Locator {
-  return page.getByRole("navigation", { name: COPY[language].navigation })
+function navigation(page: Page): Locator {
+  return page.getByRole("navigation", { name: COPY.navigation })
 }
 
 /** The navigation's link to `name`, matched whole. */
-function navLink(page: Page, name: string, language: Language = "en") {
-  return navigation(page, language).getByRole("link", { name, exact: true })
+function navLink(page: Page, name: string) {
+  return navigation(page).getByRole("link", { name, exact: true })
 }
 
 /** Opens Product A, connected, with the example spreadsheet. */
@@ -57,13 +46,6 @@ function openProductA(page: Page, sheets: { spreadsheet: readonly FakeTab[] }) {
     lastCard: "Minimal card",
   })
 }
-
-const horizontalOverflow = (page: Page) =>
-  page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth,
-  )
 
 test.describe("on a desktop", () => {
   test.beforeEach(async ({ page }) => {
@@ -93,12 +75,12 @@ test.describe("on a desktop", () => {
   }) => {
     await openProductA(page, sheets)
 
-    await navLink(page, COPY.en.families).click()
+    await navLink(page, COPY.families).click()
 
     await expect(page).toHaveURL(/#\/families$/)
     await expect(
       page.getByRole("main").getByRole("heading", { level: 1 }),
-    ).toHaveText(COPY.en.families)
+    ).toHaveText(COPY.families)
   })
 
   test("marks the roadmap open as the current page, to sight and to a screen reader (S3)", async ({
@@ -175,9 +157,9 @@ test.describe("on a desktop", () => {
     expect((await boxOf(sidebar)).width).toBe(256)
     expect(await columns()).toBe(2)
 
-    await page.getByRole("button", { name: COPY.en.fold }).click()
+    await page.getByRole("button", { name: COPY.fold }).click()
 
-    const unfold = page.getByRole("button", { name: COPY.en.unfold })
+    const unfold = page.getByRole("button", { name: COPY.unfold })
     await expect(unfold).toBeFocused()
     expect((await boxOf(sidebar)).width).toBe(64)
     expect(await columns()).toBe(3)
@@ -192,7 +174,7 @@ test.describe("on a desktop", () => {
     expect((await boxOf(sidebar)).width).toBe(64)
 
     await unfold.click()
-    await expect(page.getByRole("button", { name: COPY.en.fold })).toBeFocused()
+    await expect(page.getByRole("button", { name: COPY.fold })).toBeFocused()
     expect((await boxOf(sidebar)).width).toBe(256)
   })
 
@@ -202,10 +184,10 @@ test.describe("on a desktop", () => {
     await page.goto("./")
 
     await expect(navigation(page).getByRole("link")).toHaveText([
-      COPY.en.all,
-      COPY.en.families,
+      COPY.all,
+      COPY.families,
     ])
-    await navLink(page, COPY.en.families).click()
+    await navLink(page, COPY.families).click()
     await expect(
       page.getByRole("main").getByRole("button", { name: "Connect Google" }),
     ).toBeVisible()
@@ -221,8 +203,8 @@ test.describe("on a desktop", () => {
     await expect(page.getByRole("main").getByRole("alert")).toBeVisible()
 
     await expect(navigation(page).getByRole("link")).toHaveText([
-      COPY.en.all,
-      COPY.en.families,
+      COPY.all,
+      COPY.families,
     ])
   })
 })
@@ -232,44 +214,34 @@ test.describe("on a phone", () => {
     await page.setViewportSize(PHONE)
   })
 
-  for (const language of ["en", "cy"] as const) {
-    const copy = COPY[language]
+  // The drawer's fit in Welsh, the longest copy, is held with the navigation's other
+  // Welsh reflow checks in `navigation-welsh.spec.ts`.
+  test("opens over the page from the top bar, keeps focus in it and returns it (S5, D9)", async ({
+    page,
+  }) => {
+    await page.goto("./")
+    const menu = page
+      .getByRole("banner")
+      .getByRole("button", { name: COPY.menu })
 
-    test(`opens over the page from the top bar, keeps focus in it and returns it, and fits in ${language} (S5, D9)`, async ({
-      page,
-    }) => {
-      await useLanguage(page, language)
-      await page.goto("./")
-      const menu = page
-        .getByRole("banner")
-        .getByRole("button", { name: copy.menu })
+    await menu.click()
 
-      await menu.click()
+    const drawer = page.getByRole("dialog", { name: COPY.menu })
+    await expect(drawer).toBeVisible()
+    await expect(drawer.getByRole("navigation")).toBeVisible()
+    await expect(
+      drawer.getByRole("button", { name: COPY.closeMenu }),
+    ).toBeFocused()
+    // Focus cycles inside the drawer: past its last link comes its first control.
+    await navLink(page, COPY.families).focus()
+    await page.keyboard.press("Tab")
+    await expect(
+      drawer.getByRole("button", { name: COPY.closeMenu }),
+    ).toBeFocused()
 
-      const drawer = page.getByRole("dialog", { name: copy.menu })
-      await expect(drawer).toBeVisible()
-      await expect(drawer.getByRole("navigation")).toBeVisible()
-      await expect(
-        drawer.getByRole("button", { name: copy.closeMenu }),
-      ).toBeFocused()
-      // Focus cycles inside the drawer: past its last link comes its first control.
-      await navLink(page, copy.families, language).focus()
-      await page.keyboard.press("Tab")
-      await expect(
-        drawer.getByRole("button", { name: copy.closeMenu }),
-      ).toBeFocused()
-      // It fits: nothing scrolls sideways, and its links fit inside it.
-      expect(await horizontalOverflow(page)).toBe(0)
-      const [box, families] = await boxesOf(
-        drawer,
-        navLink(page, copy.families, language),
-      )
-      expect(families.right).toBeLessThanOrEqual(box.right)
-
-      await escapeFrom(drawer)
-      await expect(menu).toBeFocused()
-    })
-  }
+    await escapeFrom(drawer)
+    await expect(menu).toBeFocused()
+  })
 
   test("opens from a roadmap's sticky strip once scrolled, and a roadmap chosen opens its page (S5, D8, S1)", async ({
     page,
@@ -283,11 +255,11 @@ test.describe("on a phone", () => {
       })
     const strip = page.locator("[data-stuck]")
     await expect(strip).toBeVisible()
-    const menu = strip.getByRole("button", { name: COPY.en.menu })
+    const menu = strip.getByRole("button", { name: COPY.menu })
     expect((await boxOf(menu)).x).toBe(16)
 
     await menu.click()
-    await page.getByRole("dialog", { name: COPY.en.menu }).waitFor()
+    await page.getByRole("dialog", { name: COPY.menu }).waitFor()
     await navLink(page, "Product B roadmap").click()
 
     await expect(page.getByRole("dialog")).toBeHidden()

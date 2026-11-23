@@ -23,6 +23,7 @@ import {
   editItemDialog,
   openEditItemDialog,
 } from "../testing/item-dialog"
+import { expectOpeningFocus } from "../testing/opening-focus"
 import {
   closeConflictReview,
   openConflictReview,
@@ -581,7 +582,11 @@ describe("Moving an item (STY-031)", () => {
     button.focus()
 
     await user.keyboard("{Enter}")
-    await screen.findByRole("menu")
+    const menu = await screen.findByRole("menu")
+    // The menu focuses its first choice a frame after it renders.
+    await expectOpeningFocus(() =>
+      within(menu).getByRole("menuitem", { name: "Recently delivered" }),
+    )
     await user.keyboard("{ArrowDown}{Enter}")
 
     expect(titlesUnder("Now")).toContain("Online booking")

@@ -111,3 +111,12 @@ S1 on `main` itself shows in the first CI/CD run of a push to `main` carrying th
 "Deploy to GitHub Pages" runs and the editor's live build moves past `1f351cf3`. The owner
 checks that run; the observation goes into this Delivery in a later commit, and a skip
 there is a new defect.
+
+Observed on `main`: the CI/CD run of `7f52ef7e`, run
+[45091803604](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/actions/runs/45091803604),
+skipped _Dependency review_, passed _CI result_ and ran "Deploy to GitHub Pages", which
+deployed `7f52ef7e` to `github-pages`, the first deploy since `1f351cf3` (S1). The run
+before it, of `d194496c`,
+[45091291744](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/actions/runs/45091291744),
+failed _Editor: verify_ on a flaky test (DEF-032), so _CI result_ failed and the deploy
+was skipped (S2).

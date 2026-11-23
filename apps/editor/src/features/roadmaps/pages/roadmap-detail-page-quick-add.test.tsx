@@ -506,12 +506,24 @@ function moreDetails() {
   return main().getByRole("button", { name: "Add more details" })
 }
 
+/**
+ * Chooses "Add more details" in the open field and waits for the dialog's title to take
+ * focus. The dialog focuses it a frame after it renders, and a key pressed before then
+ * reaches the field instead.
+ */
+async function chooseMoreDetails(user: User) {
+  await user.click(moreDetails())
+  await expectOpeningFocus(() =>
+    addItemDialog().getByRole("textbox", { name: "Title" }),
+  )
+  return addItemDialog()
+}
+
 /** Opens Next's field, types `typed` and chooses "Add more details". */
 async function expand(user: User, typed = TYPED) {
   const input = await openField(user, "Next")
   if (typed) await user.type(input, typed)
-  await user.click(moreDetails())
-  return addItemDialog()
+  return chooseMoreDetails(user)
 }
 
 /** Expects Next's field open, focused, holding `typed` with the cursor at its end. */
@@ -568,7 +580,7 @@ describe("“Add more details” (STY-081 S1, S2)", () => {
     for (const none of ["No tags", "No organisations", "No details"]) {
       expect(dialog.getByText(none)).toBeVisible()
     }
-    await expectOpeningFocus(() => title)
+    expect(title).toHaveFocus()
     if (!(title instanceof HTMLInputElement)) throw new Error("No input")
     expect([title.selectionStart, title.selectionEnd]).toEqual([
       TIDIED.length,
@@ -675,7 +687,7 @@ describe("Closing the dialog having added nothing (STY-081 S4)", () => {
       await user.type(input, TYPED)
       // The cursor elsewhere in the title as it is expanded.
       await user.keyboard("{Home}")
-      await user.click(moreDetails())
+      await chooseMoreDetails(user)
       await user.type(
         addItemDialog().getByRole("textbox", { name: "Description" }),
         "Dropped",

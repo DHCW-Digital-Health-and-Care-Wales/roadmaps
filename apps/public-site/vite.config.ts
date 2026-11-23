@@ -97,9 +97,9 @@ function pagesNotFound(): Plugin {
 // deep link, because ./assets/... then resolves one directory too high.
 export default defineConfig(({ command, mode }) => ({
   base: "/product-roadmaps/",
-  // A worktree's own ports (scripts/worktree/dev-ports.ts), read only to start the dev
-  // server or `vite preview`, so a build or a test run needs no ports; strict,
-  // so a port in use fails rather than moving where the E2E suite and
+  // A worktree's own ports (scripts/worktree/dev-ports.ts), read only to start
+  // the dev server or `vite preview`, so a build or a test run needs no ports;
+  // strict, so a port in use fails rather than moving where the E2E suite and
   // Lighthouse don't look.
   ...(command === "serve" &&
     mode !== "test" &&

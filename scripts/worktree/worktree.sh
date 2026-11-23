@@ -136,8 +136,8 @@ ensure_env() {
   unlock
 
   local base=$((PORT_BASE + SLOT * 10)) offset
-  # Plain KEY=VALUE lines: each app's port resolver parses them, and a shell
-  # can `source` them. Written aside and renamed, so a
+  # Plain KEY=VALUE lines: the dev-ports resolver (dev-ports.ts) parses them, and
+  # a shell can `source` them. Written aside and renamed, so a
   # concurrent reader (a starting Vite or Playwright) never reads a
   # half-written file.
   {

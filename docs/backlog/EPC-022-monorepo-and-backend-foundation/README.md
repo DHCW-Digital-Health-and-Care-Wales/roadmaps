@@ -116,7 +116,7 @@ records it split into:
     file), CHO-044 (one dev-ports resolver), STY-096 (the site's interface text on
     react-i18next), STY-097 (one version per shared dependency, one font) and STY-098
     (the editor marks English shown in place of Welsh), each merged before the next.
-    The public sees no change but STY-097's font and package updates. The site's design
+    The public sees no change but STY-096's new Welsh count forms and STY-097's font and package updates, whose screenshots the owner sees before approving the merge. The site's design
     tokens follow as a placeholder, STY-099; shared code packages are out of scope.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
@@ -159,7 +159,7 @@ the seeder for any table it creates.
 | STY-086 | [Move the editor into apps/editor](../_archive/EPC-022-monorepo-and-backend-foundation/STY-086-move-the-editor-into-a-pnpm-workspace.md)   | CI/CD + Docs               | STY-085     | ✅    |
 | STY-087 | [Workspace tooling and the ruleset](../_archive/EPC-022-monorepo-and-backend-foundation/STY-087-workspace-tooling-and-the-main-ruleset.md) | CI/CD                      | STY-086     | ✅    |
 | STY-088 | [Bring the public site in](../_archive/EPC-022-monorepo-and-backend-foundation/STY-088-bring-the-public-site-into-the-workspace.md)        | CI/CD + Docs               | STY-087     | ✅    |
-| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)                                                    | Infrastructure + CI/CD     | STY-088     |       |
+| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)                                                    | Infrastructure + CI/CD     | STY-098     |       |
 | STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                                                            | API + CI/CD                | STY-087     |       |
 | STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md)                                        | API                        | STY-090     |       |
 | STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)                                                  | API + Infrastructure       | STY-090     |       |

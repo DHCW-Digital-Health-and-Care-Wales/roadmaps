@@ -28,7 +28,8 @@ STY-098's.
 **When** a reader lists them
 **Then** every file name is kebab-case (`roadmap-card.tsx`, `landing-page.tsx`,
 `app.tsx`) and every module exports by name, with no default export outside a
-configuration file and the module declaration Vite's JSON import needs
+configuration file and the declaration of the virtual module the site's roadmap-data
+plugin serves
 **And** the history of each renamed file follows it (`git log --follow`)
 
 ### S2: One ESLint base holds what both apps check
@@ -39,7 +40,9 @@ configuration file and the module declaration Vite's JSON import needs
 `stylisticTypeChecked`, jsx-a11y's **strict** preset, react-hooks, react-refresh,
 `@eslint-react`'s type-checked preset and `eslint-config-prettier`, set once in the base
 **And** each app's own config holds only its own rules: the editor's layering, token,
-i18next and E2E rules; the site's Node globals for its scripts
+i18next and E2E rules; the site's Node globals for its scripts, and its
+`prefer-nullish-coalescing` exception for strings, since its `||` treats an empty sheet
+cell or environment variable as missing
 **And** the site's config is `eslint.config.ts`, as the editor's is
 **And** both apps pass with no warnings, each finding fixed at its cause or disabled on
 its line with a reason

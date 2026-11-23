@@ -49,7 +49,7 @@ forms of S4, listed in the pull request
 
 ### S4: Counts take each language's plural forms
 
-**Given** a count of roadmaps, items or matches (the forms the site now branches on by
+**Given** a count of roadmaps or of hidden items (the counts the site now branches on by
 hand)
 **When** it is shown for 0, 1, 2, 3, 6 and 7 in Welsh, and 1 and 2 in English
 **Then** each language uses its own plural form through i18next, with Welsh's zero,
@@ -69,8 +69,9 @@ set inside a Welsh sentence, only the English part is marked
 
 **Given** a first visit to the site's root
 **When** the start language is chosen
-**Then** it is the stored choice, else the first supported browser language (any
-`cy-*` gives Welsh), else English, as today
+**Then** it is the stored choice, else Welsh when any of the browser's languages is
+Welsh (`cy` or `cy-*`), else English, as today: a browser listing `["en-GB", "cy"]`
+starts in Welsh
 **And** the module that chooses it takes its storage and browser languages as
 arguments, as the editor's does, and its tests cover each branch
 
@@ -104,6 +105,13 @@ public reader's register beside the shared rules
   for the public reader's register. Gives S7.
 - **D6** (owner, 2026-11-23, round 2): delivered after STY-095 and CHO-044, each merged
   first.
+- **D7** (agent, 2026-11-23, from the review of this record): the language preference
+  takes the editor's shape but keeps the site's rule, Welsh when any browser language is
+  Welsh, over the editor's first-match, since the owner asked for the shape alone and
+  the public sees no change. Gives S6.
+- **D8** (owner, 2026-11-23, with the order): this story changes the public site's
+  pages (S4's Welsh counts, S5's marks), so the owner sees its screenshots before
+  approving the merge (the epic's `delivery-notes.md`).
 
 ## Out of scope
 

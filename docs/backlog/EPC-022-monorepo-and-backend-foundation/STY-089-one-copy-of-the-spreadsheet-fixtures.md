@@ -5,7 +5,7 @@
 - **Type**: Refactor
 - **Area**: Infrastructure + CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
-- **Depends on**: STY-088 (hard)
+- **Depends on**: STY-088 (hard), STY-098 (hard: the alignment sequence comes first, D1)
 - **Binding ADRs**: ADR-016 §The public site
 - **Suggested model**: Sonnet — moving fixtures and repointing tests
 
@@ -34,3 +34,9 @@ _Not acceptance criteria._
   `docs/backlog/_archive/` are never rewritten. Settle with the owner, when the
   criteria are written, whether the move changes only that link's target; find every
   such link with `rg -n '\]\([^)]*fixtures/sheets' docs/backlog/_archive docs/analysis/delivery-runs`.
+
+## Decisions
+
+- **D1** (owner, 2026-11-23, STY-095 grilling round 1): the two apps' alignment comes
+  first on the repository track, so this story follows STY-098, the last of the
+  alignment sequence (STY-095 D2).

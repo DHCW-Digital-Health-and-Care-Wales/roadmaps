@@ -32,7 +32,8 @@ lucide-react, zod, jsdom, `@testing-library/react`, `@axe-core/playwright`,
 **Then** each is a `catalog:` entry, and the lockfile resolves one version of it for
 both apps
 **And** each entry takes the newer of the two apps' resolved versions, or a later one at
-least a week old
+least a week old, except `@types/node`, which stays at the oldest Node the root
+`engines` supports (STY-009), so both apps move to the catalogue's
 
 ### S2: Both apps load the variable Roboto
 
@@ -68,7 +69,11 @@ path, where the editor's TanStack Router runs on hash history with no SSR (ADR-0
 - **D3** (owner, 2026-11-23, round 5, after a comparison of the two fonts): the variable
   Roboto in both apps, over static weights in both. Gives S2.
 - **D4** (owner, 2026-11-23, with the order): this story changes the public site's
-  pages, so the owner sees its screenshots before approving the merge.
+  pages, so the owner sees its screenshots before approving the merge (the epic's
+  `delivery-notes.md`).
+- **D5** (agent, 2026-11-23, from the review of this record): `@types/node` follows the
+  `engines` floor, as STY-009 recorded, over the newer of the two apps' versions, which
+  would type-check APIs a supported Node lacks. Gives S1's exception.
 
 ## Out of scope
 

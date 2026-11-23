@@ -2,7 +2,7 @@
 
 - **Status**: Proposed — recorded in the owner's STY-095 grilling (2026-11-23, D1–D2);
   fifth in the alignment sequence
-- **Type**: Refactor
+- **Type**: Feature + Refactor
 - **Area**: Domain + Features/UI
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-097 (hard; the sequence is strict, STY-095 D4)

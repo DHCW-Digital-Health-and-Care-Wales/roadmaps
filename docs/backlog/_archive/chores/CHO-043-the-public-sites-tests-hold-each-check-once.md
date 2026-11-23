@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-016
 - **Suggested model**: Sonnet — each test needs reading against its Vitest neighbours
   to tell a behaviour from a repeat; no production code
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #266](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/266)
 
 ## Summary
 

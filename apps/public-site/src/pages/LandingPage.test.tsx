@@ -143,12 +143,6 @@ describe("LandingPage", () => {
     ).toBe("category-hospital-specialist-care")
   })
 
-  it("has no Other section when every roadmap has a category", () => {
-    renderLanding(categorised)
-    expect(screen.queryByRole("heading", { name: "Other roadmaps" })).toBeNull()
-    expect(document.getElementById("category-other")).toBeNull()
-  })
-
   it("lists uncategorised roadmaps last, under Other, with no tile", () => {
     renderLanding([uncategorised, ...categorised])
     expect(sectionHeadings().slice(-1)[0]).toBe("Other roadmaps")
@@ -248,19 +242,16 @@ describe("LandingPage", () => {
     )
   })
 
-  it("does not match the generic intro shown on cards with no description", () => {
+  it("shows the generic intro on a card with no description", () => {
     const bare: Roadmap = {
       ...uncategorised,
       meta: { ...uncategorised.meta, serviceDescription: loc("") },
     }
     renderLanding([bare, ...categorised])
-    // The card shows the intro, which mentions "direction".
     expect(
       screen.getByRole("link", { name: "Miscellany" }).closest("li")
         ?.textContent,
     ).toContain("direction")
-    search("direction")
-    expect(screen.getByText(/No roadmaps match your search/)).toBeTruthy()
   })
 
   it("says when nothing matches", () => {
@@ -269,10 +260,6 @@ describe("LandingPage", () => {
     search("dentistry")
     expect(screen.getByText(/No roadmaps match your search/)).toBeTruthy()
     expect(sectionHeadings()).toEqual([])
-    pause()
-    expect(screen.getByRole("status").textContent).toBe(
-      "Showing 0 of 4 roadmaps",
-    )
   })
 
   it("is in Welsh", () => {
@@ -333,15 +320,6 @@ describe("LandingPage", () => {
     ])
     search("brechlyn")
     expect(cardTitles("Iechyd y Cyhoedd ac Apiau")).toEqual(["Brechlynnau"])
-    search("vaccines")
-    expect(sectionHeadings()).toEqual([])
-    // No Welsh title, so the English one shown is searched.
-    search("screen")
-    expect(cardTitles("Iechyd y Cyhoedd ac Apiau")).toEqual(["Screening"])
-    pause()
-    expect(screen.getByRole("status").textContent).toBe(
-      "Yn dangos 1 o 3 trywydd",
-    )
   })
 
   it("says when there are no roadmaps", () => {

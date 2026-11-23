@@ -1,5 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { LANG_STORAGE_KEY, preferredLang, useLanguage } from "../lib/i18n"
 import { LanguageProvider } from "./LanguageProvider"
@@ -69,6 +75,18 @@ describe("LanguageToggle", () => {
     expect(screen.getByText("cy a")).toBeTruthy()
     expect(document.documentElement.lang).toBe("cy")
     expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBe("cy")
+  })
+
+  it("goes back to the other language with the browser's Back", async () => {
+    window.history.pushState(null, "", "/elsewhere/")
+    renderAt("/product-roadmaps/en/a/#roadmap")
+    fireEvent.click(screen.getByRole("link", { name: "Cymraeg" }))
+    expect(screen.getByText("cy a")).toBeTruthy()
+
+    window.history.back()
+    await waitFor(() => expect(screen.getByText("en a")).toBeTruthy())
+    expect(document.documentElement.lang).toBe("en")
+    expect(window.location.pathname).toBe("/product-roadmaps/en/a/")
   })
 
   it("adds no history entry for the current language", () => {

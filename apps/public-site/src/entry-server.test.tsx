@@ -50,6 +50,9 @@ describe("prerender", () => {
       `<title>${first.meta.family.en}: ${first.meta.title.en} – DHCW roadmaps</title>`,
     )
     expect(page?.head).toContain(
+      `property="og:title" content="${first.meta.family.en}: ${first.meta.title.en} – DHCW roadmaps"`,
+    )
+    expect(page?.head).toContain(
       `<link rel="canonical" href="${SITE}en/${first.slug}/" />`,
     )
     expect(page?.head).toContain('property="og:description"')
@@ -104,6 +107,9 @@ describe("prerender", () => {
     const page = pages.find((p) => p.file === "en/index.html")
     for (const roadmap of snapshot) {
       expect(page?.html).toContain(roadmap.meta.title.en)
+      expect(page?.html).toContain(
+        `href="/product-roadmaps/en/${roadmap.slug}/"`,
+      )
     }
     window.history.replaceState(null, "", "/product-roadmaps/en/")
     document.body.innerHTML = `<div id="root">${page?.html ?? ""}</div>`

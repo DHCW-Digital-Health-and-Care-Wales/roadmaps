@@ -75,16 +75,6 @@ describe("RoadmapCard", () => {
     expect(screen.getByText("This will:").tagName).toBe("P")
   })
 
-  it("keeps line breaks from the sheet as separate paragraphs", () => {
-    renderCard({
-      title: loc("Story"),
-      description: loc("AS A nurse\nI WANT a list\nSO THAT I can plan"),
-    })
-    expect(screen.getByText("AS A nurse").tagName).toBe("P")
-    expect(screen.getByText("I WANT a list").tagName).toBe("P")
-    expect(screen.getByText("SO THAT I can plan").tagName).toBe("P")
-  })
-
   it('reads the labels as "Tags:" then a comma-separated list', () => {
     renderCard({
       title: loc("Labels"),

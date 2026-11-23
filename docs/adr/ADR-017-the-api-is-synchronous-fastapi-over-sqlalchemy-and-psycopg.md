@@ -162,8 +162,8 @@ From the owner's STY-090 grilling (2026-11-23, STY-090 D2, D8, D19 and D24); the
 _Operation_ stands.
 
 - **Contract routes live under `/api/v1`.** The version names the contract the editor
-  and, later, the public read rely on. A breaking change would serve `/api/v2` beside
-  it for as long as a client still calls v1.
+  and, later, the public read rely on. How long an old version is served beside a new
+  one is not decided here.
 - **The probes are `/health` and `/ready` at the root,** unversioned and outside
   `/api`. The platform calls them, not a client, so they never move with the contract.
   No probe path ends in `z`, since Cloud Run reserves some such paths.

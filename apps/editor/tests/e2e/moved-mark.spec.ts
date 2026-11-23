@@ -51,24 +51,24 @@ const shortPart = (item: Locator, language: Language = "en") =>
   })
 
 test.describe("the page scrolls to the moved item (S4)", () => {
-  for (const motion of ["no-preference", "reduce"] as const) {
-    test(`after a move from the Move menu to Later, below the screen, focus on its Move (${motion} motion)`, async ({
-      page,
-    }) => {
-      await page.emulateMedia({ reducedMotion: motion })
-      await openProductA(page, DESKTOP)
-      const later = main(page).getByRole("list", { name: "Later", exact: true })
-      expect(await inRoom(later)).toBe(false)
+  // Reduced motion's run is `moved-travel.spec.ts`'s: this one moves an item with no ID,
+  // which travels with no name.
+  test("after a move from the Move menu to Later, below the screen, focus on its Move", async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    await openProductA(page, DESKTOP)
+    const later = main(page).getByRole("list", { name: "Later", exact: true })
+    expect(await inRoom(later)).toBe(false)
 
-      await chooseFromMenu(page, "Minimal card", "Later")
+    await chooseFromMenu(page, "Minimal card", "Later")
 
-      await expect(later).toContainText("Minimal card")
-      const card = itemOf(page, "Minimal card")
-      await expect.poll(() => inRoom(card)).toBe(true)
-      await expect(moveButton(page, "Minimal card")).toBeFocused()
-      await expect(card.getByText("Moved from Now")).toBeVisible()
-    })
-  }
+    await expect(later).toContainText("Minimal card")
+    const card = itemOf(page, "Minimal card")
+    await expect.poll(() => inRoom(card)).toBe(true)
+    await expect(moveButton(page, "Minimal card")).toBeFocused()
+    await expect(card.getByText("Moved from Now")).toBeVisible()
+  })
 
   test("after a move by the item dialog, focus on its Edit as the dialog closes", async ({
     page,

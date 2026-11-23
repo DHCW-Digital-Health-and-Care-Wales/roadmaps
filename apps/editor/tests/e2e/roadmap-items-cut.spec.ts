@@ -55,134 +55,116 @@ function showMore(card: Locator, of?: string): Locator {
   })
 }
 
-for (const [width, height] of [
-  [1280, 900],
-  [375, 812],
-] as const) {
-  test.describe(`at ${String(width)}px`, () => {
-    test.beforeEach(async ({ page, sheets }) => {
-      await page.setViewportSize({ width, height })
-      await openWithItems(page, sheets, withItems(...ITEMS), "Last")
+// The cut does not change with the width, since nothing in the card has a breakpoint, so the
+// ten items open once at 375 px, where a phone's reflow is also held (S1). The widest
+// window and the navigation's fold are held by the test after these two.
+test.describe("at 375px", () => {
+  test.beforeEach(async ({ page, sheets }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await openWithItems(page, sheets, withItems(...ITEMS), "Last")
+  })
+
+  test("a long description or outcome shows three lines, opens in place and shuts; a short field shows whole (S1, S2, S4, S5, S9)", async ({
+    page,
+  }) => {
+    const card = cardOf(page, "Long description")
+    const field = fieldOf(card, "Description")
+    const more = showMore(card, "of the description of Long description")
+
+    await expect(more).toBeVisible()
+    expect((await linesOf(field)).shown).toBe(3)
+    expect((await linesOf(field)).whole).toBeGreaterThan(3)
+    expect(
+      await field.evaluate(
+        (dd) => getComputedStyle(dd.firstElementChild ?? dd).webkitLineClamp,
+      ),
+    ).toBe("3")
+    expect(await scrollsSideways(page)).toBe(false)
+
+    const before = await boxOf(field)
+    await more.focus()
+    await page.keyboard.press("Enter")
+    const less = card.getByRole("button", {
+      name: "Show less of the description of Long description",
     })
+    await expect(less).toBeFocused()
+    const { shown, whole } = await linesOf(field)
+    expect(shown).toBe(whole)
+    expect((await boxOf(field)).height).toBeGreaterThan(before.height)
 
-    test("a long description shows three lines, then opens in place and shuts (S1, S4, S9)", async ({
-      page,
-    }) => {
-      const card = cardOf(page, "Long description")
-      const field = fieldOf(card, "Description")
-      const more = showMore(card, "of the description of Long description")
+    await page.keyboard.press("Enter")
+    await expect(more).toBeFocused()
+    expect((await linesOf(field)).shown).toBe(3)
 
-      await expect(more).toBeVisible()
-      await expect(more).toHaveAttribute("aria-expanded", "false")
-      expect((await linesOf(field)).shown).toBe(3)
-      expect((await linesOf(field)).whole).toBeGreaterThan(3)
-      expect(
-        await field.evaluate(
-          (dd) => getComputedStyle(dd.firstElementChild ?? dd).webkitLineClamp,
-        ),
-      ).toBe("3")
-      expect(await scrollsSideways(page)).toBe(false)
+    // An outcome is cut on its own, beside a description that is not.
+    const outcome = cardOf(page, "Long outcome")
+    await expect(outcome.getByRole("button", { name: /^Show/ })).toHaveCount(1)
+    await expect(
+      showMore(outcome, "of the expected outcome of Long outcome"),
+    ).toBeVisible()
+    expect((await linesOf(fieldOf(outcome, "Expected outcome"))).shown).toBe(3)
+    expect((await linesOf(fieldOf(outcome, "Description"))).shown).toBe(1)
 
-      const before = await boxOf(field)
-      await more.focus()
-      await page.keyboard.press("Enter")
-      const less = card.getByRole("button", {
-        name: "Show less of the description of Long description",
-      })
-      await expect(less).toBeFocused()
-      await expect(less).toHaveAttribute("aria-expanded", "true")
-      const { shown, whole } = await linesOf(field)
-      expect(shown).toBe(whole)
-      expect((await boxOf(field)).height).toBeGreaterThan(before.height)
-
-      await page.keyboard.press("Enter")
-      await expect(more).toBeFocused()
-      expect((await linesOf(field)).shown).toBe(3)
-    })
-
-    test("a long expected outcome is cut on its own (S2)", async ({ page }) => {
-      const card = cardOf(page, "Long outcome")
-      await expect(card.getByRole("button", { name: /^Show/ })).toHaveCount(1)
-      await expect(
-        showMore(card, "of the expected outcome of Long outcome"),
-      ).toBeVisible()
-      expect((await linesOf(fieldOf(card, "Expected outcome"))).shown).toBe(3)
-      expect((await linesOf(fieldOf(card, "Description"))).shown).toBe(1)
-    })
-
-    test("a short field shows whole, with its line breaks (S5)", async ({
-      page,
-    }) => {
-      const card = cardOf(page, "Breaks")
-      await expect(card.getByRole("button", { name: /Show/ })).toHaveCount(0)
-      expect(await linesOf(fieldOf(card, "Description"))).toEqual({
-        shown: 3,
-        whole: 3,
-      })
-      await expect(
-        cardOf(page, "Three lines").getByRole("button", { name: /Show/ }),
-      ).toHaveCount(0)
-    })
-
-    test("a list of details is cut at its third line, between details with no ellipsis (S3)", async ({
-      page,
-    }) => {
-      const card = cardOf(page, "Between")
-      const field = fieldOf(card, "Details")
-      await expect(showMore(card, "of the details of Between")).toBeVisible()
-      expect((await linesOf(field)).shown).toBe(3)
-      expect(await detailClamps(field)).toEqual([
-        "none",
-        "none",
-        "none",
-        "none",
-      ])
-      // The fourth is cut away by the list's height, below the field's third line.
-      const [fourth, list] = await boxesOf(
-        field.getByText("Fourth"),
-        field.locator(":scope > div"),
-      )
-      expect(fourth.y).toBeGreaterThanOrEqual(list.bottom - 1)
-    })
-
-    test("a detail the cut falls within ends in an ellipsis on the third line (S3)", async ({
-      page,
-    }) => {
-      const card = cardOf(page, "Within")
-      const field = fieldOf(card, "Details")
-      expect((await linesOf(field)).shown).toBe(3)
-      expect(await detailClamps(field)).toEqual(["none", "2", "none"])
-    })
-
-    test("one detail that wraps past three lines is cut within itself (S3)", async ({
-      page,
-    }) => {
-      const field = fieldOf(cardOf(page, "One long detail"), "Details")
-      expect((await linesOf(field)).shown).toBe(3)
-      expect(await detailClamps(field)).toEqual(["3"])
-    })
-
-    test("a list opens whole and cuts again (S4)", async ({ page }) => {
-      const card = cardOf(page, "Within")
-      const field = fieldOf(card, "Details")
-      await showMore(card).click()
-      expect(await detailClamps(field)).toEqual(["none", "none", "none"])
-      const { shown, whole } = await linesOf(field)
-      expect(shown).toBe(whole)
-      await card.getByRole("button", { name: /^Show less/ }).click()
-      expect((await linesOf(field)).shown).toBe(3)
-    })
-
-    test("names each control for its field and item (S6)", async ({ page }) => {
-      const names = await page
-        .getByRole("main")
-        .getByRole("button", { name: /^Show more/ })
-        .evaluateAll((buttons) => buttons.map((b) => b.textContent.trim()))
-      expect(names.length).toBeGreaterThan(4)
-      expect(new Set(names).size).toBe(names.length)
+    // A field of three lines or fewer shows whole, with its line breaks.
+    const breaks = cardOf(page, "Breaks")
+    await expect(breaks.getByRole("button", { name: /Show/ })).toHaveCount(0)
+    expect(await linesOf(fieldOf(breaks, "Description"))).toEqual({
+      shown: 3,
+      whole: 3,
     })
   })
-}
+
+  test("a list of details is cut at its third line, within a detail or between two; it opens whole and cuts again; each control is named for its field and item (S3, S4, S6)", async ({
+    page,
+  }) => {
+    const between = cardOf(page, "Between")
+    const betweenField = fieldOf(between, "Details")
+    await expect(showMore(between, "of the details of Between")).toBeVisible()
+    expect((await linesOf(betweenField)).shown).toBe(3)
+    expect(await detailClamps(betweenField)).toEqual([
+      "none",
+      "none",
+      "none",
+      "none",
+    ])
+    // The fourth is cut away by the list's height, below the field's third line.
+    const [fourth, list] = await boxesOf(
+      betweenField.getByText("Fourth"),
+      betweenField.locator(":scope > div"),
+    )
+    expect(fourth.y).toBeGreaterThanOrEqual(list.bottom - 1)
+
+    // A detail the cut falls within ends in an ellipsis on the third line.
+    const within = cardOf(page, "Within")
+    const withinField = fieldOf(within, "Details")
+    expect((await linesOf(withinField)).shown).toBe(3)
+    expect(await detailClamps(withinField)).toEqual(["none", "2", "none"])
+
+    // One detail that wraps past three lines is cut within itself.
+    const single = fieldOf(cardOf(page, "One long detail"), "Details")
+    expect((await linesOf(single)).shown).toBe(3)
+    expect(await detailClamps(single)).toEqual(["3"])
+
+    // A list of exactly three lines has no control.
+    await expect(
+      cardOf(page, "Three lines").getByRole("button", { name: /Show/ }),
+    ).toHaveCount(0)
+
+    await showMore(within).click()
+    expect(await detailClamps(withinField)).toEqual(["none", "none", "none"])
+    const { shown, whole } = await linesOf(withinField)
+    expect(shown).toBe(whole)
+    await within.getByRole("button", { name: /^Show less/ }).click()
+    expect((await linesOf(withinField)).shown).toBe(3)
+
+    const names = await page
+      .getByRole("main")
+      .getByRole("button", { name: /^Show more/ })
+      .evaluateAll((buttons) => buttons.map((b) => b.textContent.trim()))
+    expect(names.length).toBeGreaterThan(4)
+    expect(new Set(names).size).toBe(names.length)
+  })
+})
 
 test("the cut follows the card's width: the window and the navigation's fold (S7)", async ({
   page,

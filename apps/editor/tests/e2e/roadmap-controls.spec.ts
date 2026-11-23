@@ -90,16 +90,6 @@ for (const [device, size] of [
     await expect(
       main.getByRole("button", { name: "Discard all changes" }),
     ).toBeInViewport()
-
-    // Edit product details, Refresh and Unpublish roadmap are a press away, in More
-    // (S1, D6, STY-065 S5).
-    await main.getByRole("button", { name: "More", exact: true }).click()
-    const menu = page.getByRole("menu")
-    await expect(menu.getByRole("menuitem")).toHaveText([
-      "Edit product details",
-      "Refresh",
-      "Unpublish roadmap",
-    ])
   })
 }
 

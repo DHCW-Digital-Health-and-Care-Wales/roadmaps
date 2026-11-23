@@ -459,6 +459,18 @@ describe("RoadmapDetailPage items", () => {
       ).not.toBeInTheDocument()
     })
 
+    it("says something went wrong, with Retry, when it can't tell what", async () => {
+      await renderRoadmap("producta", {
+        producta: new AppError("unknown", { retryable: true }),
+      })
+
+      const alert = await main().findByRole("alert")
+      expect(alert).toHaveTextContent("Something went wrong. Please try again.")
+      expect(
+        within(alert).getByRole("button", { name: "Retry" }),
+      ).toBeInTheDocument()
+    })
+
     it("says this roadmap's items, not the list, are in the wrong format", async () => {
       await renderRoadmap("producta", {
         producta: new AppError("invalid-data"),

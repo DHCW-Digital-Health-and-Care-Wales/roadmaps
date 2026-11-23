@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-003, ADR-006, ADR-018
 - **Suggested model**: Sonnet — each test is weighed against the component test that
   may hold it, and the gesture and token checks kept
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #260](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/260)
 
 ## Summary
 

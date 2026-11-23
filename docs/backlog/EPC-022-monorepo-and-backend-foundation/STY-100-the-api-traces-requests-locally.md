@@ -43,3 +43,15 @@ _Not acceptance criteria._
   caller and the trace ID becomes the request ID.
 - Spans hold STY-090 S7's allow-list (STY-090 D30): no query string (`url.query`), no
   exception message and no SQL parameters, with a planted-value test as in S7.
+
+## Decisions
+
+- **D1** (owner, 2026-11-23, STY-090 grilling round 7, STY-090 D24): tracing is split
+  from STY-090 into this story, which follows it and blocks neither STY-091 nor STY-092.
+- **D2** (owner, 2026-11-23, STY-090 grilling round 4): one shared, opt-in Jaeger on
+  fixed ports, over a Compose profile per slot; no slot ports are added.
+- **D3** (owner, 2026-11-23, STY-090 grilling round 8, STY-090 D26): the trace ID
+  becomes the request ID that STY-090 generates.
+- **D4** (agent, 2026-11-23, STY-090's security review, from STY-090 D30 and D33): spans
+  hold STY-090 S7's log allow-list (no query string, exception message or SQL
+  parameters), and Jaeger is bound to 127.0.0.1 with its image pinned by digest.

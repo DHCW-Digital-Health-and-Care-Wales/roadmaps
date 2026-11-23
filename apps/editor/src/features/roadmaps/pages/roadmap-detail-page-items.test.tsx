@@ -82,7 +82,7 @@ const everyColumn = welshTitled(
   },
 )
 
-/** Product A's items, as `tests/fixtures/sheets/ProductA.csv` holds them, in row order. */
+/** Product A's items, as `fixtures/sheets/ProductA.csv` holds them, in row order. */
 const productAItems: RoadmapItem[] = [
   everyColumn,
   createTestRoadmapItem("Minimal card", {

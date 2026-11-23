@@ -53,7 +53,7 @@ The E2E suite fakes Google Identity Services and the Sheets API, so a change to 
 app signs in, reads or writes is proven against the real Google only by hand: run
 `pnpm editor:dev` (or open the deployed site), choose **Connect Google**, sign in with an
 account that can open the spreadsheet, and check the roadmaps load. For a change to
-publishing, publish a change to a test spreadsheet (`apps/editor/tests/fixtures/sheets/README.md`
+publishing, publish a change to a test spreadsheet (`fixtures/sheets/README.md`
 says how to make one), never the live one.
 
 ## Troubleshooting

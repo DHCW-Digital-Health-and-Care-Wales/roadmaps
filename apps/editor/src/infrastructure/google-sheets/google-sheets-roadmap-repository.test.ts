@@ -30,10 +30,10 @@ import {
 import { AppError } from "@/lib/errors"
 import { server } from "@/test/msw-server"
 
-import productACsv from "../../../tests/fixtures/sheets/ProductA.csv?raw"
-import productBCsv from "../../../tests/fixtures/sheets/ProductB.csv?raw"
-import productCCsv from "../../../tests/fixtures/sheets/ProductC.csv?raw"
-import roadmapsCsv from "../../../tests/fixtures/sheets/Roadmaps.csv?raw"
+import productACsv from "../../../../../fixtures/sheets/ProductA.csv?raw"
+import productBCsv from "../../../../../fixtures/sheets/ProductB.csv?raw"
+import productCCsv from "../../../../../fixtures/sheets/ProductC.csv?raw"
+import roadmapsCsv from "../../../../../fixtures/sheets/Roadmaps.csv?raw"
 import {
   applyBatchUpdate,
   TEMPLATE_TAB,
@@ -72,7 +72,7 @@ const VALUES_PARAMS = [
   ["fields", "values"],
 ]
 
-/** The example spreadsheet's roadmap index (`tests/fixtures/sheets/Roadmaps.csv`). */
+/** The example spreadsheet's roadmap index (`fixtures/sheets/Roadmaps.csv`). */
 const EXAMPLE_ROWS = parseCsv(roadmapsCsv)
 
 /** The example spreadsheet's roadmap tabs' rows, by tab title. */

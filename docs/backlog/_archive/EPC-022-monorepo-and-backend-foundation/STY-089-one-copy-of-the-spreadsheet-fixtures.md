@@ -1,13 +1,13 @@
 # STY-089: One copy of the spreadsheet fixtures, read by both apps
 
-- **Status**: Proposed — criteria from the owner's STY-089 grilling (2026-11-23,
-  D2–D16); follows STY-098 (D1)
+- **Status**: Done
 - **Type**: Refactor
 - **Area**: Infrastructure + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-088 (hard), STY-098 (hard: the alignment sequence comes first, D1)
 - **Binding ADRs**: ADR-016 §The public site, §STY-089 amendments
 - **Suggested model**: Sonnet — moving fixtures and repointing tests and docs
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/283
 
 ## Summary
 
@@ -142,3 +142,38 @@ Audited at `63ff97a4`:
 - A script that rebuilds the public site's E2E data from the CSVs (D9).
 - One CSV parser for both apps (D11), and a package for the spreadsheet format: ADR-016
   rejects it, since ADR-015 retires the format when the public site reads the API.
+
+## Delivery
+
+### Departures
+
+- **S3**: the editor's fixture README, moved to `fixtures/sheets/README.md`, loses its
+  paragraphs on the Sheets fake's `apply-batch-update.ts` and `parse-csv.ts`, which
+  stay in `apps/editor/tests/fixtures/sheets/` (D12) and whose docblocks already say
+  what they do; the README names them where it says who reads the CSVs (agent).
+- **S4**: the analyses' lines that called the fixtures a copy of the public site's
+  (`roadmap-tab-format.md`, _Items have no identity_; `roadmaps-tab-format.md`, _Example
+  data_) now say there is one copy both apps read, beyond a path-only correction, since
+  the move made the old wording false (agent).
+- **S4**: lines that record what an audit or an analysis read at a past commit keep
+  that commit's paths: EPC-022's _Findings_ (audited at `5d8c58d`) and the analyses'
+  _Source_ lines, which name `product-roadmaps`' own `sheets/` (agent).
+
+### Contract for dependents
+
+- The example spreadsheet is `fixtures/sheets/` at the workspace's root, one CSV per
+  tab. A format change edits it there, and both apps' tests fail in the same pull
+  request; the site's `e2e/fixtures/roadmaps.json` is rebuilt by hand (D9), its parser
+  test failing until it matches.
+- The editor's Sheets fake stays in `apps/editor/tests/fixtures/sheets/` (D12); each
+  app keeps its own CSV parser until the Sheets format retires (D11).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                   |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | observed: `git ls-files '*.csv'` lists only the five files in `fixtures/sheets/`; the editor's unit tests (`?raw` imports) and E2E suite (`fake-sheets.ts`, from disk), and the site's `parse-roadmap.test.ts` (through `new URL(…)`, its `matches the end-to-end test data in e2e/fixtures` included), pass against them |
+| S2       | `scripts/ci/classify-changes.test.ts` (`runs every app's jobs for the shared example sheets`); observed, a throwaway run reported in the PR and not committed: with `Sheet` renamed `Tab` in `fixtures/sheets/Roadmaps.csv`, both `pnpm editor:test` and `pnpm site:test` failed                                          |
+| S3       | `fixtures/sheets/README.md` in the diff; the folder holds no `LICENSE`                                                                                                                                                                                                                                                    |
+| S4       | `build/markdown-links.test.ts` (in `pnpm test:docs`) passes; the diff corrects ADR-009 and ADR-011 in their path alone and EPC-002's archived README in its link's target                                                                                                                                                 |
+| S5       | the companion pull request, [`product-roadmaps#53`](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/pull/53)                                                                                                                                                                                       |

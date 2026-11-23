@@ -413,7 +413,7 @@ protection beforehand.
   [the roadmap index analysis](docs/analysis/roadmaps-tab-format.md) and
   [the roadmap tab analysis](docs/analysis/roadmap-tab-format.md).
 - An example spreadsheet, with steps to import it into a test spreadsheet of your own, is in
-  [`apps/editor/tests/fixtures/sheets/`](apps/editor/tests/fixtures/sheets/README.md).
+  [`fixtures/sheets/`](fixtures/sheets/README.md).
 - A list that can't be read (no tabs, an empty first tab, or no `Sheet` column) shows a
   problem asking the spreadsheet owner to check it. A mistake in one row never hides the
   rest. A roadmap whose tab is missing, empty or has no `Title` column is still listed, but

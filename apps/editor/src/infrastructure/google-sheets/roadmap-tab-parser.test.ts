@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import { isAppError } from "@/lib/errors"
 
-import productACsv from "../../../tests/fixtures/sheets/ProductA.csv?raw"
+import productACsv from "../../../../../fixtures/sheets/ProductA.csv?raw"
 import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
 import {
   parseRoadmapTab,

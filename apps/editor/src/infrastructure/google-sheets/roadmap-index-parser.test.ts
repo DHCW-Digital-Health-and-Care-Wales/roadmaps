@@ -5,7 +5,7 @@ import type { Family } from "@/domain/roadmap/family"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { isAppError } from "@/lib/errors"
 
-import roadmapsCsv from "../../../tests/fixtures/sheets/Roadmaps.csv?raw"
+import roadmapsCsv from "../../../../../fixtures/sheets/Roadmaps.csv?raw"
 import { parseCsv } from "../../../tests/fixtures/sheets/parse-csv"
 import {
   parseRoadmapIndex,

@@ -17,7 +17,7 @@ next run. The spreadsheet format it reads is the root README's _Spreadsheet form
 - Roadmap content lives in the spreadsheet. Commit no data from it:
   `apps/public-site/.data/` is made by `pnpm site:sync` and ignored.
 - Tests, the E2E suite and Lighthouse use the example data in
-  `apps/public-site/e2e/fixtures/roadmaps.json`, made from `apps/public-site/sheets/`;
+  `apps/public-site/e2e/fixtures/roadmaps.json`, made from the workspace root's `fixtures/sheets/`;
   a build without a sync needs `ROADMAPS_DATA=e2e/fixtures/roadmaps.json`.
 - Feedback goes to issues in `product-roadmaps`, through the link
   `apps/public-site/src/lib/links.ts` builds; keep it pointing there.

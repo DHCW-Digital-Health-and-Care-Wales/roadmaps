@@ -1,10 +1,9 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
-  STY-088 are done, and the placeholders' acceptance criteria, then the schema,
-  identity and endpoint stories, are written next
-- **Progress**: 4 of 11 terminal (STY-085 to STY-088); next selectable: none until a
-  placeholder's acceptance criteria are written
+  STY-088 are done; the two apps' alignment comes next (owner, 2026-11-23), beside the
+  API placeholders' acceptance criteria
+- **Progress**: 4 of 16 terminal (STY-085 to STY-088); next selectable: STY-095
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -109,6 +108,17 @@ its drafts), from the
 15. **Supply-chain checks**: CHO-031, done beside STY-087.
 16. **Infrastructure-held protections**: EPC-023, a placeholder.
 
+Owner answers of 2026-11-23 (STY-095 grilling), recorded in STY-095 D2–D8 and the
+records it split into:
+
+17. **The two apps are aligned first** on the repository track, strictly in sequence:
+    STY-095 (file names, the shared ESLint and TypeScript bases, the shared conventions
+    file), CHO-044 (one dev-ports resolver), STY-096 (the site's interface text on
+    react-i18next), STY-097 (one version per shared dependency, one font) and STY-098
+    (the editor marks English shown in place of Welsh), each merged before the next.
+    The public sees no change but STY-097's font and package updates. The site's design
+    tokens follow as a placeholder, STY-099; shared code packages are out of scope.
+
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._
 
@@ -143,25 +153,30 @@ the seeder for any table it creates.
 
 ## Stories
 
-| ID      | Story                                                                                                                                      | Area                   | Depends on  | State |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- | ----------- | ----- |
-| STY-085 | [Rename the repository to roadmaps](../_archive/EPC-022-monorepo-and-backend-foundation/STY-085-rename-the-repository-to-roadmaps.md)      | CI/CD + Docs           | —           | ✅    |
-| STY-086 | [Move the editor into apps/editor](../_archive/EPC-022-monorepo-and-backend-foundation/STY-086-move-the-editor-into-a-pnpm-workspace.md)   | CI/CD + Docs           | STY-085     | ✅    |
-| STY-087 | [Workspace tooling and the ruleset](../_archive/EPC-022-monorepo-and-backend-foundation/STY-087-workspace-tooling-and-the-main-ruleset.md) | CI/CD                  | STY-086     | ✅    |
-| STY-088 | [Bring the public site in](../_archive/EPC-022-monorepo-and-backend-foundation/STY-088-bring-the-public-site-into-the-workspace.md)        | CI/CD + Docs           | STY-087     | ✅    |
-| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)                                                    | Infrastructure + CI/CD | STY-088     |       |
-| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                                                            | API + CI/CD            | STY-087     |       |
-| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md)                                        | API                    | STY-090     |       |
-| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)                                                  | API + Infrastructure   | STY-090     |       |
-| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                                                                | API                    | STY-091     |       |
-| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                                                        | API                    | invitations |       |
-| STY-095 | [The public site adopts the conventions](STY-095-the-public-site-adopts-the-workspace-conventions.md)                                      | Features/UI + i18n     | STY-088     |       |
+| ID      | Story                                                                                                                                      | Area                       | Depends on  | State |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- | ----------- | ----- |
+| STY-085 | [Rename the repository to roadmaps](../_archive/EPC-022-monorepo-and-backend-foundation/STY-085-rename-the-repository-to-roadmaps.md)      | CI/CD + Docs               | —           | ✅    |
+| STY-086 | [Move the editor into apps/editor](../_archive/EPC-022-monorepo-and-backend-foundation/STY-086-move-the-editor-into-a-pnpm-workspace.md)   | CI/CD + Docs               | STY-085     | ✅    |
+| STY-087 | [Workspace tooling and the ruleset](../_archive/EPC-022-monorepo-and-backend-foundation/STY-087-workspace-tooling-and-the-main-ruleset.md) | CI/CD                      | STY-086     | ✅    |
+| STY-088 | [Bring the public site in](../_archive/EPC-022-monorepo-and-backend-foundation/STY-088-bring-the-public-site-into-the-workspace.md)        | CI/CD + Docs               | STY-087     | ✅    |
+| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)                                                    | Infrastructure + CI/CD     | STY-088     |       |
+| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                                                            | API + CI/CD                | STY-087     |       |
+| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md)                                        | API                        | STY-090     |       |
+| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)                                                  | API + Infrastructure       | STY-090     |       |
+| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                                                                | API                        | STY-091     |       |
+| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                                                        | API                        | invitations |       |
+| STY-095 | [The public site adopts the conventions](STY-095-the-public-site-adopts-the-workspace-conventions.md)                                      | Features/UI + CI/CD + Docs | STY-088     |       |
+| CHO-044 | [One dev-ports resolver](../chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                                        | CI/CD                      | STY-095     |       |
+| STY-096 | [The site's interface text on react-i18next](STY-096-the-public-sites-interface-text-moves-to-react-i18next.md)                            | Features/UI + i18n         | CHO-044     |       |
+| STY-097 | [One version per shared dependency, one font](STY-097-one-version-per-shared-dependency-and-one-font.md)                                   | Features/UI + CI/CD        | STY-096     |       |
+| STY-098 | [The editor marks English in place of Welsh](STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)                                  | Domain + Features/UI       | STY-097     |       |
+| STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                           | Features/UI                | STY-098     |       |
 
 _STY-085 to STY-088 are done. STY-089 to STY-093 are
 Placeholders until their acceptance criteria are written: ADR-016 (STY-089) and
 ADR-017 (STY-090–STY-093) are accepted. STY-094 is a Placeholder until the invitation
-story exists, and STY-095 until its acceptance criteria are written from what STY-088
-imported.
+story exists, and STY-099 until design input settles what the public sees. STY-095 to
+STY-098 and CHO-044 are Proposed.
 Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
@@ -176,8 +191,9 @@ is a later story._
 The rename (STY-085) comes first, then the workspace move (STY-086), which stays one
 change, with no other editor-code pull request open while it is in flight (STY-086
 D8), then STY-087, whose hooks and gate the API joins. Then two tracks run in
-parallel: the repository's (STY-088 into a protected `main`, then STY-089 and STY-095
-in either order) and the API's (STY-090, then STY-091 and STY-092 in either order, with
+parallel: the repository's (STY-088 into a protected `main`, then the alignment
+sequence STY-095, CHO-044, STY-096, STY-097 and STY-098, strictly in that order, each
+merged before the next starts, then STY-089 and the STY-099 placeholder) and the API's (STY-090, then STY-091 and STY-092 in either order, with
 STY-093 after STY-091). CHO-031 (supply-chain checks) is done, beside STY-087. The
 threat model comes before
 any identity story (ADR-018); STY-094 follows the invitation story. The schema

@@ -1,58 +1,76 @@
 # STY-095: The public site adopts the workspace's code conventions
 
-- **Status**: Placeholder — scoped in the owner's STY-088 grilling (2026-11-21); promoted
-  once its acceptance criteria are written after STY-088
+- **Status**: Proposed — split and its acceptance criteria written in the owner's
+  grilling of 2026-11-23 (D2–D8); first of the alignment sequence
 - **Type**: Refactor
-- **Area**: Features/UI + i18n (en + cy)
+- **Area**: Features/UI + CI/CD + Docs
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-088 (hard)
-- **Binding ADRs**: ADR-008, ADR-016 §Workspace tooling, §Agent guides
-- **Suggested model**: Opus — renames, a string migration and a guide lift across two
-  apps
+- **Binding ADRs**: ADR-016 §Workspace tooling, §Agent guides, §STY-095 amendments
+- **Suggested model**: Opus — renames across the site, lint and compiler settings shared
+  by both apps, and a guide lift
 
 ## Summary
 
-After the import, the public site keeps its own conventions: PascalCase component
-files and interface text in `strings.ts`, rendered with `<T>`. This story moves it onto
-the editor's: kebab-case files, react-i18next with English and Welsh catalogues under
-ADR-008 and the copywriter skill, and a shared ESLint base, with the dependencies both
-apps use on one version each and one choice where they do the same job differently.
-The conventions both apps then share move out of the editor's guide. The public sees no
-change.
+The public site moves onto the editor's code conventions: kebab-case file names and
+named exports, one shared ESLint base and one shared TypeScript base that take the
+stricter setting of each app, and the TypeScript and React conventions both apps share
+in one file both apps' guides point to. The public sees no change: the built pages are
+the same before and after. The site's interface text, its dependency versions and its
+font are the next stories' (STY-096, STY-097); the editor's fallback-language marking is
+STY-098's.
 
-## Why this is a placeholder
+## Acceptance criteria
 
-The owner chose convergence in a follow-up story (STY-088 D2); its acceptance criteria
-are written once STY-088 shows what the imported site holds.
+### S1: The site's files follow the editor's naming
 
-## Rough shape of the work
+**Given** the public site's source, tests and scripts
+**When** a reader lists them
+**Then** every file name is kebab-case (`roadmap-card.tsx`, `landing-page.tsx`,
+`app.tsx`) and every module exports by name, with no default export outside a
+configuration file and the module declaration Vite's JSON import needs
+**And** the history of each renamed file follows it (`git log --follow`)
 
-_Not acceptance criteria._
+### S2: One ESLint base holds what both apps check
 
-- Kebab-case file names and named exports; `strings.ts` and `<T>` replaced by
-  react-i18next catalogues, prerendered in both languages, with the Welsh unchanged.
-- The root `eslint.base.ts` for the settings both React apps share (ADR-016 _Workspace
-  tooling_, _STY-088 amendments_).
-- The TypeScript and React conventions both apps share lift out of
-  `apps/editor/AGENTS.md` (STY-086 D6) to where both apps' sessions read them.
-- **One version per shared dependency** (D1): each package both apps use (react,
-  react-dom, `@types/react`, `@types/react-dom`, vite, `@vitejs/plugin-react`,
-  tailwindcss, `@tailwindcss/vite`, lucide-react, zod, jsdom, `@testing-library/react`,
-  `@axe-core/playwright`, the ESLint plugins and `@types/node`) becomes a `catalog:`
-  entry in `pnpm-workspace.yaml`, as ESLint, TypeScript, Vitest and Playwright already
-  are. STY-088 kept the versions npm had resolved for the site, so its output could be
-  compared like for like; at its delivery the site resolved react and react-dom 19.3.0,
-  lucide-react 1.35.0, tailwindcss 4.3.3, jsdom 30 and `@types/node` 24 where the editor
-  has 19.3.1, 1.70.0, 4.3.5, 31 and the catalog's 22.
-- **One choice where the apps do the same job differently** (D1): the Roboto font
-  (`@fontsource/roboto`, static weights, in the site against
-  `@fontsource-variable/roboto` in the editor), within the site's Lighthouse size
-  budgets; the React lint rules (`@eslint-react/eslint-plugin` in the site alone), with
-  the shared ESLint base; and whether the site's own router stays beside the editor's
-  TanStack Router, as a static prerendered site may warrant.
-- The built output compared before and after, as STY-088 S2 does: a newer lucide-react
-  or React can change the published HTML (an icon's SVG paths), and such a change is
-  shown and accepted, not silent.
+**Given** the root `eslint.base.ts` that both apps' `eslint.config.ts` extend
+**When** `pnpm lint` runs
+**Then** both apps are checked with typescript-eslint's `strictTypeChecked` and
+`stylisticTypeChecked`, jsx-a11y's **strict** preset, react-hooks, react-refresh,
+`@eslint-react`'s type-checked preset and `eslint-config-prettier`, set once in the base
+**And** each app's own config holds only its own rules: the editor's layering, token,
+i18next and E2E rules; the site's Node globals for its scripts
+**And** the site's config is `eslint.config.ts`, as the editor's is
+**And** both apps pass with no warnings, each finding fixed at its cause or disabled on
+its line with a reason
+
+### S3: One TypeScript base holds the compiler options both apps share
+
+**Given** a root `tsconfig.base.json`
+**When** `pnpm typecheck` runs
+**Then** both apps' application configs extend it, and the site is checked with the
+editor's settings (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
+`verbatimModuleSyntax`, `erasableSyntaxOnly` among them)
+**And** both apps pass
+
+### S4: The shared conventions live in one file both apps read
+
+**Given** `apps/typescript-react-conventions.md`
+**When** an agent works in either app
+**Then** that app's `AGENTS.md` points to the file, and it holds the TypeScript and React
+conventions both apps follow, lifted out of `apps/editor/AGENTS.md` with no rule
+changed
+**And** `apps/editor/AGENTS.md` keeps only the editor's own rules, the public site's
+guide drops "keeps its own conventions", and the root `AGENTS.md` routing table names
+the shared file
+**And** nothing under `apps/api/` is pointed at it
+
+### S5: The public sees no change
+
+**Given** the site built from the example data before and after this story
+**When** the built pages are compared
+**Then** every prerendered page's HTML is the same apart from hashed asset names
+**And** the ARIA snapshots, the E2E suite and Lighthouse pass unchanged
 
 ## Decisions
 
@@ -60,3 +78,30 @@ _Not acceptance criteria._
   as proposed": aligning the versions of the dependencies both apps share, and the
   packages they choose separately for the same job, is this story's, beside the
   conventions, over a separate chore that would compare the built output a second time.
+- **D2** (owner, 2026-11-23, grilling round 1): alignment is prioritised: this story and
+  its sequence come next on the repository track, before STY-089; the API track carries
+  on beside it. Scope stays as the placeholder set it, with no shared code package and
+  no visual change.
+- **D3** (owner, 2026-11-23, round 1): split into three stories over one: this story
+  (renames, the shared bases, the guide lift), STY-096 (the interface text) and STY-097
+  (dependency versions and the one choices). Amends D1: the built output is compared in
+  STY-096 and STY-097, and this story shows it unchanged (S5).
+- **D4** (owner, 2026-11-23, round 2): delivered strictly in sequence: STY-095, CHO-044,
+  STY-096, STY-097, STY-098, each merged before the next starts.
+- **D5** (owner, 2026-11-23, round 2): the ESLint base takes the stricter setting of each
+  app, with the editor's compiler flags; the editor fixes what jsx-a11y strict finds.
+  Gives S2, S3.
+- **D6** (owner, 2026-11-23, round 2): `@eslint-react` goes into the base for both apps,
+  over dropping it from the site; the editor fixes what it finds. Gives S2.
+- **D7** (owner, 2026-11-23, round 4): the shared compiler options sit in a root
+  `tsconfig.base.json`, beside `eslint.base.ts`. Gives S3.
+- **D8** (owner, 2026-11-23, rounds 3–4): the shared conventions file is
+  `apps/typescript-react-conventions.md`, outside `docs/` and not an `AGENTS.md`, so
+  ancestry never loads it for `apps/api/`; each app's guide points to it. Gives S4.
+
+## Out of scope
+
+- The site's interface text on react-i18next: STY-096.
+- One version per shared dependency, and the font: STY-097.
+- One dev-ports resolver for both apps: CHO-044.
+- The site's design tokens: STY-099.

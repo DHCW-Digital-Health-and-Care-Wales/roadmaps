@@ -123,6 +123,14 @@ records it split into:
     approving their merges. The site's design tokens follow as a placeholder, STY-099;
     shared code packages are out of scope.
 
+Owner answers of 2026-11-23 (STY-089 grilling), recorded in STY-089 D2–D16:
+
+18. **One copy of the spreadsheet fixtures** in a root folder, `fixtures/sheets/`, read
+    by both apps' tests; only the data moves, and each app keeps its own CSV parser
+    until the Sheets format retires. ADR-016's _STY-089 amendments_ record where shared
+    config, data and code live: a package only for code two or more apps import that
+    outlives the Sheets format.
+
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._
 
@@ -176,11 +184,10 @@ the seeder for any table it creates.
 | STY-098 | [The editor marks English in place of Welsh](STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)                                                                 | Domain + Features/UI       | STY-097     |       |
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                | STY-098     |       |
 
-_STY-085 to STY-088, STY-095, CHO-044, STY-096 and STY-097 are done. STY-089 to STY-093 are
-Placeholders until their acceptance criteria are written: ADR-016 (STY-089) and
-ADR-017 (STY-090–STY-093) are accepted. STY-094 is a Placeholder until the invitation
-story exists, and STY-099 until design input settles what the public sees. STY-098 is
-Proposed.
+_STY-085 to STY-088, STY-095, CHO-044, STY-096 and STY-097 are done. STY-090 to STY-093 are
+Placeholders until their acceptance criteria are written: ADR-017 is accepted. STY-094
+is a Placeholder until the invitation story exists, and STY-099 until design input
+settles what the public sees. STY-098 and STY-089 are Proposed.
 Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with

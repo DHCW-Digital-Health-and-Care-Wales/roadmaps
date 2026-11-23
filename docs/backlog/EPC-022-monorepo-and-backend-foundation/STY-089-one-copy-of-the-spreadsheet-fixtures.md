@@ -1,42 +1,143 @@
 # STY-089: One copy of the spreadsheet fixtures, read by both apps
 
-- **Status**: Placeholder — ADR-016 accepted (owner, 2026-11-21); promoted once its
-  acceptance criteria are written
+- **Status**: Proposed — criteria from the owner's STY-089 grilling (2026-11-23,
+  D2–D15); follows STY-098 (D1)
 - **Type**: Refactor
 - **Area**: Infrastructure + CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-088 (hard), STY-098 (hard: the alignment sequence comes first, D1)
-- **Binding ADRs**: ADR-016 §The public site
-- **Suggested model**: Sonnet — moving fixtures and repointing tests
+- **Binding ADRs**: ADR-016 §The public site, §STY-089 amendments
+- **Suggested model**: Sonnet — moving fixtures and repointing tests and docs
 
 ## Summary
 
-The editor copies the public site's fake-data spreadsheet CSVs today. One copy replaces
-both, read by the editor's tests and the public site's parser tests, so a change to the
-format fails both apps in the same pull request.
+The editor copies the public site's fake-data spreadsheet CSVs today. One copy, in a
+folder at the workspace's root, replaces both and is read by the editor's tests and its
+E2E Sheets fake and by the public site's parser tests, so a change to the format fails
+both apps in the same pull request. One README there explains the example spreadsheet
+and how to try either app against it. Nobody outside the team sees a change. Deliberately not
+in it: one CSV parser for both apps, which the Sheets format's retirement removes
+instead (D11).
 
-## Why this is a placeholder
+## Scope
 
-ADR-016 is accepted (2026-11-21), but the acceptance criteria are not yet written.
+The example data and its README move; code does not. The editor's Sheets fake (its CSV
+reader and its `batchUpdate` fake, with their tests) stays where it is (D4, D12), and
+each app keeps its own CSV parser (D11). Tests change only the path they read from.
 
-## Rough shape of the work
+## Acceptance criteria
 
-_Not acceptance criteria._
+### S1: Both apps read one copy
 
-- One fixture folder, its licence and README kept; both apps' unit tests and the
-  editor's E2E Sheets fake read it.
-- The shared folder sits outside either app's directory, so a format change runs both
-  apps' jobs (STY-087 S5).
-- The editor's copied CSVs and their provenance note go; its own `Template.csv` moves
-  into the shared folder or stays beside the editor's tests.
-- An archived record links into the fixture folder (the EPC-002 README), and the
-  Markdown link check fails on it once the folder moves, while records under
-  `docs/backlog/_archive/` are never rewritten. Settle with the owner, when the
-  criteria are written, whether the move changes only that link's target; find every
-  such link with `rg -n '\]\([^)]*fixtures/sheets' docs/backlog/_archive docs/analysis/delivery-runs`.
+**Given** the example spreadsheet's `Roadmaps`, `ProductA`, `ProductB`, `ProductC` and
+`Template` CSVs in one folder, `fixtures/sheets/` at the workspace's root (D2, D3)
+**When** the editor's unit tests, the editor's E2E Sheets fake and the public site's
+parser tests run
+**Then** each reads the CSVs from that folder, by a relative path (D13)
+**And** no other copy of the CSVs is left in either app, and the public site's E2E
+data still matches them, as its parser test checks today
+
+### S2: A format change fails both apps in one pull request
+
+**Given** a pull request that changes a CSV in `fixtures/sheets/`
+**When** CI classifies its changed paths
+**Then** both apps' jobs run, held by a row for the shared sheets in
+`classify-changes.test.ts`'s table of paths that run every app's jobs, which replaces
+its site-only row for the site's old sheets (D14)
+**And** renaming a column in the shared `Roadmaps.csv` fails both `editor:test` and
+`site:test`, shown by a throwaway run reported in the PR and reverted, not committed
+(D15)
+
+### S3: One README explains the example spreadsheet
+
+**Given** someone who wants to try either app against a test spreadsheet
+**When** they open `fixtures/sheets/README.md`
+**Then** it lists each file with its tab name and what it shows, says that no data
+from the live spreadsheet is ever committed, gives the import steps (`Template`
+included), and says how to point the public site and the editor at the result (D6)
+**And** it says the root `LICENSE` covers the data; the folder holds no licence of its
+own, and the provenance note naming `product-roadmaps`' commit goes (D5)
+
+### S4: Every link follows the move
+
+**Given** the docs and guides that name a moved file or folder
+**When** the Markdown link check runs
+**Then** it passes, and each live mention names `fixtures/sheets/`: ADR-009 and
+ADR-011 are corrected in their path alone, with no decision changed (D8)
+**And** the one archived record that links into the folder, EPC-002's README, changes
+only that link's target (D7), and the mentions of the editor's Sheets fake keep
+its unchanged path (D12)
+
+### S5: The deploy repository's README links to the new folder
+
+**Given** `product-roadmaps`' README, which links sheet editors to the public site's old
+example sheets
+**When** this story's pull request merges
+**Then** a companion pull request there, raised with this one and merged right after
+it, links to `fixtures/sheets/` (D16)
 
 ## Decisions
 
 - **D1** (owner, 2026-11-23, STY-095 grilling round 1): the two apps' alignment comes
   first on the repository track, so this story follows STY-098, the last of the
   alignment sequence (STY-095 D2).
+- **D2** (owner, 2026-11-23, STY-089 grilling round 2): the shared copy lives in a plain
+  root folder, `fixtures/sheets/`, over a `packages/sheet-fixtures/` workspace package
+  or the public site's `sheets/` folder with a classifier rule: data, not code, so no
+  package (ADR-016 _The public site_). Gives S1.
+- **D3** (owner, round 1): the editor's own `Template.csv` moves into the shared folder
+  too, so it holds the whole example spreadsheet as the live one is laid out; the public
+  site never reads that tab. Gives S1.
+- **D4** (owner, round 1, settled by D12): the editor's test helpers stay in the editor;
+  only the data moves.
+- **D5** (owner, round 1): the folder's copied `LICENSE` is dropped, since the root
+  `LICENSE` holds the same MIT text and the data now originates here, with the
+  provenance note. Gives S3.
+- **D6** (owner, round 1): one README in the shared folder, with both apps' "try it"
+  steps, over a format-only README with each app keeping its own steps. Gives S3.
+- **D7** (owner, round 1): the archived EPC-002 README's link changes only its target,
+  an exception to records under `_archive/` never being rewritten, over a stub README at
+  the old path or exempting the archive from the link check. Gives S4.
+- **D8** (owner, round 1): every live mention of a moved path is updated, ADR-009 and
+  ADR-011 included, as a path-only correction. Gives S4.
+- **D9** (owner, round 1): the public site's `e2e/fixtures/roadmaps.json` stays rebuilt
+  by hand when the CSVs change; its parser test already fails the site when they
+  differ. No regeneration script.
+- **D10** (owner, round 2): when to add a shared package is recorded, as
+  ADR-016 _STY-089 amendments_, in the pull request that wrote these criteria.
+- **D11** (owner, round 2): the editor's test-only CSV reader and the public site's
+  production CSV parser, the same RFC 4180 loop, both stay: both retire with the Sheets
+  format (ADR-015), and sharing them needs a code package or a cross-app import.
+- **D12** (owner, round 3): the editor's Sheets fake keeps its path,
+  `apps/editor/tests/fixtures/sheets/`, over renaming it to `tests/sheets-fake/`.
+- **D13** (owner, round 3): both apps reach the folder by relative paths, over an alias
+  in each app's Vite and TypeScript config.
+- **D14** (owner, round 3): the classifier test gains a row for the shared sheets among
+  the paths that run every app's jobs, and its site-only row for the old path goes; the
+  script is unchanged, since its catch-all already runs both. Gives S2.
+- **D15** (owner, round 4): the delivery shows S2's failure with a throwaway run,
+  reported in the PR and not committed. Gives S2.
+- **D16** (owner, round 3): `product-roadmaps`' README is fixed by a one-line companion
+  pull request there, over a backlog chore or a stub README at the old path. Gives S5.
+
+## Starting point
+
+Audited at `63ff97a4`:
+
+- The four CSVs both apps hold are byte-identical; the editor's README cites
+  `product-roadmaps` commit `50e67f9` as their source.
+- The editor's Vitest tests import the CSVs with `?raw`, its Playwright Sheets fake reads
+  them from disk, and the public site's parser test reads them through
+  `new URL(…, import.meta.url)`; that test also compares the site's
+  `e2e/fixtures/roadmaps.json` with what the CSVs parse to.
+- `scripts/ci/classify-changes.sh` runs both apps' jobs for any path outside `apps/` and
+  `docs/` that is not Markdown.
+- `product-roadmaps`' README links to `roadmaps/tree/main/apps/public-site/sheets`.
+- `rg -n '\]\([^)]*fixtures/sheets' docs/backlog/_archive docs/analysis/delivery-runs`
+  finds only the EPC-002 README.
+
+## Out of scope
+
+- A script that rebuilds the public site's E2E data from the CSVs (D9).
+- One CSV parser for both apps (D11), and a package for the spreadsheet format: ADR-016
+  rejects it, since ADR-015 retires the format when the public site reads the API.

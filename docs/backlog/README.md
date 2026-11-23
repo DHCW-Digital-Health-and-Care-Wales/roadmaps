@@ -120,6 +120,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-028](_archive/defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md)                            | A fresh clone gets no Git hooks from `pnpm install`                                              | Done         |
 | [DEF-029](_archive/defects/DEF-029-two-test-helpers-escape-only-some-regex-characters.md)                           | Two test helpers escape only some regex characters, so CodeQL keeps two high alerts open         | Done         |
 | [DEF-030](defects/DEF-030-a-keyboard-move-test-presses-before-the-menu-has-focused-its-first-choice.md)             | A keyboard move test presses before the menu has focused its first choice                        | Needs triage |
+| [DEF-031](defects/DEF-031-a-publish-test-waits-for-the-outcome-notice-s-focus-and-does-not-get-it.md)               | A publish test waits for the outcome notice's focus and does not get it                          | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

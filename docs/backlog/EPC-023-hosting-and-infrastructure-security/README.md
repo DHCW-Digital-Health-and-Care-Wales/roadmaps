@@ -126,6 +126,15 @@ lives:_
   by the invoker settings and ingress, not left open by default.
 - **Container images**: built from a minimal base, run as a non-root user, scanned,
   with an SBOM and build provenance attested.
+- **The API's image and server** (owner, 2026-11-23, STY-090 D25): the Dockerfile, the
+  production server process and the hosted `Host` values arrive here, not in STY-090;
+  the image carries the editor's build (ADR-020). Found in STY-090's review, not yet
+  decided: on the editor's host, `/api/v1/*`, `/health` and `/ready` reach the API and
+  the rest the editor's files, while the public host answers only the public routes
+  (ADR-020); the `Host` that Cloud Run's probes send must pass the API's allow-list
+  (STY-090 S5); the production server's own loggers follow STY-090 S7's allow-list;
+  and the probes are anonymous and query the database, so either the load
+  balancer routes no probe path publicly or the global per-address ceiling covers them.
 
 ### Operations
 

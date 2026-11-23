@@ -106,6 +106,10 @@ with no disable
 - **S2**: the option takes each rule's own default handlers without `onFocus` and
   `onBlur` (`withoutFocusHandlers`), and keeps strict's `onLoad`/`onError` allowance on
   `body`, `iframe` and `img`, which setting the option would otherwise drop (agent).
+- **S4**: rebased onto STY-098, which shows content with a `lang` where English stands
+  in for Welsh: `TagList` takes a `ShownTag`, a tag as shown with its English `name`,
+  so the Tags field keeps its unmarked English and the item form its marked tags
+  (agent).
 - **S4**: a removed item is keyed as a conflict is, by its ID, or with none by its place
   as loaded: an item kept from an earlier read keeps its old place, which an item moved
   since can share (agent, from review).
@@ -114,7 +118,8 @@ with no disable
 
 A hook that measures a laid-out element uses `useMeasure` from
 `apps/editor/src/lib/use-measure.ts`, with a module function as `measure`. `TagList`
-takes an item's tags as `LocalisedText` and keys each by its English name. A refused
+takes each tag as shown (STY-098's `ShownContent`) with its English `name`, and keys
+it by that name. A refused
 publish's notice holds each removed item as an `ItemTarget`, keyed by its ID or place.
 
 ### Scenario evidence

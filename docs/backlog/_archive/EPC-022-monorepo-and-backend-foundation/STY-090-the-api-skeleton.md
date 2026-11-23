@@ -1,15 +1,15 @@
 # STY-090: The API skeleton runs locally and in CI
 
-- **Status**: Proposed — acceptance criteria from the owner's STY-090 grilling
-  (2026-11-23); tracing split out to STY-100 (D24)
+- **Status**: Done
 - **Type**: Feature
 - **Area**: API + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-086 (hard), STY-087 (hard: its hooks and gate, which the API joins)
 - **Binding ADRs**: ADR-017, including §STY-090 amendments; ADR-020's response rules
   (ADR-017 §ADR-020 amendments); ADR-018's application-log allow-list; ADR-016 §Workspace
   tooling, §CI
 - **Suggested model**: Opus — the conventions every later API story copies
+- **Delivered**: _(the PR, added once it exists)_
 
 ## Summary
 
@@ -263,7 +263,7 @@ the editor's Vite config. S1 is an observed run.
 - **D23** (owner, round 6): requests are capped at 1 MiB, one setting, over 256 KiB or
   leaving it to the edge. Gives S4.
 - **D24** (owner, round 7): OpenTelemetry, the shared Jaeger and probes left untraced
-  move to [STY-100](STY-100-the-api-traces-requests-locally.md), over one large pull
+  move to [STY-100](../../EPC-022-monorepo-and-backend-foundation/STY-100-the-api-traces-requests-locally.md), over one large pull
   request or splitting out the local running instead.
 - **D25** (owner, round 7): no container image, production server or hosted host values
   here; they belong to EPC-023, which builds the editor's files into the API's image
@@ -334,3 +334,89 @@ Audited at `e4117b10`:
 - A container image, the production server and hosted hosts: EPC-023.
 - Serving the editor's built files with their document headers (ADR-020): a later
   EPC-022 story, in its candidate scope.
+
+## Delivery
+
+### Departures
+
+- **S1, S3: `/ready`'s two seconds are one per wait, not one deadline** (agent): the
+  pool wait, the connection (libpq's 2-second floor) and the query
+  (`statement_timeout`) each give up after about two seconds. A database that is down,
+  silent, or whose pool is exhausted answers 503 within that (tests below); only a
+  connection that succeeds and then hangs in its query could take up to four.
+- **S4: the routing handler imports Starlette's `HTTPException`** (agent): FastAPI raises
+  it for an unknown path or method, so `errors.py` registers its handler with one
+  `noqa: TID251` and a comment, and `tests/support.py` raises one with another; the
+  banned-API rule still fails any other import. A status FastAPI never raises itself
+  answers the generic 500.
+- **S6: the live OpenAPI JSON is at `/api/v1/openapi.json`** (agent), under the
+  contract's prefix, so the editor's dev proxy reaches it; `/openapi.json`, `/docs` and
+  `/redoc` answer 404 everywhere. A database URL that is not `postgresql+psycopg://`
+  is a bad setting too, failing closed rather than at the first query.
+- **S6, S7: `api:dev` checks the settings before uvicorn starts** (agent): uvicorn 0.54
+  lets a factory's exception reach the interpreter, which prints it, with its text, on
+  stderr; `python -m roadmaps_api.server` logs the bad settings' names as JSON and exits
+  1 first.
+- **S7: another library's log message is dropped, not only its arguments** (agent):
+  uvicorn formats some exceptions into its messages (`"Error loading ASGI app. %s" %
+exc`), so a line from a logger outside `roadmaps_api` carries only its time, level,
+  logger name and, for an exception, its type and frames. uvicorn's start-up lines are
+  therefore bare; `api:dev` prints the API's and the database's addresses on stderr
+  before it starts.
+- **S8: the transaction check also fails `begin()`** (agent), since
+  `with session.begin():` commits as it closes; any call by the three names fails,
+  whatever its receiver.
+- **S10: CI's API job runs the API's pnpm scripts**, after `pnpm install`, as the other
+  apps' jobs do, so CI and the gate run one definition of each check; setup-uv is
+  v10.3.3, as v10.4.0 was under a week old.
+- **S12: the wiring test is of the proxy helper the Vite config calls**
+  (`apps/editor/build/api-proxy.ts`), not of `vite.config.ts` itself, which does not
+  load under Vitest (its `import.meta.url` is not a file URL there) (agent).
+- **Tests: `httpx2`, not `httpx`** (agent): Starlette 1.10's `TestClient` deprecates
+  `httpx`, and pytest runs with warnings as errors.
+- **Added**: a root `api:format` script (ruff's format and fixes), beside the scripts the
+  scenarios name.
+
+### Contract for dependents
+
+- **Errors**: `roadmaps_api.errors.ErrorCode` lists every code with its status and
+  detail; `ApiError(code, params)` is the one way to refuse. STY-092 enumerates these
+  codes in the OpenAPI document and starts the editor's table with them.
+- **Layers**: `roadmaps_api.routes`, `.services`, `.repositories` under import-linter's
+  contract in `apps/api/pyproject.toml`, with `roadmaps_api.app` (the composition root)
+  above them; `tools/check_transactions.py` reads `routes/` and `repositories/`. A route
+  takes `DbSession` (`roadmaps_api.database`); `app.state.engine` and
+  `app.state.sessions` hold the engine and the session factory.
+- **Readiness**: `ReadinessService.check()` is where STY-091 adds the Alembic-head check
+  (D21).
+- **Request ID**: `roadmaps_api.middleware.new_request_id()` (32 hex digits) and
+  `roadmaps_api.logs.request_id_var`; STY-100 replaces the first with the trace ID.
+  `PROBE_PATHS` is where STY-100 leaves successful probes untraced.
+- **Logs**: `ALLOWED_EXTRA_FIELDS` in `roadmaps_api.logs` is the allow-list a new field
+  joins.
+- **Tests**: `tests/support.py` (`make_settings`, `add_test_routes`, `database_url()`
+  from `ROADMAPS_TEST_DATABASE_URL`); STY-091's harness replaces `database_url()` and
+  grows CI's `api-verify` service container.
+- **Local running**: `.env.worktree` gains `API_PORT`, `DB_PORT` and
+  `API_DB_PROJECT` (`roadmaps-slot-<n>`); `apps/api/scripts/api.sh` reads them, and
+  `scripts/worktree/dev-ports.ts`' `resolveServicePort(API_PORT)` gives the API's port
+  to TypeScript.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | observed run (2026-11-23, slot 32): `pnpm api:dev` started Compose project `roadmaps-slot-32` (`127.0.0.1:21325->5432`) and the API with reload on 21324; `/health` and `/ready` 200; a copy of `apps/api` with slot 98's `.env.worktree` ran beside it on 21984/21985, both `/ready` 200; `pnpm api:db:down` then `/ready` 503 in 5 ms, `/health` 200; `t3.json`'s _Start API_ |
+| S2       | `scripts/worktree/worktree.test.ts` (`writes each app's ports…`, `installs the API's locked dependencies…`, `stops, naming uv…`, `reclaims the slot… removing its database`, `worktree.sh teardown`)                                                                                                                                                                            |
+| S3       | `apps/api/tests/test_probes.py` (up, down, a silent database, an exhausted pool); `tests/test_logs.py` (`…503 logs a warning…`, `a probe that succeeds writes no access line`)                                                                                                                                                                                                  |
+| S4       | `apps/api/tests/test_errors.py` (`test_a_refusal_is_the_envelope_without_the_input`, one row per refusal, streamed and declared bodies); banned-API rule in `apps/api/pyproject.toml`                                                                                                                                                                                           |
+| S5       | `apps/api/tests/test_headers.py` (every response kind, CORS preflight, `X-Forwarded-Host`, the host table)                                                                                                                                                                                                                                                                      |
+| S6       | `apps/api/tests/test_settings.py`; `tests/test_headers.py` (docs and OpenAPI per environment); `tests/test_server.py` (`bad settings stop the server…`)                                                                                                                                                                                                                         |
+| S7       | `apps/api/tests/test_logs.py`; `tests/test_server.py` (`the server logs no query string or exception text on either stream`, uvicorn with reload, a planted query string, exception and malformed request)                                                                                                                                                                      |
+| S8       | `apps/api/tests/test_layering.py` (planted upward imports, planted `commit`/`rollback`/`begin`, the real tree passing both)                                                                                                                                                                                                                                                     |
+| S9       | `lefthook.yml` (`ruff (api)`, `typecheck`); observed: this PR's first commit, with a file left unformatted, was formatted and restaged by the hook, and its push ran ty through `pnpm typecheck`                                                                                                                                                                                |
+| S10      | `scripts/ci/classify-changes.test.ts`; `build/ci-workflow.test.ts` (`needs every job…`); `build/api-compose.test.ts` (the digest); CI's _API: verify_ on this PR; CodeQL's Python analysis: to observe once merged                                                                                                                                                              |
+| S11      | `apps/api/pyproject.toml` (`exclude-newer`, `required-version`, exact ruff and ty, the ignore list with reasons); `.github/dependabot.yml`'s uv entry                                                                                                                                                                                                                           |
+| S12      | `apps/editor/build/api-proxy.test.ts`; observed: `/api/v1/nothing` through the editor's dev port answered the API's 404 envelope, and `/api/v1/openapi.json` 200                                                                                                                                                                                                                |
+| S13      | `apps/api/AGENTS.md`, `apps/api/CLAUDE.md`, the root guide's routing row, the README's prerequisites                                                                                                                                                                                                                                                                            |
+| S14      | `.agents/skills/implement-story/references/validation.md` (the gate by app)                                                                                                                                                                                                                                                                                                     |

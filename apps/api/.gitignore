@@ -1,0 +1,8 @@
+# uv's environment and the tools' caches and output
+.venv
+__pycache__
+.coverage
+.coverage.*
+.import_linter_cache
+.pytest_cache
+.ruff_cache

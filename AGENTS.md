@@ -19,6 +19,7 @@ writes_).
 | ----------------------------- | ------------------------------------------------------------------------------------ |
 | `apps/editor/`                | `apps/editor/AGENTS.md`, with `apps/typescript-react-conventions.md`                 |
 | `apps/public-site/`           | `apps/public-site/AGENTS.md`, with `apps/typescript-react-conventions.md`            |
+| `apps/api/`                   | `apps/api/AGENTS.md`                                                                 |
 | `docs/`                       | `docs/AGENTS.md`                                                                     |
 | `.agents/skills/`, `.claude/` | The `writing-for-agents` skill and `docs/operations/authoring-agent-instructions.md` |
 | Anything else                 | This file                                                                            |

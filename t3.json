@@ -15,6 +15,11 @@
       "icon": "play"
     },
     {
+      "name": "Start API",
+      "command": "pnpm api:dev",
+      "icon": "play"
+    },
+    {
       "name": "Worktree ports",
       "command": "pnpm worktree:info",
       "icon": "debug"

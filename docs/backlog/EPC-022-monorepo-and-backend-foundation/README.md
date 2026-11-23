@@ -1,11 +1,11 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
-  STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098) and STY-089 are
-  done; STY-090 is Proposed (owner, 2026-11-23); the other API placeholders'
-  acceptance criteria come next
-- **Progress**: 10 of 17 terminal (STY-085 to STY-089, STY-095, CHO-044, STY-096 to
-  STY-098); next selectable: STY-090
+  STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
+  the API skeleton (STY-090) are done; the other API placeholders' acceptance criteria
+  come next
+- **Progress**: 11 of 17 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
+  STY-098); next selectable: none until STY-091, STY-092 or STY-100 has its criteria
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -188,7 +188,7 @@ the seeder for any table it creates.
 | STY-087 | [Workspace tooling and the ruleset](../_archive/EPC-022-monorepo-and-backend-foundation/STY-087-workspace-tooling-and-the-main-ruleset.md)                                | CI/CD                      | STY-086     | ✅    |
 | STY-088 | [Bring the public site in](../_archive/EPC-022-monorepo-and-backend-foundation/STY-088-bring-the-public-site-into-the-workspace.md)                                       | CI/CD + Docs               | STY-087     | ✅    |
 | STY-089 | [One copy of the spreadsheet fixtures](../_archive/EPC-022-monorepo-and-backend-foundation/STY-089-one-copy-of-the-spreadsheet-fixtures.md)                               | Infrastructure + CI/CD     | STY-098     | ✅    |
-| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                                                                                           | API + CI/CD                | STY-087     |       |
+| STY-090 | [The API skeleton](../_archive/EPC-022-monorepo-and-backend-foundation/STY-090-the-api-skeleton.md)                                                                       | API + CI/CD                | STY-087     | ✅    |
 | STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md)                                                                       | API                        | STY-090     |       |
 | STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)                                                                                 | API + Infrastructure       | STY-090     |       |
 | STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                                                                                               | API                        | STY-091     |       |
@@ -201,7 +201,7 @@ the seeder for any table it creates.
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                | STY-098     |       |
 | STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                                                 | API                        | STY-090     |       |
 
-_STY-085 to STY-089, STY-095, CHO-044 and STY-096 to STY-098 are done. STY-090 is Proposed;
+_STY-085 to STY-090, STY-095, CHO-044 and STY-096 to STY-098 are done.
 STY-091 to STY-093 and STY-100 are Placeholders until their acceptance criteria are
 written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input

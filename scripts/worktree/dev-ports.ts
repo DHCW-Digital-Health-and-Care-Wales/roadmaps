@@ -27,6 +27,15 @@ export const PUBLIC_SITE_PORTS: AppPorts = {
   defaults: { dev: 5174, preview: 4174 },
 }
 
+/** A service's one port, such as the API's, and the port it takes without the file. */
+export interface ServicePort {
+  readonly variable: string
+  readonly default: number
+}
+
+/** The API's, which the editor's dev server proxies `/api` to. */
+export const API_PORT: ServicePort = { variable: "API_PORT", default: 8000 }
+
 const WORKTREE_ENV = new URL("../../.env.worktree", import.meta.url)
 
 /**
@@ -40,16 +49,29 @@ export function resolveDevPorts(
   app: AppPorts,
   worktreeEnvFile: URL = WORKTREE_ENV,
 ): DevPorts {
-  let text: string
-  try {
-    text = readFileSync(worktreeEnvFile, "utf8")
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return app.defaults
-    throw error
-  }
+  const text = readWorktreeEnv(worktreeEnvFile)
+  if (text === undefined) return app.defaults
   return {
     dev: readPort(text, app.devVariable),
     preview: readPort(text, app.previewVariable),
+  }
+}
+
+/** A service's port in this checkout, read as `resolveDevPorts` reads an app's. */
+export function resolveServicePort(
+  service: ServicePort,
+  worktreeEnvFile: URL = WORKTREE_ENV,
+): number {
+  const text = readWorktreeEnv(worktreeEnvFile)
+  return text === undefined ? service.default : readPort(text, service.variable)
+}
+
+function readWorktreeEnv(worktreeEnvFile: URL): string | undefined {
+  try {
+    return readFileSync(worktreeEnvFile, "utf8")
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined
+    throw error
   }
 }
 

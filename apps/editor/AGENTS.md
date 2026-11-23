@@ -74,11 +74,12 @@ apps share, and these, the editor's own:
 - Route every user-facing string (text, aria-labels, notices, titles) through `t()`, in
   English and Welsh (ADR-008); invoke the `copywriter` skill before writing copy.
   Domain and infrastructure emit codes, never copy.
-- Show roadmap content through `<ContentText>`
-  (`apps/editor/src/features/roadmaps/components/content-text.tsx`), which marks English
-  shown in place of Welsh (ADR-008): a catalogue sentence naming content places it as an
-  element for `<Trans>`, and an attribute, which can't mark a part of itself, takes
-  `localise()` or reads that sentence with `AS_PLAIN_WORDS`.
+- Mark English shown in place of Welsh (ADR-008): show roadmap content through
+  `<ContentText>` (`apps/editor/src/features/roadmaps/components/content-text.tsx`), or
+  put `useContent()`'s `lang` on an element the content fills whole, such as an option; a
+  catalogue sentence naming content places it as an element for `<Trans>`, and an
+  attribute, which can't mark a part of itself, takes `localise()` or reads that sentence
+  with `AS_PLAIN_WORDS`.
 - Style only with the semantic tokens of `apps/editor/src/styles/globals.css`
   (ADR-010), and read `apps/editor/src/styles/AGENTS.md` before adding a token. Focus is
   `focus-visible:focus-fill` (buttons, button-styled links, menu items), `focus-ring`

@@ -27,7 +27,8 @@ Not reproduced on demand. Both failures read the same: `expect(notice).toBeFocus
 focused, Received: inactive", the call log showing the notice resolved on each of 14 polls.
 
 1. Local, a delivery's run of the nine item-editing specs (4 workers, load average 11,
-   head `cd43e94f`, base `f9ce1e34`): `removing-an-item.spec.ts` "a published item is
+   an uncommitted working tree on base `f9ce1e34`, before the delivery's first commit):
+   `removing-an-item.spec.ts` "a published item is
    removed, pending until published, then its row is deleted", 7.3 s. It passed three
    times alone and in every later run.
 2. CI run 45087674954 (PR #250's head `1299e029`, rebased on `7c29b43b`), job _Editor: E2E
@@ -42,12 +43,17 @@ focused, Received: inactive", the call log showing the notice resolved on each o
 
 ## Cause
 
-Suspected, not verified. `useFocusNoticeOnClose` focuses the notice once, in the dialog's
-`onOpenChangeComplete`, and only if the notice exists at that moment; the dialog hides
-first, and the notice shows when the write's outcome arrives. If the outcome renders after
-the close completes, or something else takes focus in between, nothing sends focus to the
-notice again, and the helper waits for a focus that does not come.DEF-024's fix added the wait for the notice's focus to the helper; this is the same wait
-timing out rather than a step losing focus to the notice.
+Suspected, not verified. On a normal publish the outcome notice is set before the dialog
+closes: `usePublish` records it, then `RoadmapPublishing` closes the dialog once the write
+settles. The dialog's `finalFocus` then sends focus nowhere, leaving it on the page body,
+and `useFocusNoticeOnClose` focuses the notice once, in `onOpenChangeComplete`. If that
+callback runs very late or not at all, or something else takes focus after it, nothing
+sends focus to the notice again, and the helper waits for a focus that does not come. The
+notice's late rendering applies only to the write hold of a publish that could not be
+read back, which neither failing spec reaches.
+
+DEF-024's fix added the wait for the notice's focus to the helper; this is the same wait
+timing out, rather than a step losing focus to the notice.
 
 - `rg -n 'confirmPublish\(' apps/editor/tests/e2e` — 24 matches in 11 files: the
   definition, one call in `publishOnce` and 22 in 10 specs. Not checked here: whether the

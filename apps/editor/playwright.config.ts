@@ -1,13 +1,14 @@
 import { defineConfig, devices } from "@playwright/test"
 
 import { resolveBasePath } from "./build/resolve-base-path.ts"
-import { resolveDevPorts } from "./build/resolve-dev-ports.ts"
+import {
+  EDITOR_PORTS,
+  resolveDevPorts,
+} from "../../scripts/worktree/dev-ports.ts"
 
 // 4173, or a parallel worktree's own preview port, from the repository root's
 // .env.worktree (scripts/worktree/worktree.sh).
-const PORT = resolveDevPorts(
-  new URL("../../.env.worktree", import.meta.url),
-).preview
+const PORT = resolveDevPorts(EDITOR_PORTS).preview
 // `vite preview` serves the build under its base path (in CI, /<repo>/), so the specs
 // navigate relative to it.
 const baseURL = `http://localhost:${String(PORT)}${resolveBasePath(process.env)}`

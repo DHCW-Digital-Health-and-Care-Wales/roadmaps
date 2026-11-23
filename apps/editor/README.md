@@ -164,10 +164,10 @@ the repository's root, installs dependencies and creates `apps/editor/.env.local
 _n_ owns `21000 + 10n` for `pnpm editor:dev` and `21000 + 10n + 1` for
 `pnpm editor:preview` and `pnpm editor:test:e2e`; `apps/editor/vite.config.ts` and
 `apps/editor/playwright.config.ts` read the file
-(`apps/editor/build/resolve-dev-ports.ts`).
+(`scripts/worktree/dev-ports.ts`).
 A checkout without it keeps 5173 and 4173. The public site takes the slot's next two
 ports for `pnpm site:dev` and for `site:preview`, `site:test:e2e` and `site:lighthouse`
-(`apps/public-site/scripts/dev-ports.ts`), or 5174 and 4174.
+(the same module), or 5174 and 4174.
 
 ```sh
 pnpm worktree:info      # this worktree's ports

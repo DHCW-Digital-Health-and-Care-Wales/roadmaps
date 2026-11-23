@@ -5,8 +5,8 @@
 #
 # Each worktree claims a numbered slot, and the slot fixes a block of host
 # ports, written to .env.worktree at the repository's root, one file for every
-# app. Each app's vite.config.ts and playwright.config.ts read that file
-# (apps/editor/build/resolve-dev-ports.ts, apps/public-site/scripts/dev-ports.ts);
+# app. Each app's vite.config.ts and playwright.config.ts (and the public site's
+# Lighthouse script) read that file through scripts/worktree/dev-ports.ts;
 # without it they keep their canonical ports (the editor 5173 dev and 4173
 # preview and E2E, the public site 5174 and 4174), so a main checkout is
 # unaffected.
@@ -136,8 +136,8 @@ ensure_env() {
   unlock
 
   local base=$((PORT_BASE + SLOT * 10)) offset
-  # Plain KEY=VALUE lines: each app's port resolver parses them, and a shell
-  # can `source` them. Written aside and renamed, so a
+  # Plain KEY=VALUE lines: the dev-ports resolver (dev-ports.ts) parses them, and
+  # a shell can `source` them. Written aside and renamed, so a
   # concurrent reader (a starting Vite or Playwright) never reads a
   # half-written file.
   {

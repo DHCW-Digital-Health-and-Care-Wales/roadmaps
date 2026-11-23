@@ -1,13 +1,13 @@
 # CHO-044: One dev-ports resolver serves both apps
 
-- **Status**: Proposed — recorded in the owner's STY-095 grilling (2026-11-23, D1); runs
-  after STY-095 in EPC-022's alignment sequence
+- **Status**: Done
 - **Type**: Refactor
 - **Area**: CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-095 (hard)
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one small module moved and two callers repointed
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/272
 
 ## Summary
 
@@ -59,3 +59,28 @@ package's suite
 
 - The language preference both apps resolve alike: STY-096 gives the site's copy the
   editor's shape, with no shared package (STY-096 D4).
+
+## Delivery
+
+### Departures
+
+- **The module's name and shape.** `scripts/worktree/dev-ports.ts` exports
+  `resolveDevPorts(app, worktreeEnvFile?)`, with the file defaulting to the repository
+  root's `.env.worktree`, and two `AppPorts` values, `EDITOR_PORTS` and
+  `PUBLIC_SITE_PORTS`, each naming its two variables and its defaults, so the site's
+  three callers do not repeat its names. The module is beside `worktree.sh`, which
+  writes those same variables. The editor's `parseWorktreePorts` is no longer exported:
+  its cases run through `resolveDevPorts`. Agent, routine shape drift.
+- The two apps' own tests of the resolver went with their copies.
+
+### Contract for dependents
+
+An app that reads another port from `.env.worktree` adds an `AppPorts` value beside the
+two and has `worktree.sh` write its variables; no app holds a resolver of its own.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                      |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `scripts/worktree/dev-ports.test.ts` (defaults, each app's ports from one file, ambient variables ignored, a missing, invalid or absent port named); observed run: `resolveDevPorts` in this worktree gives 21210/21211 and 21212/21213 from `.env.worktree` |
+| S2       | `rg 'resolveDevPorts\|parseWorktreePorts\|readPort' apps` finds callers only; the one test file is the root package's. The built public site (`pnpm site:build`) is byte-identical to the build before (`diff -r`)                                           |

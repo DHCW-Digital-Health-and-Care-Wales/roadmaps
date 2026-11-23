@@ -7,14 +7,17 @@ import { defineConfig } from "vitest/config"
 
 import { resolveBasePath } from "./build/resolve-base-path.ts"
 import { resolveBuildVersion } from "./build/resolve-build-version.ts"
-import { resolveDevPorts } from "./build/resolve-dev-ports.ts"
+import {
+  EDITOR_PORTS,
+  resolveDevPorts,
+} from "../../scripts/worktree/dev-ports.ts"
 
 const { version } = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 ) as { version: string }
 // A parallel worktree's own ports, from the .env.worktree that the worktree script
 // (scripts/worktree/worktree.sh) writes at the repository's root, else 5173 and 4173.
-const ports = resolveDevPorts(new URL("../../.env.worktree", import.meta.url))
+const ports = resolveDevPorts(EDITOR_PORTS)
 
 // https://vite.dev/config/
 export default defineConfig({

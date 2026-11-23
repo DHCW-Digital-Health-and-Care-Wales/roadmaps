@@ -163,16 +163,6 @@ export async function openAddRoadmapDialog(
   return dialog
 }
 
-/**
- * The roadmap dialog's names in `language`: its heading, and its first and last fields
- * (STY-065 S9).
- */
-export function editRoadmapNames(
-  language: Language = "en",
-): Pick<(typeof EDIT_ROADMAP)[Language], "title" | "firstField" | "lastField"> {
-  return EDIT_ROADMAP[language]
-}
-
 /** The Edit at the foot of the open "Product details", on a roadmap's page in `language`. */
 export function editRoadmapButton(
   page: Page,

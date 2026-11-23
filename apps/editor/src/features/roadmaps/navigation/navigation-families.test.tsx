@@ -208,15 +208,11 @@ describe("Close all and Open all (S3)", () => {
 describe("remembered on this device (S4)", () => {
   it("keeps the closed families across a reload, and writes nothing to the data source", async () => {
     const repository = createInMemoryRoadmapRepository(ROADMAPS, ROADMAP_ITEMS)
-    const writes = [
-      "publishRoadmapChanges",
-      "addRoadmap",
-      "addFamily",
-      "changeFamily",
-      "matchRoadmapToLists",
-      "setRoadmapPublished",
-    ] as const
-    const spies = writes.map((write) => vi.spyOn(repository, write))
+    // Every method of the port that is not a read.
+    const spies = (Object.keys(repository) as (keyof typeof repository)[])
+      .filter((method) => !method.startsWith("list"))
+      .map((method) => vi.spyOn(repository, method))
+    expect(spies.length).toBeGreaterThanOrEqual(6)
     const { user, unmount } = await renderFamilies({ repository })
     await user.click(familyButton("Single Record"))
     await user.click(familyButton("Workforce"))

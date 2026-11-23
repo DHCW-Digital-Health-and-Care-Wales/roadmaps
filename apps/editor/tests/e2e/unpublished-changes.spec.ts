@@ -8,9 +8,9 @@ import { connect, expect, test } from "./fixtures/test"
 /**
  * STY-055: which roadmaps have unpublished changes, from any page. What a browser alone
  * shows of it: the dot's colour on the navy navigation, on a focused entry (dark on the
- * yellow focus fill), on the phone's menu button and on its sticky strip's. What each
+ * yellow focus fill), on the phone's menu button; the strip's dot, named for it, is its own test. What each
  * state says, the count, its lead, the rail, the drawer and Disconnect's question, is
- * held by `unpublished-changes.test.tsx`; the Welsh fit by `navigation-changed.spec.ts`.
+ * held by `unpublished-changes.test.tsx`; the Welsh fit by `navigation-welsh.spec.ts`.
  */
 
 const DESKTOP = { width: 1280, height: 800 }

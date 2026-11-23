@@ -169,11 +169,13 @@ describe("RoadmapsPage", () => {
     })
 
     it("re-sorts the groups and titles when the language changes, naming families in Welsh (S8)", async () => {
-      await renderWithProviders({
+      const { i18n } = await renderWithProviders({
         authState: connected,
         roadmaps: example,
-        language: "cy",
       })
+      expect(await main().findByText(/^3 roadmaps/)).toBeInTheDocument()
+
+      await act(() => i18n.changeLanguage("cy"))
 
       expect(await main().findByText(/^3 map trywydd/)).toBeInTheDocument()
       expect(groups()).toEqual([

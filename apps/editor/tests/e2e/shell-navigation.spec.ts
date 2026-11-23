@@ -215,7 +215,7 @@ test.describe("on a phone", () => {
   })
 
   // The drawer's fit in Welsh, the longest copy, is held with the navigation's other
-  // Welsh reflow checks in `navigation-changed.spec.ts`.
+  // Welsh reflow checks in `navigation-welsh.spec.ts`.
   test("opens over the page from the top bar, keeps focus in it and returns it (S5, D9)", async ({
     page,
   }) => {

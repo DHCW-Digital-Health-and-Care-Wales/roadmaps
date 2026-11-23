@@ -18,11 +18,9 @@ const copy = {
     copyright: "© Digital Health and Care Wales",
   },
   cy: {
-    logo: "Iechyd a Gofal Digidol Cymru",
     home: "Golygydd Mapiau Trywydd hafan",
     shortHome: "Mapiau Trywydd hafan",
     connect: "Cysylltu â Google",
-    account: "Cyfrif",
   },
 } as const
 

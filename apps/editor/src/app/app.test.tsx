@@ -299,6 +299,22 @@ describe("routes", () => {
     expect(screen.getByRole("banner")).toBeInTheDocument()
   })
 
+  it("leads from the not-found page's link to the landing page", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({ path: "/no/such/page" })
+
+    await user.click(
+      await screen.findByRole("link", { name: "Go to the home page" }),
+    )
+
+    expect(
+      await main().findByRole("heading", {
+        level: 1,
+        name: "DHCW Roadmap Editor",
+      }),
+    ).toBeInTheDocument()
+  })
+
   it("routes /roadmaps/$roadmapId to the roadmap detail page", async () => {
     const { router } = await renderWithProviders({
       path: "/roadmaps/producta",

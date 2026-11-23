@@ -8,8 +8,9 @@ import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
- * The shell's navigation in Cymraeg, whose copy is the longest, with its widest content: a
- * family shut, three roadmaps with unpublished changes and the count shown, and a search.
+ * The shell's navigation in Cymraeg, whose copy is the longest, with its widest content
+ * (STY-061 S12, STY-062 S8, STY-063 S8, STY-055 D4): a family shut, three roadmaps with
+ * unpublished changes and the count shown, and a search.
  * One test per width where the navigation changes shape: beside the page at the narrowest
  * desktop, and in the phone's drawer. Each fits with no sideways scroll. What each state
  * says, and every English run of it, is held by the unit tests
@@ -92,7 +93,7 @@ const horizontalOverflow = (page: Page) =>
       document.documentElement.clientWidth,
   )
 
-test("at the narrowest desktop, a Welsh family shut, the count pressed and a search fit with no sideways scroll (S8)", async ({
+test("at the narrowest desktop, a Welsh family shut, the count pressed and a search fit with no sideways scroll (STY-063 S8)", async ({
   page,
   sheets,
 }) => {
@@ -118,7 +119,7 @@ test("at the narrowest desktop, a Welsh family shut, the count pressed and a sea
   expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0)
 })
 
-test("on a phone, the Welsh menu button, a family shut, the count and a search fit in the drawer with no sideways scroll (S8, D4)", async ({
+test("on a phone, the Welsh menu button, a family shut, the count and a search fit in the drawer with no sideways scroll (STY-063 S8, STY-055 D4)", async ({
   page,
   sheets,
 }) => {
@@ -134,12 +135,16 @@ test("on a phone, the Welsh menu button, a family shut, the count and a search f
   const drawer = page.getByRole("dialog", { name: COPY.menu })
   await expect(drawer).toBeVisible()
   await expect(count(page)).toBeVisible()
+  // The count, the longest Welsh string, fits inside the drawer: the list it sits in
+  // scrolls on its own, so a count past the edge would not scroll the page.
+  const [drawerBox, countBox] = await boxesOf(drawer, count(page))
+  expect(countBox.right).toBeLessThanOrEqual(drawerBox.right)
   await family(page).click()
   await expect(family(page)).toHaveAttribute("aria-expanded", "false")
   await searchBox(page).fill("gofal")
   await expect(roadmap(page, COPY.plans)).toBeVisible()
 
-  // The longest link, and the count, fit inside the drawer.
+  // The longest link, and a title found, fit inside the drawer.
   const [box, families, plans] = await boxesOf(
     drawer,
     navigation(page).getByRole("link", { name: COPY.families, exact: true }),

@@ -323,11 +323,13 @@ ruleset at once; the owner turned merge commits on beforehand and the agent off 
   reaches `485ca43`; `.git-blame-ignore-revs` names the reformat commit as it landed
   (`e0979be`). `main`'s ruleset compared empty against `.github/rulesets/main.json`
   afterwards, and the repository allows squash merges only again. `main`'s CI run
-  (`45085192396`) passed every job; its editor deploy skipped, as on every push since
-  CHO-031 (DEF-031).
+  (`45085192396`) passed every job that runs on a push; Dependency review (pull requests
+  only) skipped, and so did the editor's deploy, as on every push since CHO-031, a
+  defect the owner made a priority the next day.
 - **S3**: `product-roadmaps` #52 merged (`5eb45a2`, 23:48:46Z) while its `main` was still
   at `2548219`; the repository holds the nine files S3 and D9 list, and the merge
-  triggered no deploy. Dependabot closed its five pull requests itself at 23:57Z. A
+  triggered no deploy. Its five Dependabot pull requests (#19, #48–#51) were closed by the owner's account at
+  23:57Z, #48 also locked. A
   manual _Check the roadmap sheet_ run (`45086364768`) passed.
 - **S2**: a manual deploy there (`45086184077`) built this repository at `c23ed2fe` with
   the sheet as it stood (23 roadmaps) and published it (deployment of `5eb45a2` to

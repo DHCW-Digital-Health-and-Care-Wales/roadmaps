@@ -102,13 +102,13 @@ the language switcher's names of the languages.
   gives the text and its language.
 - A catalogue sentence naming content places it as `<title />`, `<name />` or
   `<subject />` and is read through `<Trans>`, or as plain words through `t()` with
-  `AS_PLAIN_WORDS` (`plain-words.ts`); a bare `t()` returns the tag as text. The keys: `roadmaps.edit.removal.title`, `roadmaps.publish.notice.refused.removed` and
+  `AS_PLAIN_WORDS` (`plain-words.ts`); a bare `t()` returns the tag as text. The keys:
+  `roadmaps.edit.removal.title`, `roadmaps.publish.notice.refused.removed` and
   `.targetLead`, `roadmaps.publishRoadmap.confirm.title.*`, `.notice.published`,
   `.savedAndPublished`, `.unpublished`, `.failed.*` and `.refused.problems.idTaken`,
   `roadmaps.add.added`, `roadmaps.edit.addItem.added`, `roadmaps.navigation.changed`,
-  `roadmaps.lists.match.confirm.title`, `.notice.matched` and
-  `.matchedPublic`, `roadmaps.families.form.changeTitle`, `.confirm.title` and
-  `.organisations.entry`.
+  `roadmaps.lists.match.confirm.title`, `.notice.matched` and `.matchedPublic`,
+  `roadmaps.families.form.changeTitle`, `.confirm.title` and `.organisations.entry`.
 - Text shown with no `lang` of its own is `unmarked(text)` (`shown-content.ts`).
 - `CutField` takes `value: ShownContent[]`, `DetailList` and `CutDetails` take
   `ShownDetail` (`shown-content.ts`, a `DetailLine` with an optional `lang`), `TagList` takes

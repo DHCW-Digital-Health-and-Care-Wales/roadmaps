@@ -27,6 +27,7 @@ import { ContentText, ShownText } from "../components/content-text"
 import { DetailList } from "../components/detail-list"
 import { FieldName } from "../components/field-name"
 import { useOrganisations } from "../hooks/use-organisations"
+import { AS_PLAIN_WORDS } from "../plain-words"
 import {
   describeOrganisations,
   type OpenConflict,
@@ -39,7 +40,6 @@ import { type OrderLine, reviewedOrders } from "./order-review"
 import type { PageItem } from "./page-items"
 import type { PublishAction } from "./pending-changes-store"
 import { RemovedItems } from "./refusal-notice"
-import { AS_PLAIN_WORDS } from "../plain-words"
 import { useDecisionFocus } from "./use-decision-focus"
 import { useRoadmapChoices } from "./use-roadmap-choices"
 

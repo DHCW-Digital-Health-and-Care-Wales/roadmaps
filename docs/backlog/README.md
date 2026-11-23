@@ -83,6 +83,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-040](_archive/chores/CHO-040-the-connecting-and-publishing-specs-hold-what-their-component-tests-cannot.md) | The connecting and publishing specs hold only what their component tests cannot (part of CHO-014)                                   | Done           |
 | [CHO-041](_archive/chores/CHO-041-the-vitest-suite-asserts-each-rule-once-at-its-lowest-seam.md)                 | The Vitest suite asserts each rule once, at its lowest seam (part of CHO-014)                                                       | Done           |
 | [CHO-042](_archive/chores/CHO-042-every-sideways-scroll-check-uses-one-helper.md)                                | Every sideways-scroll check uses one helper (part of CHO-014)                                                                       | Done           |
+| [CHO-043](chores/CHO-043-the-public-sites-tests-hold-each-check-once.md)                                         | The public site's tests hold each check once, where it can fail alone                                                               | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

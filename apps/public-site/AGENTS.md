@@ -43,6 +43,18 @@ component files, its own ESLint config, and `strings.ts` with `<T>` in place of 
 Follow the file you are in, not `apps/editor/AGENTS.md`; the workspace's toolchain
 (Prettier, pnpm, Node) applies as everywhere.
 
+## Tests
+
+- The seams of the root guide's test rule, lowest first: a parsing or schema script in
+  `apps/public-site/scripts/` or a helper in `apps/public-site/src/lib/`, a component, a
+  page, `App`, then `entry-server` for the prerendered HTML; a table-driven test is an
+  `it.each`.
+- A Playwright spec holds only what a built site in a browser shows: pages with
+  JavaScript off, navigation and the base path, focus and its ring, what is in view and
+  what stays in place as the page scrolls or filters, controls that show only at some
+  widths, reflow at 320 px and 400% zoom, errors in the console, the axe scans and the
+  ARIA snapshots. Lighthouse holds performance.
+
 ## Commands and checks
 
 - Run `pnpm site:sync` before `pnpm site:dev` or `pnpm site:build` against live data.

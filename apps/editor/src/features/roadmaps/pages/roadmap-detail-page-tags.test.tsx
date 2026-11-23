@@ -205,13 +205,17 @@ describe("Editing an item's tags (STY-037)", () => {
     expect(
       field.getByRole("button", { name: "Ailenwi Patients" }),
     ).toBeVisible()
-    expect(field.getByRole("button", { name: "Tynnu Patients" })).toBeVisible()
     expect(
       field.getByRole("button", {
         name: "Ychwanegu Appointments, ar 2 eitem arall",
       }),
     ).toBeVisible()
     expect(form.getByRole("button", { name: "Cau tagiau" })).toBeVisible()
+    await user.click(field.getByRole("button", { name: "Tynnu Patients" }))
+    expect(field.getByRole("status")).toHaveTextContent("Tynnwyd “Patients”.")
+    expect(
+      field.getByRole("button", { name: "Dadwneud tynnu Patients" }),
+    ).toBeVisible()
   })
 
   it("keeps an added tag pending, on the card and in the publish dialog, writing nothing until published (S2, S12)", async () => {

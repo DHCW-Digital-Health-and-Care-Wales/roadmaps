@@ -1,49 +1,27 @@
 import type { Locator, Page } from "@playwright/test"
 
 import {
-  addItem,
   addItemButtons,
-  clickOutside,
   confirmPublish,
   editItemButton,
   openAddItemDialog,
-  openEditItemDialog,
-  confirmRemoval,
-  reviewFooterClose,
 } from "./fixtures/dialogs"
-import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
-import { withTabItems } from "./fixtures/fake-sheets"
-import { escapeFrom } from "./fixtures/keyboard"
-import { useLanguage } from "./fixtures/look"
-import {
-  goToList,
-  openConflictReview,
-  refreshRoadmap,
-  refusal,
-} from "./fixtures/roadmap-page"
+import { goToList, refreshRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
  * A Product Lead adds an item on a roadmap's page (STY-046), against the fake Sheets
  * API: "Add an item" opens the item dialog, empty; "Add item" keeps the item pending,
  * on a card tagged "New", and nothing is written until the roadmap is published or
- * saved. The rules of each field are held in `editing.spec.ts`, through the same form.
- * The journey runs once, at the default size and theme (EPC-011's delivery notes): the
- * accessibility spec and the focus tour open the dialog in both themes. The dialog that
- * asks before a publish lists each new item, marked as new (STY-047).
+ * saved. What the dialog shows and keeps, and the publish dialog's list of new items,
+ * are held in `roadmap-detail-page-adding.test.tsx`; this spec holds the round trip of
+ * an appended row and what only a browser shows. The journey runs once, at the default
+ * size and theme (EPC-011's delivery notes): the accessibility spec and the focus tour
+ * open the dialog in both themes.
  */
 
 const CLINIC = "Choose a clinic closer to home"
 const CHECK_IN = "Check in from your phone"
-
-const PLACEMENT_HEADINGS = [
-  "Recently delivered",
-  "Now",
-  "Next",
-  "Later",
-  "Delivered this year",
-  "Not doing",
-]
 
 async function openRoadmap(
   page: Page,
@@ -198,400 +176,25 @@ test("a Product Lead adds an item in the item dialog, pending until published (S
   await expect(main.getByText(/unpublished change/)).toHaveCount(0)
 })
 
-test("a publish the roadmap can't be read back after holds the app until a Refresh reads it (DEF-015 S1, S3)", async ({
+test("a double click on “Add item” adds one item: the dialog is closing by the second click (S4)", async ({
   page,
-  sheets,
 }) => {
   await openRoadmap(page, "producta")
-  const main = page.getByRole("main")
-  await addItem(page, CLINIC, "Next")
-  const readsBack = sheets.failReadsAfterNextWrite(503)
-
-  await main.getByRole("button", { name: "Publish changes" }).click()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish changes" })
-    .click()
-
-  // The hold opens once the failing reads have given up, over the whole app.
-  const hold = page.getByRole("alertdialog", {
-    name: "Your changes were published",
-  })
-  await expect(hold).toBeVisible({ timeout: 15_000 })
-  const refresh = hold.getByRole("button", { name: "Refresh" })
-  await expect(refresh).toBeFocused()
-  await expect(page.getByRole("banner")).toHaveCount(0)
-  await expect(page.getByRole("main")).toHaveCount(0)
-  await page.keyboard.press("Escape")
-  await clickOutside(page, hold)
-  await page.keyboard.press("Tab")
-  await expect(hold).toBeVisible()
-  await expect(refresh).toBeFocused()
-  expect(sheets.writes).toHaveLength(1)
-
-  // A Refresh that fails keeps it.
-  await refresh.click()
-  await expect(hold.getByText("Couldn't refresh your roadmaps")).toBeVisible()
-  await expect(refresh).toBeFocused()
-
-  // One that reads ends it: published, no longer pending.
-  readsBack()
-  await refresh.click()
-  await expect(hold).toHaveCount(0)
-  const card = itemCard(page, CLINIC)
-  await expect(newTag(card, CLINIC)).toHaveCount(0)
-  await expect(main.getByText(/unpublished change/)).toHaveCount(0)
-  await expect(titlesUnder(page, "Next")).toHaveText([
-    "Card being explored",
-    CLINIC,
-  ])
-  expect(sheets.writes).toHaveLength(1)
-})
-
-test("the publish dialog lists a new item beside an edit; a co-lead's conflict publishes nothing and keeps it (STY-047 S1)", async ({
-  page,
-  sheets,
-}) => {
-  await openRoadmap(page, "producta")
-  const main = page.getByRole("main")
-  // Only an item with an ID can conflict: a first publish gives every item its ID.
-  await addItem(page, CHECK_IN, "Now")
-  await main.getByRole("button", { name: "Publish changes" }).click()
-  await confirmPublish(page)
-  expect(sheets.writes).toHaveLength(1)
-
-  const EDITED = "Card being explored"
-  await addItem(page, CLINIC, "Next")
-  const editing = await openEditItemDialog(page, EDITED)
-  await editing.getByRole("textbox", { name: "Description" }).fill("Mine.")
-  await editing.getByRole("button", { name: "Done" }).click()
-  await expect(editing).toBeHidden()
-  sheets.coLead("ProductA", EDITED, "Description", "Theirs.")
-
-  // The edit as it is always listed, then the new item, marked as new.
-  await main.getByRole("button", { name: "Publish changes" }).click()
-  const dialog = page.getByRole("alertdialog", {
-    name: "Publish these changes?",
-  })
-  await expect(dialog.getByRole("heading", { level: 3 })).toHaveText(
-    "What changes",
-  )
-  await expect(listedChanges(page)).toHaveText([
-    `${EDITED}Description`,
-    `${CLINIC}New item, title only`,
-  ])
-  const notice = refusal(page)
-  await confirmPublish(page, notice)
-
-  // The conflict publishes nothing; its review names the edit alone, and the new item
-  // stays pending.
-  await expect(notice).toContainText(
-    "Someone else has changed this roadmap too",
-  )
-  await expect(notice).toContainText("Nothing was published.")
-  const review = await openConflictReview(page)
-  await expect(review.getByRole("listitem")).toHaveCount(1)
-  await expect(review.getByRole("listitem")).toContainText(
-    `${EDITED}: Description`,
-  )
-  await expect(review).not.toContainText(CLINIC)
-  expect(sheets.writes).toHaveLength(1)
-
-  // Once the edit is decided, the new item is published with the rest.
-  await review.getByRole("button", { name: /^Use theirs/ }).click()
-  await expect(review).toContainText(
-    "Every change is decided. Publish when you're ready.",
-  )
-  await reviewFooterClose(review).click()
-  await expect(review).toBeHidden()
-  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
-  await expect(main.getByText("1 unpublished change")).toBeVisible()
-  await main.getByRole("button", { name: "Publish changes" }).click()
-  await confirmPublish(page)
-  expect(sheets.writes).toHaveLength(2)
-  const [row = []] = appendedRows(sheets.writes[1])
-  expect(row).toContain(CLINIC)
-  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toHaveCount(0)
-})
-
-test("“Add and start another” keeps the dialog open; a new item is edited, moved and removed before publishing (S4, S6)", async ({
-  page,
-  sheets,
-}) => {
-  await openRoadmap(page, "producta")
-  const main = page.getByRole("main")
   const dialog = await openAddItemDialog(page)
-  const title = dialog.getByRole("textbox", { name: "Title" })
-  const placement = dialog.getByRole("combobox", { name: "Horizon or section" })
 
-  await title.fill(CLINIC)
-  await placement.selectOption({ label: "Next" })
-  await dialog.getByRole("button", { name: "Add and start another" }).click()
-
-  // Open and empty, the horizon still chosen, focus in the title, saying what was added.
-  await expect(dialog.getByRole("status")).toHaveText(`“${CLINIC}” was added.`)
-  await expect(title).toHaveValue("")
-  await expect(title).toBeFocused()
-  await expect(placement.locator("option:checked")).toHaveText("Next")
-
-  // A double click adds one item: the dialog is closing by the second.
-  await title.fill(CHECK_IN)
+  await dialog.getByRole("textbox", { name: "Title" }).fill(CHECK_IN)
+  await dialog
+    .getByRole("combobox", { name: "Horizon or section" })
+    .selectOption({ label: "Next" })
   await dialog.getByRole("button", { name: "Add item", exact: true }).dblclick()
+
   await expect(dialog).toBeHidden()
   await expect(editItemButton(page, CHECK_IN)).toBeFocused()
   await expect(titlesUnder(page, "Next")).toHaveText([
     "Card being explored",
-    CLINIC,
     CHECK_IN,
   ])
-  await expect(main.getByText("2 unpublished changes")).toBeVisible()
-
-  // Edit opens the editing form; what it changes is part of the new item.
-  const editing = await openEditItemDialog(page, CLINIC)
   await expect(
-    editing.getByRole("button", { name: "Add and start another" }),
-  ).toHaveCount(0)
-  await editing.getByRole("textbox", { name: "Phase" }).fill("Discovery")
-  await editing.getByRole("button", { name: "Done" }).click()
-  await expect(editing).toBeHidden()
-  const card = itemCard(page, CLINIC)
-  await expect(card.getByText("Discovery")).toBeVisible()
-  await expect(newTag(card, CLINIC)).toBeVisible()
-  await expect(card.getByText("Changed")).toHaveCount(0)
-  await expect(card.getByRole("button", { name: /^Undo changes/ })).toHaveCount(
-    0,
-  )
-
-  // Move puts it last in its new horizon, still one change.
-  await card
-    .getByRole("button", { name: `Move ${CLINIC}`, exact: true })
-    .click()
-  await page.getByRole("menuitem", { name: "Later" }).click()
-  await expect(titlesUnder(page, "Later")).toHaveText([
-    "Discovery card",
-    "Longer-term idea",
-    CLINIC,
-  ])
-  await expect(main.getByText("2 unpublished changes")).toBeVisible()
-
-  // Remove asks first, then drops it at once (STY-049 S10); focus goes to "Add an item".
-  await confirmRemoval(page, CLINIC)
-  await expect(
-    main.getByRole("heading", { level: 3, name: CLINIC }),
-  ).toHaveCount(0)
-  await expect(addItemButtons(page)).toBeFocused()
-  await expect(main.getByText("1 unpublished change")).toBeVisible()
-  expect(sheets.writes).toEqual([])
-})
-
-test("an empty roadmap's panel holds “Add an item”; its first item brings the six headings, and counts when publishing (S8, S10)", async ({
-  page,
-  sheets,
-}) => {
-  // Product C is not published.
-  sheets.spreadsheet = withTabItems("ProductC")
-  await openRoadmap(page, "productc")
-  const main = page.getByRole("main")
-  const panel = main.locator("[data-slot=empty]")
-  await expect(
-    panel.getByText("Add what the product is doing now, next and later."),
+    page.getByRole("main").getByText("1 unpublished change"),
   ).toBeVisible()
-
-  // From the panel's own button, where focus goes back on Cancel.
-  const inPanel = panel.getByRole("button", { name: "Add an item" })
-  const dialog = await openAddItemDialog(page, { opener: inPanel })
-  await expect(
-    dialog.getByText("It isn't saved until you choose “Save changes”."),
-  ).toBeVisible()
-  await dialog.getByRole("button", { name: "Cancel" }).click()
-  await expect(inPanel).toBeFocused()
-
-  // The first item takes the panel's place, and its button with it: closing the
-  // dialog then puts focus on the page's own "Add an item".
-  await page.keyboard.press("Enter")
-  await dialog.getByRole("textbox", { name: "Title" }).fill(CLINIC)
-  await dialog
-    .getByRole("combobox", { name: "Horizon or section" })
-    .selectOption({ label: "Now" })
-  await dialog.getByRole("button", { name: "Add and start another" }).click()
-  await expect(dialog.getByRole("status")).not.toBeEmpty()
-  await escapeFrom(dialog)
-  await expect(addItemButtons(page)).toBeFocused()
-
-  await expect(main.getByRole("heading", { level: 2 })).toHaveText([
-    "Product details",
-    ...PLACEMENT_HEADINGS,
-  ])
-  await expect(titlesUnder(page, "Now")).toHaveText([CLINIC])
-  await expect(addItemButtons(page)).toHaveCount(1)
-  await expect(main.getByText("1 change to save")).toBeVisible()
-
-  // "Publish roadmap" takes the new item with it, and the public would see it.
-  await main.getByRole("button", { name: "Publish roadmap" }).click()
-  const question = page.getByRole("alertdialog")
-  await expect(question).toHaveAccessibleDescription(
-    "It shows on the public site after its next nightly update. Your unsaved change goes public with it.",
-  )
-  await expect(listedChanges(page)).toHaveText([
-    `${CLINIC}New item, title only`,
-  ])
-  await question.getByRole("button", { name: "Save and publish" }).click()
-  await expect(
-    main.getByText(/^Changes saved and Product C roadmap published\./),
-  ).toBeVisible()
-  expect(sheets.writes).toHaveLength(1)
-  const [row = []] = appendedRows(sheets.writes[0])
-  expect(row).toContain(CLINIC)
-  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toHaveCount(0)
-})
-
-test("Cancel and Escape close the dialog and drop what was typed; a click outside does nothing (S9)", async ({
-  page,
-}) => {
-  await openRoadmap(page, "producta")
-  const main = page.getByRole("main")
-
-  const dialog = await openAddItemDialog(page)
-  const title = dialog.getByRole("textbox", { name: "Title" })
-  await title.fill(CLINIC)
-  await clickOutside(page, dialog)
-  await expect(dialog).toBeVisible()
-  await expect(title).toHaveValue(CLINIC)
-
-  await page.keyboard.press("Escape")
-  await expect(dialog).toBeHidden()
-  await expect(addItemButtons(page)).toBeFocused()
-
-  await page.keyboard.press("Enter")
-  await expect(title).toBeFocused()
-  await expect(title).toHaveValue("")
-  await title.fill(CHECK_IN)
-  await dialog.getByRole("button", { name: "Cancel" }).click()
-  await expect(dialog).toBeHidden()
-  await expect(addItemButtons(page)).toBeFocused()
-
-  await expect(main.getByText(/unpublished change/)).toHaveCount(0)
-  await expect(
-    main.getByRole("heading", { level: 3, name: CLINIC }),
-  ).toHaveCount(0)
-})
-
-test("the dialog stays through the session's end, and “Add item” still adds; “Add an item” then opens it without asking to reconnect (S9, STY-080 S11)", async ({
-  page,
-}) => {
-  await page.clock.install()
-  await openRoadmap(page, "producta")
-  const dialog = await openAddItemDialog(page)
-  const title = dialog.getByRole("textbox", { name: "Title" })
-  await title.fill(CLINIC)
-
-  // The warning opens over the dialog; leaving it leaves the dialog as it was.
-  await page.clock.fastForward(sessionMs() - SESSION_WARNING_MS)
-  const warning = page.getByRole("alertdialog", {
-    name: "Your session is about to end",
-  })
-  await escapeFrom(warning)
-
-  await page.clock.fastForward(SESSION_WARNING_MS)
-  // Said by the page behind, which only its text can reach.
-  await expect(page.getByText("Your session has expired")).toBeVisible()
-  await expect(title).toHaveValue(CLINIC)
-  await dialog
-    .getByRole("combobox", { name: "Horizon or section" })
-    .selectOption({ label: "Later" })
-  await dialog.getByRole("button", { name: "Add item", exact: true }).click()
-
-  await expect(dialog).toBeHidden()
-  const main = page.getByRole("main")
-  await expect(newTag(itemCard(page, CLINIC), CLINIC)).toBeVisible()
-  await expect(main.getByText("1 unpublished change")).toBeVisible()
-  // Publishing stays on offer, and asks to reconnect first (STY-057); adding writes
-  // nothing, so its dialog opens at once (STY-080 S11).
-  await expect(
-    main.getByRole("button", { name: "Publish changes" }),
-  ).toBeEnabled()
-  await addItemButtons(page).click()
-  await expect(page.getByRole("dialog", { name: "Add an item" })).toBeVisible()
-  await expect(page.getByRole("alertdialog")).toHaveCount(0)
-})
-
-test("adding an item in Welsh (S9, STY-047 S2)", async ({ page }) => {
-  await useLanguage(page, "cy")
-  await openRoadmap(page, "producta", "Cysylltu â Google")
-  const main = page.getByRole("main")
-
-  const dialog = await openAddItemDialog(page, { language: "cy" })
-  const title = dialog.getByRole("textbox", { name: "Teitl (Saesneg)" })
-  const placement = dialog.getByRole("combobox", { name: "Gorwel neu adran" })
-  await expect(
-    dialog.getByText(
-      "Bydd yn aros heb ei chyhoeddi nes i chi ddewis “Cyhoeddi'r newidiadau”.",
-    ),
-  ).toBeVisible()
-  await dialog
-    .getByRole("button", { name: "Ychwanegu a dechrau un arall" })
-    .click()
-  await expect(title).toHaveAccessibleDescription("Gwall: Rhowch deitl")
-  await expect(placement).toHaveAccessibleDescription(
-    "Gwall: Dewiswch orwel neu adran",
-  )
-
-  await title.fill(CLINIC)
-  await placement.selectOption({ label: "Nesaf" })
-  await dialog
-    .getByRole("button", { name: "Ychwanegu a dechrau un arall" })
-    .click()
-  await expect(dialog.getByRole("status")).toHaveText(
-    `Ychwanegwyd “${CLINIC}”.`,
-  )
-  await dialog.getByRole("button", { name: "Canslo" }).click()
-  await expect(dialog).toBeHidden()
-
-  const card = itemCard(page, CLINIC)
-  await expect(newTag(card, CLINIC, "Newydd")).toBeVisible()
-  await expect(
-    card.getByRole("button", { name: `Tynnu ${CLINIC}` }),
-  ).toBeVisible()
-  await expect(main.getByText("1 newid heb ei gyhoeddi")).toBeVisible()
-
-  // The publish dialog marks it as new, in Welsh (STY-047 S2).
-  await main.getByRole("button", { name: "Cyhoeddi'r newidiadau" }).click()
-  await expect(
-    page.getByRole("alertdialog").getByRole("heading", { level: 3 }),
-  ).toHaveText("Beth sy'n newid")
-  await expect(listedChanges(page)).toHaveText([
-    `${CLINIC}Eitem newydd, teitl yn unig`,
-  ])
-})
-
-test("the publish dialog marks a new item that has only a title, and publishing writes it as it writes any (STY-082 S1, S2)", async ({
-  page,
-  sheets,
-}) => {
-  await openRoadmap(page, "producta")
-  const main = page.getByRole("main")
-  await addItem(page, CLINIC, "Next")
-  const dialog = await openAddItemDialog(page)
-  await dialog.getByRole("textbox", { name: "Title" }).fill(CHECK_IN)
-  await dialog
-    .getByRole("textbox", { name: "Description" })
-    .fill("Check in without queuing.")
-  await dialog
-    .getByRole("combobox", { name: "Horizon or section" })
-    .selectOption({ label: "Next" })
-  await dialog.getByRole("button", { name: "Add item", exact: true }).click()
-  await expect(dialog).toBeHidden()
-
-  // Both are listed as new, and the one with only a title says so.
-  await main.getByRole("button", { name: "Publish changes" }).click()
-  await expect(listedChanges(page)).toHaveText([
-    `${CLINIC}New item, title only`,
-    `${CHECK_IN}New item`,
-  ])
-  await confirmPublish(page)
-  expect(sheets.writes).toHaveLength(1)
-  expect(appendedRows(sheets.writes[0])).toEqual([
-    expect.arrayContaining([CLINIC, "Next"]),
-    expect.arrayContaining([CHECK_IN, "Next", "Check in without queuing."]),
-  ])
 })

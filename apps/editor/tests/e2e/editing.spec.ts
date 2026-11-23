@@ -9,16 +9,13 @@ import {
   reviewFooterClose,
 } from "./fixtures/dialogs"
 import {
-  EXAMPLE_INDEX_ROWS,
   EXAMPLE_LISTS,
   EXAMPLE_SPREADSHEET,
   EXAMPLE_SPREADSHEET_WITH_LISTS,
   type FakeTab,
-  withRoadmapIndex,
   withTabRows,
 } from "./fixtures/fake-sheets"
 import { boxesOf } from "./fixtures/layout"
-import { useLanguage } from "./fixtures/look"
 import {
   productDetailsField,
   goToList,
@@ -31,13 +28,14 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
 /**
  * A Product Lead edits a roadmap's English and publishes it, or saves it when the roadmap
  * is not published (STY-025), against the fake Sheets API: one `batchUpdate` per publish.
- * A co-lead's change made meanwhile is shown, never overwritten (STY-026). A family and
- * category are chosen from their lists (STY-028). An item is moved to another placement,
- * writing its `Horizon` cell and moving its row to last there (STY-031, STY-051), or
- * put elsewhere in its own, which moves rows alone (STY-050). Its
- * organisations are ticked in a field that opens on request (STY-034, STY-038), its tags
- * are added, renamed and removed in another (STY-037), and its details are written as
- * an outline in a third (STY-039).
+ * What each field shows and keeps, a co-lead's change to it and the Welsh copy are held
+ * in the page tests (`roadmap-detail-page-*.test.tsx`), and each cell's shape in the
+ * Sheets adapter's; this spec holds one round trip of each kind of write: a cell, a new
+ * column (STY-037), a moved row (STY-031, STY-050, STY-051), a family and category
+ * chosen from their lists (STY-028), and a co-lead's change shown beside yours, never
+ * overwritten (STY-026). Its other tests hold what only a browser shows: the leave
+ * warning, a phone's width, a keyboard move's focus, and the Organisations, tags and
+ * details fields opening on request (STY-034, STY-037, STY-038, STY-039).
  */
 
 const ITEM = "Example card with every column"
@@ -367,106 +365,6 @@ test.describe("a co-lead's change (STY-026)", () => {
     ).toBeVisible()
     await expect(page.getByRole("main").getByText("My vision.")).toBeVisible()
   })
-
-  test("names a roadmap's own date among its product details, in the review, as Product details: Roadmap last updated (STY-065 S9)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    const dialog = await openEditRoadmapDialog(page)
-    await dialog.getByLabel("Roadmap last updated").fill("2026-11-10")
-    await dialog.getByRole("button", { name: "Done" }).click()
-    await expect(dialog).toBeHidden()
-    sheets.coLead("Roadmaps", "ProductA", "Last updated", "2026-10-05")
-
-    await chooseAndConfirm(page, "Publish")
-
-    const review = await openConflictReview(page)
-    await expect(review.getByRole("listitem")).toHaveCount(1)
-    await expect(
-      review.getByRole("button", {
-        name: "Keep mine Product details: Roadmap last updated",
-      }),
-    ).toBeVisible()
-    await expect(
-      review.getByRole("button", {
-        name: "Use theirs Product details: Roadmap last updated",
-      }),
-    ).toBeVisible()
-  })
-
-  test("removing an item discards only the changes to it, naming it (S5)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    await editTitle(page, ITEM, "My first card")
-    await editTitle(page, "Discovery card", "My discovery card")
-    sheets.coLead("ProductA", "Discovery card", "Title", null)
-
-    await chooseAndConfirm(page, "Publish")
-
-    const review = page.getByRole("main").getByRole("alert")
-    await expect(review).toBeFocused()
-    await expect(review).toContainText("Some changes couldn't be kept")
-    await expect(review).toContainText(
-      "Someone else has removed or changed “Discovery card”, so your changes to it couldn't be kept.",
-    )
-    expect(sheets.writes).toHaveLength(1)
-    await expect(
-      page.getByRole("main").getByText("1 unpublished change"),
-    ).toBeVisible()
-
-    await review.getByRole("button", { name: "Dismiss message" }).click()
-    await chooseAndConfirm(page, "Publish")
-    await expect(
-      page.getByRole("main").getByText(/^Changes published\./),
-    ).toBeVisible()
-    await expect(
-      page.getByRole("heading", { level: 3, name: "My first card" }),
-    ).toBeVisible()
-  })
-
-  test("removing the roadmap from the list discards its changes and says so (S6)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await editTitle(page, ITEM, "My first card")
-    sheets.spreadsheet = withRoadmapIndex(
-      EXAMPLE_INDEX_ROWS.filter(([sheet]) => sheet !== "ProductA"),
-    )
-
-    await chooseAndConfirm(page, "Publish")
-
-    await expect(
-      page
-        .getByRole("main")
-        .getByRole("heading", { level: 1, name: "Roadmap not found" }),
-    ).toBeVisible()
-    await expect(
-      page
-        .getByRole("main")
-        .getByText(
-          "This roadmap was removed from the list, so your changes to it couldn't be kept.",
-        ),
-    ).toBeVisible()
-    expect(sheets.writes).toEqual([])
-    await page
-      .getByRole("main")
-      .getByRole("link", { name: "Back to roadmaps" })
-      .first()
-      .click()
-    await expect(roadmapCards(page)).toHaveText([
-      "Product B roadmap",
-      "Product C roadmap",
-    ])
-    await expect(
-      page.getByRole("main").getByText("Unpublished changes"),
-    ).toHaveCount(0)
-  })
 })
 
 test.describe("a family and category (STY-028)", () => {
@@ -578,28 +476,6 @@ test.describe("a family and category (STY-028)", () => {
     expect(indexRow(sheets.spreadsheet, "ProductB")).toMatchObject({
       "Family ID": "",
     })
-  })
-
-  test("a co-lead's move to another family is shown by name, nothing written (S5)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    const dialog = await openEditRoadmapDialog(page)
-    await dialog
-      .getByRole("combobox", { name: "Family" })
-      .selectOption("No family")
-    await dialog.getByRole("button", { name: "Done" }).click()
-    sheets.coLead("Roadmaps", "ProductA", "Family", "Medicines & Diagnostics")
-
-    await chooseAndConfirm(page, "Publish")
-
-    await expect(refusal(page)).toBeFocused()
-    const review = await openConflictReview(page)
-    await expect(review.getByRole("listitem")).toContainText(
-      /Product details: Family.*Your change.*No family.*Current text.*Medicines & Diagnostics/,
-    )
-    expect(sheets.writes).toHaveLength(0)
   })
 
   test("is shown read-only, saying why, when its list is missing (S6)", async ({
@@ -741,27 +617,6 @@ test.describe("moving an item (STY-031)", () => {
     await expect(
       page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
-    expect(sheets.writes).toHaveLength(1)
-  })
-
-  test("a co-lead's other move is shown beside yours, by heading, nothing written (S8)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    await moveWithMenu(page, ITEM, "Next")
-    sheets.coLead("ProductA", ITEM, "Horizon", "Later")
-
-    await chooseAndConfirm(page, "Publish")
-
-    await expect(refusal(page)).toBeFocused()
-    const review = await openConflictReview(page)
-    await expect(review.getByRole("listitem")).toContainText(
-      new RegExp(
-        `${ITEM}: Horizon or section.*Your change.*Next.*Current text.*Later`,
-      ),
-    )
     expect(sheets.writes).toHaveLength(1)
   })
 
@@ -978,6 +833,9 @@ test.describe("reordering a placement's items (STY-050)", () => {
         ),
       ).toBe(true)
       expect(sheets.writes).toHaveLength(1)
+      // The decision and the second publish are the same at either width: the desktop's
+      // run holds them, this one only the phone's layout.
+      if (width === PHONE_WIDTH) return
 
       await review.getByRole("button", { name: "Keep mine Now: Order" }).click()
       await expect(review).toContainText(
@@ -1007,130 +865,6 @@ test.describe("reordering a placement's items (STY-050)", () => {
       ])
     })
   }
-
-  test("Use theirs drops the pending order, leaving the co-lead's (S12)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    const main = page.getByRole("main")
-    await moveButton(page, LAST).click()
-    await page.getByRole("menuitem", { name: "Up one" }).click()
-    sheets.coLead("ProductA", "Card being explored", "Horizon", "Now")
-    await chooseAndConfirm(page, "Publish")
-
-    const review = await openConflictReview(page)
-    await review.getByRole("button", { name: "Use theirs Now: Order" }).click()
-    await expect(review).toContainText(
-      "Every change is decided. Nothing is left to publish.",
-    )
-    await expect(reviewFooterClose(review)).toBeFocused()
-    await reviewFooterClose(review).click()
-
-    await expect(review).toBeHidden()
-    await expect(main.getByRole("heading", { level: 1 })).toBeFocused()
-    await expect(main.getByRole("alert")).toHaveCount(0)
-    await expect(main.getByText("Order changed")).toHaveCount(0)
-    await expect(main.getByText(/unpublished change/)).toHaveCount(0)
-    await expect(titlesUnder(page, "Now")).toHaveText([
-      ITEM,
-      "A minimal card",
-      LAST,
-      "Card being explored",
-    ])
-    expect(sheets.writes).toHaveLength(1)
-  })
-})
-
-test.describe("choosing an item's organisations (STY-034)", () => {
-  /** Ticks or unticks each named organisation in the item's form, then confirms it. */
-  async function toggleOrganisations(
-    page: Page,
-    title: string,
-    names: readonly string[],
-  ) {
-    const form = await openEditItemDialog(page, title)
-    // The field starts shut (STY-038): "Change", or "Add" for an item with none.
-    await form
-      .getByRole("button", { name: /^(Change|Add) organisations$/ })
-      .click()
-    const group = form.getByRole("group", { name: "Organisations" })
-    for (const name of names) {
-      await group.getByRole("checkbox", { name }).click()
-    }
-    await form.getByRole("button", { name: "Done" }).click()
-  }
-
-  test("ticks organisations, pending, then publishes their codes in that cell alone (S1, S2, S5)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    const before = sheets.spreadsheet
-
-    await toggleOrganisations(page, ITEM, [
-      "All Wales (National)",
-      "Cardiff and Vale (CAVUHB)",
-    ])
-
-    await expect(
-      itemCard(page, ITEM).getByText("All Wales, Swansea Bay"),
-    ).toBeVisible()
-    await expect(itemCard(page, ITEM).getByText("Changed")).toBeVisible()
-    expect(sheets.writes).toEqual([])
-
-    await chooseAndConfirm(page, "Publish")
-    await expect(
-      page.getByRole("main").getByText(/^Changes published\./),
-    ).toBeVisible()
-    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
-      `${ITEM}: Organisations = National, SBUHB`,
-    ])
-  })
-
-  test("adds an Organisations column to a roadmap with none (S6)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "productc", "Unpublished work")
-    const before = sheets.spreadsheet
-
-    await toggleOrganisations(page, "Unpublished work", [
-      "Powys (PTHB)",
-      "Hywel Dda (HDUHB)",
-    ])
-    await chooseAndConfirm(page, "Save")
-    await expect(
-      page.getByRole("main").getByText("Changes saved"),
-    ).toBeVisible()
-
-    expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
-      "header = Organisations",
-      "Unpublished work: Organisations = HDUHB, PTHB",
-    ])
-  })
-
-  test("a co-lead's other choice is shown beside yours, by short name, nothing written (S7)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    await toggleOrganisations(page, ITEM, ["Powys (PTHB)"])
-    sheets.coLead("ProductA", ITEM, "Organisations", "sbuhb, WAST")
-
-    await chooseAndConfirm(page, "Publish")
-
-    await expect(refusal(page)).toBeFocused()
-    const review = await openConflictReview(page)
-    await expect(review.getByRole("listitem")).toContainText(
-      new RegExp(
-        `${ITEM}: Organisations.*Your change.*Cardiff and Vale, Powys, Swansea Bay.*Current text.*Swansea Bay, Welsh Ambulance`,
-      ),
-    )
-    expect(sheets.writes).toHaveLength(1)
-  })
 })
 
 test.describe("the Organisations field opens on request (STY-038)", () => {
@@ -1178,9 +912,8 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
     expect(sheets.writes).toEqual([])
   })
 
-  test("Done keeps a choice made in a field shut again, and publishes it (S4)", async ({
+  test("Done keeps a choice made in a field shut again (S4)", async ({
     page,
-    sheets,
   }) => {
     await openRoadmap(page, "producta", ITEM)
     const form = await openForm(page, ITEM)
@@ -1194,14 +927,6 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
       itemCard(page, ITEM).getByText("Cardiff and Vale, Powys, Swansea Bay"),
     ).toBeVisible()
     await expect(itemCard(page, ITEM).getByText("Changed")).toBeVisible()
-    await chooseAndConfirm(page, "Publish")
-    await expect(
-      page.getByRole("main").getByText(/^Changes published\./),
-    ).toBeVisible()
-    const organisations = sheets.spreadsheet
-      .find(({ title }) => title === "ProductA")
-      ?.rows.find(([title]) => title === ITEM)?.[6]
-    expect(organisations).toBe("CAVUHB, PTHB, SBUHB")
   })
 
   test("an item with none reads No organisations beside Add, and an unknown code is named while shut (S1, S5)", async ({
@@ -1296,37 +1021,6 @@ test.describe("the Organisations field opens on request (STY-038)", () => {
     // The form is still open: no key confirmed or cancelled it.
     await expect(form.getByRole("button", { name: "Done" })).toBeVisible()
   })
-
-  test("is Welsh on the Welsh interface, the short names staying English (S7)", async ({
-    page,
-  }) => {
-    await useLanguage(page, "cy")
-    await page.goto("./#/roadmaps/producta")
-    await connect(page, "Cysylltu â Google")
-    const title = "Cerdyn enghreifftiol gyda phob colofn"
-    const form = await openEditItemDialog(page, title, "cy")
-
-    await expect(form.getByText("Sefydliadau", { exact: true })).toBeVisible()
-    await expect(form.getByText("Cardiff and Vale, Swansea Bay")).toBeVisible()
-    await form.getByRole("button", { name: "Newid sefydliadau" }).click()
-    await expect(
-      form
-        .getByRole("group", { name: "Sefydliadau" })
-        .getByRole("checkbox", { name: "Cardiff and Vale (CAVUHB)" }),
-    ).toBeChecked()
-    await form.getByRole("button", { name: "Cau sefydliadau" }).click()
-    await form.getByRole("button", { name: "Canslo" }).click()
-
-    const empty = await openEditItemDialog(
-      page,
-      "Something we are not doing",
-      "cy",
-    )
-    await expect(empty.getByText("Dim sefydliadau")).toBeVisible()
-    await expect(
-      empty.getByRole("button", { name: "Ychwanegu sefydliadau" }),
-    ).toBeVisible()
-  })
 })
 
 test.describe("editing an item's tags (STY-037)", () => {
@@ -1354,70 +1048,6 @@ test.describe("editing an item's tags (STY-037)", () => {
         document.documentElement.scrollWidth -
         document.documentElement.clientWidth,
     )
-
-  test("starts shut, then adds, renames and removes tags, pending, and publishes the Labels cell alone (S2, S5, S6, S8, S12, S19)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    const before = sheets.spreadsheet
-    const main = page.getByRole("main")
-    const form = await openEditItemDialog(page, TAGGED)
-
-    // Shut: the tags on one line, and no editor (S19).
-    await expect(form.getByRole("list").first()).toHaveText(
-      "Service YService Z",
-    )
-    await expect(form.getByRole("textbox", { name: "Add a tag" })).toHaveCount(
-      0,
-    )
-    await form.getByRole("button", { name: "Change tags" }).click()
-    const field = form.getByRole("group", { name: "Tags" })
-    await expect(
-      field.getByRole("textbox", { name: "Add a tag" }),
-    ).toBeFocused()
-
-    // The roadmap's other tags are offered, without the item's own (S3, S18).
-    await expect(
-      field
-        .getByRole("list", { name: "Used elsewhere in this roadmap" })
-        .getByRole("button"),
-    ).toHaveText(["Service X"])
-    await field
-      .getByRole("button", { name: "Add Service X, on 2 other items" })
-      .click()
-    await field.getByRole("button", { name: "Rename Service Z" }).click()
-    const name = field.getByRole("textbox", { name: "Rename Service Z" })
-    await expect(name).toBeFocused()
-    await name.fill("Video appointments")
-    await page.keyboard.press("Enter")
-    await expect(
-      field.getByRole("button", { name: "Rename Video appointments" }),
-    ).toBeFocused()
-    await field.getByRole("button", { name: "Remove Service Y" }).click()
-    await expect(field.getByRole("status")).toHaveText("Removed “Service Y”.")
-    await expect(rows(field)).toHaveText([/^Video appointments/, /^Service X/])
-    // Typed, not yet added: it counts when the form is confirmed (S8).
-    await field.getByRole("textbox", { name: "Add a tag" }).fill("Carers")
-    await form.getByRole("button", { name: "Done" }).click()
-
-    const card = itemCard(page, TAGGED)
-    await expect(
-      card.getByText("Video appointments, Service X, Carers"),
-    ).toBeVisible()
-    await expect(card.getByText("Changed")).toBeVisible()
-    expect(sheets.writes).toEqual([])
-
-    await main.getByRole("button", { name: "Publish changes" }).click()
-    const dialog = page.getByRole("alertdialog")
-    await expect(dialog.getByRole("listitem")).toContainText(
-      new RegExp(`${TAGGED}.*Tags`),
-    )
-    await confirmPublish(page)
-    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
-      `${TAGGED}: Labels = Video appointments, Service X, Carers`,
-    ])
-  })
 
   test("adds a Labels column to a roadmap with none, and an empty cell for no tags (S12)", async ({
     page,
@@ -1458,100 +1088,6 @@ test.describe("editing an item's tags (STY-037)", () => {
     expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
       "header = Labels",
     ])
-  })
-
-  test("a co-lead's different tags are shown beside yours, nothing written (S13)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    const { form, field } = await openTags(page, TAGGED)
-    await field.getByRole("textbox", { name: "Add a tag" }).fill("Carers")
-    await form.getByRole("button", { name: "Done" }).click()
-    sheets.coLead("ProductA", TAGGED, "Labels", "Service Z, Service Y")
-
-    await chooseAndConfirm(page, "Publish")
-
-    await expect(refusal(page)).toBeFocused()
-    const review = await openConflictReview(page)
-    await expect(review.getByRole("listitem")).toContainText(
-      new RegExp(
-        `${TAGGED}: Tags.*Your change.*Service Y, Service Z, Carers.*Current text.*Service Z, Service Y`,
-      ),
-    )
-    expect(sheets.writes).toHaveLength(1)
-  })
-
-  test("an item with Welsh tags shows them with no way to change them, and publishes its other fields alone (S20)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    const before = sheets.spreadsheet
-    const main = page.getByRole("main")
-    const form = await openEditItemDialog(page, ITEM)
-
-    await expect(form.getByText("Tags", { exact: true })).toBeVisible()
-    await expect(form.getByRole("list").first()).toHaveText(
-      "Service XService Y",
-    )
-    await expect(
-      form.getByText(
-        "These tags have Welsh versions, so they can't be changed here yet.",
-      ),
-    ).toBeVisible()
-    await expect(form.getByRole("button", { name: /tags$/ })).toHaveCount(0)
-
-    await form.getByRole("textbox", { name: "Phase" }).fill("Live")
-    await form.getByRole("button", { name: "Done" }).click()
-    await chooseAndConfirm(page, "Publish")
-    await expect(main.getByText(/^Changes published\./)).toBeVisible()
-    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
-      `${ITEM}: Phase = Live`,
-    ])
-  })
-
-  test("Welsh tags written since the item was read stop the publish: the change can be discarded, not kept (S22)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    const { form, field } = await openTags(page, TAGGED)
-    await field.getByRole("textbox", { name: "Add a tag" }).fill("Carers")
-    await form.getByRole("button", { name: "Done" }).click()
-    // One Welsh entry for two tags: it pairs with none, and still stops the write.
-    sheets.coLead("ProductA", TAGGED, "Labels (cy)", "Gwasanaeth Y")
-
-    await chooseAndConfirm(page, "Publish")
-
-    const main = page.getByRole("main")
-    await expect(refusal(page)).toBeFocused()
-    const review = await openConflictReview(page)
-    const conflict = review.getByRole("listitem")
-    await expect(conflict).toContainText(`${TAGGED}: Tags`)
-    await expect(
-      conflict.getByText(
-        "These tags now have Welsh versions, so they can't be changed here yet.",
-      ),
-    ).toBeVisible()
-    await expect(conflict.getByRole("button")).toHaveText([
-      `Discard my change ${TAGGED}: Tags`,
-    ])
-    expect(sheets.writes).toHaveLength(1)
-
-    await conflict.getByRole("button", { name: /^Discard my change/ }).click()
-    await expect(review).toContainText(
-      "Every change is decided. Nothing is left to publish.",
-    )
-    await reviewFooterClose(review).click()
-    await expect(review).toBeHidden()
-    await expect(main.getByText("Changed")).toHaveCount(0)
-    // Its tags are now shown, not changed (S20).
-    const reopened = await openEditItemDialog(page, TAGGED)
-    await expect(reopened.getByRole("button", { name: /tags$/ })).toHaveCount(0)
-    expect(sheets.writes).toHaveLength(1)
   })
 
   test("on a phone, the rows' buttons are icons beside a long tag, which wraps, and nothing scrolls sideways (S14, S16)", async ({
@@ -1612,35 +1148,6 @@ test.describe("editing an item's tags (STY-037)", () => {
     await expect(rename).not.toHaveAttribute("title")
     await expect(rename.locator("svg")).toHaveCount(0)
   })
-
-  test("is Welsh on the Welsh interface, the tags staying English (S1)", async ({
-    page,
-  }) => {
-    await useLanguage(page, "cy")
-    await page.goto("./#/roadmaps/producta")
-    await connect(page, "Cysylltu â Google")
-    const form = await openEditItemDialog(page, TAGGED, "cy")
-
-    await form.getByRole("button", { name: "Newid tagiau" }).click()
-    const field = form.getByRole("group", { name: "Tagiau (Saesneg)" })
-    await expect(
-      field.getByRole("textbox", { name: "Ychwanegu tag" }),
-    ).toBeFocused()
-    await expect(
-      field.getByRole("button", { name: "Ailenwi Service Y" }),
-    ).toBeVisible()
-    await field.getByRole("button", { name: "Tynnu Service Y" }).click()
-    await expect(field.getByRole("status")).toHaveText("Tynnwyd “Service Y”.")
-    await expect(
-      field.getByRole("button", { name: "Dadwneud tynnu Service Y" }),
-    ).toBeVisible()
-    await expect(
-      field.getByRole("button", {
-        name: "Ychwanegu Service X, ar 2 eitem arall",
-      }),
-    ).toBeVisible()
-    await expect(form.getByRole("button", { name: "Cau tagiau" })).toBeVisible()
-  })
 })
 
 test.describe("editing an item's details (STY-039)", () => {
@@ -1686,190 +1193,6 @@ test.describe("editing an item's details (STY-039)", () => {
         document.documentElement.clientWidth,
     )
 
-  test("starts shut, then writes, nests, moves and removes details by keyboard and pointer, pending, and publishes the Details cell alone (S2, S3, S7, S13, S14, S17, S21, S23, S25)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    const before = sheets.spreadsheet
-    const main = page.getByRole("main")
-    const form = await openEditItemDialog(page, DETAILED)
-
-    // Shut: the details as the card lists them, and no editor (S17).
-    await expect(form.getByRole("list").last()).toHaveText(FIRST + SECOND)
-    await expect(form.getByRole("textbox", { name: /^Detail / })).toHaveCount(0)
-    await form.getByRole("button", { name: "Change details" }).click()
-    const field = form.getByRole("group", { name: "Details" })
-    await expect(
-      field.getByRole("textbox", { name: "Detail 1 of 2, top level" }),
-    ).toBeFocused()
-
-    // Enter starts the next detail; the buttons are the next stops for Tab (S21, S24).
-    await page.keyboard.press("End")
-    await page.keyboard.press("Enter")
-    await expect(field.getByRole("status")).toHaveText(
-      "New detail at the top level.",
-    )
-    await page.keyboard.type("Nested line")
-    await page.keyboard.press("Tab")
-    await page.keyboard.press("Tab")
-    await expect(
-      field.getByRole("button", { name: "Move in Nested line" }),
-    ).toBeFocused()
-    await page.keyboard.press("Enter")
-    await expect(field.getByRole("status")).toHaveText(
-      `Moved in, under “${FIRST}”.`,
-    )
-    await expect(
-      field.getByRole("textbox", {
-        name: `Detail 2 of 3, nested under “${FIRST}”`,
-      }),
-    ).toHaveValue("Nested line")
-    // A hyphen typed at the start of a detail nests it (S9).
-    await page.keyboard.press("Shift+Tab")
-    await page.keyboard.press("Shift+Tab")
-    await expect(await detail(field, "Nested line")).toBeFocused()
-    await page.keyboard.press("End")
-    await page.keyboard.press("Enter")
-    await page.keyboard.type("-Third level")
-    await expect(
-      field.getByRole("textbox", {
-        name: "Detail 3 of 4, nested under “Nested line”",
-      }),
-    ).toHaveValue("Third level")
-
-    // With a pointer, a move puts the caret back in the detail's text (S23).
-    await (await detail(field, SECOND)).click()
-    await field.getByRole("button", { name: `Move up ${SECOND}` }).click()
-    await expect(await detail(field, SECOND)).toBeFocused()
-    expect(await texts(field)).toEqual([
-      SECOND,
-      FIRST,
-      "Nested line",
-      "Third level",
-    ])
-    // A removal says what moved, and can be undone (S25).
-    await (await detail(field, "Nested line")).click()
-    await field.getByRole("button", { name: "Remove Nested line" }).click()
-    await expect(field.getByRole("status")).toHaveText(
-      "Removed “Nested line”. The detail under it moved up a level.",
-    )
-    await expect(await detail(field, "Third level")).toBeFocused()
-    await field
-      .getByRole("button", { name: "Undo removing Nested line" })
-      .click()
-    await expect(await detail(field, "Nested line")).toBeFocused()
-    // Text typed and not yet followed by anything counts (S10).
-    await page.keyboard.type(", kept as typed")
-    await form.getByRole("button", { name: "Done" }).click()
-
-    const card = itemCard(page, DETAILED)
-    await expect(card.getByRole("list").first()).toHaveText(
-      `${SECOND}${FIRST}Nested line, kept as typedThird level`,
-    )
-    await expect(card.getByText("Changed")).toBeVisible()
-    expect(sheets.writes).toEqual([])
-
-    await main.getByRole("button", { name: "Publish changes" }).click()
-    const dialog = page.getByRole("alertdialog")
-    await expect(dialog.getByRole("listitem")).toContainText(
-      new RegExp(`${DETAILED}.*Details`),
-    )
-    await confirmPublish(page)
-    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
-      `${DETAILED}: Details = ${[
-        SECOND,
-        FIRST,
-        "- Nested line, kept as typed",
-        "-- Third level",
-      ].join("\n")}`,
-    ])
-  })
-
-  test("adds a Details column to a roadmap with none, and an empty cell for no details (S12, S14)", async ({
-    page,
-    sheets,
-  }) => {
-    sheets.spreadsheet = withTabRows("ProductC", [
-      ["Title", "Horizon"],
-      ["Unpublished work", "Now"],
-    ])
-    await openRoadmap(page, "productc", "Unpublished work")
-    const before = sheets.spreadsheet
-    const { form, field } = await openDetails(page, "Unpublished work")
-
-    // Pasted lines are a detail each, nested by their hyphens (S8).
-    await field.getByRole("textbox").evaluate((box) => {
-      const data = new DataTransfer()
-      data.setData("text", "Evening clinics\n- Tuesdays\n\n- Thursdays ")
-      box.dispatchEvent(
-        new ClipboardEvent("paste", {
-          clipboardData: data,
-          bubbles: true,
-          cancelable: true,
-        }),
-      )
-    })
-    expect(await texts(field)).toEqual([
-      "Evening clinics",
-      "Tuesdays",
-      "Thursdays",
-    ])
-    await form.getByRole("button", { name: "Done" }).click()
-    await chooseAndConfirm(page, "Save")
-    await expect(
-      page.getByRole("main").getByText("Changes saved"),
-    ).toBeVisible()
-
-    expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
-      "header = Details",
-      "Unpublished work: Details = Evening clinics\n- Tuesdays\n- Thursdays",
-    ])
-
-    const again = await openDetails(page, "Unpublished work")
-    for (const text of ["Evening clinics", "Tuesdays", "Thursdays"]) {
-      await again.field.getByRole("button", { name: `Remove ${text}` }).click()
-    }
-    await expect(
-      again.field.getByRole("textbox", { name: "Detail 1 of 1, top level" }),
-    ).toBeFocused()
-    await again.form.getByRole("button", { name: "Done" }).click()
-    await chooseAndConfirm(page, "Save")
-    await expect.poll(() => sheets.writes.length).toBe(2)
-    expect(changedCells(before, sheets.spreadsheet, "ProductC")).toEqual([
-      "header = Details",
-    ])
-  })
-
-  test("a co-lead's different details are shown beside yours, each nested, nothing written (S15)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    const { form, field } = await openDetails(page, DETAILED)
-    await (await detail(field, SECOND)).click()
-    await field.getByRole("button", { name: `Move in ${SECOND}` }).click()
-    await form.getByRole("button", { name: "Done" }).click()
-    sheets.coLead("ProductA", DETAILED, "Details", `${FIRST}\n- Their line`)
-
-    await chooseAndConfirm(page, "Publish")
-
-    await expect(refusal(page)).toBeFocused()
-    const review = await openConflictReview(page)
-    await expect(review).toContainText(`${DETAILED}: Details`)
-    const values = review.getByRole("definition")
-    await expect(values.first().getByRole("listitem")).toHaveText([
-      FIRST + SECOND,
-      SECOND,
-    ])
-    await expect(values.last().getByRole("listitem")).toHaveText([
-      `${FIRST}Their line`,
-      "Their line",
-    ])
-    expect(sheets.writes).toHaveLength(1)
-  })
-
   test("details written another way show as the public site shows them, and are written only once they change (S20)", async ({
     page,
     sheets,
@@ -1902,79 +1225,6 @@ test.describe("editing an item's details (STY-039)", () => {
     expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
       `${DETAILED}: Details = One\n- Two\n5 degrees`,
     ])
-  })
-
-  test("an item with Welsh details shows them with no way to change them, and publishes its other fields alone (S18)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    const before = sheets.spreadsheet
-    const main = page.getByRole("main")
-    const form = await openEditItemDialog(page, ITEM)
-
-    await expect(form.getByText("Details", { exact: true })).toBeVisible()
-    await expect(
-      form.getByRole("listitem").filter({ hasText: /^Another top-level/ }),
-    ).toBeVisible()
-    await expect(
-      form.getByText(
-        "These details have Welsh versions, so they can't be changed here yet.",
-      ),
-    ).toBeVisible()
-    await expect(form.getByRole("button", { name: /details$/ })).toHaveCount(0)
-
-    await form.getByRole("textbox", { name: "Phase" }).fill("Live")
-    await form.getByRole("button", { name: "Done" }).click()
-    await chooseAndConfirm(page, "Publish")
-    await expect(main.getByText(/^Changes published\./)).toBeVisible()
-    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
-      `${ITEM}: Phase = Live`,
-    ])
-  })
-
-  test("Welsh details written since the item was read stop the publish: the change can be discarded, not kept (S19)", async ({
-    page,
-    sheets,
-  }) => {
-    await openRoadmap(page, "producta", ITEM)
-    await publishOnce(page)
-    const { form, field } = await openDetails(page, DETAILED)
-    await (await detail(field, SECOND)).click()
-    await field.getByRole("button", { name: `Remove ${SECOND}` }).click()
-    await form.getByRole("button", { name: "Done" }).click()
-    // One Welsh line for two details: it pairs with none, and still stops the write.
-    sheets.coLead("ProductA", DETAILED, "Details (cy)", "Beth oedd ynddo")
-
-    await chooseAndConfirm(page, "Publish")
-
-    const main = page.getByRole("main")
-    await expect(refusal(page)).toBeFocused()
-    const review = await openConflictReview(page)
-    await expect(review).toContainText(`${DETAILED}: Details`)
-    await expect(
-      review.getByText(
-        "These details now have Welsh versions, so they can't be changed here yet.",
-      ),
-    ).toBeVisible()
-    await expect(review.getByRole("listitem").getByRole("button")).toHaveText([
-      `Discard my change ${DETAILED}: Details`,
-    ])
-    expect(sheets.writes).toHaveLength(1)
-
-    await review.getByRole("button", { name: /^Discard my change/ }).click()
-    await expect(review).toContainText(
-      "Every change is decided. Nothing is left to publish.",
-    )
-    await reviewFooterClose(review).click()
-    await expect(review).toBeHidden()
-    await expect(main.getByText("Changed")).toHaveCount(0)
-    // Its details are now shown, not changed (S18).
-    const reopened = await openEditItemDialog(page, DETAILED)
-    await expect(
-      reopened.getByRole("button", { name: /details$/ }),
-    ).toHaveCount(0)
-    expect(sheets.writes).toHaveLength(1)
   })
 
   test("on a phone, a long detail at the third level wraps, every control can be reached and nothing scrolls sideways (S16)", async ({
@@ -2026,34 +1276,48 @@ test.describe("editing an item's details (STY-039)", () => {
     )
     expect(await sideways(page)).toBe(0)
   })
+})
 
-  test("is Welsh on the Welsh interface, the details staying English (S1)", async ({
+test.describe("an item's tags, organisations and details together (STY-034, STY-037, STY-039)", () => {
+  /** An item with details and an organisation, and no tags. */
+  const DETAILED = "Earlier delivery this year"
+
+  test("are pending together, then published as three cells of the item's row, nothing else written (S2, S5, S13)", async ({
     page,
+    sheets,
   }) => {
-    await useLanguage(page, "cy")
-    await page.goto("./#/roadmaps/producta")
-    await connect(page, "Cysylltu â Google")
-    const form = await openEditItemDialog(page, DETAILED, "cy")
+    await openRoadmap(page, "producta", ITEM)
+    const before = sheets.spreadsheet
+    const form = await openEditItemDialog(page, DETAILED)
 
-    await form.getByRole("button", { name: "Newid manylion" }).click()
-    const field = form.getByRole("group", { name: "Manylion (Saesneg)" })
+    await form.getByRole("button", { name: "Add tags" }).click()
+    const tag = form.getByRole("textbox", { name: "Add a tag" })
+    await expect(tag).toBeFocused()
+    await tag.fill("Patients, Carers")
+    await form.getByRole("button", { name: "Change organisations" }).click()
+    await form.getByRole("checkbox", { name: "Powys (PTHB)" }).click()
+    await form.getByRole("button", { name: "Change details" }).click()
+    const details = form.getByRole("group", { name: "Details" })
+    // Enter at the end of the first detail starts the next, and a hyphen nests it.
+    await expect(details.getByRole("textbox").first()).toBeFocused()
+    await page.keyboard.press("End")
+    await page.keyboard.press("Enter")
+    await page.keyboard.type("-Added line")
+    await form.getByRole("button", { name: "Done" }).click()
+
+    await expect(itemCard(page, DETAILED).getByText("Changed")).toBeVisible()
+    expect(sheets.writes).toEqual([])
+
+    await chooseAndConfirm(page, "Publish")
+
     await expect(
-      field.getByRole("textbox", { name: "Manylyn 1 o 2, lefel uchaf" }),
-    ).toBeFocused()
-    expect(await texts(field)).toEqual([FIRST, SECOND])
-    await field.getByRole("button", { name: `Tynnu ${FIRST}` }).click()
-    await expect(field.getByRole("status")).toHaveText(`Tynnwyd “${FIRST}”.`)
-    await expect(
-      field.getByRole("button", { name: `Dadwneud tynnu ${FIRST}` }),
+      page.getByRole("main").getByText(/^Changes published\./),
     ).toBeVisible()
-    await chooseRefused(
-      field.getByRole("button", { name: `Symud allan ${SECOND}` }),
-    )
-    await expect(field.getByRole("status")).toHaveText(
-      "Mae eisoes ar y lefel uchaf.",
-    )
-    await expect(
-      form.getByRole("button", { name: "Cau manylion" }),
-    ).toBeVisible()
+    expect(sheets.writes).toHaveLength(1)
+    expect(changedCells(before, sheets.spreadsheet, "ProductA")).toEqual([
+      `${DETAILED}: Labels = Patients, Carers`,
+      `${DETAILED}: Organisations = National, PTHB`,
+      `${DETAILED}: Details = What it included\n- Added line\nAnother thing it included`,
+    ])
   })
 })

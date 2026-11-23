@@ -8,6 +8,7 @@
 - **Binding ADRs**: ADR-016 §Workspace tooling, §STY-095 amendments
 - **Suggested model**: Sonnet — catalogue entries, one font swap and a before/after
   comparison
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/275
 
 ## Summary
 

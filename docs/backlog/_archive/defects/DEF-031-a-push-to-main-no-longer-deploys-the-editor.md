@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-007, ADR-016 §CI
 - **Suggested model**: Opus — GitHub Actions' job-skipping rules, a guard test to
   change, and a deploy to observe on `main`
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/254
 
 ## Summary
 

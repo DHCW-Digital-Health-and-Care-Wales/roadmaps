@@ -7,6 +7,7 @@
 - **Depends on**: STY-088 (hard), STY-098 (hard: the alignment sequence comes first, D1)
 - **Binding ADRs**: ADR-016 §The public site, §STY-089 amendments
 - **Suggested model**: Sonnet — moving fixtures and repointing tests and docs
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/283
 
 ## Summary
 
@@ -175,4 +176,4 @@ Audited at `63ff97a4`:
 | S2       | `scripts/ci/classify-changes.test.ts` (`runs every app's jobs for the shared example sheets`); observed, a throwaway run reported in the PR and not committed: with `Sheet` renamed `Tab` in `fixtures/sheets/Roadmaps.csv`, both `pnpm editor:test` and `pnpm site:test` failed                                          |
 | S3       | `fixtures/sheets/README.md` in the diff; the folder holds no `LICENSE`                                                                                                                                                                                                                                                    |
 | S4       | `build/markdown-links.test.ts` (in `pnpm test:docs`) passes; the diff corrects ADR-009 and ADR-011 in their path alone and EPC-002's archived README in its link's target                                                                                                                                                 |
-| S5       | the companion pull request in `product-roadmaps`, linked from this story's pull request                                                                                                                                                                                                                                   |
+| S5       | the companion pull request, [`product-roadmaps#53`](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps/pull/53)                                                                                                                                                                                       |

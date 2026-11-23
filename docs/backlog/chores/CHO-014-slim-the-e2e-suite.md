@@ -224,6 +224,12 @@ column, a token) rests on the Sheets or GIS adapter's own tests, which go with i
   over the Visible UI row alone, since its "Playwright coverage for each changed
   journey" asks for an E2E test of every journey, which is how the suite came to repeat
   its page tests (S7).
+- **D15** (owner, 2026-11-23): CHO-036 to CHO-042 are all delivered, and this umbrella
+  stays open (Proposed) rather than closing as Done. Revisit it in a few weeks (from
+  mid-December 2026): is the suite's growth appropriate, and has redundancy crept back
+  (a Playwright test whose assertions a Vitest page test makes, a run that cannot fail
+  alone, a rule asserted at several seams)? Close it, or open a new sub-chore, from
+  what that review finds.
 
 ## Out of scope
 

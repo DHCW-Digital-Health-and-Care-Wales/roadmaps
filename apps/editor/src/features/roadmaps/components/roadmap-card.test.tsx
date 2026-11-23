@@ -6,7 +6,7 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { connected } from "@/test/connected-state"
 import { renderWithProviders } from "@/test/render-with-providers"
 
-/** The example roadmaps (`tests/fixtures/sheets/Roadmaps.csv`) as the app reads them. */
+/** The example roadmaps (`fixtures/sheets/Roadmaps.csv`) as the app reads them. */
 const productA = createTestRoadmap("producta", "Product A roadmap", {
   category: {
     en: "GP & Community Services",

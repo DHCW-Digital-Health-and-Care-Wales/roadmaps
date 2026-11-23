@@ -46,7 +46,6 @@ describe("classify-changes.sh", () => {
       "the public site's ARIA snapshots",
       ["apps/public-site/e2e/__snapshots__/structure.spec.ts/a.aria.yml"],
     ],
-    ["its example sheets", ["apps/public-site/sheets/ProductA.csv"]],
   ])("runs only the public site's jobs for %s", (_case, paths) => {
     expect(classify(...paths)).toBe("editor=false\nsite=true\n")
   })
@@ -58,6 +57,7 @@ describe("classify-changes.sh", () => {
       ["package.json", "pnpm-workspace.yaml", ".nvmrc"],
     ],
     ["a workflow", [".github/workflows/ci.yml"]],
+    ["the shared example sheets", ["fixtures/sheets/ProductA.csv"]],
     ["a file directly under apps/", ["apps/editor"]],
     ["one code file among documentation", ["docs/a.md", "eslint.config.ts"]],
     [

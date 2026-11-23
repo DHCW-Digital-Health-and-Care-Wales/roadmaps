@@ -77,13 +77,13 @@ Categories, in the public site's display order, with Welsh names from its `conte
 
 Each roadmap tab holds its items (`Title`, `Description`, `Outcome`, `Horizon`, `Phase`,
 `Labels`, `Organisations`, `Details`, with `(cy)` columns). They are out of scope for the
-roadmap index; `apps/editor/tests/fixtures/sheets/Product*.csv` keeps examples for the roadmap detail
+roadmap index; `fixtures/sheets/Product*.csv` keeps examples for the roadmap detail
 work.
 
 ### Example data
 
 The public repository's `sheets/*.csv` are fake data in this exact layout, MIT licensed.
-They are copied to [`apps/editor/tests/fixtures/sheets/`](../../apps/editor/tests/fixtures/sheets/README.md) as the
+They are copied to [`fixtures/sheets/`](../../fixtures/sheets/README.md) as the
 only data tests may use; nothing from the live spreadsheet is stored in this repository.
 
 ## Options

@@ -52,20 +52,23 @@ export interface FakeTab {
  */
 export type SheetsRead = "metadata" | `values:${string}` | `header:${string}`
 
-const FIXTURES = path.resolve(import.meta.dirname, "../../fixtures/sheets")
+const FIXTURES = path.resolve(
+  import.meta.dirname,
+  "../../../../../fixtures/sheets",
+)
 
 function readCsv(file: string): string[][] {
   return parseCsv(readFileSync(path.join(FIXTURES, file), "utf8"))
 }
 
-/** The example spreadsheet's roadmap index (`tests/fixtures/sheets/Roadmaps.csv`). */
+/** The example spreadsheet's roadmap index (`fixtures/sheets/Roadmaps.csv`). */
 export const EXAMPLE_INDEX_ROWS: readonly (readonly string[])[] =
   readCsv("Roadmaps.csv")
 
 /**
  * The spreadsheet tests see unless they say otherwise: the example spreadsheet, its
  * roadmap index first, a tab per roadmap, then the `Template` a new roadmap is copied
- * from, its header frozen (`tests/fixtures/sheets/`).
+ * from, its header frozen (`fixtures/sheets/`).
  */
 export const EXAMPLE_SPREADSHEET: readonly FakeTab[] = [
   { title: "Roadmaps", rows: EXAMPLE_INDEX_ROWS },

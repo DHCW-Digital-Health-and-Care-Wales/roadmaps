@@ -21,7 +21,10 @@ import {
 const fixture = (name: string): Worksheet => ({
   name,
   rows: parseCsv(
-    readFileSync(new URL(`../sheets/${name}.csv`, import.meta.url), "utf8"),
+    readFileSync(
+      new URL(`../../../fixtures/sheets/${name}.csv`, import.meta.url),
+      "utf8",
+    ),
   ),
 })
 

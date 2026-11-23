@@ -7,7 +7,7 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   nothing from `apps/editor/src/`: tests drive the app as a user does, through roles and copy.
 - `gis` (`fixtures/fake-gis.ts`) plays Google Identity Services and `sheets`
   (`fixtures/fake-sheets.ts`) the Sheets API, over the example spreadsheet in
-  `apps/editor/tests/fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`,
+  the root's `fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`,
   then `values:<first tab>` and a `Families` or `Categories` tab's; a roadmap's items
   read all of those again, then add `values:<its tab>` (ADR-011), so a roadmap's page
   is five reads on the example spreadsheet; a publish is one `batchUpdate`, recorded

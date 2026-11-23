@@ -8,7 +8,8 @@ const BASE_URL = `http://localhost:${String(resolveDevPorts(PUBLIC_SITE_PORTS).p
 
 /**
  * End-to-end and ARIA snapshot tests against a production build (`vite preview`) of
- * the fixed data in e2e/fixtures/roadmaps.json, made from sheets/*.csv.
+ * the fixed data in e2e/fixtures/roadmaps.json, made from fixtures/sheets/*.csv
+ * at the workspace's root.
  */
 export default defineConfig({
   testDir: "e2e",

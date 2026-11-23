@@ -63,13 +63,11 @@ Rules no lint catches:
 - Tests sit beside the code as `*.test.ts(x)`; E2E lives in `apps/editor/tests/e2e/`.
   Every file in `apps/editor/src/routes/` becomes a route, so route tests live
   elsewhere; commit the generated `apps/editor/src/routeTree.gen.ts` when routes change.
-- Assert a rule's cases once, at the lowest seam that holds them all (a domain or
-  editing-state function, then a component, a page, the app), and test only its wiring,
-  once, at each seam above; cases that differ only in data taking no new branch are one
-  table-driven test (`it.each`). A rule every repository adapter must honour keeps all
-  its cases in the repository contract (ADR-002), whatever a domain test also holds. A
-  Playwright spec holds only what `apps/editor/tests/e2e/AGENTS.md` (_What earns an E2E
-  test_) allows.
+- The seams of the root guide's test rule, lowest first: a domain or editing-state
+  function, a component, a page, the app; a table-driven test is an `it.each`. A rule
+  every repository adapter must honour keeps all its cases in the repository contract
+  (ADR-002), whatever a domain test also holds. What earns a Playwright spec is
+  `apps/editor/tests/e2e/AGENTS.md` (_What earns an E2E test_).
 - Add shadcn components with the shadcn CLI, Base UI flavour; never Radix or a
   hand-rolled competing primitive.
 - Route every user-facing string (text, aria-labels, notices, titles) through `t()`, in

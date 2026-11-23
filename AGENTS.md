@@ -45,6 +45,11 @@ writes_).
 - Within a task's scope, prefer the cleaner structure (refactor, rename, extract) over
   the smallest diff. Leave each touched file tidier, in proportion; record any other
   actionable finding in the backlog (`docs/AGENTS.md`), since a PR note is not a record.
+- Test a rule's cases once, at the lowest seam that holds them all, with one wiring test
+  at each seam above; cases that differ only in data taking no new branch are one
+  table-driven test. A Playwright test holds only what jsdom cannot see, and runs again
+  per theme, language or width only where that run can fail alone. Each app's guide
+  names its seams and what earns an E2E test.
 
 ## Delivery
 

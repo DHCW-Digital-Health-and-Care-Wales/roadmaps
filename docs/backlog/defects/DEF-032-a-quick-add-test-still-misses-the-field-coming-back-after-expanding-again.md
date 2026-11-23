@@ -36,17 +36,24 @@ and the test goes on.
 
 ## Cause
 
-Suspected, not shown. The lookup now retries (CHO-030 S3), so this is not DEF-027's
-cause: the field stayed away for the whole 3 seconds, not one render. The test presses
-Escape straight after `expand` clicks "Add more details" and returns the dialog, without
-waiting for the dialog to take focus. On a loaded runner Escape may land before the
-dialog is ready to close, leaving it open and the field closed. The test before it,
-which also presses Escape straight after `expand` (once a held read is released),
-passed in the same run.
+Suspected from the code and the log, not reproduced. The lookup now retries (CHO-030
+S3), so this is not DEF-027's cause: the field stayed away for the whole 3 seconds, not
+one render. At the failure the dialog had closed too: the log's page dump marks nothing
+`aria-hidden`, as an open modal dialog marks the page behind it.
+
+The field's `keepFocus` (`apps/editor/src/features/roadmaps/editing/quick-add.tsx`)
+keeps focus in its title when "Add more details" is pressed, and the dialog takes its first focus
+later, a frame on (Base UI's deferred initial focus; the adding form does not take it on
+a first open, `takesFocus` in `item-dialog.tsx`). The test presses Escape straight after
+`expand` returns. An Escape in that gap reaches the field's own `onKeyDown`, whose
+`close(true)` drops the title and closes the field, and Base UI's document listener
+closes the dialog as well: both end closed. The test before it, which waits on releasing
+a held read before its Escape, passed in the same run. DEF-030 is the same kind of race:
+a key pressed before a Base UI popup's deferred first focus lands.
 
 - `rg -n 'await expand\(user\)' apps/editor/src/features/roadmaps/pages/roadmap-detail-page-quick-add.test.tsx`:
-  9 sites. Three discard the dialog `expand` returns and act at once (lines 707, 719,
-  730); the failing test is line 730.
+  9 sites. Three discard the dialog `expand` returns (lines 707, 719, 730); 707 and 730
+  act at once, and the failing test is line 730.
 
 ## Acceptance criteria
 

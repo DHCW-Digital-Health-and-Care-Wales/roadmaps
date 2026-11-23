@@ -143,6 +143,10 @@ From the owner's STY-088 grilling and the review of its record (2026-11-21):
 - `product-roadmaps`, which publishes the public site, gets the same protection as
   `main` here: the same ruleset, less the required check it has no CI to report, the owner its only code owner, a read-only default
   workflow token, and workflows that name what they check out literally.
+- Observed at STY-088's cut-over (2026-11-22): the owner's bypass does not lift the
+  ruleset's merge methods. The history merge needed the repository setting and the
+  ruleset both to allow a merge commit for its pull request; the bypass alone, which
+  _The public site_ offers as an alternative, was refused.
 
 ### CHO-031 amendments
 

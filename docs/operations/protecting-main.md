@@ -32,9 +32,11 @@ repo=DHCW-Digital-Health-and-Care-Wales/roadmaps
 gh api --method POST "repos/$repo/rulesets" --input .github/rulesets/main.json
 ```
 
-Then untick _Settings → General → Pull Requests → Allow rebase merging_, so a merge
-through the bypass, which may skip the ruleset's squash-only rule with the rest, is a
-squash too.
+Then untick _Settings → General → Pull Requests → Allow rebase merging_, so the
+repository offers only the squash merge the ruleset allows. The owner's bypass does not
+lift the ruleset's merge methods: a merge commit for one pull request, as STY-088's
+history merge needed, takes the setting ticked and the live ruleset's
+`allowed_merge_methods` widened for it, then this file applied again.
 
 After a later change to the file, replace the live ruleset with it:
 

@@ -90,9 +90,10 @@ public reader's register beside the shared rules
   i18next. Lighthouse's `resource-summary:script:size` limit is 100,000 bytes
   (`apps/public-site/lighthouserc.json`; ADR-016 keeps the site's own router "within a
   100 KB script budget"), and it counts the site's script with the Simple Analytics
-  script (6.0 KB): about 96.5 KB at the base. i18next adds 16.7 KB gzip, react-i18next's
-  provider, hook and `<Trans>` 7.5 KB more, so `pnpm site:lighthouse` finds 119,371
-  bytes and fails on that assertion alone.
+  script (6.0 KB): about 96.5 KB at the base. Bundled alone, i18next is 16.7 KB gzip
+  and react-i18next's provider, hook and `<Trans>` 7.5 KB more; in the site's script
+  they add about 23 KB, and `pnpm site:lighthouse` finds 119,371 bytes and fails on that
+  assertion alone.
   - (a) Raise the budget to 130 KB (recommended) — the story ships as decided; the
     lighthouserc limit and ADR-016's line change, each page loads ~23 KB more script,
     and ~10 KB of headroom remains.

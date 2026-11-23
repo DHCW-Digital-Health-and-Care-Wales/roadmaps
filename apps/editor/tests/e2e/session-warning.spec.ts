@@ -6,7 +6,8 @@ import { connect, expect, roadmapCards, test } from "./fixtures/test"
 /**
  * The warning's countdown, a failed renewal and dismissing it are held by
  * `session-warning.test.tsx` and `google-auth-client.test.ts`; what only a browser shows
- * is renewing in a real click, and the next request carrying the renewed token.
+ * is renewing in a real click, focus on Stay connected as the warning opens, and the
+ * next request carrying the renewed token.
  */
 
 /** Connects with a fake clock, loads the roadmaps, and reaches the warning. */

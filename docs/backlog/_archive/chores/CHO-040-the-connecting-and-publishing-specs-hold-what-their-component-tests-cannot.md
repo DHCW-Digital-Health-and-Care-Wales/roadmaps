@@ -76,7 +76,7 @@ through the fakes shown after a reload
   CHO-038 merged): the five specs took 32 runs and 33.3 s summed on CI. After: 9 runs,
   23 fewer. The 23 run names that are gone took 24.9 s summed on CI there, against the
   record's ~26 s; the time after is not re-measured on CI (the 9 runs took 7.8 s on this
-  host with four workers). The five specs go from 918 to 498 lines (the record said
+  host with four workers). The five specs go from 918 to 503 lines (the record said
   430), and Vitest gains one 26-line test. Line numbers below are those of `2bcbe692`.
   Tests only.
 - `auth.spec.ts:71` is two runs, as the record says: access denied from the account
@@ -108,10 +108,10 @@ through the fakes shown after a reload
   red by dropping "hyn" from `cy.ts`), before the E2E test went (CHO-014 S7).
 - `sheets-writes.spec.ts` is untouched: its two tests are not merged, since the saving
   would be one connect (about 0.5 s) and the second reads the violations of its own
-  clean spreadsheet. The cuts leave the fake GIS's `popup-closed` outcome and `scope`
-  option and the `chooseFromMore` helper with no spec that uses them: they stay as the
-  fakes' and fixtures' documented model of Google and of the page, which the guide names
-  (`apps/editor/tests/e2e/AGENTS.md`). The reconnect helpers lose their Welsh variant
+  clean spreadsheet. The `chooseFromMore` helper stays (the guide names
+  it, and `refreshRoadmap` uses it). The fake GIS's `popup-closed` outcome and `scope`
+  option are left as the fake's model of Google, with no spec using them now, for the
+  switch to retire. The reconnect helpers lose their Welsh variant
   with the one test that used it.
 - No axe scan is in these specs, so none is dropped (the owner's rule of 2026-11-23).
 - Archived records that cite a cut test stay as they were.

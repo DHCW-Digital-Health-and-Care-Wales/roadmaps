@@ -16,10 +16,10 @@ The public site's suite repeats itself as the editor's did before CHO-014: every
 Playwright test runs in a `desktop` and a `mobile` (Pixel 7) project, most cannot fail
 on one alone, some assert what Vitest already holds, and Vitest asserts several rules
 at three or four seams. At `e13a21b9` the E2E job takes 93 s on CI (its test step 46 s,
-build included); about 51 of its 101 runs repeat another. Done looks like: each check
-held once, at the lowest seam that holds it (root `AGENTS.md`, and
-`apps/public-site/AGENTS.md`, _Tests_), in the project where it can fail, with nothing
-that guards a reader of the site lost.
+build included); about 51 of its 101 runs go. Done looks like: each check held once,
+at the lowest seam that holds it (root `AGENTS.md`, and `apps/public-site/AGENTS.md`,
+_Tests_), in the project where it can fail, with nothing that guards a reader of the
+site lost.
 
 ## Measurement
 

@@ -51,9 +51,9 @@ Follow the file you are in, not `apps/editor/AGENTS.md`; the workspace's toolcha
   `it.each`.
 - A Playwright spec holds only what a built site in a browser shows: pages with
   JavaScript off, navigation and the base path, focus and its ring, what is in view and
-  what stays in place as the page scrolls or filters, reflow at 320 px and 400% zoom,
-  errors in the console, the axe scans and the ARIA snapshots. Lighthouse holds
-  performance.
+  what stays in place as the page scrolls or filters, controls that show only at some
+  widths, reflow at 320 px and 400% zoom, errors in the console, the axe scans and the
+  ARIA snapshots. Lighthouse holds performance.
 
 ## Commands and checks
 

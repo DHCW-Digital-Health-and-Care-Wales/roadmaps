@@ -1,7 +1,7 @@
 # STY-089: One copy of the spreadsheet fixtures, read by both apps
 
 - **Status**: Proposed — criteria from the owner's STY-089 grilling (2026-11-23,
-  D2–D15); follows STY-098 (D1)
+  D2–D16); follows STY-098 (D1)
 - **Type**: Refactor
 - **Area**: Infrastructure + CI/CD
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
@@ -55,8 +55,8 @@ its site-only row for the site's old sheets (D14)
 **Then** it lists each file with its tab name and what it shows, says that no data
 from the live spreadsheet is ever committed, gives the import steps (`Template`
 included), and says how to point the public site and the editor at the result (D6)
-**And** it says the root `LICENSE` covers the data; the folder holds no licence of its
-own, and the provenance note naming `product-roadmaps`' commit goes (D5)
+**And** the folder holds no licence of its own, since the root `LICENSE` covers the
+data, and the provenance note naming `product-roadmaps`' commit goes (D5)
 
 ### S4: Every link follows the move
 
@@ -124,8 +124,9 @@ it, links to `fixtures/sheets/` (D16)
 
 Audited at `63ff97a4`:
 
-- The four CSVs both apps hold are byte-identical; the editor's README cites
-  `product-roadmaps` commit `50e67f9` as their source.
+- The four CSVs both apps hold are byte-identical; the editor's fixture README
+  (`apps/editor/tests/fixtures/sheets/README.md`) cites `product-roadmaps` commit
+  `50e67f9` as their source.
 - The editor's Vitest tests import the CSVs with `?raw`, its Playwright Sheets fake reads
   them from disk, and the public site's parser test reads them through
   `new URL(…, import.meta.url)`; that test also compares the site's

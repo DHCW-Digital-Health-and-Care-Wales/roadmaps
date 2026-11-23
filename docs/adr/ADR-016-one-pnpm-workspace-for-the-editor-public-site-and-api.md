@@ -200,7 +200,7 @@ _Layout and name_ and _The public site_ stands.
   root files (`eslint.base.ts`, `tsconfig.base.json`), shared data a root folder (the
   spreadsheet fixtures in `fixtures/sheets/`, from STY-089), and a package under
   `packages/` holds only code that two or more apps import and that outlives the Sheets
-  format; `packages/api-types` is the first.
+  format.
 - **Code the Sheets format retires stays in each app**, duplicated rather than shared:
   the editor's test-only CSV reader and the public site's CSV parser (ADR-015).
 

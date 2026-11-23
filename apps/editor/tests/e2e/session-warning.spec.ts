@@ -1,8 +1,14 @@
 import type { Page } from "@playwright/test"
 
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
-import { escapeFrom } from "./fixtures/keyboard"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
+
+/**
+ * The warning's countdown, a failed renewal and dismissing it are held by
+ * `session-warning.test.tsx` and `google-auth-client.test.ts`; what only a browser shows
+ * is renewing in a real click, focus on Stay connected as the warning opens, and the
+ * next request carrying the renewed token.
+ */
 
 /** Connects with a fake clock, loads the roadmaps, and reaches the warning. */
 async function reachWarning(page: Page) {
@@ -35,21 +41,6 @@ async function recordStatuses(page: Page) {
     )
 }
 
-test("the warning counts down two minutes before the session ends (S3)", async ({
-  page,
-}) => {
-  const warning = await reachWarning(page)
-
-  await expect(warning).toContainText("Your session ends in 2 minutes.")
-  await expect(
-    warning.getByRole("button", { name: "Stay connected" }),
-  ).toBeFocused()
-  await page.clock.fastForward(11_000)
-  await expect(warning).toContainText(
-    "Your session ends in 1 minute and 49 seconds.",
-  )
-})
-
 test("staying connected renews in one click and keeps the page (S4)", async ({
   page,
   gis,
@@ -58,9 +49,11 @@ test("staying connected renews in one click and keeps the page (S4)", async ({
   const warning = await reachWarning(page)
   const statuses = await recordStatuses(page)
   expect(sheets.reads).toHaveLength(2)
+  const stay = warning.getByRole("button", { name: "Stay connected" })
+  await expect(stay).toBeFocused()
 
   // A real click: the fake GIS records a violation if the popup opens outside it.
-  await warning.getByRole("button", { name: "Stay connected" }).click()
+  await stay.click()
 
   await expect(warning).toBeHidden()
   await expect.poll(() => gis.tokenRequests.length).toBe(2)
@@ -79,60 +72,4 @@ test("staying connected renews in one click and keeps the page (S4)", async ({
   await expect(warning).toBeHidden()
   await page.getByRole("button", { name: "Refresh" }).click()
   await expect.poll(() => sheets.tokens.at(-1)).toBe("e2e-token-2")
-})
-
-test("a blocked renewal shows why and the session runs out as before (S5)", async ({
-  page,
-  gis,
-}) => {
-  const warning = await reachWarning(page)
-  gis.respondWith({ type: "popup-blocked" })
-
-  await warning.getByRole("button", { name: "Stay connected" }).click()
-
-  await expect(warning).toBeHidden()
-  const main = page.getByRole("main")
-  const callout = main
-    .getByRole("alert")
-    .filter({ hasText: "Couldn't keep you connected" })
-  await expect(callout).toContainText(
-    "Your browser blocked the Google window. Allow pop-ups for this site and try again.",
-  )
-  await expect(roadmapCards(page)).toHaveCount(3)
-  await expect(page.getByRole("banner").getByRole("status")).toHaveText(
-    "Google connected",
-  )
-
-  await page.clock.fastForward(SESSION_WARNING_MS)
-  await expect(page.getByRole("banner").getByRole("status")).toHaveText(
-    "Session expired",
-  )
-  await expect(callout).toHaveCount(0)
-  await expect(main.getByText("Your session has expired")).toBeVisible()
-  await expect(roadmapCards(page)).toHaveCount(3)
-})
-
-test("dismissing the warning leaves the session to run out (S6)", async ({
-  page,
-  gis,
-}) => {
-  const warning = await reachWarning(page)
-
-  await escapeFrom(warning)
-  // Short of the end by more than a loaded runner's steps take: the clock still runs
-  // in real time between them.
-  const SLACK_MS = 30_000
-  await page.clock.fastForward(SESSION_WARNING_MS - SLACK_MS)
-  await expect(warning).toBeHidden()
-  await expect(page.getByRole("banner").getByRole("status")).toHaveText(
-    "Google connected",
-  )
-  await page.clock.fastForward(SLACK_MS)
-  await expect(page.getByRole("banner").getByRole("status")).toHaveText(
-    "Session expired",
-  )
-  await expect(
-    page.getByRole("main").getByRole("button", { name: "Reconnect" }),
-  ).toBeVisible()
-  expect(gis.tokenRequests).toHaveLength(1)
 })

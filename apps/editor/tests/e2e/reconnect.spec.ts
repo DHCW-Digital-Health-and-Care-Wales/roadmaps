@@ -3,45 +3,33 @@ import type { Page } from "@playwright/test"
 import {
   confirmPublish,
   openEditItemDialog,
-  openEditRoadmapDialogFromMore,
   reconnectButton,
   reconnectDialog,
 } from "./fixtures/dialogs"
 import { sessionMs } from "./fixtures/fake-gis"
-import { escapeFrom } from "./fixtures/keyboard"
-import { useLanguage } from "./fixtures/look"
-import { moreButton, refreshRoadmap } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
  * STY-057: once the session has expired, an action that needs it stays on offer. Pressed,
- * it asks to reconnect in one dialog, then carries on; cancelled or refused, nothing is
- * written and nothing pending is lost. Publish changes is the journey's action; the
- * component tests hold the others.
+ * it asks to reconnect in one dialog, then carries on. Publish changes is the journey's
+ * action, run once through the fakes: Google's popup opening inside the Reconnect click,
+ * the new token on the write that follows, and focus back on Publish as the dialog closes.
+ * `reconnect-dialog.test.tsx` and the page tests hold the other actions, a refusal, Escape
+ * and Welsh.
  */
 
-/** An item with no Welsh title, so it reads the same in either language. */
+/** An item the test edits, to leave one change pending. */
 const ITEM = "Minimal card"
 const EDITED = "A clearer card"
 
-const COPY = {
-  en: { connect: "Connect Google", title: "Title", done: "Done" },
-  cy: {
-    connect: "Cysylltu â Google",
-    title: "Teitl (Saesneg)",
-    done: "Gorffen",
-  },
-} as const
-
 /** Opens Product A, makes one pending change, then lets the session run out. */
-async function expireWithAChange(page: Page, language: "en" | "cy" = "en") {
-  const copy = COPY[language]
+async function expireWithAChange(page: Page) {
   await page.clock.install()
   await page.goto("./#/roadmaps/producta")
-  await connect(page, copy.connect)
-  const form = await openEditItemDialog(page, ITEM, language)
-  await form.getByRole("textbox", { name: copy.title }).fill(EDITED)
-  await form.getByRole("button", { name: copy.done }).click()
+  await connect(page)
+  const form = await openEditItemDialog(page, ITEM)
+  await form.getByRole("textbox", { name: "Title" }).fill(EDITED)
+  await form.getByRole("button", { name: "Done" }).click()
   // Closed, it has given focus back to the card's Edit.
   await expect(form).toBeHidden()
   await expect(
@@ -56,7 +44,7 @@ async function expireWithAChange(page: Page, language: "en" | "cy" = "en") {
   return main
 }
 
-test("Publish stays on offer, asks to reconnect, then asks to publish the changes (S1, S2, S3)", async ({
+test("Publish stays on offer, asks to reconnect, Cancel keeps the change, then asks to publish the changes (S1, S2, S3)", async ({
   page,
   gis,
   sheets,
@@ -69,14 +57,20 @@ test("Publish stays on offer, asks to reconnect, then asks to publish the change
   await publish.click()
 
   const dialog = reconnectDialog(page)
-  await expect(dialog).toContainText(
-    "Reconnect to Google to carry on. Your changes are kept in this tab.",
-  )
-  const reconnect = dialog.getByRole("button", { name: "Reconnect" })
+  const reconnect = reconnectButton(page)
   await expect(reconnect).toBeFocused()
-  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeVisible()
 
+  // Cancelled, the dialog gives focus back to Publish and keeps the change.
+  await dialog.getByRole("button", { name: "Cancel" }).click()
+  await expect(dialog).toBeHidden()
+  await expect(publish).toBeFocused()
+  await expect(main.getByText("1 unpublished change")).toBeVisible()
+  expect(sheets.writes).toEqual([])
+
+  await publish.click()
+  await expect(reconnect).toBeFocused()
   const requests = gis.tokenRequests.length
+  const tokensBefore = sheets.tokens.length
   await reconnect.click()
 
   // Google's popup came from the click itself: the fake fails the test otherwise.
@@ -89,117 +83,9 @@ test("Publish stays on offer, asks to reconnect, then asks to publish the change
   expect(sheets.writes).toEqual([])
   await confirmPublish(page)
   expect(sheets.writes).toHaveLength(1)
-})
-
-test("a refusal or a closed window says why, and Cancel keeps every change, focus back on Publish (S4)", async ({
-  page,
-  gis,
-  sheets,
-}) => {
-  const main = await expireWithAChange(page)
-  const publish = main.getByRole("button", { name: "Publish changes" })
-  await publish.click()
-  const dialog = reconnectDialog(page)
-  const reconnect = dialog.getByRole("button", { name: "Reconnect" })
-
-  gis.respondWith({ type: "access-denied" })
-  await reconnect.click()
-  const why = dialog.getByRole("alert")
-  await expect(why).toContainText("Couldn't reconnect")
-  await expect(why).toContainText(
-    "Access wasn't granted, so your roadmaps can't be loaded.",
-  )
-  await expect(reconnect).toBeFocused()
-
-  gis.respondWith({ type: "popup-closed" })
-  await reconnect.click()
-  await expect(why).toContainText(
-    "The Google window was closed before connecting finished.",
-  )
-
-  await dialog.getByRole("button", { name: "Cancel" }).click()
-
-  await expect(dialog).toBeHidden()
-  await expect(publish).toBeFocused()
-  await expect(main.getByText("1 unpublished change")).toBeVisible()
-  await expect(
-    main.getByRole("heading", { level: 3, name: EDITED }),
-  ).toBeVisible()
-  expect(sheets.writes).toEqual([])
-})
-
-test("Refresh asks to reconnect, then reads the page once (S1, D1)", async ({
-  page,
-  sheets,
-}) => {
-  const main = await expireWithAChange(page)
-  const reads = sheets.reads.length
-
-  await refreshRoadmap(page)
-  await reconnectButton(page).click()
-
-  // Reconnecting reads the page again, and Refresh joins those reads: the items are
-  // read once. Focus goes back to More, the control Refresh was chosen from.
-  await expect(moreButton(page)).toBeFocused()
-  await expect
-    .poll(() => sheets.reads.slice(reads))
-    .toContain("values:ProductA")
-  await expect(moreButton(page)).toHaveAttribute("aria-busy", "false")
-  expect(
-    sheets.reads.slice(reads).filter((read) => read === "values:ProductA"),
-  ).toHaveLength(1)
-  await expect(main.getByText("1 unpublished change")).toBeVisible()
-})
-
-test("More's Edit product details never asks to reconnect, keeping the edits pending and writing nothing (STY-065 S5, D10)", async ({
-  page,
-  gis,
-  sheets,
-}) => {
-  const main = await expireWithAChange(page)
-  const requests = gis.tokenRequests.length
-
-  const dialog = await openEditRoadmapDialogFromMore(page)
-  await expect(reconnectDialog(page)).toHaveCount(0)
-  await dialog.getByRole("textbox", { name: "Product lead" }).fill("Sam Evans")
-  await dialog.getByRole("button", { name: "Done" }).click()
-
-  await expect(dialog).toBeHidden()
-  await expect(moreButton(page)).toBeFocused()
-  await expect(main.getByText("2 unpublished changes")).toBeVisible()
-  expect(gis.tokenRequests).toHaveLength(requests)
-  expect(sheets.writes).toEqual([])
-})
-
-test("in Welsh, by keyboard: the dialog keeps focus, and Escape gives it back (S6)", async ({
-  page,
-}) => {
-  await useLanguage(page, "cy")
-  const main = await expireWithAChange(page, "cy")
-  const publish = main.getByRole("button", { name: "Cyhoeddi'r newidiadau" })
-  await publish.focus()
-  await expect(publish).toBeFocused()
-
-  await page.keyboard.press("Enter")
-
-  const dialog = reconnectDialog(page, "cy")
-  await expect(dialog).toContainText(
-    "Ailgysylltwch â Google i barhau. Mae eich newidiadau wedi'u cadw yn y tab hwn.",
-  )
-  const reconnect = dialog.getByRole("button", { name: "Ailgysylltu" })
-  await expect(reconnect).toBeFocused()
-  await page.keyboard.press("Tab")
-  await expect(dialog.getByRole("button", { name: "Canslo" })).toBeFocused()
-  await page.keyboard.press("Tab")
-  await expect(reconnect).toBeFocused()
-
-  await escapeFrom(dialog)
-  await expect(publish).toBeFocused()
-
-  await page.keyboard.press("Enter")
-  await expect(reconnect).toBeFocused()
-  await page.keyboard.press("Enter")
-  await expect(
-    page.getByRole("alertdialog", { name: "Cyhoeddi'r newidiadau hyn?" }),
-  ).toBeVisible()
+  // Every request since reconnecting, the write among them, carries the new session's
+  // token: the fake still accepts the old one, so only this proves it.
+  const since = sheets.tokens.slice(tokensBefore)
+  expect(since.length).toBeGreaterThan(1)
+  expect(new Set(since)).toEqual(new Set(["e2e-token-2"]))
 })

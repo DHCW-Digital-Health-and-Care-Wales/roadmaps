@@ -804,6 +804,32 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     expect(main().getByText("4 unpublished changes")).toBeInTheDocument()
   })
 
+  it("asks in Welsh, naming the dialog and what it does, and Cancel writes nothing (ADR-008)", async () => {
+    const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
+    const write = vi.spyOn(repository, "publishRoadmapChanges")
+    const { user } = await renderPage({ repository, language: "cy" })
+    const form = await openEditItemDialog(user, "Eitem gyntaf", "cy")
+    await user.type(form.getByRole("textbox", { name: "Teitl (Saesneg)" }), "!")
+    await confirmItemEdit(user, "cy")
+
+    await user.click(
+      main().getByRole("button", { name: "Cyhoeddi'r newidiadau" }),
+    )
+
+    const dialog = screen.getByRole("alertdialog", {
+      name: "Cyhoeddi'r newidiadau hyn?",
+    })
+    expect(dialog).toHaveAccessibleDescription(
+      "Bydd y wefan gyhoeddus yn eu dangos ar ôl ei diweddariad nesaf dros nos.",
+    )
+    expect(
+      within(dialog).getByRole("heading", { name: "Beth sy'n newid" }),
+    ).toBeVisible()
+    await user.click(within(dialog).getByRole("button", { name: "Canslo" }))
+    expect(screen.queryByRole("alertdialog")).toBeNull()
+    expect(write).not.toHaveBeenCalled()
+  })
+
   it("publishes once, busy until it ends, then confirms and shows the re-read text (S10)", async () => {
     const repository = createInMemoryRoadmapRepository(roadmaps, roadmapItems)
     const {

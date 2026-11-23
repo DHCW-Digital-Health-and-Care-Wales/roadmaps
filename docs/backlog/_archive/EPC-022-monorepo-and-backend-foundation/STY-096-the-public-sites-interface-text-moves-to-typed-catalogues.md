@@ -156,9 +156,9 @@ public reader's register beside the shared rules
   roadmap content alone (agent).
 - **S1, S2** (D10): a value filled in is a typed function in the catalogue
   (`showingRoadmaps: ({ shown, total }) => …`), so `cy.ts` must take the same arguments;
-  the `restrict-template-expressions` rule allows numbers, and nothing else it
-  forbids, in `src/i18n/locales/` alone, where counts are filled in unformatted, so the prerender and the browser agree
-  (agent).
+  the `restrict-template-expressions` rule allows numbers and no other type in
+  `src/i18n/locales/` alone, where counts are filled in unformatted, so the prerender
+  and the browser agree (agent).
 - **S4** (D10): a count is `plural(language, forms)`, whose forms type checking requires
   in full for that language (`pluralCategories`, which a test holds to
   `Intl.PluralRules`); `Intl.PluralRules` chooses the form. The count carries its

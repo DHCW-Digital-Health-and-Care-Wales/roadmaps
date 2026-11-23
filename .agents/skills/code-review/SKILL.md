@@ -52,8 +52,10 @@ not post, change code, merge or message other people as part of reviewing.
    findings separately. The docs a diff changes, which is all of a docs-only
    one, are reviewed against `docs/AGENTS.md` (the records guide): do the
    records agree with the code and each other, is a status or acceptance claim
-   true, and does each test a record cites as evidence exist under that name
-   and hold what the record says? Invent no other risk.
+   true, and does each test a record, PR body or commit cites as evidence
+   exist under that name and assert what is claimed? Open it: a neighbour that
+   renders or calls the same code without asserting the claim is a gap. Invent
+   no other risk.
 5. **Verify plausible findings** with a concrete trigger and an observed or
    code-derived failure path. Run a focused test, minimal reproduction or
    computed-style check when useful, outputs and caches under `/tmp`:
@@ -81,9 +83,6 @@ unverifiable; quote it for a mismatch and show the implementation path.
   reload) to the control the user meets, including what completes a branch that
   hands off or defers. Where a change replaces a surface, carried-over behavior
   may be what the story changes.
-- Where a diff deletes or trims a test and names the test that still holds it, open
-  that test and find the assertion: a neighbour that renders or calls the same code
-  without asserting the removed claim is a gap.
 - Look for omitted refusal and expiry branches, empty and loading states, a
   failed read shown as "no results", an error shown as an empty list, mobile
   layouts that drop a control (the header's account menu offers Connect or

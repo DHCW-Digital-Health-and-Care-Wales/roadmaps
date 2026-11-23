@@ -15,6 +15,7 @@ import { useSessionAction } from "@/features/auth/session-action"
 import { MarkUpdatedCheckbox } from "./mark-updated-checkbox"
 import { countChanges } from "./pending-changes"
 import { publishedStateAction } from "./published-state-action"
+import { PublishedStateIcon } from "./published-state-icon"
 import { useFocusNoticeOnClose } from "./use-focus-notice-on-close"
 import type { PublishedState } from "./use-published-state"
 import { WhatChanges } from "./what-changes"
@@ -31,7 +32,7 @@ export interface PublishRoadmapButtonProps {
 export function PublishRoadmapButton({ state }: PublishRoadmapButtonProps) {
   const { t } = useTranslation()
   const ask = useSessionAction(state.ask)
-  const { verb, Icon } = publishedStateAction(state)
+  const verb = publishedStateAction(state)
   return (
     <Button
       variant="secondary"
@@ -42,7 +43,11 @@ export function PublishRoadmapButton({ state }: PublishRoadmapButtonProps) {
         ask(event.currentTarget)
       }}
     >
-      <Icon data-icon="inline-start" aria-hidden="true" />
+      <PublishedStateIcon
+        action={verb}
+        data-icon="inline-start"
+        aria-hidden="true"
+      />
       {t(`roadmaps.publishRoadmap.action.${verb}`)}
     </Button>
   )

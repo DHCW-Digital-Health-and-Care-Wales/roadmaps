@@ -33,13 +33,15 @@ export function RoadmapsPage() {
   // The "Add a roadmap" button clicked, of the two an empty list shows: where focus
   // returns as the dialog closes (DEF-008). The one beside Refresh stands in for the
   // panel's, which a read can remove while the dialog is open.
-  const clicked = useRef<HTMLElement | null>(null)
-  const toolbarAdd = useRef<HTMLButtonElement>(null)
+  const clickedRef = useRef<HTMLElement | null>(null)
+  const toolbarAddRef = useRef<HTMLButtonElement>(null)
   // Read when the dialog restores focus, after its closing animation: a read that lands
   // meanwhile can remove the button that was clicked.
   const opener = {
     get current() {
-      return clicked.current?.isConnected ? clicked.current : toolbarAdd.current
+      return clickedRef.current?.isConnected
+        ? clickedRef.current
+        : toolbarAddRef.current
     },
   }
   const openAdded = useOpenAddedRoadmap()
@@ -59,7 +61,7 @@ export function RoadmapsPage() {
       <Button
         ref={ref}
         onClick={(event) => {
-          clicked.current = event.currentTarget
+          clickedRef.current = event.currentTarget
           add(event.currentTarget)
         }}
       >
@@ -88,7 +90,7 @@ export function RoadmapsPage() {
         </div>
         {/* Wraps before the page would scroll sideways: the Welsh is the longer. */}
         <div className="flex flex-wrap items-center gap-3">
-          {addButton(toolbarAdd)}
+          {addButton(toolbarAddRef)}
           <RefreshButton fetching={isFetching} onRefresh={reload} />
         </div>
       </div>

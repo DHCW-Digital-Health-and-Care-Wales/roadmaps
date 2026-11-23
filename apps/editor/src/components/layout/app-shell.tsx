@@ -67,10 +67,10 @@ export interface AppShellProps {
  */
 function useFocusOnNavigation(target: RefObject<HTMLElement | null>) {
   const pathname = useLocation({ select: (location) => location.pathname })
-  const previous = useRef(pathname)
+  const previousRef = useRef(pathname)
   useEffect(() => {
-    if (previous.current === pathname) return
-    previous.current = pathname
+    if (previousRef.current === pathname) return
+    previousRef.current = pathname
     // The router restores scroll; focusing must not move it.
     target.current?.focus({ preventScroll: true })
   }, [pathname, target])
@@ -161,13 +161,13 @@ export function AppShell({
   children,
 }: AppShellProps) {
   const { t } = useTranslation()
-  const main = useRef<HTMLElement>(null)
-  useFocusOnNavigation(main)
-  useRescueFocus(main)
+  const mainRef = useRef<HTMLElement>(null)
+  useFocusOnNavigation(mainRef)
+  useRescueFocus(mainRef)
   const desktop = useMediaQuery(DESKTOP_WIDTH)
   const [folded, setFolded] = useNavigationFolded()
-  const frame = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useNavigationWidth(frame, desktop && !folded)
+  const frameRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useNavigationWidth(frameRef, desktop && !folded)
   const [drawer] = useState(createSheetHandle)
   const form: NavigationForm = folded ? "rail" : "full"
   const openNavigation = () => {
@@ -179,7 +179,7 @@ export function AppShell({
       <UnpublishedRoadmapsContext value={unpublishedRoadmaps}>
         <div
           className="flex min-h-svh"
-          ref={frame}
+          ref={frameRef}
           // Sets `--navigation-width` (globals.css) while the navigation stands beside the
           // page; an open one's is the dragged width (`useNavigationWidth`).
           data-navigation={desktop ? (folded ? "folded" : "open") : undefined}
@@ -190,7 +190,7 @@ export function AppShell({
             onClick={(event) => {
               // Hash history owns the URL fragment, so move focus without navigating.
               event.preventDefault()
-              main.current?.focus()
+              mainRef.current?.focus()
             }}
           >
             {t("layout.skipToContent")}
@@ -210,7 +210,7 @@ export function AppShell({
           ) : (
             <NavigationDrawer
               handle={drawer}
-              page={main}
+              page={mainRef}
               search={navigationSearch("full", openNavigation)}
             >
               {navigation("full", openNavigation)}
@@ -226,11 +226,11 @@ export function AppShell({
             <PhaseBanner
               // Its button goes with it: focus carries on from the page.
               onDismiss={() => {
-                main.current?.focus({ preventScroll: true })
+                mainRef.current?.focus({ preventScroll: true })
               }}
             />
             <main
-              ref={main}
+              ref={mainRef}
               id={MAIN_ID}
               tabIndex={-1}
               className="flex flex-1 flex-col outline-none"

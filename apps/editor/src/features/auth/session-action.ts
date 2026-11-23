@@ -35,11 +35,11 @@ export function useSessionAction(
     )
   }
   const connected = useAuth().state.status === "connected"
-  const latest = useRef<(() => void) | null>(null)
+  const latestRef = useRef<(() => void) | null>(null)
   useLayoutEffect(() => {
-    latest.current = action
+    latestRef.current = action
     return () => {
-      latest.current = null
+      latestRef.current = null
     }
   })
 
@@ -51,7 +51,7 @@ export function useSessionAction(
     askToReconnect({
       from,
       carryOn: () => {
-        latest.current?.()
+        latestRef.current?.()
       },
     })
   }

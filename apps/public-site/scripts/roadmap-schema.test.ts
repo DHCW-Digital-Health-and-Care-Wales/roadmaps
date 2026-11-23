@@ -22,14 +22,19 @@ describe("roadmap snapshot schema", () => {
 
   // Each case breaks one rule of the snapshot, so they differ only in data.
   type Roadmaps = ReturnType<typeof valid>
+  const firstRoadmap = (data: Roadmaps) => {
+    const [roadmap] = data
+    if (!roadmap) throw new Error("The example data has no roadmap")
+    return roadmap
+  }
   const nowItem = (data: Roadmaps) =>
-    data[0].items.now[0] as unknown as Record<string, unknown>
+    firstRoadmap(data).items.now[0] as unknown as Record<string, unknown>
   it.each<[string, (data: Roadmaps) => unknown, RegExp]>([
     ["duplicate slugs", ([a]) => [a, a], /Duplicate URL slugs/],
     [
       "an empty slug",
       (data) => {
-        data[0].slug = ""
+        firstRoadmap(data).slug = ""
         return data
       },
       /slug/,
@@ -37,7 +42,7 @@ describe("roadmap snapshot schema", () => {
     [
       "an invalid date",
       (data) => {
-        data[0].meta.lastUpdated = "2026-02-31"
+        firstRoadmap(data).meta.lastUpdated = "2026-02-31"
         return data
       },
       /lastUpdated/,
@@ -45,7 +50,7 @@ describe("roadmap snapshot schema", () => {
     [
       "a colour that is not hex",
       (data) => {
-        data[0].meta.colour = "red; background: url(x)"
+        firstRoadmap(data).meta.colour = "red; background: url(x)"
         return data
       },
       /hex colour/,
@@ -53,7 +58,8 @@ describe("roadmap snapshot schema", () => {
     [
       "an unknown category",
       (data) => {
-        ;(data[0].meta as { category: string }).category = "dentistry"
+        ;(firstRoadmap(data).meta as { category: string }).category =
+          "dentistry"
         return data
       },
       /category/,
@@ -77,7 +83,8 @@ describe("roadmap snapshot schema", () => {
     [
       "a missing placement",
       (data) => {
-        delete (data[0].items as unknown as Record<string, unknown>).later
+        delete (firstRoadmap(data).items as unknown as Record<string, unknown>)
+          .later
         return data
       },
       /later/,
@@ -94,7 +101,7 @@ describe("roadmap snapshot schema", () => {
     [
       "Welsh with no English",
       (data) => {
-        data[0].items.now[0].description = { en: "", cy: "Disgrifiad" }
+        nowItem(data).description = { en: "", cy: "Disgrifiad" }
         return data
       },
       /Welsh text with no English/,
@@ -102,7 +109,7 @@ describe("roadmap snapshot schema", () => {
     [
       "an empty detail line",
       (data) => {
-        data[0].items.now[0].details = [{ level: 0, text: { en: "", cy: "" } }]
+        nowItem(data).details = [{ level: 0, text: { en: "", cy: "" } }]
         return data
       },
       /Empty English text/,

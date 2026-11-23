@@ -157,24 +157,24 @@ function TagsEditor({
   const say = (message: Message | null) => {
     setSaid((last) => message && { serial: (last?.serial ?? 0) + 1, message })
   }
-  const rows = useRef<HTMLUListElement>(null)
-  const offers = useRef<HTMLUListElement>(null)
-  const renameField = useRef<HTMLInputElement>(null)
-  const icons = useRowIcons(rows, tags)
+  const rowsRef = useRef<HTMLUListElement>(null)
+  const offersRef = useRef<HTMLUListElement>(null)
+  const renameFieldRef = useRef<HTMLInputElement>(null)
+  const icons = useRowIcons(rowsRef, tags)
 
   // Focus is moved once the change that asked for it has been drawn.
-  const focusNext = useRef<(() => void) | null>(null)
+  const focusNextRef = useRef<(() => void) | null>(null)
   useLayoutEffect(() => {
-    focusNext.current?.()
-    focusNext.current = null
+    focusNextRef.current?.()
+    focusNextRef.current = null
   })
   const addField = () => document.getElementById(addId)
   const focusControl = (
-    list: typeof rows,
+    list: typeof rowsRef,
     control: "rename" | "remove" | "offer",
     index: number,
   ) => {
-    focusNext.current = () => {
+    focusNextRef.current = () => {
       const controls = list.current?.querySelectorAll<HTMLElement>(
         `[data-tag-control="${control}"]`,
       )
@@ -210,13 +210,13 @@ function TagsEditor({
       { ...draft, renaming: null },
     )
     say({ kind: "removed", tag, index })
-    focusControl(rows, "remove", index)
+    focusControl(rowsRef, "remove", index)
   }
   const undoRemove = (tag: string, index: number) => {
     const at = Math.min(index, tags.length)
     onApply([...tags.slice(0, at), tag, ...tags.slice(at)], draft)
     say({ kind: "putBack", tag })
-    focusControl(rows, "remove", at)
+    focusControl(rowsRef, "remove", at)
   }
   const startRename = (tag: string) => {
     const kept = renamed()
@@ -225,9 +225,9 @@ function TagsEditor({
     onApply(kept, { ...draft, renaming: { index, name: tag } })
     // An Undo would put a tag back among tags that have changed since.
     say(null)
-    focusNext.current = () => {
-      renameField.current?.focus()
-      renameField.current?.select()
+    focusNextRef.current = () => {
+      renameFieldRef.current?.focus()
+      renameFieldRef.current?.select()
     }
   }
   const finishRename = (keep: boolean) => {
@@ -238,7 +238,7 @@ function TagsEditor({
       : { tags, notes: [] }
     onApply(result.tags, { ...draft, renaming: null })
     sayChange(result.notes)
-    focusControl(rows, "rename", index)
+    focusControl(rowsRef, "rename", index)
   }
 
   const typed = draft.adding.replace(/\s+/g, " ").trim()
@@ -252,7 +252,7 @@ function TagsEditor({
     <>
       {tags.length > 0 && (
         <ul
-          ref={rows}
+          ref={rowsRef}
           aria-label={t("roadmaps.edit.tags.onItem")}
           className="relative flex flex-col border-b border-border"
         >
@@ -264,7 +264,7 @@ function TagsEditor({
               {draft.renaming?.index === index ? (
                 <>
                   <Input
-                    ref={renameField}
+                    ref={renameFieldRef}
                     aria-label={t("roadmaps.edit.tags.renameField", { tag })}
                     value={draft.renaming.name}
                     autoComplete="off"
@@ -445,7 +445,7 @@ function TagsEditor({
           </p>
           {offered.length > 0 ? (
             <ul
-              ref={offers}
+              ref={offersRef}
               aria-labelledby={elsewhereId}
               className="flex flex-wrap gap-2"
             >
@@ -460,7 +460,7 @@ function TagsEditor({
                     className="h-auto min-h-8 max-w-full py-1 text-left wrap-anywhere whitespace-normal"
                     onClick={() => {
                       add(tag)
-                      focusControl(offers, "offer", index)
+                      focusControl(offersRef, "offer", index)
                     }}
                   >
                     <PlusIcon data-icon="inline-start" aria-hidden="true" />

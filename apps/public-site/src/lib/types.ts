@@ -124,15 +124,16 @@ export interface DetailLine {
   level: number
 }
 
+/** An optional field is absent from the snapshot, or undefined as the parser makes it. */
 export interface RoadmapItem {
   title: Localised
   description: Localised
-  outcome?: Localised
-  phase?: Localised
-  labels?: Localised[]
-  details?: DetailLine[]
+  outcome?: Localised | undefined
+  phase?: Localised | undefined
+  labels?: Localised[] | undefined
+  details?: DetailLine[] | undefined
   /** Who the work is for, in ORGANISATION_IDS order. */
-  organisations?: OrganisationId[]
+  organisations?: OrganisationId[] | undefined
 }
 
 export interface RoadmapMeta {

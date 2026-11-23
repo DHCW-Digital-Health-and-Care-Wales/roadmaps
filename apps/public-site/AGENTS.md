@@ -38,17 +38,14 @@ next run. The spreadsheet format it reads is the root README's _Spreadsheet form
 
 ## Code conventions
 
-The site keeps its own conventions until it adopts the editor's (ADR-016): PascalCase
-component files, its own ESLint config, and `strings.ts` with `<T>` in place of i18next.
-Follow the file you are in, not `apps/editor/AGENTS.md`; the workspace's toolchain
-(Prettier, pnpm, Node) applies as everywhere.
+Follow `apps/typescript-react-conventions.md`, the TypeScript and React conventions both
+apps share.
 
 ## Tests
 
 - The seams of the root guide's test rule, lowest first: a parsing or schema script in
   `apps/public-site/scripts/` or a helper in `apps/public-site/src/lib/`, a component, a
-  page, `App`, then `entry-server` for the prerendered HTML; a table-driven test is an
-  `it.each`.
+  page, `App`, then `entry-server` for the prerendered HTML.
 - A Playwright spec holds only what a built site in a browser shows: pages with
   JavaScript off, navigation and the base path, focus and its ring, what is in view and
   what stays in place as the page scrolls or filters, controls that show only at some

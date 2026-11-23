@@ -13,7 +13,7 @@ import {
  * first paint; this keeps the document in step with later changes and remembers them.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState(readThemePreference)
+  const [theme, setTheme] = useState(readThemePreference)
 
   useLayoutEffect(() => {
     applyTheme(theme)
@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       theme,
       setTheme: (next: Theme) => {
         storeThemePreference(next)
-        setThemeState(next)
+        setTheme(next)
       },
     }),
     [theme],

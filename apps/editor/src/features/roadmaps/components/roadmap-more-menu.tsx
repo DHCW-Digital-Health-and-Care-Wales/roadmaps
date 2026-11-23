@@ -19,6 +19,7 @@ import { useMenuChoice } from "@/lib/use-menu-choice"
 import { cn } from "@/lib/utils"
 
 import { publishedStateAction } from "../editing/published-state-action"
+import { PublishedStateIcon } from "../editing/published-state-icon"
 import type { PublishedState } from "../editing/use-published-state"
 
 export interface RoadmapMoreMenuProps {
@@ -55,7 +56,7 @@ export function RoadmapMoreMenu({
   className,
 }: RoadmapMoreMenuProps) {
   const { t } = useTranslation()
-  const trigger = useRef<HTMLButtonElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const refresh = useSessionAction(onRefresh)
   const askPublishedState = useSessionAction(() => {
     publishedState?.ask()
@@ -68,14 +69,14 @@ export function RoadmapMoreMenu({
   }
   const { choose, onOpenChangeComplete } = useMenuChoice(
     (chosen: keyof typeof actions) => {
-      actions[chosen](trigger.current)
+      actions[chosen](triggerRef.current)
     },
   )
 
   return (
     <DropdownMenu onOpenChangeComplete={onOpenChangeComplete}>
       <DropdownMenuTrigger
-        ref={trigger}
+        ref={triggerRef}
         aria-busy={fetching}
         render={
           <Button
@@ -141,10 +142,10 @@ function PublishedStateItem({
   onChoose: () => void
 }) {
   const { t } = useTranslation()
-  const { verb, Icon } = publishedStateAction(state)
+  const verb = publishedStateAction(state)
   return (
     <DropdownMenuItem disabled={!state.available} onClick={onChoose}>
-      <Icon aria-hidden="true" />
+      <PublishedStateIcon action={verb} aria-hidden="true" />
       {t(`roadmaps.publishRoadmap.action.${verb}`)}
     </DropdownMenuItem>
   )

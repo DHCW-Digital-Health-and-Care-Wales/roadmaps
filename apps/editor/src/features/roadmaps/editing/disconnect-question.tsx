@@ -64,9 +64,9 @@ export function DisconnectQuestion() {
   const language = useLanguage()
   const { open, onKeep, onDiscard, onCancel } = useDisconnectQuestion()
   const { shown, current } = useChangedRoadmaps(open)
-  const chosen = useRef(false)
+  const chosenRef = useRef(false)
   useEffect(() => {
-    if (open) chosen.current = false
+    if (open) chosenRef.current = false
   }, [open])
   const nothingToKeep = open && current.count === 0
   useEffect(() => {
@@ -80,7 +80,7 @@ export function DisconnectQuestion() {
         if (!next) onCancel()
       }}
       onOpenChangeComplete={(opened) => {
-        if (!opened && chosen.current) {
+        if (!opened && chosenRef.current) {
           document.getElementById(MAIN_ID)?.focus({ preventScroll: true })
         }
       }}
@@ -89,7 +89,7 @@ export function DisconnectQuestion() {
         // Back to Disconnect, unless a link was chosen: then focus goes to the page it
         // opens once this has closed, as the router's own move of focus could not reach
         // it while this was modal, and Base UI would carry on to its first control.
-        finalFocus={() => !chosen.current}
+        finalFocus={() => !chosenRef.current}
       >
         <AlertDialogHeader>
           <AlertDialogTitle>{t("roadmaps.disconnect.title")}</AlertDialogTitle>
@@ -111,7 +111,7 @@ export function DisconnectQuestion() {
                     className={textLinkClasses}
                     onClick={(event) => {
                       if (!isPlainClick(event)) return
-                      chosen.current = true
+                      chosenRef.current = true
                       onCancel()
                     }}
                   >

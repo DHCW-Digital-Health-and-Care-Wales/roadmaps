@@ -43,22 +43,24 @@ export function NavigationResizeHandle({
 }: NavigationResizeHandleProps) {
   const { t } = useTranslation()
   // Where the drag began and the width it asked for last; `null` while none is under way.
-  const drag = useRef<{ x: number; width: number; latest: number } | null>(null)
+  const dragRef = useRef<{ x: number; width: number; latest: number } | null>(
+    null,
+  )
   const [dragging, setDragging] = useState(false)
 
   // The edge goes with the open navigation (a window narrowed below a desktop, a tablet
   // turned) and takes its pointer's release with it: settle a drag cut short there, so the
   // width it reached is the one kept.
-  const settle = useRef(onResizeEnd)
+  const settleRef = useRef(onResizeEnd)
   useEffect(() => {
-    settle.current = onResizeEnd
+    settleRef.current = onResizeEnd
   })
   useEffect(
     () => () => {
-      const current = drag.current
+      const current = dragRef.current
       if (!current) return
-      drag.current = null
-      settle.current(current.latest)
+      dragRef.current = null
+      settleRef.current(current.latest)
     },
     [],
   )
@@ -85,9 +87,9 @@ export function NavigationResizeHandle({
   }
 
   const finish = () => {
-    const current = drag.current
+    const current = dragRef.current
     if (!current) return
-    drag.current = null
+    dragRef.current = null
     setDragging(false)
     onResizeEnd(current.latest)
   }
@@ -120,11 +122,11 @@ export function NavigationResizeHandle({
           // A pointer already gone can't be followed: leave the drag unstarted.
           return
         }
-        drag.current = { x: event.clientX, width, latest: width }
+        dragRef.current = { x: event.clientX, width, latest: width }
         setDragging(true)
       }}
       onPointerMove={(event: PointerEvent) => {
-        const current = drag.current
+        const current = dragRef.current
         if (!current) return
         current.latest = clampNavigationWidth(
           current.width + event.clientX - current.x,

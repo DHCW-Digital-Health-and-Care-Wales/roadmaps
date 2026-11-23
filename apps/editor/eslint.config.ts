@@ -1,13 +1,7 @@
-import js from "@eslint/js"
-import prettier from "eslint-config-prettier/flat"
-import jsxA11y from "eslint-plugin-jsx-a11y-x"
 import i18next from "eslint-plugin-i18next"
-import reactHooks from "eslint-plugin-react-hooks"
-import { reactRefresh } from "eslint-plugin-react-refresh"
-import { defineConfig, globalIgnores } from "eslint/config"
-import globals from "globals"
-import tseslint from "typescript-eslint"
+import { globalIgnores } from "eslint/config"
 
+import { reactAppConfig } from "../../eslint.base.ts"
 import { designTokenRules } from "./build/design-token-lint.ts"
 import { e2eRules } from "./build/e2e-lint.ts"
 
@@ -52,7 +46,12 @@ const frameworks = [
   },
 ]
 
-export default defineConfig(
+export default reactAppConfig(
+  {
+    tsconfigRootDir: import.meta.dirname,
+    // TanStack Router's `createLink` makes a link component (`NavigationLink`).
+    extraHOCs: ["createLink"],
+  },
   globalIgnores([
     "dist",
     "coverage",
@@ -62,32 +61,6 @@ export default defineConfig(
     // Deliberately off-brand: linted by build/design-token-lint.test.ts.
     "build/fixtures",
   ]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.strictTypeChecked,
-      tseslint.configs.stylisticTypeChecked,
-    ],
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-  {
-    files: ["src/**/*.{ts,tsx}"],
-    extends: [
-      reactHooks.configs.flat["recommended-latest"],
-      // TanStack Router's `createLink` makes a link component (`NavigationLink`).
-      reactRefresh.configs.vite({ extraHOCs: ["createLink"] }),
-      jsxA11y.configs.recommended,
-    ],
-    languageOptions: {
-      globals: globals.browser,
-    },
-  },
   {
     // All copy comes from the i18n catalogues (ADR-008): no literal JSX text or literal
     // user-facing attributes. Tests and generated shadcn components are exempt.
@@ -203,5 +176,4 @@ export default defineConfig(
   ...designTokenRules,
   // A Playwright test never slows the machine: build/e2e-lint.ts.
   ...e2eRules,
-  prettier,
 )

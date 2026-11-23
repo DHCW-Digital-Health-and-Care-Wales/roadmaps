@@ -81,9 +81,9 @@ function WriteHoldContent({ held, store }: WriteHoldContentProps) {
   const queryClient = useQueryClient()
   const repository = useRoadmapRepository()
   const { state, connect } = useAuth()
-  const action = useRef<HTMLButtonElement>(null)
+  const actionRef = useRef<HTMLButtonElement>(null)
   useReturnFocus()
-  useKeepFocus(action)
+  useKeepFocus(actionRef)
 
   const connected = state.status === "connected"
   const { request, refresh } = held
@@ -112,14 +112,14 @@ function WriteHoldContent({ held, store }: WriteHoldContentProps) {
   const readOnConnect = useEffectEvent(() => {
     void read()
   })
-  const wasConnected = useRef(connected)
+  const wasConnectedRef = useRef(connected)
   useEffect(() => {
-    if (connected && !wasConnected.current) readOnConnect()
-    wasConnected.current = connected
+    if (connected && !wasConnectedRef.current) readOnConnect()
+    wasConnectedRef.current = connected
   }, [connected])
 
   return (
-    <AlertDialogContent initialFocus={action} finalFocus={false}>
+    <AlertDialogContent initialFocus={actionRef} finalFocus={false}>
       <AlertDialogHeader>
         <AlertDialogTitle>
           {t(`roadmaps.hold.title.${outcome}.${request.write}`)}
@@ -141,7 +141,7 @@ function WriteHoldContent({ held, store }: WriteHoldContentProps) {
       <AlertDialogFooter>
         {/* One button, relabelled, so focus stays on it as the session ends or resumes. */}
         <Button
-          ref={action}
+          ref={actionRef}
           disabled={busy}
           focusableWhenDisabled
           aria-busy={busy}

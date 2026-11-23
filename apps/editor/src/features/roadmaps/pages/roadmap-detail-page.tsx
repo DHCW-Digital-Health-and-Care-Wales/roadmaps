@@ -196,16 +196,16 @@ function RoadmapView({
   // The placement the page was in as another view was chosen, until it is drawn: set
   // only by a change of view, so the effect's other runs, as `align` follows the
   // pinned header's height, find none.
-  const keptInView = useRef<JumpTarget | null>(null)
+  const keptInViewRef = useRef<JumpTarget | null>(null)
   const chooseView = (view: ItemsView) => {
     if (view === itemsView) return
-    keptInView.current = navigation.current
+    keptInViewRef.current = navigation.current
     setItemsView(view)
   }
   const { align } = navigation
   useLayoutEffect(() => {
-    const target = keptInView.current
-    keptInView.current = null
+    const target = keptInViewRef.current
+    keptInViewRef.current = null
     if (target) align(target)
   }, [itemsView, align])
   // As the items area shows its placements, each with a heading to jump to: once both
@@ -214,11 +214,11 @@ function RoadmapView({
     items.data !== undefined &&
     organisations.data !== undefined &&
     hasGroupedItems(groups)
-  const heading = useRef<HTMLHeadingElement>(null)
-  const addItemButton = useRef<HTMLButtonElement>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  const addItemButtonRef = useRef<HTMLButtonElement>(null)
   const roadmapEdit = useRoadmapEdit(roadmap, shown)
-  const publishedStateNotice = useRef<HTMLDivElement>(null)
-  const publishNotice = useRef<HTMLDivElement>(null)
+  const publishedStateNoticeRef = useRef<HTMLDivElement>(null)
+  const publishNoticeRef = useRef<HTMLDivElement>(null)
   const movedMark = useMovedMark({
     roadmapId: roadmap.id,
     items: items.data,
@@ -231,12 +231,12 @@ function RoadmapView({
     items: items.data,
     organisations: organisations.data,
     pageItems,
-    addItemButton,
+    addItemButton: addItemButtonRef,
     onMoved: movedMark.moved,
   })
   // The page's own "Add an item" is always there, where a removed item's card is not.
   const focusAddItem = useCallback(() => {
-    addItemButton.current?.focus()
+    addItemButtonRef.current?.focus()
   }, [])
   const addedNotice = useAddedRoadmapNotice(roadmap)
   const title = localise(shown.title, language)
@@ -267,7 +267,7 @@ function RoadmapView({
           roadmap={roadmap}
           title={title}
           titleChanged={Boolean(changes?.roadmap.title)}
-          heading={heading}
+          heading={headingRef}
           publishedState={publishedState}
           details={
             <EditableProductDetails
@@ -281,7 +281,7 @@ function RoadmapView({
             listFetching || items.isFetching || organisations.isFetching
           }
           onRefresh={refresh}
-          addItemButton={addItemButton}
+          addItemButton={addItemButtonRef}
           canAddItem={itemDialog.canAdd}
           onAddItem={() => {
             itemDialog.add()
@@ -295,12 +295,12 @@ function RoadmapView({
         <RoadmapPublishing
           roadmap={roadmap}
           pageItems={pageItems}
-          heading={heading}
-          outcomeNotice={publishNotice}
+          heading={headingRef}
+          outcomeNotice={publishNoticeRef}
           pageNotices={
             publishedState.notice && (
               <PublishedStateNotice
-                ref={publishedStateNotice}
+                ref={publishedStateNoticeRef}
                 notice={publishedState.notice}
                 title={title}
                 onDismiss={publishedState.dismissNotice}
@@ -312,7 +312,9 @@ function RoadmapView({
           state={publishedState}
           title={title}
           // Its own notice, or the refusal of the changes it sent (D21).
-          notice={() => publishedStateNotice.current ?? publishNotice.current}
+          notice={() =>
+            publishedStateNoticeRef.current ?? publishNoticeRef.current
+          }
         />
         <RoadmapDialog {...roadmapEdit.dialog} />
         <MatchListsAction roadmap={roadmap} />

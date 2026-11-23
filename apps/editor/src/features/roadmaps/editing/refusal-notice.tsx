@@ -87,7 +87,7 @@ export function RemovedItems({
   return (
     <>
       {removed.map((title, index) => (
-        // Two removed items may share a title.
+        // eslint-disable-next-line @eslint-react/no-array-index-key -- Two removed items may share a title, so only the place is an identity.
         <p key={index}>
           {t("roadmaps.publish.notice.refused.removed", {
             title: localise(title, language),

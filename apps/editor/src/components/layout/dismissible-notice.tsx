@@ -47,10 +47,10 @@ export function DismissibleNotice({
     <Alert variant={variant} {...props}>
       <Icon aria-hidden="true" />
       <AlertContent>
-        {title && <AlertTitle>{title}</AlertTitle>}
+        {Boolean(title) && <AlertTitle>{title}</AlertTitle>}
         <AlertDescription>{children}</AlertDescription>
       </AlertContent>
-      {action && <AlertAction>{action}</AlertAction>}
+      {Boolean(action) && <AlertAction>{action}</AlertAction>}
       {onDismiss && (
         <AlertAction className="-my-1.5 -mr-2 self-start max-sm:w-auto max-sm:pl-0">
           <Button

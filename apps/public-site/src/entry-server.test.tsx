@@ -2,15 +2,16 @@
 import { act } from "react"
 import { hydrateRoot } from "react-dom/client"
 import { describe, expect, it, vi } from "vitest"
-import App from "./App"
-import { LanguageProvider } from "./components/LanguageProvider"
+import { App } from "./app"
+import { LanguageProvider } from "./components/language-provider"
 import snapshot from "../e2e/fixtures/roadmaps.json"
 import { renderDataFiles, renderPages } from "./entry-server"
 import { UI } from "./lib/strings"
 
 const SITE = "https://example.org/product-roadmaps/"
 const pages = await renderPages(SITE)
-const [first] = snapshot
+const [first, second] = snapshot
+if (!first || !second) throw new Error("The example data has too few roadmaps")
 
 // Hydration re-renders once to add links that need JavaScript; act() must see it.
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true })
@@ -30,7 +31,8 @@ describe("prerender", () => {
   })
 
   it("sends the site root to the English landing page without JavaScript", () => {
-    const [root] = pages
+    const root = pages[0]
+    if (!root) throw new Error("No pages were rendered")
     const english = pages.find((p) => p.file === "en/index.html")
     expect(root.route).toBeNull()
     expect(root.html).toBe(english?.html)
@@ -84,11 +86,10 @@ describe("prerender", () => {
     expect(files.map((f) => f.file)).toEqual(
       snapshot.map((roadmap) => `${roadmap.slug}/roadmap.json`),
     )
-    expect(JSON.parse(files[0].content)).toEqual(first)
+    expect(JSON.parse(files[0]?.content ?? "")).toEqual(first)
   })
 
   it("prerenders each language", () => {
-    const second = snapshot[1]
     const english = pages.find((p) => p.file === `en/${second.slug}/index.html`)
     const welsh = pages.find((p) => p.file === `cy/${second.slug}/index.html`)
     expect(second.meta.title.cy).not.toBe("")
@@ -116,16 +117,20 @@ describe("prerender", () => {
     const search = () => document.querySelector('[role="search"]')
     expect(search()).not.toBeNull()
 
+    const container = document.getElementById("root")
+    if (!container) throw new Error("The page has no root element")
     const root = await act(() =>
       hydrateRoot(
-        document.getElementById("root")!,
+        container,
         <LanguageProvider>
           <App />
         </LanguageProvider>,
       ),
     )
     expect(search()).not.toBeNull()
-    act(() => root.unmount())
+    act(() => {
+      root.unmount()
+    })
   })
 
   it("leaves the organisation filter out without JavaScript", () => {
@@ -161,9 +166,11 @@ describe("prerender", () => {
       .spyOn(console, "error")
       .mockImplementation(() => undefined)
 
+    const container = document.getElementById("root")
+    if (!container) throw new Error("The page has no root element")
     const root = await act(() =>
       hydrateRoot(
-        document.getElementById("root")!,
+        container,
         <LanguageProvider>
           <App />
         </LanguageProvider>,
@@ -178,7 +185,9 @@ describe("prerender", () => {
         ([message]) => !String(message).includes("multiple renderers"),
       ),
     ).toEqual([])
-    act(() => root.unmount())
+    act(() => {
+      root.unmount()
+    })
     consoleError.mockRestore()
   })
 })

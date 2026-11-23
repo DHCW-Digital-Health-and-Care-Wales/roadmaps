@@ -36,6 +36,8 @@ const loc = (en: string) => ({ en, cy: "" })
 // In the fixture, ProductA has 5 of its 9 items for Cardiff and Vale counting
 // all-Wales work (2 without), and ProductB 1 of 5 (0 without).
 const [productA, productB] = snapshot
+if (!productA || !productB)
+  throw new Error("The example data has too few roadmaps")
 const cardiff: OrgFilter = { org: "cavuhb", includeNational: true }
 const cardiffOnly: OrgFilter = { org: "cavuhb", includeNational: false }
 const allWales: OrgFilter = { org: "national", includeNational: true }
@@ -112,7 +114,7 @@ describe("placementHeadingId", () => {
 
 describe("roadmapGroups", () => {
   it("lists sections and horizons in page order, counting the top ones", () => {
-    const groups = roadmapGroups(snapshot[0])
+    const groups = roadmapGroups(productA)
     expect(groups.map((g) => [g.id, g.glance])).toEqual([
       ["recently-delivered", true],
       ["now", true],
@@ -316,10 +318,10 @@ const roadmap = (
   title: { en: string; cy?: string },
   extra: Partial<Roadmap["meta"]> = {},
 ): Roadmap => ({
-  ...snapshot[0],
+  ...productA,
   slug,
   meta: {
-    ...snapshot[0].meta,
+    ...productA.meta,
     title: { cy: "", ...title },
     category,
     family: loc(""),

@@ -79,14 +79,14 @@ interface ReconnectDialogContentProps {
 function ReconnectDialogContent({ from }: ReconnectDialogContentProps) {
   const { t } = useTranslation()
   const { state } = useAuth()
-  const reconnect = useRef<HTMLButtonElement>(null)
+  const reconnectRef = useRef<HTMLButtonElement>(null)
   // A failure from before the dialog opened is not this dialog's to say.
   const [tried, setTried] = useState(false)
   const failure = tried ? connectFailure(state) : null
   useReturnFocus(from)
 
   return (
-    <AlertDialogContent initialFocus={reconnect} finalFocus={false}>
+    <AlertDialogContent initialFocus={reconnectRef} finalFocus={false}>
       <AlertDialogHeader>
         <AlertDialogTitle>{t("auth.reconnectDialog.title")}</AlertDialogTitle>
         <AlertDialogDescription>
@@ -106,7 +106,7 @@ function ReconnectDialogContent({ from }: ReconnectDialogContentProps) {
       )}
       <AlertDialogFooter>
         <ReconnectButton
-          ref={reconnect}
+          ref={reconnectRef}
           onReconnect={() => {
             setTried(true)
           }}

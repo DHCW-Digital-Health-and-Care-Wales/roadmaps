@@ -155,7 +155,7 @@ export function RoadmapItems({
       ),
     )
   }
-  const panelAddButton = useRef<HTMLButtonElement>(null)
+  const panelAddButtonRef = useRef<HTMLButtonElement>(null)
   const names = useMemo(() => travelNames(pageItems), [pageItems])
 
   const list = (
@@ -195,9 +195,9 @@ export function RoadmapItems({
           description={t("roadmaps.items.empty.description")}
           action={
             <AddItemButton
-              ref={panelAddButton}
+              ref={panelAddButtonRef}
               onAdd={() => {
-                itemDialog.add(panelAddButton)
+                itemDialog.add(panelAddButtonRef)
               }}
             />
           }

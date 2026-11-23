@@ -25,6 +25,12 @@ const fixture = (name: string): Worksheet => ({
   ),
 })
 
+const firstOf = <T>(list: readonly T[]): T => {
+  const [item] = list
+  if (item === undefined) throw new Error("The list is empty")
+  return item
+}
+
 let warnings: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
@@ -99,7 +105,10 @@ describe("parseRoadmapList", () => {
         name: "Roadmaps",
         rows: [
           ["Sheet", "Enabled"],
-          ...enabled.map((value, i) => [`T${i}`, ...(value ? [value] : [])]),
+          ...enabled.map((value, i) => [
+            `T${String(i)}`,
+            ...(value ? [value] : []),
+          ]),
         ],
       }).map((l) => l.sheet)
     expect(list("Yes", "No", "", undefined, "yes", "YES", "Y", "true")).toEqual(
@@ -258,9 +267,9 @@ describe("Category and Family", () => {
   it("accepts every dropdown value, ignoring case and spaces", () => {
     const values = CATEGORY_IDS.map((id) => CATEGORY_SHEET_VALUES[id])
     expect(
-      list(...values.map((value, i) => [`T${i}`, "Yes", value, ""])).map(
-        (l) => l.meta.category,
-      ),
+      list(
+        ...values.map((value, i) => [`T${String(i)}`, "Yes", value, ""]),
+      ).map((l) => l.meta.category),
     ).toEqual([...CATEGORY_IDS])
     expect(
       list(
@@ -317,11 +326,11 @@ describe("Category and Family", () => {
 
 describe("Organisations", () => {
   const cards = (...values: string[]) =>
-    parseRoadmap(parseRoadmapList(fixture("Roadmaps"))[0], {
+    parseRoadmap(firstOf(parseRoadmapList(fixture("Roadmaps"))), {
       name: "ProductA",
       rows: [
         ["Title", "Horizon", "Organisations"],
-        ...values.map((value, i) => [`Card ${i}`, "Now", value]),
+        ...values.map((value, i) => [`Card ${String(i)}`, "Now", value]),
       ],
     }).items.now.map((item) => item.organisations)
   const rowWarnings = () => takeWarnings().filter((w) => w.row !== undefined)
@@ -377,7 +386,7 @@ describe("warnings", () => {
   })
 
   it("keep sheet text on one line so it is never a workflow command", () => {
-    parseRoadmap(parseRoadmapList(fixture("Roadmaps"))[0], {
+    parseRoadmap(firstOf(parseRoadmapList(fixture("Roadmaps"))), {
       name: "Tab\n::error::x",
       rows: [
         ["Title", "Horizon"],
@@ -398,7 +407,8 @@ describe("parseRoadmap", () => {
   const listings = () => parseRoadmapList(fixture("Roadmaps"))
 
   it.each(["ProductA", "ProductB"])("matches the %s snapshot", (name) => {
-    const listing = listings().find((l) => l.sheet === name)!
+    const listing = listings().find((l) => l.sheet === name)
+    if (!listing) throw new Error(`No ${name} listing in the example sheet`)
     expect(parseRoadmap(listing, fixture(name))).toMatchSnapshot()
     expect(warnings).not.toHaveBeenCalled()
   })
@@ -415,7 +425,7 @@ describe("parseRoadmap", () => {
   })
 
   it("places cards and parses nested details", () => {
-    const [listing] = listings()
+    const listing = firstOf(listings())
     const roadmap = parseRoadmap(listing, fixture("ProductA"))
     expect(roadmap.slug).toBe("producta")
     expect(roadmap.items.now).toHaveLength(3)
@@ -430,7 +440,7 @@ describe("parseRoadmap", () => {
   })
 
   it("reads Welsh columns and falls back to English when blank", () => {
-    const [listing] = listings()
+    const listing = firstOf(listings())
     const roadmap = parseRoadmap(listing, fixture("ProductA"))
     const [full, minimal] = roadmap.items.now
     expect(full?.title).toEqual({
@@ -448,7 +458,7 @@ describe("parseRoadmap", () => {
   })
 
   it("ignores Welsh lists that do not match the English", () => {
-    const [listing] = listings()
+    const listing = firstOf(listings())
     const roadmap = parseRoadmap(listing, {
       name: "ProductA",
       rows: [
@@ -478,7 +488,7 @@ describe("parseRoadmap", () => {
   })
 
   it("warns when the Welsh and English lengths differ a lot", () => {
-    const [listing] = listings()
+    const listing = firstOf(listings())
     parseRoadmap(listing, {
       name: "ProductA",
       rows: [
@@ -494,13 +504,15 @@ describe("parseRoadmap", () => {
   })
 
   const parseCard = (header: string[], cells: string[]) =>
-    parseRoadmap(listings()[0], {
-      name: "ProductA",
-      rows: [
-        ["Title", "Horizon", ...header],
-        ["Card", "Now", ...cells],
-      ],
-    }).items.now[0]
+    firstOf(
+      parseRoadmap(firstOf(listings()), {
+        name: "ProductA",
+        rows: [
+          ["Title", "Horizon", ...header],
+          ["Card", "Now", ...cells],
+        ],
+      }).items.now,
+    )
 
   it("lets single Welsh list entries fall back to English", () => {
     const card = parseCard(
@@ -595,7 +607,7 @@ describe("parseRoadmap", () => {
   })
 
   it("skips cards with an unknown horizon or no title", () => {
-    const [listing] = listings()
+    const listing = firstOf(listings())
     const roadmap = parseRoadmap(listing, {
       name: "ProductA",
       rows: [
@@ -615,7 +627,7 @@ describe("parseRoadmap", () => {
   })
 
   it("fails when the tab name gives an empty slug", () => {
-    const [listing] = listings()
+    const listing = firstOf(listings())
     expect(() =>
       parseRoadmap(
         { ...listing, sheet: "日本語" },

@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test"
 import { resolveDevPorts } from "./scripts/dev-ports.ts"
 
-const BASE_URL = `http://localhost:${resolveDevPorts().preview}/product-roadmaps/`
+const BASE_URL = `http://localhost:${String(resolveDevPorts().preview)}/product-roadmaps/`
 
 /**
  * End-to-end and ARIA snapshot tests against a production build (`vite preview`) of

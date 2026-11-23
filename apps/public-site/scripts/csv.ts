@@ -6,10 +6,10 @@ export function parseCsv(text: string): string[][] {
   let quoted = false
 
   for (let i = 0; i < text.length; i++) {
-    const char = text[i]
+    const char = text.charAt(i)
     if (quoted) {
       if (char !== '"') field += char
-      else if (text[i + 1] === '"') field += text[++i]
+      else if (text[i + 1] === '"') field += text.charAt(++i)
       else quoted = false
     } else if (char === '"') {
       quoted = true

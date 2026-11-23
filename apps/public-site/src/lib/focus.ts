@@ -19,7 +19,7 @@ export const ORG_SELECT_ID = "org-filter-organisation"
  */
 export function keepInPlace(element: Element | undefined, update: () => void) {
   const before = element?.getBoundingClientRect().top
-  // Synchronously, as the new layout must exist to measure it.
+  // eslint-disable-next-line @eslint-react/dom-no-flush-sync -- the new layout must be rendered before it can be measured.
   flushSync(update)
   if (!element?.isConnected || before === undefined) return
   const moved = element.getBoundingClientRect().top - before

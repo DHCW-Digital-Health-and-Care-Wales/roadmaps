@@ -42,7 +42,7 @@ export function StatusPanel({
       )}
     >
       <EmptyHeader>
-        {icon && (
+        {Boolean(icon) && (
           <EmptyMedia
             aria-hidden="true"
             className="size-12 rounded-lg border bg-muted text-muted-foreground [&_svg]:size-5"
@@ -55,7 +55,7 @@ export function StatusPanel({
           {description}
         </EmptyDescription>
       </EmptyHeader>
-      {action && <EmptyContent>{action}</EmptyContent>}
+      {Boolean(action) && <EmptyContent>{action}</EmptyContent>}
     </Empty>
   )
 }

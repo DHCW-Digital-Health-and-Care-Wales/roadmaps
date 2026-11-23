@@ -34,7 +34,7 @@ export interface Listing {
 export interface SheetWarning {
   sheet: string
   /** Spreadsheet row number, when the problem is in one row. */
-  row?: number
+  row?: number | undefined
   message: string
 }
 
@@ -106,7 +106,7 @@ const collected: SheetWarning[] = []
 export const takeWarnings = () => collected.splice(0)
 
 export const formatWarning = ({ sheet, row, message }: SheetWarning) =>
-  `Warning: ${sheet}${row ? `, row ${row}` : ""}: ${message}`
+  `Warning: ${sheet}${row ? `, row ${String(row)}` : ""}: ${message}`
 
 // Sheet text can contain newlines; one line per warning stops a line starting
 // with "::" being run as a GitHub Actions workflow command.
@@ -161,7 +161,7 @@ export function checkTranslation(en: string, cy: string): string | undefined {
   if (Math.min(enWords, cyWords) / longer >= TRANSLATION_CHECK.minLengthRatio) {
     return undefined
   }
-  return `Welsh has ${cyWords} word(s) but English has ${enWords}; check the translation`
+  return `Welsh has ${String(cyWords)} word(s) but English has ${String(enWords)}; check the translation`
 }
 
 type Row = Record<string, string>
@@ -308,7 +308,7 @@ function pairLists(
   if (cy.length > 0 && cy.length !== en.length) {
     warn(
       ctx.sheet,
-      `${column} of "${ctx.label}" has ${en.length} English and ${cy.length} Welsh entries, so the Welsh is ignored. English: ${en.join(" | ")}. Welsh: ${cy.join(" | ")}`,
+      `${column} of "${ctx.label}" has ${String(en.length)} English and ${String(cy.length)} Welsh entries, so the Welsh is ignored. English: ${en.join(" | ")}. Welsh: ${cy.join(" | ")}`,
       ctx.line,
     )
     cy = []
@@ -361,7 +361,7 @@ function parseDetails(ctx: RowContext): DetailLine[] | undefined {
       if (isUntranslated(text.en, text.cy)) {
         warn(
           ctx.sheet,
-          `Details line ${index + 1} of "${ctx.label}": Welsh is the same as the English`,
+          `Details line ${String(index + 1)} of "${ctx.label}": Welsh is the same as the English`,
           ctx.line,
         )
       }
@@ -457,7 +457,7 @@ function isEnabled(sheet: string, { line, cells }: ListRow): boolean {
   if (value && value !== "No") {
     warn(
       sheet,
-      `Enabled "${value}" for "${cells.sheet}" is not exactly "Yes"; not published`,
+      `Enabled "${value}" for "${String(cells.sheet)}" is not exactly "Yes"; not published`,
       line,
     )
   }
@@ -465,6 +465,9 @@ function isEnabled(sheet: string, { line, cells }: ListRow): boolean {
 }
 
 type ListRow = ReturnType<typeof readTable>[number]
+
+/** A row of the first tab that names its roadmap's tab. */
+type NamedListRow = ListRow & { cells: { sheet: string } }
 
 /**
  * Reads the first tab: one roadmap per row, settings as columns. Rows that
@@ -477,8 +480,8 @@ export function parseRoadmapList(
   checkColumns(sheet, LIST_COLUMNS)
   return readTable(sheet, LIST_COLUMNS)
     .filter(
-      (row) =>
-        row.cells.sheet && (includeDisabled || isEnabled(sheet.name, row)),
+      (row): row is NamedListRow =>
+        !!row.cells.sheet && (includeDisabled || isEnabled(sheet.name, row)),
     )
     .map(({ line, cells }) => {
       const ctx = { sheet: sheet.name, line, label: cells.sheet, cells }

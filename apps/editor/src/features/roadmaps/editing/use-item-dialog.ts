@@ -135,7 +135,7 @@ export function useItemDialog({
 }: ItemDialogOptions): PageItemDialog {
   const store = usePendingChangesStore()
   const [opening, setOpening] = useState<Opening | null>(null)
-  const cardOpener = useRef<HTMLButtonElement>(null)
+  const cardOpenerRef = useRef<HTMLButtonElement>(null)
   const cardKey =
     opening?.form === "edit" ? opening.key : (opening?.addedKey ?? null)
   const cardAt =
@@ -223,7 +223,7 @@ export function useItemDialog({
             // page has an item, added here or read meanwhile: the page's own stays.
             opener:
               opening.addedKey !== null
-                ? cardOpener
+                ? cardOpenerRef
                 : firstMounted(opening.from, addItemButton),
             action: publishAction(roadmap),
             start: opening.expanded?.start,
@@ -233,7 +233,7 @@ export function useItemDialog({
           ? {
               ...shared,
               open: opening.open,
-              opener: cardOpener,
+              opener: cardOpenerRef,
               opened: opening.opened,
               item: edited.shown,
               onDone: done,
@@ -245,7 +245,7 @@ export function useItemDialog({
     drawn: opening && props ? { key: opening.count, props } : null,
     canAdd,
     cardAt,
-    cardOpener,
+    cardOpener: cardOpenerRef,
     edit: (position) => {
       const target = pageItems[position]
       if (!target) return

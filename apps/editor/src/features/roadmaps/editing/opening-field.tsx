@@ -58,9 +58,9 @@ export function OpeningField({
   const labelId = `${id}-label`
   const hintId = hint ? `${id}-hint` : undefined
   const [open, setOpen] = useState(false)
-  const button = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   // The control is drawn only while the field is open, so it arrives as the field opens.
-  const [control, focusOnOpen] = useState<HTMLElement | null>(null)
+  const [control, setControl] = useState<HTMLElement | null>(null)
   useEffect(() => {
     control?.focus()
   }, [control])
@@ -74,7 +74,7 @@ export function OpeningField({
           onShut?.()
           // Not every browser focuses a button it is pressed with (Safari), and the
           // control that held focus is about to go.
-          button.current?.focus()
+          buttonRef.current?.focus()
         }
         setOpen(opening)
       }}
@@ -87,7 +87,7 @@ export function OpeningField({
         <CollapsibleTrigger
           render={
             <Button
-              ref={button}
+              ref={buttonRef}
               type="button"
               variant="secondary"
               size="sm"
@@ -119,7 +119,7 @@ export function OpeningField({
           />
         }
       >
-        {children(focusOnOpen)}
+        {children(setControl)}
       </CollapsibleContent>
     </Collapsible>
   )

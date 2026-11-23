@@ -36,7 +36,7 @@ export function EditableProductDetails({
   const { t } = useTranslation()
   const store = usePendingChangesStore()
   const changes = useRoadmapChanges(roadmap.id)
-  const editButton = useRef<HTMLButtonElement>(null)
+  const editButtonRef = useRef<HTMLButtonElement>(null)
   const changed = changedRoadmapFields(changes).length > 0
 
   return (
@@ -49,14 +49,14 @@ export function EditableProductDetails({
           size="default"
           align="start"
           pending={changed ? "changed" : undefined}
-          editButton={editButton}
+          editButton={editButtonRef}
           onEdit={() => {
-            onEdit(editButton.current)
+            onEdit(editButtonRef.current)
           }}
           onDrop={() => {
             store.update(roadmap.id, undoRoadmap)
             // "Undo changes" goes with the changes.
-            editButton.current?.focus()
+            editButtonRef.current?.focus()
           }}
         />
       }

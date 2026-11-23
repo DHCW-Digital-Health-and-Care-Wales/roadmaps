@@ -14,14 +14,14 @@ import {
  * S4).
  */
 export function EditSurfaceProvider({ children }: { children: ReactNode }) {
-  const [surface, setSurfaceState] = useState(readEditSurface)
+  const [surface, setSurface] = useState(readEditSurface)
 
   const value = useMemo(
     () => ({
       surface,
       setSurface: (next: EditSurface) => {
         const kept = storeEditSurface(next)
-        if (kept || next === "panel") setSurfaceState(next)
+        if (kept || next === "panel") setSurface(next)
       },
     }),
     [surface],

@@ -102,7 +102,7 @@ export function PublishedStateNotice({
       {notice.kind === "unpublishable" && (
         <ul className="list-disc pl-5">
           {notice.problems.map((problem, i) => (
-            // A list that never reorders: its place is its identity.
+            // eslint-disable-next-line @eslint-react/no-array-index-key -- A list that never reorders: its place is its identity.
             <li key={i}>{problemText(problem, t, language)}</li>
           ))}
         </ul>

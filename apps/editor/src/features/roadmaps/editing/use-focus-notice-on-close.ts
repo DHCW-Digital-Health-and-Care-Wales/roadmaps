@@ -22,18 +22,18 @@ export interface FocusNoticeOnClose {
 export function useFocusNoticeOnClose(
   notice: () => HTMLElement | null,
 ): FocusNoticeOnClose {
-  const confirmed = useRef(false)
+  const confirmedRef = useRef(false)
   return {
     confirmed: () => {
-      confirmed.current = true
+      confirmedRef.current = true
     },
     finalFocus: (otherwise) => {
-      if (confirmed.current && notice()) return false
+      if (confirmedRef.current && notice()) return false
       return otherwise ?? true
     },
     onOpenChangeComplete: (open) => {
-      if (open) confirmed.current = false
-      else if (confirmed.current) notice()?.focus()
+      if (open) confirmedRef.current = false
+      else if (confirmedRef.current) notice()?.focus()
     },
   }
 }

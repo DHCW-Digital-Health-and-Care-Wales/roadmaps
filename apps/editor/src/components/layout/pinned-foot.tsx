@@ -27,12 +27,12 @@ const inFlowClasses = "max-w-none px-0 md:px-0"
  */
 export function PinnedFoot({ notices, bar }: PinnedFootProps) {
   const pinning = usePinning()
-  const foot = useRef<HTMLDivElement>(null)
-  usePinnedInset("bottom", useMeasuredHeight(foot, pinning), pinning)
+  const footRef = useRef<HTMLDivElement>(null)
+  usePinnedInset("bottom", useMeasuredHeight(footRef, pinning), pinning)
 
   return (
     <div
-      ref={foot}
+      ref={footRef}
       data-slot="pinned-foot"
       data-pinned={pinning || undefined}
       className={cn(

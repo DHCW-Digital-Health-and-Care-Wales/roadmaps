@@ -237,7 +237,7 @@ export function EditControls({
 }: EditControlsProps) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      {(mark ?? pending) && (
+      {Boolean(mark ?? pending) && (
         // Together: where one line can't hold both, the second wraps under the first.
         <div className="flex flex-wrap items-center gap-2">
           {mark}

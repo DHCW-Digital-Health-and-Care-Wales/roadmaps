@@ -32,19 +32,20 @@ export interface StickyHeaderProps {
  */
 export function StickyHeader({ children }: StickyHeaderProps) {
   const pinning = usePinning()
-  const place = useRef<HTMLDivElement>(null)
-  const header = useRef<HTMLDivElement>(null)
-  const stuck = useScrolledPast(place, pinning)
+  const placeRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const stuck = useScrolledPast(placeRef, pinning)
   // Two heights of the one row: its place keeps the height the row had in the flow,
   // last measured before it stuck, while the inset follows the row's stuck height.
-  const flowHeight = useMeasuredHeight(header, pinning && !stuck)
-  const stuckHeight = useMeasuredHeight(header, stuck)
+  const flowHeight = useMeasuredHeight(headerRef, pinning && !stuck)
+  const stuckHeight = useMeasuredHeight(headerRef, stuck)
   usePinnedInset("top", stuckHeight, pinning)
 
   return (
-    <div ref={place} style={stuck ? { height: flowHeight } : undefined}>
+    <div ref={placeRef} style={stuck ? { height: flowHeight } : undefined}>
+      {/* eslint-disable-next-line jsx-a11y-x/no-static-element-interactions -- onFocus only observes focus bubbling up from the controls inside; the div is not a control. */}
       <div
-        ref={header}
+        ref={headerRef}
         data-slot="sticky-header"
         data-stuck={stuck || undefined}
         onFocus={(event) => {
@@ -55,7 +56,7 @@ export function StickyHeader({ children }: StickyHeaderProps) {
             event.currentTarget,
           )
           if (next === "release") {
-            place.current?.scrollIntoView({ block: "start" })
+            placeRef.current?.scrollIntoView({ block: "start" })
           } else {
             next?.focus()
           }

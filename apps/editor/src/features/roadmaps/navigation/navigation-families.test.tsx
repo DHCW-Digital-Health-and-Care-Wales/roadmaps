@@ -9,6 +9,7 @@ import { connected } from "@/test/connected-state"
 import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
+import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
 import { editItemText } from "../testing/item-dialog"
 import { recordSayings } from "../testing/record-sayings"
 import {
@@ -179,6 +180,17 @@ describe("Close all and Open all (S3)", () => {
     })
   })
 
+  it("is reached by Tab from All roadmaps, and worked by Space", async () => {
+    const { user } = await renderFamilies()
+    within(navigation()).getByRole("link", { name: "All roadmaps" }).focus()
+
+    await user.tab()
+
+    expect(closeAll()).toHaveFocus()
+    await user.keyboard(" ")
+    expect(openAll()).toHaveFocus()
+  })
+
   it("closes the current roadmap's family too, and leaves it closed", async () => {
     const { user } = await renderFamilies({ path: "/roadmaps/plans" })
     await screen.findByRole("heading", { level: 3, name: "Plan item" })
@@ -194,14 +206,24 @@ describe("Close all and Open all (S3)", () => {
 })
 
 describe("remembered on this device (S4)", () => {
-  it("keeps the closed families across a reload, and writes no more than their keys", async () => {
-    const { user, unmount } = await renderFamilies()
+  it("keeps the closed families across a reload, and writes nothing to the data source", async () => {
+    const repository = createInMemoryRoadmapRepository(ROADMAPS, ROADMAP_ITEMS)
+    const writes = [
+      "publishRoadmapChanges",
+      "addRoadmap",
+      "addFamily",
+      "changeFamily",
+      "matchRoadmapToLists",
+      "setRoadmapPublished",
+    ] as const
+    const spies = writes.map((write) => vi.spyOn(repository, write))
+    const { user, unmount } = await renderFamilies({ repository })
     await user.click(familyButton("Single Record"))
     await user.click(familyButton("Workforce"))
     expect(readClosedFamilies()).toEqual(new Set(["singlerecord", "workforce"]))
     unmount()
 
-    await renderAgain()
+    await renderAgain({ repository })
 
     expect(familyButton("Single Record")).toHaveAttribute(
       "aria-expanded",
@@ -212,6 +234,7 @@ describe("remembered on this device (S4)", () => {
       "aria-expanded",
       "true",
     )
+    for (const spy of spies) expect(spy).not.toHaveBeenCalled()
   })
 
   it("leaves every family open, with no error, where storage can't be read or kept", async () => {

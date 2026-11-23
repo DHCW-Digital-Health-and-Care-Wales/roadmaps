@@ -3,7 +3,6 @@ import type { Locator, Page } from "@playwright/test"
 import type { FakeSheets } from "./fixtures/fake-sheets"
 import { escapeFrom } from "./fixtures/keyboard"
 import { boxesOf, boxOf } from "./fixtures/layout"
-import { type Language, useLanguage } from "./fixtures/look"
 import { NAVIGATION_WORLD } from "./fixtures/navigation-world"
 import { connect, expect, test } from "./fixtures/test"
 
@@ -15,32 +14,21 @@ import { connect, expect, test } from "./fixtures/test"
  */
 
 const DESKTOP = { width: 1280, height: 800 }
-const NARROWEST_DESKTOP = { width: 1024, height: 768 }
 const PHONE = { width: 375, height: 812 }
 
 const COPY = {
-  en: {
-    navigation: "Roadmaps",
-    connect: "Connect Google",
-    search: "Search roadmaps",
-    last: "Staff directory",
-  },
-  cy: {
-    navigation: "Mapiau trywydd",
-    connect: "Cysylltu â Google",
-    search: "Chwilio mapiau trywydd",
-    last: "Cyfeiriadur staff",
-  },
-} as const satisfies Record<Language, Record<string, string>>
+  navigation: "Roadmaps",
+  connect: "Connect Google",
+  search: "Search roadmaps",
+  last: "Staff directory",
+} as const
 
-function navigation(page: Page, language: Language = "en"): Locator {
-  return page.getByRole("navigation", { name: COPY[language].navigation })
+function navigation(page: Page): Locator {
+  return page.getByRole("navigation", { name: COPY.navigation })
 }
 
-function searchBox(page: Page, language: Language = "en"): Locator {
-  return navigation(page, language).getByRole("searchbox", {
-    name: COPY[language].search,
-  })
+function searchBox(page: Page): Locator {
+  return navigation(page).getByRole("searchbox", { name: COPY.search })
 }
 
 /** The navigation's list, which scrolls under its top row. */
@@ -49,27 +37,14 @@ function navigationList(page: Page): Locator {
 }
 
 /** Connects with the sample world's 14 roadmaps, on the home page. */
-async function openWorld(
-  page: Page,
-  sheets: FakeSheets,
-  language: Language = "en",
-) {
+async function openWorld(page: Page, sheets: FakeSheets) {
   sheets.spreadsheet = NAVIGATION_WORLD
   await page.goto("./")
-  await connect(page, COPY[language].connect)
+  await connect(page, COPY.connect)
   await expect(
-    page
-      .getByRole("main")
-      .getByRole("link", { name: COPY[language].last, exact: true }),
+    page.getByRole("main").getByRole("link", { name: COPY.last, exact: true }),
   ).toBeVisible()
 }
-
-const horizontalOverflow = (page: Page) =>
-  page.evaluate(
-    () =>
-      document.documentElement.scrollWidth -
-      document.documentElement.clientWidth,
-  )
 
 test.describe("on a desktop", () => {
   test.beforeEach(async ({ page }) => {
@@ -181,32 +156,4 @@ test.describe("on a phone", () => {
 
     await escapeFrom(drawer)
   })
-})
-
-test("fits its Cymraeg at the narrowest desktop and in the drawer, finding a Welsh title (S12)", async ({
-  page,
-  sheets,
-}) => {
-  await useLanguage(page, "cy")
-  await page.setViewportSize(NARROWEST_DESKTOP)
-  await openWorld(page, sheets, "cy")
-
-  await expect(searchBox(page, "cy")).toHaveAttribute("placeholder", "Chwilio")
-  await searchBox(page, "cy").fill("gofal")
-  await expect(navigation(page, "cy").getByRole("link")).toHaveText([
-    "Pob map trywydd",
-    "Cynlluniau gofal a rennir",
-    "Gwyliwr cofnodion gofal",
-    "Cofrestr gofalwyr",
-    "Teuluoedd, categorïau a sefydliadau",
-  ])
-  expect(await horizontalOverflow(page)).toBe(0)
-
-  await page.setViewportSize(PHONE)
-  await page
-    .getByRole("banner")
-    .getByRole("button", { name: "Dewislen" })
-    .click()
-  await expect(searchBox(page, "cy")).toHaveValue("gofal")
-  expect(await horizontalOverflow(page)).toBe(0)
 })

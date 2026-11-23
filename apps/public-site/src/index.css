@@ -29,10 +29,10 @@
   --color-border: #d8dde0;
   --color-border-strong: #b6c0cd;
 
-  /* Roboto is self-hosted via @fontsource. */
+  /* The variable Roboto is self-hosted via @fontsource-variable. */
   --font-sans:
-    Roboto, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial,
-    sans-serif;
+    "Roboto Variable", Roboto, system-ui, -apple-system, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
 
   --radius-card: 0.5rem;
 

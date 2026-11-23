@@ -32,7 +32,7 @@ Licensed under the [MIT License](LICENSE).
 
 ## Getting started
 
-You need Node.js 26 (see `.nvmrc`; 22.22+ and 24.15+ also work) and pnpm, e.g.
+You need Node.js 26 (see `.nvmrc`) and pnpm, e.g.
 `npm install --global pnpm` (see <https://pnpm.io/installation>); any recent pnpm switches
 itself to the version pinned in `packageManager` (Node 25+ no longer ships Corepack).
 Then:

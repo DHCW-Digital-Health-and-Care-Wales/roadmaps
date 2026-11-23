@@ -11,7 +11,7 @@
   "type": "module",
   "packageManager": "pnpm@12.18.0",
   "engines": {
-    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+    "node": ">=26.0.0"
   },
   "scripts": {
     "editor:dev": "pnpm --filter @roadmaps/editor dev",

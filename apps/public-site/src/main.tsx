@@ -1,11 +1,10 @@
 import { StrictMode } from "react"
 import { flushSync } from "react-dom"
 import { createRoot, hydrateRoot } from "react-dom/client"
-// Self-hosted Roboto (DHCW digital interface font). Bundled into the build so
+// Self-hosted variable Roboto (DHCW digital interface font), every subset (Welsh ŵ and
+// ŷ are in latin-ext), each fetched only when a page uses it. Bundled into the build so
 // no third-party font service is called.
-import "@fontsource/roboto/400.css"
-import "@fontsource/roboto/500.css"
-import "@fontsource/roboto/700.css"
+import "@fontsource-variable/roboto"
 import "./index.css"
 import { App } from "./app.tsx"
 import { LanguageProvider } from "./components/language-provider"

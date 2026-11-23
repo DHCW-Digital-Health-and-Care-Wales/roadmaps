@@ -137,7 +137,7 @@ describe("the session warning (S3)", () => {
 })
 
 describe("staying connected (S4)", () => {
-  it("renews inside the click, closes and gives focus back, keeping the roadmaps", async () => {
+  it("renews inside the click, closes and gives focus back, keeping the roadmaps, and warns again before the renewed session ends", async () => {
     const { authClient } = await renderSession(3 * MINUTE_MS)
     const refresh = screen.getByRole("button", { name: "Refresh" })
     refresh.focus()
@@ -156,6 +156,8 @@ describe("staying connected (S4)", () => {
     // The fake renewed the session for an hour: no warning until near its end.
     advance(50 * MINUTE_MS)
     expect(dialog()).not.toBeInTheDocument()
+    advance(8 * MINUTE_MS)
+    expect(dialog()).toBeInTheDocument()
   })
 
   it("gives focus back to the page itself when that is where it was", async () => {
@@ -177,15 +179,6 @@ describe("staying connected (S4)", () => {
       expect(dialog()).not.toBeInTheDocument()
       expect(page).toHaveFocus()
     })
-  })
-
-  it("warns again before the renewed session ends", async () => {
-    await renderSession(2 * MINUTE_MS)
-
-    fireEvent.click(screen.getByRole("button", { name: "Stay connected" }))
-    advance(58 * MINUTE_MS)
-
-    expect(dialog()).toBeInTheDocument()
   })
 })
 

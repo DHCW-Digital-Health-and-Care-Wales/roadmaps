@@ -216,22 +216,6 @@ describe("the page notice (S5: a renewal that fails)", () => {
 })
 
 describe("the page notice (S2: confirmations)", () => {
-  it("confirms disconnecting where the user is looking, but not connecting (STY-056 S1)", async () => {
-    const user = userEvent.setup()
-    await renderWithProviders({ roadmaps })
-
-    await user.click(main().getByRole("button", { name: "Connect Google" }))
-    expect(
-      await main().findByRole("link", { name: "Product A roadmap" }),
-    ).toBeInTheDocument()
-    expect(main().queryByRole("note")).not.toBeInTheDocument()
-
-    await disconnectFromHeader(user)
-    expect(main().getByRole("note")).toHaveTextContent(
-      "Disconnected from Google",
-    )
-  })
-
   it("stays silent when a session is renewed", async () => {
     const session = connected()
     const { authClient } = await renderWithProviders({

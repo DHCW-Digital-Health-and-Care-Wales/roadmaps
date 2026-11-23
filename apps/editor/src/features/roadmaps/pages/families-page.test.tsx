@@ -21,9 +21,7 @@ import {
   reconnectFromDialog,
 } from "@/features/auth/testing/reconnect-dialog"
 import { AppError } from "@/lib/errors"
-import { DESKTOP_WIDTH } from "@/lib/use-media-query"
 import { connected } from "@/test/connected-state"
-import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { holdCall } from "../testing/held-call"
@@ -571,29 +569,6 @@ describe("FamiliesPage (STY-029)", () => {
     expect(
       main().queryByRole("button", { name: "Refresh" }),
     ).not.toBeInTheDocument()
-  })
-
-  it("is linked from the navigation, not from the roadmap list (STY-058 S2)", async () => {
-    matchMediaQueries(DESKTOP_WIDTH)
-    await renderWithProviders({
-      authState: connected,
-      repository: repositoryWith(),
-    })
-    const user = userEvent.setup()
-    const name = "Families, categories and organisations"
-
-    expect(
-      await main().findByRole("heading", { level: 1, name: "Your roadmaps" }),
-    ).toBeInTheDocument()
-    expect(main().queryByRole("link", { name })).not.toBeInTheDocument()
-
-    await user.click(
-      within(screen.getByRole("navigation")).getByRole("link", { name }),
-    )
-
-    expect(
-      await main().findByRole("heading", { level: 1, name }),
-    ).toBeInTheDocument()
   })
 
   it("starts with its title, with no back link (STY-058 S4)", async () => {

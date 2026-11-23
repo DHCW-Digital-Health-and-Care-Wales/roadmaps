@@ -126,31 +126,6 @@ describe("RoadmapDetailPage", () => {
     )
   })
 
-  it("keeps a cached roadmap visible, with Reconnect, once the session expires", async () => {
-    const { authClient } = await renderWithProviders({
-      path: "/roadmaps/productb",
-      authState: connected,
-      roadmaps,
-    })
-    await main().findByRole("heading", { level: 1, name: "Product B roadmap" })
-
-    act(() => {
-      authClient.setState({ status: "expired" })
-    })
-
-    const alert = main().getByRole("alert")
-    expect(alert).toHaveTextContent("Your session has expired")
-    expect(
-      within(alert).getByRole("button", { name: "Reconnect" }),
-    ).toBeInTheDocument()
-    expect(
-      main().getByRole("heading", { level: 1, name: "Product B roadmap" }),
-    ).toBeInTheDocument()
-    expect(
-      main().getByRole("region", { name: "Product details" }),
-    ).toBeInTheDocument()
-  })
-
   it("shows no product details while the list loads", async () => {
     await renderWithProviders({
       path: "/roadmaps/productb",

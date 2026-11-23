@@ -30,8 +30,8 @@ the editor reads its header row alone, to check it, and copies it to start a roa
 - The editor's Vitest tests import a file's text with `?raw`, and its E2E Sheets fake
   (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`) reads all five from disk as the
   example spreadsheet: `Roadmaps` first, the roadmap tabs, then `Template`. Both parse
-  them with the editor's test CSV reader and apply its writes with its `batchUpdate`
-  fake, in `apps/editor/tests/fixtures/sheets/`.
+  them with the editor's test CSV reader (`parse-csv.ts`) and apply its writes with its
+  `batchUpdate` fake (`apply-batch-update.ts`), both in `apps/editor/tests/fixtures/sheets/`.
 - The public site's parser test (`apps/public-site/scripts/parse-roadmap.test.ts`) parses
   `Roadmaps` and the tabs of the roadmaps it publishes, and checks that its E2E data,
   `apps/public-site/e2e/fixtures/roadmaps.json`, matches what they parse to. That JSON is

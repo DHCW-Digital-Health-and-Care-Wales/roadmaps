@@ -119,7 +119,7 @@ It never writes `(cy)` cells, other columns, unchanged cells, another roadmap's 
 the `Template` tab. Since STY-036 it writes `Last updated` (a changed date, or today's
 when "Mark as updated today" is ticked) as `YYYY-MM-DD` text, or empty; see the README's
 _What the editor writes_ for every write since. The example data in `fixtures/sheets/` stays
-the public site's copy, without `Item ID` (STY-023 D8).
+in the layout the public site reads, without `Item ID` (STY-023 D8).
 
 ### Example data
 

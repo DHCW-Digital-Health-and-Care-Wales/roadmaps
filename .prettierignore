@@ -9,3 +9,6 @@ apps/public-site/.lighthouseci
 apps/public-site/.data
 # Playwright writes aria snapshots in its own format
 apps/public-site/e2e/__snapshots__
+# The API's environment and its tools' caches, which apps/api/.gitignore lists
+apps/api/.venv
+apps/api/.*_cache

@@ -1,6 +1,6 @@
 # CHO-042: Every sideways-scroll check uses one helper
 
-- **Status**: Done — part of CHO-014 (its D9) and its S3; last, once the other sub-chores have cut what they cut
+- **Status**: Done
 - **Type**: Refactor
 - **Area**: E2E (tests only)
 - **Epic**: standalone
@@ -44,19 +44,21 @@ sub-chore, is still checked at 375 px
 
 ### Departures
 
-- Re-counted at delivery on `65a6b09b` (CHO-041 merged), not `9ee767b`: `rg -n scrollWidth
-apps/editor/tests/e2e` finds 28 lines, of which 16 were page-level expressions (the
-  whole document's width against its viewport's) in eight specs, and 12 remain, all
+- Re-counted at delivery on `65a6b09b` (CHO-041 merged), not `9ee767b`:
+  `rg -n scrollWidth apps/editor/tests/e2e` finds 28 lines, of which 16 were page-level
+  expressions (the whole document's width against its viewport's) in eight specs, and 12 remain, all
   element-own checks or the helper itself. At `9ee767b` there were 32 lines, 21 of them
   `documentElement.scrollWidth`; the earlier sub-chores cut 4 of those page-level checks
   (21 to 17, counting the helper's), so 16 remained for this chore.
-- Four specs wrote the expression as a local helper (`horizontalOverflow` in `shell`,
-  `navigation-welsh` and `navigation-width`; `sideways` in `editing`); each helper is
-  removed, and its callers call `scrollsSideways` and assert `toBe(false)`. The
+- Several specs wrapped the expression in a local helper or closure (`horizontalOverflow`
+  in `shell`, `navigation-welsh` and `navigation-width`; `overflow` and `sideways` in
+  `editing`); each is removed, and its callers call `scrollsSideways` and assert
+  `toBe(false)`. The
   numeric `toBe(0)` and `toBeLessThanOrEqual(0)` assertions become the boolean they
   always meant: no overflow.
-- Two sites compared against `window.innerWidth` (`roadmap-controls`, `roadmaps`) and
-  one `scrollWidth - window.innerWidth`; the helper compares with `clientWidth`. The two
+- Three sites compared against `window.innerWidth`: two in `roadmap-controls` (`scrollWidth
+<= innerWidth`) and one in `roadmaps` (`scrollWidth - innerWidth`); the helper compares
+  with `clientWidth`. The two
   differ only by a vertical scrollbar, which the suite's headless browser does not draw,
   so the comparison is unchanged in practice.
 - Element-own checks stay: `shell` (the service name's own box), `control-row` (a label),
@@ -74,4 +76,4 @@ apps/editor/tests/e2e` finds 28 lines, of which 16 were page-level expressions (
   touched specs calls `scrollsSideways` at the width its test already set (375 px where
   the test set it; no width changed).
 - Local: `pnpm lint`, `pnpm typecheck`, `pnpm format:check` pass. The E2E specs of the
-  eight touched files were run locally (see the PR's verification).
+  eight touched files ran locally: 167 passed, exit 0, on `9c7a3d31`'s tree.

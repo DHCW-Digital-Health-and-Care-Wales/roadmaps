@@ -379,6 +379,33 @@ describe("Jumping between a roadmap's placements (STY-053)", () => {
     ).toBeInTheDocument()
   })
 
+  it("is used by keyboard alone in Welsh, the arrow keys down to a placement and Enter moving focus to its heading (S7)", async () => {
+    const user = await renderPage({ language: "cy" })
+
+    main().getByRole("button", { name: "Neidio i" }).focus()
+    await user.keyboard("{Enter}")
+    const menu = await screen.findByRole("menu")
+    expect(within(menu).getAllByRole("menuitem")).toHaveLength(7)
+    // From the first item, the unplaced items', down to Hwyrach, the fifth.
+    await waitFor(() => {
+      expect(within(menu).getAllByRole("menuitem")[0]).toHaveFocus()
+    })
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}")
+    expect(
+      within(menu).getByRole("menuitem", { name: /^Hwyrach,/ }),
+    ).toHaveFocus()
+    await user.keyboard("{Enter}")
+
+    await waitFor(() => {
+      expect(
+        main().getByRole("heading", { level: 2, name: "Hwyrach" }),
+      ).toHaveFocus()
+    })
+    expect(
+      main().getByRole("button", { name: "Neidio i: Hwyrach" }),
+    ).toBeInTheDocument()
+  })
+
   it("is Welsh in the links from a tablet's width (S7)", async () => {
     await renderPage({ language: "cy", tablet: true })
 

@@ -25,28 +25,22 @@ import { expect, test } from "./fixtures/test"
 
 const COPY = {
   en: {
-    addItem: "Add an item",
-    more: "More",
     jumpTo: "Jump to",
     links: "Horizons and sections",
     title: "Title",
     done: "Done",
     next: "Next",
-    later: "Later",
     longest: "Recently delivered",
     pending: "2 unpublished changes",
     publish: "Publish changes",
     discard: "Discard all changes",
   },
   cy: {
-    addItem: "Ychwanegu eitem",
-    more: "Mwy",
     jumpTo: "Neidio i",
     links: "Gorwelion ac adrannau",
     title: "Teitl (Saesneg)",
     done: "Gorffen",
     next: "Nesaf",
-    later: "Hwyrach",
     longest: "Wedi'u cyflawni'n ddiweddar",
     pending: "2 newid heb eu cyhoeddi",
     publish: "Cyhoeddi'r newidiadau",
@@ -95,117 +89,62 @@ async function scrollInto(page: Page, name: string) {
   })
 }
 
-for (const language of ["en", "cy"] as const) {
+// A width each side of 768px, where the page offers the placement links in place of Jump to,
+// and 640px, where its stuck strip shows labelled buttons in place of icons; 820, 1024 and
+// 1280px take the branch 768px does. Welsh, whose copy is the longer, runs at the two widths
+// where a row has least room; 375px in Welsh is held by the Welsh phone tests below.
+for (const [language, width] of [
+  ["en", 375],
+  ["en", 640],
+  ["en", 768],
+  ["cy", 640],
+  ["cy", 768],
+] as const) {
   const copy = COPY[language]
-  for (const width of [375, 640, 768, 820, 1024, 1280]) {
-    const tablet = width >= 768
-    test(`shows one jump control at ${String(width)}px in ${language}, the same at the top and once stuck (STY-060 S1, STY-065 S6, S7, D7)`, async ({
-      page,
-      sheets,
-    }) => {
-      await page.setViewportSize({ width, height: 800 })
-      await openLongRoadmap(page, sheets, { language })
-      const strip = page.locator("[data-stuck]")
-
-      if (tablet) {
-        await expect(placementLinks(page, language)).toBeVisible()
-        await expect(jumpTo(page, language)).toHaveCount(0)
-        // Under Add an item and More, which end the title's row.
-        const more = await boxOf(button(page, copy.more))
-        expect(
-          (await boxOf(placementLinks(page, language))).y,
-        ).toBeGreaterThanOrEqual(more.bottom)
-      } else {
-        await expect(jumpTo(page, language)).toBeVisible()
-        await expect(placementLinks(page, language)).toHaveCount(0)
-      }
-
-      await scrollInto(page, copy.next)
-
-      if (tablet) {
-        const shown = strip.getByRole("navigation", { name: copy.links })
-        await expect(shown).toBeInViewport({ ratio: 1 })
-        await expect(shown.getByRole("link")).toHaveCount(6)
-        // The current placement marked, with its count.
-        await expect(
-          shown.getByRole("link", { name: new RegExp(`^${copy.next},`) }),
-        ).toHaveAttribute("aria-current", "location")
-        await expect(jumpTo(page, language)).toHaveCount(0)
-        // Each in view, wrapping onto another line where the six do not fit.
-        for (const link of await shown.getByRole("link").all()) {
-          await expect(link).toBeInViewport({ ratio: 1 })
-        }
-      } else {
-        await expect(
-          strip.getByRole("button", {
-            name: `${copy.jumpTo}: ${copy.next}`,
-          }),
-        ).toBeInViewport({ ratio: 1 })
-        await expect(placementLinks(page, language)).toHaveCount(0)
-      }
-      for (const control of await shownInStuckRow(page)) {
-        await expect(control).toBeInViewport({ ratio: 1 })
-      }
-      expect(await scrollsSideways(page)).toBe(false)
-    })
-  }
-}
-
-test("puts More at the end of the title's row on a phone, and Add an item, Jump to and Compact view on one row below, Jump to across the rest (STY-065 S7, STY-067 S2)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize({ width: 375, height: 800 })
-  await openLongRoadmap(page, sheets)
-
-  const title = await boxOf(
-    page.getByRole("main").getByRole("heading", { level: 1 }),
-  )
-  const add = await boxOf(button(page, "Add an item"))
-  const more = await boxOf(button(page, "More"))
-  const jump = await boxOf(jumpTo(page))
-  const toggle = await boxOf(button(page, "Compact view"))
-  // More is "…" with a chevron, named More, at the end of the title's row.
-  await expect(button(page, "More").locator("svg")).toHaveCount(2)
-  expect(more.width).toBeLessThan(70)
-  expect(more.y).toBeLessThan(title.bottom)
-  expect(Math.abs(more.right - (await contentRight(page)))).toBeLessThan(1)
-  // Add an item as wide as its label, Jump to growing to Compact view at the edge.
-  expect(jump.y).toBe(add.y)
-  expect(jump.x).toBeGreaterThan(add.right)
-  expect(add.width).toBeLessThan(160)
-  expect(add.y).toBeGreaterThanOrEqual(more.bottom)
-  expect(toggle.y).toBe(add.y)
-  expect(toggle.x - jump.right).toBe(12)
-  expect(toggle.width).toBe(40)
-  expect(Math.abs(toggle.right - (await contentRight(page)))).toBeLessThan(1)
-  expect(add.height).toBe(40)
-  expect(jump.height).toBe(40)
-})
-
-for (const language of ["en", "cy"] as const) {
-  test(`puts Add an item and More at the end of the title's row on an iPad, the links under, in ${language} (STY-065 S6)`, async ({
+  const tablet = width >= 768
+  test(`shows one jump control at ${String(width)}px in ${language}, the same at the top and once stuck (STY-060 S1, STY-065 S6, S7, D7)`, async ({
     page,
     sheets,
   }) => {
-    await page.setViewportSize({ width: 820, height: 1180 })
+    await page.setViewportSize({ width, height: 800 })
     await openLongRoadmap(page, sheets, { language })
-    const copy = COPY[language]
+    const strip = page.locator("[data-stuck]")
 
-    const title = await boxOf(
-      page.getByRole("main").getByRole("heading", { level: 1 }),
-    )
-    const add = await boxOf(button(page, copy.addItem))
-    const more = await boxOf(button(page, copy.more))
-    const links = await boxOf(placementLinks(page, language))
-    expect(more.y).toBe(add.y)
-    expect(more.x).toBeGreaterThan(add.right)
-    expect(add.y).toBeLessThan(title.bottom)
-    expect(Math.abs(more.right - (await contentRight(page)))).toBeLessThan(1)
-    expect(links.y).toBeGreaterThanOrEqual(more.bottom)
-    await expect(jumpTo(page, language)).toHaveCount(0)
-    expect(add.height).toBe(40)
-    expect(more.height).toBe(40)
+    if (tablet) {
+      await expect(placementLinks(page, language)).toBeVisible()
+      await expect(jumpTo(page, language)).toHaveCount(0)
+    } else {
+      await expect(jumpTo(page, language)).toBeVisible()
+      await expect(placementLinks(page, language)).toHaveCount(0)
+    }
+
+    await scrollInto(page, copy.next)
+
+    if (tablet) {
+      const shown = strip.getByRole("navigation", { name: copy.links })
+      await expect(shown).toBeInViewport({ ratio: 1 })
+      await expect(shown.getByRole("link")).toHaveCount(6)
+      // The current placement marked, with its count.
+      await expect(
+        shown.getByRole("link", { name: new RegExp(`^${copy.next},`) }),
+      ).toHaveAttribute("aria-current", "location")
+      await expect(jumpTo(page, language)).toHaveCount(0)
+      // Each in view, wrapping onto another line where the six do not fit.
+      for (const link of await shown.getByRole("link").all()) {
+        await expect(link).toBeInViewport({ ratio: 1 })
+      }
+    } else {
+      await expect(
+        strip.getByRole("button", {
+          name: `${copy.jumpTo}: ${copy.next}`,
+        }),
+      ).toBeInViewport({ ratio: 1 })
+      await expect(placementLinks(page, language)).toHaveCount(0)
+    }
+    for (const control of await shownInStuckRow(page)) {
+      await expect(control).toBeInViewport({ ratio: 1 })
+    }
+    expect(await scrollsSideways(page)).toBe(false)
   })
 }
 
@@ -412,46 +351,50 @@ test("keeps a stuck Jump to on one line in Cymraeg on a phone, the longest place
   expect(await scrollsSideways(page)).toBe(false)
 })
 
-for (const language of ["en", "cy"] as const) {
+// Only 640px changes the bar (Publish gains its icon), and Welsh has the longer count, so
+// it runs where the bar is narrowest.
+for (const [language, width] of [
+  ["en", 375],
+  ["en", 640],
+  ["cy", 375],
+] as const) {
   const copy = COPY[language]
-  for (const width of [375, 820, 1280]) {
-    test(`puts the count, Publish and Discard on one row at ${String(width)}px in ${language} (S6)`, async ({
-      page,
-      sheets,
-    }) => {
-      await page.setViewportSize({ width, height: 800 })
-      await openLongRoadmap(page, sheets, { language })
-      await editItems(page, ["Planned work 1", "Planned work 2"], language)
-      await scrollInto(page, copy.next)
+  test(`puts the count, Publish and Discard on one row at ${String(width)}px in ${language} (S6)`, async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width, height: 800 })
+    await openLongRoadmap(page, sheets, { language })
+    await editItems(page, ["Planned work 1", "Planned work 2"], language)
+    await scrollInto(page, copy.next)
 
-      const foot = page.locator("[data-pinned]")
-      const countText = foot.getByText(copy.pending, { exact: true })
-      const publishButton = foot.getByRole("button", { name: copy.publish })
-      const discardButton = foot.getByRole("button", { name: copy.discard })
-      const [count, publish, discard] = [
-        await boxOf(countText),
-        await boxOf(publishButton),
-        await boxOf(discardButton),
-      ]
-      expect(discard.y).toBe(publish.y)
-      expect(publish.x).toBeGreaterThan(count.right)
-      expect(discard.x).toBeGreaterThan(publish.right)
-      // The count beside them, on two lines at most.
-      expect(count.y).toBeLessThan(publish.bottom)
-      expect(count.bottom).toBeGreaterThan(publish.y)
-      const lineHeight = await countText.evaluate((text) =>
-        Number.parseFloat(getComputedStyle(text).lineHeight),
-      )
-      expect(count.height).toBeLessThanOrEqual(2 * lineHeight + 0.5)
-      for (const control of [countText, publishButton, discardButton]) {
-        await expect(control).toBeInViewport({ ratio: 1 })
-      }
-      // On a phone, Publish shows no icon.
-      if (width < 640) await expect(publishButton.locator("svg")).toBeHidden()
-      else await expect(publishButton.locator("svg")).toBeVisible()
-      expect(await scrollsSideways(page)).toBe(false)
-    })
-  }
+    const foot = page.locator("[data-pinned]")
+    const countText = foot.getByText(copy.pending, { exact: true })
+    const publishButton = foot.getByRole("button", { name: copy.publish })
+    const discardButton = foot.getByRole("button", { name: copy.discard })
+    const [count, publish, discard] = [
+      await boxOf(countText),
+      await boxOf(publishButton),
+      await boxOf(discardButton),
+    ]
+    expect(discard.y).toBe(publish.y)
+    expect(publish.x).toBeGreaterThan(count.right)
+    expect(discard.x).toBeGreaterThan(publish.right)
+    // The count beside them, on two lines at most.
+    expect(count.y).toBeLessThan(publish.bottom)
+    expect(count.bottom).toBeGreaterThan(publish.y)
+    const lineHeight = await countText.evaluate((text) =>
+      Number.parseFloat(getComputedStyle(text).lineHeight),
+    )
+    expect(count.height).toBeLessThanOrEqual(2 * lineHeight + 0.5)
+    for (const control of [countText, publishButton, discardButton]) {
+      await expect(control).toBeInViewport({ ratio: 1 })
+    }
+    // On a phone, Publish shows no icon.
+    if (width < 640) await expect(publishButton.locator("svg")).toBeHidden()
+    else await expect(publishButton.locator("svg")).toBeVisible()
+    expect(await scrollsSideways(page)).toBe(false)
+  })
 }
 
 test("keeps Save, for a roadmap not published, on the phone's one row, its name unchanged (S6)", async ({

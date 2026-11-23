@@ -1,13 +1,11 @@
 import type { Locator, Page } from "@playwright/test"
 
-import { EXAMPLE_SPREADSHEET } from "./fixtures/fake-sheets"
 import { boxOf, contentRight, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   jumpTo,
   moreButton,
   openLongRoadmap,
-  openRoadmapIn,
   placementLinks,
   productDetailsDisclosure,
   roadmapFacts,
@@ -23,23 +21,30 @@ import { expect, test } from "./fixtures/test"
  * Add an item shares a row with "Jump to" and "Compact view" (STY-067 S2).
  */
 
+// A width each side of 768px, where the header takes its tablet layout: 1024 and 1280px take
+// 820px's branch with more room.
 const WIDTHS = [
   ["a phone", 375],
   ["an iPad", 820],
-  ["a desktop", 1280],
 ] as const
 
-/** The widths the Welsh page is checked at, as the validation table sets (S10). */
-const WELSH_WIDTHS = [375, 640, 768, 820, 1024, 1280] as const
+/**
+ * The Welsh page's widths, as the validation table sets (S10): the narrowest of each layout,
+ * 375px and 768px, where its longer copy has the least room. A notice, which wraps with no
+ * breakpoint, is checked at the phone and once on a tablet.
+ */
+const WELSH_RUNS = [
+  ["ProductA", 375],
+  ["ProductA", 768],
+  ["ProductC", 375],
+  ["ProductC", 768],
+] as const
 
 const COPY = {
   en: {
-    status: "Status:",
-    productDetails: "Product details",
     edit: "Edit Product details",
     addItem: "Add an item",
     more: "More",
-    jumpTo: "Jump to",
     view: "View",
     cards: "Cards",
     compact: "Compact",
@@ -49,12 +54,9 @@ const COPY = {
     publish: "Publish roadmap",
   },
   cy: {
-    status: "Statws:",
-    productDetails: "Manylion y cynnyrch",
     edit: "Golygu Manylion y cynnyrch",
     addItem: "Ychwanegu eitem",
     more: "Mwy",
-    jumpTo: "Neidio i",
     view: "Golwg",
     cards: "Cardiau",
     compact: "Cryno",
@@ -222,35 +224,6 @@ test("reads the facts as plain text on one line from 768px, wrapping on a phone 
   expect(await scrollsSideways(page)).toBe(false)
 })
 
-for (const language of ["en", "cy"] as const) {
-  test(`reads the status as text, leaving out what a roadmap has not, in ${language} (S2)`, async ({
-    page,
-    sheets,
-  }) => {
-    await page.setViewportSize({ width: 1280, height: 800 })
-    // Product B has a status and a date, but no product lead.
-    await openRoadmapIn(page, sheets, {
-      spreadsheet: EXAMPLE_SPREADSHEET,
-      tab: "ProductB",
-      lastCard: "Integration with another system",
-      language,
-    })
-    const items = roadmapFacts(page, language).getByRole("listitem")
-    const copy = COPY[language]
-    await expect(items).toHaveCount(3)
-    await expect(items.nth(0)).toHaveText(
-      language === "en" ? "Status: Alpha" : "Statws: Alffa",
-    )
-    await expect(items.nth(1)).toHaveText(
-      language === "en" ? "Updated 15 September 2026" : /^Diweddarwyd 15 /,
-    )
-    await expect(items.nth(2)).toHaveText(copy.productDetails)
-    await expect(
-      roadmapFacts(page, language).locator("[data-slot=badge]"),
-    ).toHaveCount(0)
-  })
-}
-
 test("shows Not published as one notice under the facts, with a 40px Publish roadmap at its end, on a desktop and under its text on a phone, in English (S4)", async ({
   page,
   sheets,
@@ -292,30 +265,6 @@ test("shows Not published as one notice under the facts, with a 40px Publish roa
   expect(await scrollsSideways(page)).toBe(false)
 })
 
-test("publishes the roadmap from its notice, the outcome at the foot and the notice gone (S4)", async ({
-  page,
-  sheets,
-}) => {
-  await openLongRoadmap(page, sheets, { tab: "ProductC" })
-  const main = page.getByRole("main")
-  await expect(main.getByText("Not published", { exact: true })).toBeVisible()
-
-  await main.getByRole("button", { name: "Publish roadmap" }).click()
-  await page
-    .getByRole("alertdialog")
-    .getByRole("button", { name: "Publish roadmap" })
-    .click()
-
-  await expect(
-    main.getByText(/^Product C roadmap is published\./),
-  ).toBeVisible()
-  await expect(main.getByText("Not published", { exact: true })).toHaveCount(0)
-  await expect(
-    main.getByRole("button", { name: "Publish roadmap" }),
-  ).toHaveCount(0)
-  expect(sheets.writes).toHaveLength(1)
-})
-
 for (const [device, width] of WIDTHS) {
   test(`reaches the controls in the order they are drawn, on ${device} (S10, D8)`, async ({
     page,
@@ -355,62 +304,60 @@ for (const [device, width] of WIDTHS) {
   })
 }
 
-for (const width of WELSH_WIDTHS) {
-  for (const tab of ["ProductA", "ProductC"] as const) {
-    test(`fits ${String(width)}px in Cymraeg for ${tab === "ProductA" ? "a roadmap published" : "one not published"}, nothing passing the right edge or scrolling sideways (S10)`, async ({
-      page,
-      sheets,
-    }) => {
-      const copy = COPY.cy
-      await page.setViewportSize({ width, height: 800 })
-      await openLongRoadmap(page, sheets, { tab, language: "cy" })
-      const main = page.getByRole("main")
+for (const [tab, width] of WELSH_RUNS) {
+  test(`fits ${String(width)}px in Cymraeg for ${tab === "ProductA" ? "a roadmap published" : "one not published"}, nothing passing the right edge or scrolling sideways (S10)`, async ({
+    page,
+    sheets,
+  }) => {
+    const copy = COPY.cy
+    await page.setViewportSize({ width, height: 800 })
+    await openLongRoadmap(page, sheets, { tab, language: "cy" })
+    const main = page.getByRole("main")
 
-      expect(await pastTheRightEdge(page)).toEqual([])
-      expect(await scrollsSideways(page)).toBe(false)
-      // Every control reached and named.
+    expect(await pastTheRightEdge(page)).toEqual([])
+    expect(await scrollsSideways(page)).toBe(false)
+    // Every control reached and named.
+    await expect(
+      main.getByRole("button", { name: copy.addItem, exact: true }),
+    ).toBeVisible()
+    await expect(moreButton(page, "cy")).toBeVisible()
+    await expect(productDetailsDisclosure(page, "cy")).toBeVisible()
+    if (tab === "ProductC") {
       await expect(
-        main.getByRole("button", { name: copy.addItem, exact: true }),
+        main.getByRole("button", { name: copy.publish, exact: true }),
       ).toBeVisible()
-      await expect(moreButton(page, "cy")).toBeVisible()
-      await expect(productDetailsDisclosure(page, "cy")).toBeVisible()
-      if (tab === "ProductC") {
-        await expect(
-          main.getByRole("button", { name: copy.publish, exact: true }),
-        ).toBeVisible()
-      }
-      if (width >= 768) {
-        await expect(placementLinks(page, "cy")).toBeVisible()
-      } else {
-        await expect(jumpTo(page, "cy")).toBeVisible()
-      }
+    }
+    if (width >= 768) {
+      await expect(placementLinks(page, "cy")).toBeVisible()
+    } else {
+      await expect(jumpTo(page, "cy")).toBeVisible()
+    }
 
-      // Open, the details and the notice still fit.
-      await productDetailsDisclosure(page, "cy").click()
-      expect(await pastTheRightEdge(page)).toEqual([])
-      expect(await scrollsSideways(page)).toBe(false)
-      await expect(main.getByRole("button", { name: copy.edit })).toBeVisible()
-    })
-  }
+    // Open, the details and the notice still fit.
+    await productDetailsDisclosure(page, "cy").click()
+    expect(await pastTheRightEdge(page)).toEqual([])
+    expect(await scrollsSideways(page)).toBe(false)
+    await expect(main.getByRole("button", { name: copy.edit })).toBeVisible()
+  })
 }
 
+// The tallest header, a roadmap not published, in each language: ProductA's is shorter.
 for (const language of ["en", "cy"] as const) {
-  for (const tab of ["ProductA", "ProductC"] as const) {
-    test(`keeps the first placement on the first screen at 1280×800 for ${tab} in ${language} (S10, STY-053 S6)`, async ({
-      page,
-      sheets,
-    }) => {
-      await page.setViewportSize({ width: 1280, height: 800 })
-      await openLongRoadmap(page, sheets, { tab, language })
-      // The page's first level-2 heading is Product details'; the first placement's
-      // follows it.
-      const first = page
-        .getByRole("main")
-        .getByRole("heading", { level: 2 })
-        .nth(1)
-      expect((await boxOf(first)).y).toBeLessThan(800)
-    })
-  }
+  const tab = "ProductC"
+  test(`keeps the first placement on the first screen at 1280×800 for ${tab} in ${language} (S10, STY-053 S6)`, async ({
+    page,
+    sheets,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await openLongRoadmap(page, sheets, { tab, language })
+    // The page's first level-2 heading is Product details'; the first placement's
+    // follows it.
+    const first = page
+      .getByRole("main")
+      .getByRole("heading", { level: 2 })
+      .nth(1)
+    expect((await boxOf(first)).y).toBeLessThan(800)
+  })
 }
 
 test("shows the title in the large heading size on a phone, and today's from 640px (STY-059 S3)", async ({

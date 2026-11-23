@@ -1,13 +1,13 @@
 import type { Page } from "@playwright/test"
 
-import { confirmPublish, openEditRoadmapDialog } from "./fixtures/dialogs"
 import { roadmapFacts } from "./fixtures/roadmap-page"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
- * A Product Lead sets when a roadmap was last updated (STY-036), against the fake Sheets
- * API: a pending date from the roadmap dialog, or today's date ticked when publishing, each
- * written to the index's `Last updated` cell as `YYYY-MM-DD` text.
+ * A Product Lead sets when a roadmap was last updated (STY-036). Its page test holds the
+ * journeys (a pending date, Today, the refusal of a later date, the tick box beside a
+ * publish); this is the one round trip, against the fake Sheets API, of today's date by the
+ * browser's clock written to the index's `Last updated` cell as `YYYY-MM-DD` text.
  */
 
 /** The index cell of the row whose `Sheet` is `sheet`, in the column headed `column`. */
@@ -29,111 +29,29 @@ async function open(page: Page, id: string, title: string) {
   await expect(page.getByRole("heading", { level: 3 }).first()).toBeVisible()
 }
 
-test("publishes a date picked in the roadmap dialog as YYYY-MM-DD text (S2, S8)", async ({
+test.beforeEach(async ({ page }) => {
+  // 2 July in Europe/London, the browser's zone here, though 1 July in UTC.
+  await page.clock.setFixedTime(new Date("2026-07-01T23:30:00Z"))
+})
+
+test("writes today's date with Enabled when ticked on Publish roadmap (D10)", async ({
   page,
   sheets,
 }) => {
-  await open(page, "productb", "Product B roadmap")
+  await open(page, "productc", "Product C roadmap")
   const main = page.getByRole("main")
-  await expect(roadmapFacts(page)).toContainText("Updated 15 September 2026")
 
-  const editing = await openEditRoadmapDialog(page)
-  const field = editing.getByLabel("Roadmap last updated")
-  await expect(field).toHaveValue("2026-09-15")
-  await field.fill("2026-11-10")
-  await editing.getByRole("button", { name: "Done" }).click()
-  await expect(roadmapFacts(page)).toContainText("Updated 10 November 2026")
-  await expect(main.getByText("1 unpublished change")).toBeVisible()
-  expect(sheets.writes).toEqual([])
-
-  await main.getByRole("button", { name: "Publish changes" }).click()
+  await main.getByRole("button", { name: "Publish roadmap" }).click()
   const dialog = page.getByRole("alertdialog")
-  // Named among the product details, as the review names it (STY-065 S9).
+  await dialog.getByRole("checkbox", { name: "Mark as updated today" }).click()
+  await dialog.getByRole("button", { name: "Publish roadmap" }).click()
+
   await expect(
-    dialog.getByRole("listitem").filter({ hasText: "Product details" }),
-  ).toHaveText(/Product details\s*Roadmap last updated/)
-  await expect(
-    dialog.getByRole("checkbox", { name: "Mark as updated today" }),
-  ).toHaveCount(0)
-  await confirmPublish(page)
+    main.getByText(/^Product C roadmap is published\./),
+  ).toBeVisible()
+  await expect(roadmapFacts(page)).toContainText("Updated 2 July 2026")
   expect(sheets.writes).toHaveLength(1)
   const [index] = sheets.spreadsheet
-  // Read back as displayed: written as text, it shows as it was written.
-  expect(indexCell(index?.rows, "ProductB", "Last updated")).toBe("2026-11-10")
-})
-
-test.describe("today, by the browser's clock (D11)", () => {
-  test.beforeEach(async ({ page }) => {
-    // 2 July in Europe/London, the browser's zone here, though 1 July in UTC.
-    await page.clock.setFixedTime(new Date("2026-07-01T23:30:00Z"))
-  })
-
-  test("fills today with Today, and refuses a later date (S3, S4)", async ({
-    page,
-  }) => {
-    await open(page, "producta", "Product A roadmap")
-    const editing = await openEditRoadmapDialog(page)
-    const field = editing.getByLabel("Roadmap last updated")
-    await expect(field).toHaveAttribute("max", "2026-07-02")
-
-    await field.fill("2026-07-03")
-    await editing.getByRole("button", { name: "Done" }).click()
-    await expect(field).toHaveAccessibleDescription(
-      "Error: Enter today's date or an earlier one",
-    )
-    await expect(field).toBeFocused()
-
-    await editing.getByRole("button", { name: "Today" }).click()
-    await expect(field).toHaveValue("2026-07-02")
-  })
-
-  test("writes today's date with the changes when ticked (S6)", async ({
-    page,
-    sheets,
-  }) => {
-    await open(page, "producta", "Product A roadmap")
-    const main = page.getByRole("main")
-    const editing = await openEditRoadmapDialog(page)
-    await editing.getByRole("textbox", { name: "Status" }).fill("Live")
-    await editing.getByRole("button", { name: "Done" }).click()
-
-    await main.getByRole("button", { name: "Publish changes" }).click()
-    const dialog = page.getByRole("alertdialog")
-    const box = dialog.getByRole("checkbox", { name: "Mark as updated today" })
-    await expect(box).not.toBeChecked()
-    await box.click()
-    await confirmPublish(page)
-    expect(sheets.writes).toHaveLength(1)
-    const [index] = sheets.spreadsheet
-    expect(indexCell(index?.rows, "ProductA", "Status label")).toBe("Live")
-    expect(indexCell(index?.rows, "ProductA", "Last updated")).toBe(
-      "2026-07-02",
-    )
-  })
-
-  test("writes today's date with Enabled when ticked on Publish roadmap (D10)", async ({
-    page,
-    sheets,
-  }) => {
-    await open(page, "productc", "Product C roadmap")
-    const main = page.getByRole("main")
-
-    await main.getByRole("button", { name: "Publish roadmap" }).click()
-    const dialog = page.getByRole("alertdialog")
-    await dialog
-      .getByRole("checkbox", { name: "Mark as updated today" })
-      .click()
-    await dialog.getByRole("button", { name: "Publish roadmap" }).click()
-
-    await expect(
-      main.getByText(/^Product C roadmap is published\./),
-    ).toBeVisible()
-    await expect(roadmapFacts(page)).toContainText("Updated 2 July 2026")
-    expect(sheets.writes).toHaveLength(1)
-    const [index] = sheets.spreadsheet
-    expect(indexCell(index?.rows, "ProductC", "Enabled")).toBe("Yes")
-    expect(indexCell(index?.rows, "ProductC", "Last updated")).toBe(
-      "2026-07-02",
-    )
-  })
+  expect(indexCell(index?.rows, "ProductC", "Enabled")).toBe("Yes")
+  expect(indexCell(index?.rows, "ProductC", "Last updated")).toBe("2026-07-02")
 })

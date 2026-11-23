@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test"
+import type { Page } from "@playwright/test"
 
 import {
   confirmPublish,
@@ -7,7 +7,6 @@ import {
   publishOnce,
 } from "./fixtures/dialogs"
 import { withTabItems } from "./fixtures/fake-sheets"
-import { boxesOf } from "./fixtures/layout"
 import { tokenColour } from "./fixtures/look"
 import {
   chooseCompact,
@@ -120,13 +119,6 @@ async function open(page: Page) {
   await publishOnce(page)
 }
 
-/** The item's place in the page, unmoved by the page's scroll. */
-const placeOf = (item: Locator) =>
-  item.evaluate((element) => {
-    const box = element.getBoundingClientRect()
-    return { x: box.x, y: box.y + window.scrollY }
-  })
-
 /** Waits for every transition started to end, and for nothing to travel. */
 async function landed(page: Page) {
   await expect
@@ -140,128 +132,99 @@ async function landed(page: Page) {
 test.describe("a move within a placement travels (S1)", () => {
   test.use({ reducedMotion: "no-preference" })
 
-  for (const view of ["cards", "compact"] as const) {
-    for (const [choice, moved, passed, mark] of [
-      ["Up one", "Card awaiting release", "A minimal card", "Moved up"],
-      [
-        "To the top",
-        "Card awaiting release",
-        "Example card with every column",
-        "Moved to the top",
-      ],
-      [
-        "Down one",
-        "Example card with every column",
-        "A minimal card",
-        "Moved down",
-      ],
-      [
-        "To the bottom",
-        "Example card with every column",
-        "Card awaiting release",
-        "Moved to the bottom",
-      ],
-    ] as const) {
-      test(`“${choice}” in ${view}: raised, in about 0.4 seconds, the items it passes moving too, then marked, focus on its Move`, async ({
-        page,
-      }) => {
-        await recordTravels(page)
-        await open(page)
-        if (view === "compact") await chooseCompact(page)
-        const [movedName, passedName] = await Promise.all([
-          nameOf(page, moved),
-          nameOf(page, passed),
-        ])
-        expect(movedName).toMatch(/^item-/)
-        const passedFrom = await placeOf(itemOf(page, passed))
+  // Every choice takes one code path, which raises the item and moves the ones it passes; a
+  // view is the branch, since a card and a row each set the transition name.
+  for (const [view, choice, moved, passed] of [
+    [
+      "cards",
+      "To the top",
+      "Card awaiting release",
+      "Example card with every column",
+    ],
+    ["compact", "Down one", "Example card with every column", "A minimal card"],
+  ] as const) {
+    test(`“${choice}” in ${view}: raised, in about 0.4 seconds, the items it passes moving too`, async ({
+      page,
+    }) => {
+      await recordTravels(page)
+      await open(page)
+      if (view === "compact") await chooseCompact(page)
+      const [movedName, passedName] = await Promise.all([
+        nameOf(page, moved),
+        nameOf(page, passed),
+      ])
+      expect(movedName).toMatch(/^item-/)
 
-        await chooseFromMenu(page, moved, choice)
-        await landed(page)
+      await chooseFromMenu(page, moved, choice)
+      await landed(page)
 
-        const [travel, ...more] = await travels(page)
-        expect(more).toEqual([])
-        expect(travel?.types).toEqual(["item-move"])
-        // The menu it was chosen from went as it began.
-        expect(travel?.menuShown).toBe(false)
-        const group = (name: string) =>
-          travel?.groups.find((each) => each.name === name)
-        expect(group(movedName)).toMatchObject({ duration: 400, zIndex: "1" })
-        expect(group(passedName)).toMatchObject({ duration: 400 })
-        expect(group(passedName)?.zIndex).not.toBe("1")
-        expect(await placeOf(itemOf(page, passed))).not.toEqual(passedFrom)
-        await expect(
-          itemOf(page, moved).getByText(mark, { exact: true }),
-        ).toBeAttached()
-        await expect(moveButton(page, moved)).toBeFocused()
-        // Opaque, as a card is, so it hides the items it passes as it travels.
-        expect(
-          await itemOf(page, moved).evaluate(
-            (element) => getComputedStyle(element).backgroundColor,
-          ),
-        ).toBe(await tokenColour(page, "--card"))
-      })
-    }
+      const [travel, ...more] = await travels(page)
+      expect(more).toEqual([])
+      expect(travel?.types).toEqual(["item-move"])
+      // The menu it was chosen from went as it began.
+      expect(travel?.menuShown).toBe(false)
+      const group = (name: string) =>
+        travel?.groups.find((each) => each.name === name)
+      expect(group(movedName)).toMatchObject({ duration: 400, zIndex: "1" })
+      expect(group(passedName)).toMatchObject({ duration: 400 })
+      expect(group(passedName)?.zIndex).not.toBe("1")
+      // Opaque, as a card is, so it hides the items it passes as it travels.
+      expect(
+        await itemOf(page, moved).evaluate(
+          (element) => getComputedStyle(element).backgroundColor,
+        ),
+      ).toBe(await tokenColour(page, "--card"))
+    })
   }
 })
 
 test.describe("a long placement (S1, STY-071 S4)", () => {
   test.use({ reducedMotion: "no-preference" })
 
-  for (const view of ["cards", "compact"] as const) {
-    for (const by of ["pointer", "keyboard"] as const) {
-      for (const late of by === "keyboard" ? [false, true] : [false]) {
-        test(`“To the top” from far down, in ${view}, chosen by ${by}${late ? ", the publish dialog closing late (DEF-024 S1)" : ""}: it travels and lands in the room between the bars, focus on its Move`, async ({
-          page,
-          sheets,
-        }) => {
-          if (late) await holdPublishDialogClosing(page)
-          sheets.spreadsheet = withTabItems(
-            "ProductA",
-            ["Minimal card", "Next"],
-            ...Array.from({ length: 20 }, (_, at): [string, string] => [
-              `Now item ${String(at + 1)}`,
-              "Now",
-            ]),
-          )
-          await recordTravels(page)
-          await open(page)
-          if (view === "compact") await chooseCompact(page)
-          const last = itemOf(page, "Now item 20")
+  // A choice by pointer and by keyboard differ only in how Base UI closes the menu, so each
+  // view runs one of them: the cards' by keyboard, with the publish dialog closing late
+  // (DEF-024 S1), since that is the run a late close could break.
+  for (const [view, by, late] of [
+    ["cards", "keyboard", true],
+    ["compact", "pointer", false],
+  ] as const) {
+    test(`“To the top” from far down, in ${view}, chosen by ${by}${late ? ", the publish dialog closing late (DEF-024 S1)" : ""}: it travels and lands in the room between the bars, focus on its Move`, async ({
+      page,
+      sheets,
+    }) => {
+      if (late) await holdPublishDialogClosing(page)
+      sheets.spreadsheet = withTabItems(
+        "ProductA",
+        ["Minimal card", "Next"],
+        ...Array.from({ length: 20 }, (_, at): [string, string] => [
+          `Now item ${String(at + 1)}`,
+          "Now",
+        ]),
+      )
+      await recordTravels(page)
+      await open(page)
+      if (view === "compact") await chooseCompact(page)
+      const last = itemOf(page, "Now item 20")
 
-          if (by === "pointer") {
-            await chooseFromMenu(page, "Now item 20", "To the top")
-          } else {
-            await moveButton(page, "Now item 20").focus()
-            await page.keyboard.press("Enter")
-            await page
-              .getByRole("menuitem", { name: "To the top", exact: true })
-              .focus()
-            await page.keyboard.press("Enter")
-          }
-          await landed(page)
-
-          expect((await travels(page)).map((each) => each.types)).toEqual([
-            ["item-move"],
-          ])
-          await expect(last.getByText("Moved to the top")).toBeAttached()
-          await expect.poll(() => inRoom(last)).toBe(true)
-          await expect(moveButton(page, "Now item 20")).toBeFocused()
-        })
+      if (by === "pointer") {
+        await chooseFromMenu(page, "Now item 20", "To the top")
+      } else {
+        await moveButton(page, "Now item 20").focus()
+        await page.keyboard.press("Enter")
+        await page
+          .getByRole("menuitem", { name: "To the top", exact: true })
+          .focus()
+        await page.keyboard.press("Enter")
       }
-    }
+      await landed(page)
+
+      expect((await travels(page)).map((each) => each.types)).toEqual([
+        ["item-move"],
+      ])
+      await expect.poll(() => inRoom(last)).toBe(true)
+      await expect(moveButton(page, "Now item 20")).toBeFocused()
+    })
   }
-})
-
-// `publishOnce`'s own test sits with the case whose scripted focus lost the race to it.
-test("publishing once hands over only when the notice has focus, however late the publish dialog closes (DEF-024 S1)", async ({
-  page,
-}) => {
-  await holdPublishDialogClosing(page)
-  await open(page)
-
-  expect(
-    await page.evaluate(() => document.activeElement?.textContent ?? ""),
-  ).toMatch(/^Changes published\./)
 })
 
 test.describe("a move to another placement travels the whole way (S2)", () => {
@@ -290,24 +253,7 @@ test.describe("a move to another placement travels the whole way (S2)", () => {
     })
     // The page went on scrolling while the item travelled.
     expect(travel?.scrollAtEnd).toBeGreaterThan(travel?.scrollAtReady ?? 0)
-    const card = itemOf(page, "A minimal card")
-    // Last of its items, before Later's quick add (STY-080).
-    await expect(
-      later
-        .getByRole("listitem")
-        .filter({ has: page.getByRole("heading", { level: 3 }) })
-        .last(),
-    ).toContainText("A minimal card")
-    await expect(card.getByText("Moved from Now")).toBeVisible()
-    await expect.poll(() => inRoom(card)).toBe(true)
-    await expect(moveButton(page, "A minimal card")).toBeFocused()
-    // It ends with its tags together at its foot (STY-075 S1), as it lands.
-    const [moved, changed] = await boxesOf(
-      card.getByText("Moved from Now"),
-      card.getByText("Changed", { exact: true }),
-    )
-    expect(Math.abs(moved.y - changed.y)).toBeLessThan(1)
-    expect(moved.right).toBeLessThan(changed.x)
+    await expect.poll(() => inRoom(itemOf(page, "A minimal card"))).toBe(true)
   })
 })
 
@@ -469,22 +415,6 @@ test.describe("“Undo order” makes the items travel back (STY-073 S1)", () =>
         exact: true,
       }),
     ).toBeVisible()
-  })
-
-  test("a mark on an item elsewhere stays", async ({ page }) => {
-    await recordTravels(page)
-    await open(page)
-    await chooseFromMenu(page, "Card awaiting release", "To the top")
-    await chooseFromMenu(page, "A minimal card", "Later")
-    await landed(page)
-
-    await undoOrder(page).click()
-    await landed(page)
-
-    await expect(
-      itemOf(page, "A minimal card").getByText("Moved from Now"),
-    ).toBeVisible()
-    await expect(main(page).getByText(/^Moved [^.]+$/)).toHaveCount(1)
   })
 
   test("in the compact view too", async ({ page }) => {

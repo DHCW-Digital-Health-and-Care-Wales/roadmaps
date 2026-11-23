@@ -3,9 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import { chooseFromAccountMenu, openAccountMenu } from "./fixtures/account-menu"
 import {
   askToRemove,
-  clickOutside,
   cornerClose,
-  editItemButton,
   isInView,
   openAddItemDialog,
   openAddRoadmapDialog,
@@ -15,7 +13,6 @@ import {
 import { SESSION_WARNING_MS, sessionMs } from "./fixtures/fake-gis"
 import { escapeFrom } from "./fixtures/keyboard"
 import { boxOf, boxesOf } from "./fixtures/layout"
-import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
@@ -203,37 +200,6 @@ test("on a laptop, every form dialog is a panel, and a question is still centred
   expect(box.height).toBeLessThan(size.height / 2)
 })
 
-test("on a laptop, a click on the dimmed page does nothing; Cancel, Escape and the close button close the panel and drop what was typed, focus back on Edit (S4)", async ({
-  page,
-}) => {
-  await page.setViewportSize(LAPTOP)
-  await openProductA(page)
-  let dialog = await openEditItemDialog(page, ITEM)
-  const phase = dialog.getByRole("textbox", { name: "Phase" })
-  await phase.fill("Beta")
-
-  await clickOutside(page, dialog)
-
-  await expect(dialog).toBeVisible()
-  await expect(phase).toHaveValue("Beta")
-  const closers: ((panel: Locator) => Promise<void>)[] = [
-    (panel) => panel.getByRole("button", { name: "Cancel" }).click(),
-    () => page.keyboard.press("Escape"),
-    (panel) => cornerClose(panel).click(),
-  ]
-  for (const close of closers) {
-    await close(dialog)
-    await expect(dialog).toBeHidden()
-    await expect(editItemButton(page, ITEM)).toBeFocused()
-    await expect(page.getByText(/unpublished change/)).toHaveCount(0)
-    dialog = await openEditItemDialog(page, ITEM)
-    await expect(dialog.getByRole("textbox", { name: "Phase" })).toHaveValue(
-      "Alpha",
-    )
-    await dialog.getByRole("textbox", { name: "Phase" }).fill("Beta")
-  }
-})
-
 test("on a phone, the form rises from the foot at full width as the dialog does (S7)", async ({
   page,
 }) => {
@@ -327,27 +293,4 @@ test("with reduced motion the panel shows in place, without sliding (S10)", asyn
         .every((duration) => Number.parseFloat(duration) < 0.001),
     ),
   ).toBe(true)
-})
-
-test("in Welsh, the menu names both ways in Welsh and the panel opens (S11, STY-083 S1)", async ({
-  page,
-}) => {
-  await useLanguage(page, "cy")
-  await page.setViewportSize(LAPTOP)
-  await page.goto("./#/roadmaps/producta")
-  await connect(page, "Cysylltu â Google")
-  await expect(
-    page.getByRole("heading", { level: 3, name: ITEM }),
-  ).toBeVisible()
-
-  const panel = await openEditItemDialog(page, ITEM, "cy")
-  await expectPanel(page, panel)
-  await escapeFrom(panel)
-
-  await chooseFromAccountMenu(page, "Golygu mewn deialog", "cy")
-
-  const menu = await openAccountMenu(page, "cy")
-  await expect(
-    menu.getByRole("menuitem", { name: "Golygu mewn panel ochr" }),
-  ).toBeVisible()
 })

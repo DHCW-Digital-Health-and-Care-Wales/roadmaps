@@ -2,11 +2,10 @@ import type { Locator, Page } from "@playwright/test"
 
 import { openEditItemDialog } from "./fixtures/dialogs"
 import { type FakeTab, withTabItems } from "./fixtures/fake-sheets"
-import { escapeFrom, tabTo } from "./fixtures/keyboard"
+import { escapeFrom } from "./fixtures/keyboard"
 import { boxOf, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
-  productDetails,
   focusClearOfBars,
   jumpTo,
   openLongRoadmap,
@@ -184,41 +183,6 @@ async function retitle(page: Page, title: string) {
   await expect(form).toBeHidden()
 }
 
-test("shows each placement's count in the links and marks those with pending changes (S2)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize(DESKTOP)
-  await openSmallRoadmap(page, sheets)
-  await retitle(page, "Now item 3")
-
-  const now = placementLinks(page).getByRole("link", { name: /^Now,/ })
-  await expect(now).toHaveAccessibleName("Now, 7 items, unpublished changes")
-  await expect(now).toContainText("7")
-  await expect(
-    placementLinks(page).getByRole("link", { name: /^Next,/ }),
-  ).toHaveAccessibleName("Next, 2 items")
-})
-
-test("shows each placement's count in Jump to and marks those with pending changes (S2)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize(PHONE)
-  await openSmallRoadmap(page, sheets)
-  await retitle(page, "Now item 3")
-
-  await jumpTo(page).click()
-  const menu = page.getByRole("menu")
-  await expect(
-    menu.getByRole("menuitem", { name: /^Now,/ }),
-  ).toHaveAccessibleName("Now, 7 items, unpublished changes")
-  await expect(menu.getByRole("menuitem", { name: /^Now,/ })).toContainText("7")
-  await expect(
-    menu.getByRole("menuitem", { name: /^Next,/ }),
-  ).toHaveAccessibleName("Next, 2 items")
-})
-
 for (const motion of ["reduce", "no-preference"] as const) {
   test.describe(`the open menu, reducedMotion ${motion}`, () => {
     test.use({ reducedMotion: motion })
@@ -307,21 +271,12 @@ test("marks the placement the page is in, in the links, and none at the top (S3,
   await expect(next).not.toHaveAttribute("aria-current")
 })
 
-test("reaches the unplaced items, and an empty placement, which offers its first item (S4, S5, STY-080 S1)", async ({
+test("reaches an empty placement, which offers its first item, and keeps it the current one (S5, STY-080 S1)", async ({
   page,
   sheets,
 }) => {
   await page.setViewportSize(DESKTOP)
   await openSmallRoadmap(page, sheets)
-  const unplaced = placementLinks(page).getByRole("link").first()
-  await expect(unplaced).toHaveAccessibleName(
-    "Not on the public roadmap, 1 item",
-  )
-
-  await unplaced.click()
-  await expect(
-    placementHeading(page, "Not on the public roadmap"),
-  ).toBeFocused()
 
   await placementLinks(page)
     .getByRole("link", { name: /^Not doing,/ })
@@ -335,48 +290,6 @@ test("reaches the unplaced items, and an empty placement, which offers its first
   await expect(
     placementLinks(page).getByRole("link", { name: /^Not doing,/ }),
   ).toHaveAttribute("aria-current", "location")
-})
-
-test("keeps Product details closed, so the first placement starts on the first screen at 1280×800 (S6, STY-059 S8, STY-065 S10)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize(DESKTOP)
-  await openLongRoadmap(page, sheets)
-
-  const region = productDetails(page)
-  await expect(region.getByRole("term")).toHaveCount(0)
-  // One line: the facts ending in its disclosure, at 1280px.
-  expect((await boxOf(region)).height).toBeLessThan(50)
-  expect(
-    await topOf(placementHeading(page, "Recently delivered")),
-  ).toBeLessThan(DESKTOP.height)
-})
-
-test("is used by keyboard alone, in Cymraeg on a 375px phone, with no sideways scroll (S7)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize(PHONE)
-  await openSmallRoadmap(page, sheets, "cy")
-
-  await tabTo(page, jumpTo(page, "cy"), "Tab", 40)
-  await page.keyboard.press("Enter")
-  const menu = page.getByRole("menu")
-  await expect(menu.getByRole("menuitem")).toHaveCount(7)
-  // From the first item, the unplaced items', down to Later, the fifth.
-  await expect(menu.getByRole("menuitem").first()).toBeFocused()
-  for (let down = 0; down < 4; down += 1) await page.keyboard.press("ArrowDown")
-  await expect(
-    menu.getByRole("menuitem", { name: new RegExp(`^${COPY.cy.later},`) }),
-  ).toBeFocused()
-  await page.keyboard.press("Enter")
-  await expect(placementHeading(page, COPY.cy.later)).toBeFocused()
-  await expect(jumpTo(page, "cy")).toHaveAccessibleName("Neidio i: Hwyrach")
-
-  // "Jump to" alone: no row of links on a phone (STY-060 S1).
-  await expect(placementLinks(page, "cy")).toHaveCount(0)
-  expect(await scrollsSideways(page)).toBe(false)
 })
 
 // The longest name but the first placement's, which sits too close under the header

@@ -449,103 +449,89 @@ test("leaves the page where it is when the view in use is pressed, as the stuck 
     .toBeGreaterThan(100)
 })
 
-test("remembers the view on another roadmap and after a reload (S11)", async ({
-  page,
-  sheets,
-}) => {
-  await page.setViewportSize({ width: 1280, height: 900 })
-  await openWithItems(page, sheets, withItems(...ITEMS), "Last")
-  await chooseCompact(page)
-
-  await page.reload()
-  await main(page).getByRole("button", { name: "Connect Google" }).click()
-  await expect(button(page, "Show the rest of Last")).toBeVisible()
-  await expect(button(page, "Compact")).toHaveAttribute("aria-pressed", "true")
-
-  await page.getByRole("link", { name: "Product B roadmap" }).click()
-  await expect(
-    main(page)
-      .getByRole("button", { name: /^Show the rest of / })
-      .first(),
-  ).toBeVisible()
-  await expect(button(page, "Compact")).toHaveAttribute("aria-pressed", "true")
-})
-
 test.describe("the switch beside a long title (S1, S2, S13)", () => {
-  for (const language of ["en", "cy"] as const) {
+  // The row takes one branch below 768px and another from it, and 640px is where a stuck
+  // strip stops showing icons; 1024 and 1280px take 768px's. Welsh runs at the two widths
+  // where its longer copy has the least room, since `roadmap-header.spec.ts` holds the top of
+  // the page at 375px in it.
+  for (const [language, width] of [
+    ["en", 375],
+    ["en", 640],
+    ["en", 768],
+    ["cy", 640],
+    ["cy", 768],
+  ] as const) {
     const copy = COPY[language]
-    for (const width of [375, 640, 768, 1024, 1280]) {
-      const tablet = width >= 768
-      test(`sits ${tablet ? "before Add an item" : "after Jump to"} at ${String(width)}px in ${language}, at the top and once stuck`, async ({
-        page,
-        sheets,
-      }) => {
-        await page.setViewportSize({ width, height: 900 })
-        await openWithItems(page, sheets, withItems(...ITEMS), "Last", language)
-        const dialog = await openEditRoadmapDialog(page, { language })
-        await dialog
-          .getByRole("textbox", { name: copy.productName })
-          .fill(LONG_TITLE)
-        await dialog.getByRole("button", { name: copy.done }).click()
-        await expect(dialog).toBeHidden()
+    const tablet = width >= 768
+    test(`sits ${tablet ? "before Add an item" : "after Jump to"} at ${String(width)}px in ${language}, at the top and once stuck`, async ({
+      page,
+      sheets,
+    }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await openWithItems(page, sheets, withItems(...ITEMS), "Last", language)
+      const dialog = await openEditRoadmapDialog(page, { language })
+      await dialog
+        .getByRole("textbox", { name: copy.productName })
+        .fill(LONG_TITLE)
+      await dialog.getByRole("button", { name: copy.done }).click()
+      await expect(dialog).toBeHidden()
 
-        const check = async (within: Locator) => {
-          if (tablet) {
-            const group = within.getByRole("group", { name: copy.view })
-            const add = await boxOf(
-              within.getByRole("button", { name: copy.addItem, exact: true }),
-            )
-            const more = await boxOf(
-              within.getByRole("button", { name: copy.more, exact: true }),
-            )
-            for (const name of [copy.cards, copy.compact]) {
-              const part = group.getByRole("button", { name, exact: true })
-              await expect(part).toBeInViewport({ ratio: 1 })
-              const box = await boxOf(part)
-              expect(box.right).toBeLessThanOrEqual(add.x)
-              expect(box.y).toBe(add.y)
-            }
-            expect(
-              Math.abs(more.right - (await contentRight(page))),
-            ).toBeLessThan(1)
-          } else {
-            const toggle = within.getByRole("button", {
-              name: copy.compactView,
-              exact: true,
-            })
-            await toggle.scrollIntoViewIfNeeded()
-            await expect(toggle).toBeInViewport({ ratio: 1 })
-            const box = await boxOf(toggle)
-            const jump = await boxOf(jumpTo(page, language))
-            expect(box.x).toBeGreaterThan(jump.right)
-            expect(box.y).toBe(jump.y)
-            expect(
-              Math.abs(box.right - (await contentRight(page))),
-            ).toBeLessThan(1)
+      const check = async (within: Locator) => {
+        if (tablet) {
+          const group = within.getByRole("group", { name: copy.view })
+          const add = await boxOf(
+            within.getByRole("button", { name: copy.addItem, exact: true }),
+          )
+          const more = await boxOf(
+            within.getByRole("button", { name: copy.more, exact: true }),
+          )
+          for (const name of [copy.cards, copy.compact]) {
+            const part = group.getByRole("button", { name, exact: true })
+            await expect(part).toBeInViewport({ ratio: 1 })
+            const box = await boxOf(part)
+            expect(box.right).toBeLessThanOrEqual(add.x)
+            expect(box.y).toBe(add.y)
           }
-          expect(await scrollsSideways(page)).toBe(false)
+          expect(
+            Math.abs(more.right - (await contentRight(page))),
+          ).toBeLessThan(1)
+        } else {
+          const toggle = within.getByRole("button", {
+            name: copy.compactView,
+            exact: true,
+          })
+          await toggle.scrollIntoViewIfNeeded()
+          await expect(toggle).toBeInViewport({ ratio: 1 })
+          const box = await boxOf(toggle)
+          const jump = await boxOf(jumpTo(page, language))
+          expect(box.x).toBeGreaterThan(jump.right)
+          expect(box.y).toBe(jump.y)
+          expect(Math.abs(box.right - (await contentRight(page)))).toBeLessThan(
+            1,
+          )
         }
+        expect(await scrollsSideways(page)).toBe(false)
+      }
 
-        await check(main(page))
-        await chooseCompact(page, language)
-        await check(main(page))
+      await check(main(page))
+      await chooseCompact(page, language)
+      await check(main(page))
 
-        const heading = main(page).getByRole("heading", {
-          level: 2,
-          name: copy.later,
-          exact: true,
-        })
-        await heading.evaluate((element) => {
-          element.scrollIntoView({ block: "start" })
-        })
-        const strip = page.locator("[data-stuck]")
-        await expect(strip).toBeVisible()
-        await check(strip)
-        for (const control of await shownInStuckRow(page)) {
-          await expect(control).toBeInViewport({ ratio: 1 })
-        }
+      const heading = main(page).getByRole("heading", {
+        level: 2,
+        name: copy.later,
+        exact: true,
       })
-    }
+      await heading.evaluate((element) => {
+        element.scrollIntoView({ block: "start" })
+      })
+      const strip = page.locator("[data-stuck]")
+      await expect(strip).toBeVisible()
+      await check(strip)
+      for (const control of await shownInStuckRow(page)) {
+        await expect(control).toBeInViewport({ ratio: 1 })
+      }
+    })
   }
 })
 

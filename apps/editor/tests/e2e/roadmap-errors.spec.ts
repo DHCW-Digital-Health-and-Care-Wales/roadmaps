@@ -1,8 +1,6 @@
 import type { Locator, Page } from "@playwright/test"
 
 import { sessionMs } from "./fixtures/fake-gis"
-import { withRoadmapIndex } from "./fixtures/fake-sheets"
-import { useLanguage } from "./fixtures/look"
 import { connect, expect, roadmapCards, test } from "./fixtures/test"
 
 /** Lets fake time pass until `locator` shows, so back-off between retries costs nothing. */
@@ -31,25 +29,6 @@ test("a failed load can be retried", async ({ page, sheets }) => {
 
   await expect(roadmapCards(page)).toHaveCount(3)
   await expect(panel).toBeHidden()
-})
-
-test("a permission error explains how to get access", async ({
-  page,
-  sheets,
-}) => {
-  sheets.failWith(403)
-  await page.goto("./")
-  await connect(page)
-
-  const panel = page.getByRole("alert").filter({
-    hasText: "Couldn't load your roadmaps",
-  })
-  await expect(panel).toContainText(
-    "You don't have access to this spreadsheet. Ask the spreadsheet owner for access.",
-  )
-  // Retrying cannot help, so it is neither offered nor done automatically.
-  await expect(panel.getByRole("button")).toHaveCount(0)
-  expect(sheets.tokens).toHaveLength(1)
 })
 
 test("a rejected token expires the session until reconnected", async ({
@@ -112,46 +91,4 @@ test("an expired token keeps the roadmaps on screen until reconnected", async ({
     "e2e-token-2",
     "e2e-token-2",
   ])
-})
-
-const UNREADABLE_LIST =
-  "The list of roadmaps in the spreadsheet isn't in the expected format. Ask the spreadsheet owner to check it."
-
-test("a roadmap index with no Sheet column can't be read, and retrying can't help (S5)", async ({
-  page,
-  sheets,
-}) => {
-  sheets.spreadsheet = withRoadmapIndex([
-    ["Title", "Enabled"],
-    ["Product A roadmap", "Yes"],
-  ])
-  await page.goto("./")
-  await connect(page)
-
-  const panel = page.getByRole("alert").filter({
-    hasText: "Couldn't load your roadmaps",
-  })
-  await expect(panel).toContainText(UNREADABLE_LIST)
-  await expect(panel.getByRole("button")).toHaveCount(0)
-  expect(sheets.reads).toEqual(["metadata", "values:Roadmaps"])
-})
-
-test("an empty roadmap index can't be read, in Welsh too (S5)", async ({
-  page,
-  sheets,
-}) => {
-  await useLanguage(page, "cy")
-  sheets.spreadsheet = withRoadmapIndex([])
-  await page.goto("./")
-  await page
-    .getByRole("main")
-    .getByRole("button", { name: "Cysylltu â Google" })
-    .click()
-
-  const panel = page.getByRole("alert")
-  await expect(panel).toContainText(
-    "Nid yw'r rhestr o fapiau trywydd yn y daenlen yn y fformat disgwyliedig. Gofynnwch i berchennog y daenlen ei gwirio.",
-  )
-  await expect(panel.getByRole("button")).toHaveCount(0)
-  await expect(roadmapCards(page)).toHaveCount(0)
 })

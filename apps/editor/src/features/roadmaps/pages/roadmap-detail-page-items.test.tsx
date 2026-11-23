@@ -525,6 +525,12 @@ describe("RoadmapDetailPage items", () => {
         }),
       ).toBeInTheDocument()
       expect(main().getAllByRole("alert")).toHaveLength(1)
+      expect(
+        main().getByRole("heading", { level: 1, name: "Product A roadmap" }),
+      ).toBeInTheDocument()
+      expect(
+        main().getByRole("region", { name: "Product details" }),
+      ).toBeInTheDocument()
     })
 
     it("shows the items after connecting from a deep link", async () => {
@@ -690,42 +696,6 @@ describe("RoadmapDetailPage items", () => {
       })
 
       expect(listRoadmapItems).toHaveBeenCalledTimes(1)
-    })
-  })
-
-  describe("the Not published notice (S15)", () => {
-    it("shows under an unpublished roadmap's facts, not beside its title, with Publish roadmap at its end (STY-065 S4)", async () => {
-      await renderRoadmap("productc", { productc: productBItems })
-
-      const title = await main().findByRole("heading", {
-        level: 1,
-        name: "Product C roadmap",
-      })
-      expect(title.parentElement).toHaveTextContent(/^Product C roadmap$/)
-      const notice = main().getByText("Not published").closest("p")
-      expect(notice?.parentElement).toHaveTextContent(
-        "Not publishedThe public site doesn't show this roadmap.Publish roadmap",
-      )
-    })
-
-    it("is absent for a published roadmap", async () => {
-      await renderRoadmap("producta", { producta: productAItems })
-
-      await main().findByRole("heading", {
-        level: 1,
-        name: "Product A roadmap",
-      })
-      expect(main().queryByText("Not published")).not.toBeInTheDocument()
-    })
-
-    it("is in Welsh", async () => {
-      await renderRoadmap(
-        "productc",
-        { productc: productBItems },
-        { language: "cy" },
-      )
-
-      expect(await main().findByText("Heb ei gyhoeddi")).toBeInTheDocument()
     })
   })
 

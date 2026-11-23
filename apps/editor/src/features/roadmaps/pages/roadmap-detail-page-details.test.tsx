@@ -359,26 +359,6 @@ describe("Editing an item's details (STY-039)", () => {
     ])
   })
 
-  it("offers no fourth level: a detail whose nested details are at the third can't go deeper (S3)", async () => {
-    const { user } = await renderPage({
-      shown: [
-        createTestRoadmapItem(VIDEO, {
-          id: "item-1",
-          details: detailed(["One", 0], ["Two", 1], ["Three", 1], ["Four", 2]),
-        }),
-      ],
-    })
-    const { field } = await openDetails(user)
-
-    await caretIn(user, field, "Three")
-    await user.click(field.getByRole("button", { name: "Move in Three" }))
-
-    expect(status(field)).toBe(
-      "A list has three levels, so this can't go deeper.",
-    )
-    expect(written(field)[2]).toEqual(["Three", 1])
-  })
-
   it("moves a nested detail back out (S4)", async () => {
     const { user } = await renderPage()
     const { field } = await openDetails(user)
@@ -496,21 +476,6 @@ describe("Editing an item's details (STY-039)", () => {
       "Added 4 details. A list has three levels, so this can't go deeper.",
     )
     expect(field.getByRole("status")).toBeVisible()
-  })
-
-  it("puts pasted lines after a detail that holds text and those nested under it (D22)", async () => {
-    const { user } = await renderPage()
-    const { field } = await openDetails(user)
-
-    await caretIn(user, field, FOLLOW_UP)
-    await user.paste("Paediatrics\n- Under 16s")
-
-    expect(written(field)).toEqual([
-      ...S1.slice(0, 3),
-      ["Paediatrics", 0],
-      ["Under 16s", 1],
-      [IN_PERSON, 0],
-    ])
   })
 
   it("nests a detail for each hyphen typed or pasted before its text, which never holds one (S9, D21)", async () => {

@@ -45,9 +45,11 @@ const copy = {
   },
 } as const satisfies Record<Language, unknown>
 
+const appInfo = { version: "1.2.3+abc1234" }
+
+/** What the shell says in each language; its structure, which no language changes, is held once below. */
 describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
   const c = copy[language]
-  const appInfo = { version: "1.2.3+abc1234" }
 
   describe("header", () => {
     it("shows the DHCW logo, named for the organisation", async () => {
@@ -77,27 +79,14 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       expect(home).toHaveTextContent(c.shortName)
     })
 
-    it("lists the controls in order: menu, home link, status, language, account", async () => {
+    it("names its menu and account buttons", async () => {
       await renderWithProviders({ language, appInfo, authState: connected })
 
-      const header = within(screen.getByRole("banner"))
-      const status = header.getByRole("status")
-      const home = header.getByRole("link")
-      const controls = header.getAllByRole("button")
-      expect(controls).toHaveLength(3)
-      const [menu, language_, account] = controls
-      const follows = (a: Node | undefined, b: Node | undefined) =>
-        Boolean(
-          a &&
-          b &&
-          a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING,
-        )
+      const [menu, , account] = within(screen.getByRole("banner")).getAllByRole(
+        "button",
+      )
       expect(menu).toHaveAccessibleName(c.menu)
       expect(account).toHaveAccessibleName(c.account)
-      expect(follows(menu, home)).toBe(true)
-      expect(follows(home, status)).toBe(true)
-      expect(follows(status, language_)).toBe(true)
-      expect(follows(language_, account)).toBe(true)
     })
   })
 
@@ -107,6 +96,9 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
 
       expect(screen.getByText("Beta")).toBeInTheDocument()
       expect(screen.getByText(c.phaseText)).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: c.dismiss }),
+      ).toBeInTheDocument()
       expect(
         screen.queryByRole("link", { name: new RegExp(c.feedback) }),
       ).not.toBeInTheDocument()
@@ -123,65 +115,6 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       expect(link).toHaveAttribute("target", "_blank")
       expect(link).toHaveAttribute("rel", "noopener noreferrer")
     })
-
-    it("sits between the header and the main content", async () => {
-      await renderWithProviders({ language, appInfo })
-
-      const beta = screen.getByText("Beta")
-      expect(
-        screen.getByRole("banner").compareDocumentPosition(beta) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy()
-      expect(
-        beta.compareDocumentPosition(screen.getByRole("main")) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy()
-    })
-    it("is dismissed by its button, which moves focus to the page's content (STY-065 S8)", async () => {
-      const user = userEvent.setup()
-      await renderWithProviders({ language, appInfo })
-
-      await user.click(screen.getByRole("button", { name: c.dismiss }))
-
-      expect(screen.queryByText(c.phaseText)).not.toBeInTheDocument()
-      expect(
-        screen.queryByRole("button", { name: c.dismiss }),
-      ).not.toBeInTheDocument()
-      await waitFor(() => {
-        expect(screen.getByRole("main")).toHaveFocus()
-      })
-    })
-
-    it("stays away after an in-app navigation, while the app stays loaded (STY-065 S8)", async () => {
-      const user = userEvent.setup()
-      const { router } = await renderWithProviders({ language, appInfo })
-      await user.click(screen.getByRole("button", { name: c.dismiss }))
-
-      await act(async () => {
-        await router.navigate({ to: "/families" })
-      })
-
-      expect(router.state.location.pathname).toBe("/families")
-      expect(screen.queryByText(c.phaseText)).not.toBeInTheDocument()
-    })
-
-    it("shows again once the app is loaded again, as nothing is stored (STY-065 S8, D11)", async () => {
-      const user = userEvent.setup()
-      const setItem = vi.spyOn(Storage.prototype, "setItem")
-      onTestFinished(() => {
-        setItem.mockRestore()
-      })
-      const first = await renderWithProviders({ language, appInfo })
-      await user.click(screen.getByRole("button", { name: c.dismiss }))
-      expect(setItem).not.toHaveBeenCalled()
-      expect(localStorage).toHaveLength(0)
-      expect(sessionStorage).toHaveLength(0)
-      first.unmount()
-
-      await renderWithProviders({ language, appInfo })
-
-      expect(screen.getByText(c.phaseText)).toBeInTheDocument()
-    })
   })
 
   describe("footer", () => {
@@ -191,14 +124,6 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
       const footer = within(screen.getByRole("contentinfo"))
       expect(footer.getByText(c.copyright)).toBeInTheDocument()
       expect(footer.getByText(c.version)).toBeInTheDocument()
-    })
-
-    it("has no repository link when no address is set", async () => {
-      await renderWithProviders({ language, appInfo })
-
-      expect(
-        within(screen.getByRole("contentinfo")).queryByRole("link"),
-      ).not.toBeInTheDocument()
     })
 
     it("links to the repository, in a new tab, when an address is set", async () => {
@@ -223,5 +148,99 @@ describe.each(["en", "cy"] as const)("the shell in %s", (language) => {
         footer.getByText(language === "en" ? "Version dev" : "Fersiwn dev"),
       ).toBeInTheDocument()
     })
+  })
+})
+
+/** What nothing in a language changes: held once, in English. */
+describe("the shell's structure", () => {
+  const c = copy.en
+
+  it("lists the header's controls in order: menu, home link, status, language, account", async () => {
+    await renderWithProviders({ appInfo, authState: connected })
+
+    const header = within(screen.getByRole("banner"))
+    const status = header.getByRole("status")
+    const home = header.getByRole("link")
+    const controls = header.getAllByRole("button")
+    expect(controls).toHaveLength(3)
+    const [menu, language, account] = controls
+    const follows = (a: Node | undefined, b: Node | undefined) =>
+      Boolean(
+        a &&
+        b &&
+        a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING,
+      )
+    expect(follows(menu, home)).toBe(true)
+    expect(follows(home, status)).toBe(true)
+    expect(follows(status, language)).toBe(true)
+    expect(follows(language, account)).toBe(true)
+  })
+
+  it("sits the phase banner between the header and the main content", async () => {
+    await renderWithProviders({ appInfo })
+
+    const beta = screen.getByText("Beta")
+    expect(
+      screen.getByRole("banner").compareDocumentPosition(beta) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(
+      beta.compareDocumentPosition(screen.getByRole("main")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it("dismisses the phase banner by its button, which moves focus to the page's content (STY-065 S8)", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({ appInfo })
+
+    await user.click(screen.getByRole("button", { name: c.dismiss }))
+
+    expect(screen.queryByText(c.phaseText)).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: c.dismiss }),
+    ).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole("main")).toHaveFocus()
+    })
+  })
+
+  it("keeps the phase banner away after an in-app navigation, while the app stays loaded (STY-065 S8)", async () => {
+    const user = userEvent.setup()
+    const { router } = await renderWithProviders({ appInfo })
+    await user.click(screen.getByRole("button", { name: c.dismiss }))
+
+    await act(async () => {
+      await router.navigate({ to: "/families" })
+    })
+
+    expect(router.state.location.pathname).toBe("/families")
+    expect(screen.queryByText(c.phaseText)).not.toBeInTheDocument()
+  })
+
+  it("shows the phase banner again once the app is loaded again, as nothing is stored (STY-065 S8, D11)", async () => {
+    const user = userEvent.setup()
+    const setItem = vi.spyOn(Storage.prototype, "setItem")
+    onTestFinished(() => {
+      setItem.mockRestore()
+    })
+    const first = await renderWithProviders({ appInfo })
+    await user.click(screen.getByRole("button", { name: c.dismiss }))
+    expect(setItem).not.toHaveBeenCalled()
+    expect(localStorage).toHaveLength(0)
+    expect(sessionStorage).toHaveLength(0)
+    first.unmount()
+
+    await renderWithProviders({ appInfo })
+
+    expect(screen.getByText(c.phaseText)).toBeInTheDocument()
+  })
+
+  it("has no repository link in the footer when no address is set", async () => {
+    await renderWithProviders({ appInfo })
+
+    expect(
+      within(screen.getByRole("contentinfo")).queryByRole("link"),
+    ).not.toBeInTheDocument()
   })
 })

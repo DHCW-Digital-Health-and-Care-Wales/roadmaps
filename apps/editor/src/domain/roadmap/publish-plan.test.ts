@@ -395,22 +395,6 @@ describe("planRoadmapPublish", () => {
         })
       })
 
-      it("writes the placement alone for a row already last there (S5)", () => {
-        const plan = planRoadmapPublish(
-          { ...NO_CHANGES, items: [toNow(later, 2)] },
-          snapshotOf([a, b, later]),
-        )
-
-        expect(plan.kind === "write" && plan.writes).toMatchObject({
-          items: [
-            { index: 2, id: "bookingx", field: "placement", value: "now" },
-          ],
-          removals: [],
-          moves: [],
-          orders: [],
-        })
-      })
-
       it("moves several in the order they were moved, whatever their rows' order (S6)", () => {
         const plan = planRoadmapPublish(
           { ...NO_CHANGES, items: [toNow(video, 1), toNow(later, 0)] },

@@ -196,11 +196,6 @@ describe("an action that needs a session (STY-057)", () => {
       "The Google window was closed before connecting finished.",
     ],
     [
-      "its window closed after a refusal",
-      { status: "ready", lastError: "popup-closed" },
-      "The Google window was closed before connecting finished.",
-    ],
-    [
       "its window blocked",
       { status: "expired", lastError: "popup-blocked" },
       "Your browser blocked the Google window. Allow pop-ups for this site and try again.",

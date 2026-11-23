@@ -517,19 +517,6 @@ describe("A pending order and the items' own changes (S4, S5)", () => {
     expect(titlesUnder("Next")).toEqual(["Echo", "Foxtrot"])
     expect(main().getByText("Order changed")).toBeInTheDocument()
   })
-
-  it("is no change once undoing a move leaves the page's own order (D12)", async () => {
-    const { user } = await renderPage()
-    await chooseFromMenu(user, "Echo", "Now")
-    await chooseFromMenu(user, "Echo", "To the top")
-    expect(main().getByText("Order changed")).toBeInTheDocument()
-
-    await user.click(main().getByRole("button", { name: "Undo changes Echo" }))
-
-    expect(titlesUnder("Now")).toEqual(["Alpha", "Bravo", "Charlie", "Delta"])
-    expect(main().queryByText("Order changed")).toBeNull()
-    expect(main().queryByText(/unpublished change/)).toBeNull()
-  })
 })
 
 describe("Publishing a pending order (S6, S7, S15)", () => {

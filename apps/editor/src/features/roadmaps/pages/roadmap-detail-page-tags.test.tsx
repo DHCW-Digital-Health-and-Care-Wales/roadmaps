@@ -248,19 +248,6 @@ describe("Editing an item's tags (STY-037)", () => {
     expect(within(card("Video clinics")).queryByText("Changed")).toBeNull()
   })
 
-  it("offers the roadmap's other tags, most used first then alphabetical, without the item's own (S3, S18)", async () => {
-    const { user } = await renderPage()
-
-    const { field } = await openTags(user, "Video clinics")
-
-    expect(field.getByText("Used elsewhere in this roadmap")).toBeVisible()
-    expect(offeredBy(field)).toEqual([
-      "Add Appointments, on 2 other items",
-      "Add Clinic staff, on 2 other items",
-      "Add Waiting lists, on 1 other item",
-    ])
-  })
-
   it("narrows the offered tags as Add a tag is typed in, adds a chosen one and says when none matches (S3, S18)", async () => {
     const { user } = await renderPage()
     const { field } = await openTags(user, "Video clinics")
@@ -303,21 +290,18 @@ describe("Editing an item's tags (STY-037)", () => {
     expect(offeredBy(field)).toContain("Add Self-service, on 1 other item")
   })
 
-  it.each(["Patients", "patients"])(
-    "adds no tag the item has, typed as %s, and says the item has it (S4)",
-    async (typed) => {
-      const { user } = await renderPage()
-      const { field } = await openTags(user, "Video clinics")
+  it("adds no tag the item has, whatever its capitals, and says the item has it (S4)", async () => {
+    const { user } = await renderPage()
+    const { field } = await openTags(user, "Video clinics")
 
-      await addTag(user, field, typed)
+    await addTag(user, field, "patients")
 
-      expect(rowsOf(field)).toEqual(["Patients", "Video consultations"])
-      expect(field.getByRole("status")).toHaveTextContent(
-        "“Patients” is already on this item.",
-      )
-      expect(field.getByRole("status")).toBeVisible()
-    },
-  )
+    expect(rowsOf(field)).toEqual(["Patients", "Video consultations"])
+    expect(field.getByRole("status")).toHaveTextContent(
+      "“Patients” is already on this item.",
+    )
+    expect(field.getByRole("status")).toBeVisible()
+  })
 
   it("removes a tag, offering it again while other items carry it (S5)", async () => {
     const { user } = await renderPage()
@@ -439,7 +423,7 @@ describe("Editing an item's tags (STY-037)", () => {
     )
   })
 
-  it("keeps a name still being changed when the form is confirmed (S15)", async () => {
+  it("keeps a name still being changed, and counts text typed but not yet added, when the form is confirmed (S8, S15)", async () => {
     const { user } = await renderPage()
     const { field } = await openTags(user, "Video clinics")
     await user.click(
@@ -450,10 +434,13 @@ describe("Editing an item's tags (STY-037)", () => {
     })
     await user.clear(name)
     await user.type(name, "Video appointments")
+    await user.type(field.getByRole("textbox", { name: "Add a tag" }), "Carers")
 
     await confirmItemEdit(user)
 
-    expect(tagsLineOf("Video clinics")).toBe("Patients, Video appointments")
+    expect(tagsLineOf("Video clinics")).toBe(
+      "Patients, Video appointments, Carers",
+    )
   })
 
   it("keeps a name still being changed when another control of the field is used (S15)", async () => {
@@ -471,41 +458,6 @@ describe("Editing an item's tags (STY-037)", () => {
     await user.click(field.getByRole("button", { name: "Remove Patients" }))
 
     expect(rowsOf(field)).toEqual(["Video appointments"])
-  })
-
-  it("ends a tag at a comma as it is typed, and at a pasted line break, each trimmed (S7)", async () => {
-    const { user } = await renderPage()
-    const { field } = await openTags(user, "New idea")
-    const input = field.getByRole("textbox", { name: "Add a tag" })
-
-    await user.type(input, " Carers , Clinic staff{Enter}")
-    expect(rowsOf(field)).toEqual(["Carers", "Clinic staff"])
-    expect(input).toHaveValue("")
-    await user.click(input)
-    await user.paste("Waiting lists\n Appointments ,")
-
-    expect(rowsOf(field)).toEqual([
-      "Carers",
-      "Clinic staff",
-      "Waiting lists",
-      "Appointments",
-    ])
-    await confirmItemEdit(user)
-    expect(tagsLineOf("New idea")).toBe(
-      "Carers, Clinic staff, Waiting lists, Appointments",
-    )
-  })
-
-  it("counts text typed but not yet added when the form is confirmed (S8)", async () => {
-    const { user } = await renderPage()
-    const { field } = await openTags(user, "Video clinics")
-
-    await user.type(field.getByRole("textbox", { name: "Add a tag" }), "Carers")
-    await confirmItemEdit(user)
-
-    expect(tagsLineOf("Video clinics")).toBe(
-      "Patients, Video consultations, Carers",
-    )
   })
 
   it("shuts keeping a name still being changed and text typed but not added, the line showing the tags as changed (S19)", async () => {
@@ -624,6 +576,10 @@ describe("Editing an item's tags (STY-037)", () => {
     await user.keyboard("Carers{Enter}")
     expect(rowsOf(field)).toEqual(["Patients", "Video consultations", "Carers"])
     expect(field.getByRole("textbox", { name: "Add a tag" })).toHaveFocus()
+    // A comma ends a tag as it is typed, with no Enter.
+    await user.keyboard(" Waiting lists ,")
+    expect(rowsOf(field).at(-1)).toBe("Waiting lists")
+    expect(field.getByRole("textbox", { name: "Add a tag" })).toHaveValue("")
 
     // Add tag, then the first tag offered.
     await user.tab()

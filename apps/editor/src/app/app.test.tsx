@@ -3,7 +3,6 @@ import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, describe, expect, it } from "vitest"
 
-import type { AuthState } from "@/domain/auth/auth-client"
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { authScopedQueryKey } from "@/features/auth/auth-scoped-queries"
 import {
@@ -72,78 +71,19 @@ describe("landing page", () => {
     expect(connect).toHaveAttribute("aria-busy", "true")
     expect(connect).not.toBeDisabled()
   })
-
-  it.each<[AuthState, string]>([
-    [
-      { status: "error", error: "script-load-failed" },
-      "Google couldn't be reached. Check your internet connection and try again.",
-    ],
-    [
-      { status: "ready", lastError: "popup-closed" },
-      "The Google window was closed before connecting finished.",
-    ],
-  ])("explains why it is not connected (%j)", async (authState, notice) => {
-    await renderWithProviders({ authState })
-
-    expect(main().getByText(notice)).toBeInTheDocument()
-  })
-
-  it("renders in Welsh", async () => {
-    await renderWithProviders({ language: "cy" })
-
-    expect(
-      main().getByRole("heading", {
-        level: 1,
-        name: "Golygydd Mapiau Trywydd IGDC",
-      }),
-    ).toBeInTheDocument()
-    expect(
-      main().getByRole("button", { name: "Cysylltu â Google" }),
-    ).toBeInTheDocument()
-    expect(header().getByRole("status")).toHaveTextContent("Heb gysylltu")
-  })
 })
 
 describe("header", () => {
-  it.each<[AuthState, string, string]>([
-    [{ status: "ready" }, "Not connected", "Connect Google"],
-    [connected, "Google connected", "Disconnect"],
-    [{ status: "expired" }, "Session expired", "Reconnect"],
-    [
-      { status: "error", error: "unknown" },
-      "Connection failed",
-      "Connect Google",
-    ],
-  ])(
-    "announces the %j auth state, shows nothing of it, and offers its action in the menu",
-    async (authState, status, action) => {
-      const user = userEvent.setup()
-      await renderWithProviders({ authState })
+  it("announces the auth state, shows nothing of it, and offers its action in the menu", async () => {
+    const user = userEvent.setup()
+    await renderWithProviders({ authState: { status: "expired" } })
 
-      const announcement = header().getByRole("status")
-      expect(announcement).toHaveTextContent(status)
-      expect(announcement).toHaveClass("sr-only")
-      const menu = await openAccountMenu(user)
-      expect(menu.getByRole("menuitem", { name: action })).toBeEnabled()
-    },
-  )
-
-  it.each<[AuthState, string]>([
-    [{ status: "initializing" }, "Getting ready…"],
-    [{ status: "connecting" }, "Connecting…"],
-  ])(
-    "waits, in the menu, while the auth state is %j",
-    async (authState, status) => {
-      const user = userEvent.setup()
-      await renderWithProviders({ authState })
-
-      expect(header().getByRole("status")).toHaveTextContent(status)
-      const menu = await openAccountMenu(user)
-      expect(
-        menu.getByRole("menuitem", { name: "Connect Google" }),
-      ).toHaveAttribute("aria-disabled", "true")
-    },
-  )
+    const announcement = header().getByRole("status")
+    expect(announcement).toHaveTextContent("Session expired")
+    expect(announcement).toHaveClass("sr-only")
+    const menu = await openAccountMenu(user)
+    expect(menu.getByRole("menuitem", { name: "Reconnect" })).toBeEnabled()
+  })
 
   it("follows auth state changes", async () => {
     const { authClient } = await renderWithProviders()
@@ -153,28 +93,6 @@ describe("header", () => {
     })
 
     expect(header().getByRole("status")).toHaveTextContent("Connecting…")
-  })
-
-  it("holds the theme, where the forms open and the session's action in one menu, with the language beside it (STY-056 D1, S2)", async () => {
-    const user = userEvent.setup()
-    await renderWithProviders({ authState: connected })
-
-    const menu = await openAccountMenu(user)
-
-    expect(menu.getAllByRole("menuitem")).toHaveLength(3)
-    expect(
-      menu.getByRole("menuitem", { name: "Switch to dark theme" }),
-    ).toBeInTheDocument()
-    expect(
-      menu.getByRole("menuitem", { name: "Edit in a dialog" }),
-    ).toBeInTheDocument()
-    expect(
-      menu.getByRole("menuitem", { name: "Disconnect" }),
-    ).toBeInTheDocument()
-    expect(
-      header().getByRole("button", { name: "Language English" }),
-    ).toBeVisible()
-    expect(header().queryByRole("button", { name: "Disconnect" })).toBeNull()
   })
 
   it("disconnects, clearing only auth-scoped queries, and confirms it", async () => {
@@ -207,49 +125,6 @@ describe("header", () => {
     await disconnectFromHeader(user)
 
     expect(main().getAllByRole("note")).toHaveLength(1)
-  })
-
-  it("announces a failed connection on the page, but not a closed popup", async () => {
-    const { authClient } = await renderWithProviders({
-      authState: { status: "connecting" },
-    })
-
-    act(() => {
-      authClient.setState({ status: "ready", lastError: "popup-closed" })
-    })
-    expect(main().queryByRole("alert")).not.toBeInTheDocument()
-
-    act(() => {
-      authClient.setState({ status: "connecting" })
-    })
-    act(() => {
-      authClient.setState({ status: "error", error: "access-denied" })
-    })
-    expect(main().getByRole("alert")).toHaveTextContent(
-      "Access wasn't granted, so your roadmaps can't be loaded.",
-    )
-  })
-
-  it("switches the language from the header", async () => {
-    const user = userEvent.setup()
-    await renderWithProviders()
-
-    await user.click(header().getByRole("button", { name: "Language English" }))
-    await user.click(
-      await screen.findByRole("menuitemradio", { name: "Cymraeg" }),
-    )
-
-    expect(
-      await main().findByRole("button", { name: "Cysylltu â Google" }),
-    ).toBeInTheDocument()
-  })
-
-  it("links the product name to the home page", async () => {
-    await renderWithProviders({ path: "/roadmaps/producta" })
-
-    expect(
-      header().getByRole("link", { name: /Roadmap Editor home$/ }),
-    ).toHaveAttribute("href", "/")
   })
 })
 

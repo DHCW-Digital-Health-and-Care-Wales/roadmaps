@@ -32,4 +32,15 @@ describe("ConnectionStatus", () => {
       expect(status).toHaveClass("sr-only")
     },
   )
+
+  it("announces in Welsh", () => {
+    renderWithI18n(
+      <AuthProvider client={createFakeAuthClient({ status: "ready" })}>
+        <ConnectionStatus />
+      </AuthProvider>,
+      { language: "cy" },
+    )
+
+    expect(screen.getByRole("status")).toHaveTextContent("Heb gysylltu")
+  })
 })

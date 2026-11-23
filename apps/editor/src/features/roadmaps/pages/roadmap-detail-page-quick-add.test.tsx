@@ -633,38 +633,26 @@ describe("Adding in the dialog (STY-081 S3, S7)", () => {
     expect(titlesUnder("Next")).toEqual(["See your waiting time", TIDIED])
   })
 
-  it("keeps the dialog open, empty, on Next, after “Add and start another” (S3)", async () => {
-    const { user } = await renderPage()
-    const dialog = await expand(user)
-
-    await user.click(
-      dialog.getByRole("button", { name: "Add and start another" }),
-    )
-
-    const title = addItemDialog().getByRole("textbox", { name: "Title" })
-    await waitFor(() => {
-      expect(title).toHaveFocus()
-    })
-    expect(title).toHaveValue("")
-    expect(
-      addItemDialog().getByRole("combobox", { name: "Horizon or section" }),
-    ).toHaveValue("next")
-    expect(addItemDialog().getByRole("status")).toHaveTextContent(
-      `“${TIDIED}” was added.`,
-    )
-  })
-
   it.each(CLOSINGS)(
-    "ends the run on %s after “Add and start another”: the field stays closed, focus on Next's “Add an item” (S7)",
+    "opens an empty form on Next after “Add and start another”, and ends the run on %s: the field stays closed, focus on Next's “Add an item” (S3, S7)",
     async (_how, close) => {
       const { user } = await renderPage()
       const dialog = await expand(user)
       await user.click(
         dialog.getByRole("button", { name: "Add and start another" }),
       )
+      // The next form is empty, on Next still, saying what was added.
+      const title = addItemDialog().getByRole("textbox", { name: "Title" })
       await waitFor(() => {
-        expect(addItemDialog().getByRole("status")).not.toBeEmptyDOMElement()
+        expect(title).toHaveFocus()
       })
+      expect(title).toHaveValue("")
+      expect(
+        addItemDialog().getByRole("combobox", { name: "Horizon or section" }),
+      ).toHaveValue("next")
+      expect(addItemDialog().getByRole("status")).toHaveTextContent(
+        `“${TIDIED}” was added.`,
+      )
 
       await close(user)
 

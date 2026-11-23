@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest"
 
+import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { removeItem } from "@/domain/roadmap/item-removal"
 import { addNewItem } from "@/domain/roadmap/new-item"
 import { planRoadmapPublish } from "@/domain/roadmap/publish-plan"
 import {
+  type ItemValues,
   NO_CHANGES,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
@@ -195,6 +197,47 @@ describe("matchItemChanges", () => {
     expect(same.get(0)).toBe(changes.items[0])
     expect(same.get(1)).toBe(changes.items[1])
   })
+
+  const worded = (...texts: string[]) =>
+    texts.map((en) => ({ text: { en, cy: "" }, level: 0 }))
+
+  it.each<
+    [
+      field: string,
+      held: Partial<RoadmapItem>,
+      edit: ItemValues,
+      written: Partial<RoadmapItem>,
+    ]
+  >([
+    [
+      "choice",
+      { organisationIds: ["cavuhb"], unknownOrganisationCodes: ["CAVHB"] },
+      { organisationIds: "national" },
+      { organisationIds: ["national"], unknownOrganisationCodes: [] },
+    ],
+    [
+      "tags",
+      { tags: [{ en: "Patients", cy: "" }] },
+      { tags: "Carers" },
+      { tags: [{ en: "Carers", cy: "" }] },
+    ],
+    [
+      "details",
+      { details: worded("Follow-up appointments") },
+      { details: "In person" },
+      { details: worded("In person") },
+    ],
+  ])(
+    "finds an item without an ID whose %s a lost publish already wrote",
+    (_, held, edit, written) => {
+      const loaded = createTestRoadmapItem("Item", { ...held, id: null })
+      const changes = editItem(NO_CHANGES, undefined, loaded, 1, edit)
+
+      expect(
+        matchItemChanges([first, { ...loaded, ...written }], changes).get(1),
+      ).toBe(changes.items[0])
+    },
+  )
 })
 
 describe("reconcile", () => {
@@ -715,22 +758,6 @@ describe("a choice of organisations (STY-034)", () => {
       title: { base: "For Cardiff", value: "Renamed" },
     })
   })
-
-  it("finds an item without an ID whose choice a lost publish already wrote", () => {
-    const loaded = { ...forCardiff, id: null }
-    const chosen = editItem(NO_CHANGES, undefined, loaded, 1, {
-      organisationIds: "national",
-    })
-    const written = {
-      ...loaded,
-      organisationIds: ["national"],
-      unknownOrganisationCodes: [],
-    }
-
-    expect(matchItemChanges([first, written], chosen).get(1)).toBe(
-      chosen.items[0],
-    )
-  })
 })
 
 describe("a change of tags (STY-037)", () => {
@@ -803,18 +830,6 @@ describe("a change of tags (STY-037)", () => {
     }
 
     expect(reconcileItems(retagged, [theirs]).items[0]?.item).toEqual(theirs)
-  })
-
-  it("finds an item without an ID whose tags a lost publish already wrote", () => {
-    const loaded = { ...booking, id: null }
-    const retagged = editItem(NO_CHANGES, undefined, loaded, 1, {
-      tags: "Carers",
-    })
-    const written = { ...loaded, tags: tagged("Carers") }
-
-    expect(matchItemChanges([first, written], retagged).get(1)).toBe(
-      retagged.items[0],
-    )
   })
 })
 
@@ -923,129 +938,120 @@ describe("a change of details (STY-039)", () => {
 
     expect(reconcileItems(changed, [theirs]).items[0]?.item).toEqual(theirs)
   })
-
-  it("finds an item without an ID whose details a lost publish already wrote", () => {
-    const loaded = { ...video, id: null }
-    const changed = editItem(NO_CHANGES, undefined, loaded, 1, {
-      details: "In person",
-    })
-    const written = { ...loaded, details: detailed(["In person", 0]) }
-
-    expect(matchItemChanges([first, written], changed).get(1)).toBe(
-      changed.items[0],
-    )
-  })
 })
 
-describe("an item without an ID whose details a co-lead wrote another way (STY-039 S15)", () => {
-  const detailed = (...lines: [string, number][]) =>
-    lines.map(([en, level]) => ({ text: { en, cy: "" }, level }))
-  const loaded = createTestRoadmapItem("Video appointments", {
-    details: detailed(["One", 0], ["Two", 1]),
-  })
-  // The same list, a hyphen on every line.
-  const rewritten = { ...loaded, details: detailed(["One", 1], ["Two", 2]) }
-
-  it("is still found, with a pending change of its details or of another field", () => {
-    const redetailed = editItem(NO_CHANGES, undefined, loaded, 1, {
-      details: "One\n- Two\nThree",
-    })
-    const retitled = editItem(NO_CHANGES, undefined, loaded, 1, {
-      title: "Video calls",
-    })
-
-    expect(matchItemChanges([first, rewritten], redetailed).get(1)).toBe(
-      redetailed.items[0],
-    )
-    expect(matchItemChanges([first, rewritten], retitled).get(1)).toBe(
-      retitled.items[0],
-    )
-  })
-
-  it("is not found once its details read as another list, or gain Welsh", () => {
-    const retitled = editItem(NO_CHANGES, undefined, loaded, 1, {
-      title: "Video calls",
-    })
-    const other = { ...loaded, details: detailed(["One", 0], ["Other", 1]) }
-    const welsh = {
-      ...loaded,
-      details: [
-        { text: { en: "One", cy: "Un" }, level: 0 },
-        { text: { en: "Two", cy: "Dau" }, level: 1 },
-      ],
-      hasWelshDetails: true,
-    }
-
-    expect(matchItemChanges([first, other], retitled).size).toBe(0)
-    expect(matchItemChanges([first, welsh], retitled).size).toBe(0)
-  })
-})
-
-describe("an item whose details read deeper than the third level (STY-039, review round 2)", () => {
+describe("an item without an ID, found by the details it shows (STY-039 S15)", () => {
+  /** Details of the levels given, each named for its place. */
   const detailed = (...levels: number[]) =>
     levels.map((level, index) => ({
       text: { en: `Detail ${String(index + 1)}`, cy: "" },
       level,
     }))
-  const loaded = createTestRoadmapItem("Legacy", {
-    details: detailed(0, 1, 2, 3),
-  })
-  const retitled = editItem(NO_CHANGES, undefined, loaded, 1, { phase: "Beta" })
-
-  it("is not found in a row whose fourth level a co-lead moved to the third, though the field would show both alike", () => {
-    const moved = { ...loaded, details: detailed(0, 1, 2, 2) }
-
-    expect(matchItemChanges([first, moved], retitled).size).toBe(0)
-  })
-
-  it("is found in a row that shows the same list, written with other hyphens", () => {
-    const rewritten = { ...loaded, details: detailed(1, 2, 3, 4) }
-
-    expect(matchItemChanges([first, rewritten], retitled).get(1)).toBe(
-      retitled.items[0],
-    )
-  })
-
-  it("is not found once a detail's text reads otherwise, a hyphen after its nesting included", () => {
-    const hyphened = {
-      ...loaded,
-      details: loaded.details.map((detail, index) =>
-        index === 3 ? { ...detail, text: { en: "-Detail 4", cy: "" } } : detail,
-      ),
-    }
-
-    expect(matchItemChanges([first, hyphened], retitled).size).toBe(0)
-  })
-})
-
-describe("an item with pending details, found by its content (STY-039, after the review cap)", () => {
-  const detailed = (...levels: number[]) =>
-    levels.map((level, index) => ({
-      text: { en: `Detail ${String(index + 1)}`, cy: "" },
-      level,
-    }))
-  const loaded = createTestRoadmapItem("Legacy", { details: detailed(0, 1) })
   const PENDING = "Detail 1\n- Detail 2\n-- Detail 3\n-- Detail 4"
-  const redetailed = editItem(NO_CHANGES, undefined, loaded, 1, {
-    details: PENDING,
-  })
+  const welsh = detailed(0, 1).map((detail) => ({
+    ...detail,
+    text: { ...detail.text, cy: "Cymraeg" },
+  }))
 
-  it("is found in a row holding the pending details, however their hyphens are written", () => {
-    const written = { ...loaded, details: detailed(0, 1, 2, 2) }
-    const hyphened = { ...loaded, details: detailed(1, 2, 3, 3) }
+  it.each<
+    [
+      row: string,
+      held: number[],
+      edit: ItemValues,
+      read: Partial<RoadmapItem>,
+      found: boolean,
+    ]
+  >([
+    [
+      "is found in a row showing the same list with a hyphen on every line, whatever else is pending",
+      [0, 1],
+      { title: "Video calls" },
+      { details: detailed(1, 2) },
+      true,
+    ],
+    [
+      "is found in a row showing the same list with a hyphen on every line, with a pending change of its details",
+      [0, 1],
+      { details: "Detail 1\n- Detail 2\nDetail 3" },
+      { details: detailed(1, 2) },
+      true,
+    ],
+    [
+      "is found in a row showing the same list, written with other hyphens, below the third level",
+      [0, 1, 2, 3],
+      { phase: "Beta" },
+      { details: detailed(1, 2, 3, 4) },
+      true,
+    ],
+    [
+      "is found in a row holding the pending details, however their hyphens are written",
+      [0, 1],
+      { details: PENDING },
+      { details: detailed(0, 1, 2, 2) },
+      true,
+    ],
+    [
+      "is found in a row holding the pending details with a hyphen on every line",
+      [0, 1],
+      { details: PENDING },
+      { details: detailed(1, 2, 3, 3) },
+      true,
+    ],
+    [
+      "is not found once its details read as another list",
+      [0, 1],
+      { title: "Video calls" },
+      {
+        details: detailed(0, 1).map((detail, index) =>
+          index === 1 ? { ...detail, text: { en: "Other", cy: "" } } : detail,
+        ),
+      },
+      false,
+    ],
+    [
+      "is not found once its details gain Welsh",
+      [0, 1],
+      { title: "Video calls" },
+      { details: welsh, hasWelshDetails: true },
+      false,
+    ],
+    [
+      "is not found in a row whose fourth level a co-lead moved to the third, though the field would show both alike",
+      [0, 1, 2, 3],
+      { phase: "Beta" },
+      { details: detailed(0, 1, 2, 2) },
+      false,
+    ],
+    [
+      "is not found once a detail's text reads otherwise, a hyphen after its nesting included",
+      [0, 1, 2, 3],
+      { phase: "Beta" },
+      {
+        details: detailed(0, 1, 2, 3).map((detail, index) =>
+          index === 3
+            ? { ...detail, text: { en: "-Detail 4", cy: "" } }
+            : detail,
+        ),
+      },
+      false,
+    ],
+    [
+      "is not found in a row that shows a fourth level, though the field would show it as the pending list",
+      [0, 1],
+      { details: PENDING },
+      { details: detailed(0, 1, 2, 3) },
+      false,
+    ],
+  ])("%s", (_, held, edit, read, found) => {
+    const loaded = createTestRoadmapItem("Legacy", {
+      details: detailed(...held),
+    })
+    const changes = editItem(NO_CHANGES, undefined, loaded, 1, edit)
 
-    expect(matchItemChanges([first, written], redetailed).get(1)).toBe(
-      redetailed.items[0],
-    )
-    expect(matchItemChanges([first, hyphened], redetailed).get(1)).toBe(
-      redetailed.items[0],
-    )
-  })
+    const matched = matchItemChanges([first, { ...loaded, ...read }], changes)
 
-  it("is not found in a row that shows a fourth level, though the field would show it as the pending list", () => {
-    const deeper = { ...loaded, details: detailed(0, 1, 2, 3) }
-
-    expect(matchItemChanges([first, deeper], redetailed).size).toBe(0)
+    expect(matched.size).toBe(found ? 1 : 0)
+    expect(matched.get(1)).toBe(found ? changes.items[0] : undefined)
   })
 })
 

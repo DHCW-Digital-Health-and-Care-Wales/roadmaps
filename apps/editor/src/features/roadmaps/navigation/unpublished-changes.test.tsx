@@ -117,7 +117,7 @@ describe("on a desktop", () => {
     expect(dot("Product C roadmap")).toBeNull()
   })
 
-  it("leads to the roadmap with changes while it is the only one, and to nothing on its own page (STY-063 S5)", async () => {
+  it("leads to the roadmap with changes while it is the only one, and to nothing on its own page, where only that roadmap is the current page (STY-063 S5; S2)", async () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user, router } = await renderShell()
     await change(user, router, "productb", "B item")
@@ -134,6 +134,14 @@ describe("on a desktop", () => {
     expect(
       within(navigation()).queryByRole("button", { name: countName }),
     ).not.toBeInTheDocument()
+    // Only the roadmap open is the current page, not the count.
+    await waitFor(() => {
+      expect(
+        within(navigation())
+          .getAllByRole("link")
+          .filter((link) => link.hasAttribute("aria-current")),
+      ).toHaveLength(1)
+    })
   })
 
   it("drops the count and the dot as a roadmap's last change goes (S3)", async () => {
@@ -163,25 +171,6 @@ describe("on a desktop", () => {
     expect(
       within(navigation()).getByRole("link", { name: "Product A roadmap" }),
     ).toBeInTheDocument()
-  })
-
-  it("does not mark the count as the current page while the one roadmap with changes is open (S2)", async () => {
-    matchMediaQueries(DESKTOP_WIDTH)
-    const { user, router } = await renderShell()
-    await change(user, router, "producta", "A item")
-
-    const nav = within(navigation())
-    expect(
-      within(navigation()).queryByRole("link", { name: /^\d+ roadmaps? ha/ }),
-    ).not.toBeInTheDocument()
-    expect(announcement()).toHaveTextContent(total(1))
-    await waitFor(() => {
-      expect(
-        nav
-          .getAllByRole("link")
-          .filter((link) => link.hasAttribute("aria-current")),
-      ).toHaveLength(1)
-    })
   })
 
   it("speaks only when the number changes, not on a second edit or as the Product Lead moves between pages (S4)", async () => {

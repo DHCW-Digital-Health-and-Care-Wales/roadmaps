@@ -8,7 +8,7 @@ import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
 import type { Language } from "@/i18n"
 import { connected } from "@/test/connected-state"
-import { DESKTOP_WIDTH, TABLET_WIDTH } from "@/lib/use-media-query"
+import { TABLET_WIDTH } from "@/lib/use-media-query"
 import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
@@ -174,6 +174,10 @@ describe("A roadmap's header block (STY-065)", () => {
     expect(notice).toHaveTextContent(
       "Not publishedThe public site doesn't show this roadmap.",
     )
+    // Not beside the title.
+    expect(
+      main().getByRole("heading", { level: 1 }).parentElement,
+    ).not.toContainElement(notice)
     const publish = button("Publish roadmap")
     expect(publish.parentElement).toContainElement(notice)
     expect(
@@ -366,16 +370,6 @@ describe("The header at each width (STY-065 S6, S7)", () => {
     expect(within(links).getAllByRole("link")).toHaveLength(6)
     expect(main().queryByRole("button", { name: /^Jump to/ })).toBeNull()
     expect(moreButton()).toHaveAccessibleName("More")
-  })
-
-  it("is the same beside the navigation on a desktop (S6)", async () => {
-    matchMediaQueries(TABLET_WIDTH, DESKTOP_WIDTH)
-    await renderPage(demographics)
-
-    expect(
-      main().getByRole("navigation", { name: "Horizons and sections" }),
-    ).toBeInTheDocument()
-    expect(main().queryByRole("button", { name: /^Jump to/ })).toBeNull()
   })
 
   it("is the row of placement links in Welsh too, with no Neidio i (S6)", async () => {

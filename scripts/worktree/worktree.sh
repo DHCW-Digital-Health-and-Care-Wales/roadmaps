@@ -41,11 +41,14 @@ db_project() {
 
 # Removes a slot's database container and its volume, so the slot's next worktree
 # starts with an empty database. By project name alone, with no Compose file, so it
-# works for a worktree already deleted.
+# works for a worktree already deleted. Fails, naming the fix, when Docker is installed
+# but cannot remove them (its daemon stopped, say): the caller then keeps the slot, so
+# no worktree inherits the data. A host without Docker has no database to remove.
 remove_database() {
   command -v docker >/dev/null 2>&1 || return 0
-  ( cd / && docker compose --project-name "$1" down --volumes --remove-orphans >/dev/null 2>&1 ) ||
-    echo "worktree: could not remove Compose project $1; remove it with docker compose --project-name $1 down --volumes" >&2
+  ( cd / && docker compose --project-name "$1" down --volumes --remove-orphans >/dev/null 2>&1 ) && return 0
+  echo "worktree: could not remove Compose project $1; start Docker and rerun, or run docker compose --project-name $1 down --volumes" >&2
+  return 1
 }
 
 port_in_use() {
@@ -102,7 +105,8 @@ reap_stale_slots() {
     path="$(sed -n 1p "$file")"
     [ -d "$path" ] && continue
     grep -qxF "worktree $path" <<<"$listed" && continue
-    remove_database "$(db_project "$(basename "$file")")"
+    # Kept until its database is gone, so the slot's next worktree starts empty.
+    remove_database "$(db_project "$(basename "$file")")" || continue
     rm -f "$file"
     echo "worktree: reclaimed slot $(basename "$file") from deleted $path"
   done
@@ -222,7 +226,8 @@ teardown() {
     . "$ENV_FILE"
     # The database first, so stopping DB_PORT's listener below finds none.
     if [ -n "${WORKTREE_SLOT:-}" ]; then
-      remove_database "${API_DB_PROJECT:-$(db_project "$WORKTREE_SLOT")}"
+      # The slot stays claimed until its database is gone.
+      remove_database "${API_DB_PROJECT:-$(db_project "$WORKTREE_SLOT")}" || exit 1
     fi
     local var
     for var in "${PORT_VARS[@]}"; do

@@ -165,6 +165,16 @@ describe("worktree.sh setup", () => {
     ])
   })
 
+  it("keeps a deleted worktree's slot while its database cannot be removed", async () => {
+    const deleted = worktree("deleted-docker-down")
+    const slot = await setup(deleted)
+    rmSync(deleted, { recursive: true })
+    failDocker()
+
+    expect(await setup(worktree("after"))).not.toBe(slot)
+    expect(readdirSync(registry)).toContain(String(slot))
+  })
+
   it("stops with the fix named when a crashed setup left both of its locks", async () => {
     mkdirSync(registry, { recursive: true })
     symlinkSync(String(deadPid()), join(registry, ".lock"))
@@ -193,7 +203,32 @@ describe("worktree.sh setup", () => {
   }, 60_000)
 })
 
+/** Makes the docker stub fail, as Docker does with its daemon stopped. */
+function failDocker(): void {
+  writeFileSync(
+    join(bin, "docker"),
+    `#!/bin/sh\necho "docker $PWD $*" >> "${calls}"\nexit 1\n`,
+  )
+}
+
 describe("worktree.sh teardown", () => {
+  it("keeps the slot, naming the fix, when its database cannot be removed", async () => {
+    const root = worktree("docker-down")
+    const slot = await setup(root)
+    failDocker()
+
+    const teardown = run(
+      join(root, "scripts", "worktree", "worktree.sh"),
+      ["teardown"],
+      { env, timeout: 30_000 },
+    )
+
+    await expect(teardown).rejects.toThrow(
+      /could not remove Compose project roadmaps-slot-\d+; start Docker and rerun/,
+    )
+    expect(readdirSync(registry)).toContain(String(slot))
+  })
+
   it("removes the slot's database container and its volume, and releases the slot", async () => {
     const root = worktree("done")
     const slot = await setup(root)

@@ -41,6 +41,10 @@ BAD = {
         {"ROADMAPS_DATABASE_URL": "postgresql+psycopg://u:p@s:SECRET-PASSWORD@db/x"},
         ["ROADMAPS_DATABASE_URL"],
     ),
+    "a database URL whose port is not a number": (
+        {"ROADMAPS_DATABASE_URL": "postgresql+psycopg://u:p@db:SECRET-PASSWORD/x"},
+        ["ROADMAPS_DATABASE_URL"],
+    ),
     "unset allowed hosts": ({"ROADMAPS_ALLOWED_HOSTS": None}, ["ROADMAPS_ALLOWED_HOSTS"]),
     "empty allowed hosts": ({"ROADMAPS_ALLOWED_HOSTS": ""}, ["ROADMAPS_ALLOWED_HOSTS"]),
     "an empty entry among the hosts": (

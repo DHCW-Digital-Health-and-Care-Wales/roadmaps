@@ -81,6 +81,9 @@ unverifiable; quote it for a mismatch and show the implementation path.
   reload) to the control the user meets, including what completes a branch that
   hands off or defers. Where a change replaces a surface, carried-over behavior
   may be what the story changes.
+- Where a diff deletes or trims a test and names the test that still holds it, open
+  that test and find the assertion: a neighbour that renders or calls the same code
+  without asserting the removed claim is a gap.
 - Look for omitted refusal and expiry branches, empty and loading states, a
   failed read shown as "no results", an error shown as an empty list, mobile
   layouts that drop a control (the header's account menu offers Connect or

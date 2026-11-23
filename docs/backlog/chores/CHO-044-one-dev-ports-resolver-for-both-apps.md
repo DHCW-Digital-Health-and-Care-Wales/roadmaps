@@ -1,0 +1,61 @@
+# CHO-044: One dev-ports resolver serves both apps
+
+- **Status**: Proposed — recorded in the owner's STY-095 grilling (2026-11-23, D1); runs
+  after STY-095 in EPC-022's alignment sequence
+- **Type**: Refactor
+- **Area**: CI/CD
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Depends on**: STY-095 (hard)
+- **Binding ADRs**: none
+- **Suggested model**: Sonnet — one small module moved and two callers repointed
+
+## Summary
+
+Each app has its own copy of the function that reads a worktree's ports from the root
+`.env.worktree`, ignoring ambient variables: the same parsing and error, differing only
+in the variable names they read and the default ports without the file. A fix to one
+copy misses the other. One module under the root `scripts/worktree/`, beside
+`worktree.sh` that writes the file, serves both apps' Vite and Playwright configs and
+the site's Lighthouse script, each naming its variables and defaults.
+
+## Measurement
+
+At commit `d2566963`:
+
+| Copy                                     | Lines | Test lines | Reads                                | Defaults   |
+| ---------------------------------------- | ----- | ---------- | ------------------------------------ | ---------- |
+| `apps/editor/build/resolve-dev-ports.ts` | 52    | 64         | `DEV_PORT`, `PREVIEW_PORT`           | 5173, 4173 |
+| `apps/public-site/scripts/dev-ports.ts`  | 47    | 43         | `SITE_DEV_PORT`, `SITE_PREVIEW_PORT` | 5174, 4174 |
+
+Callers: each app's `vite.config.ts` and `playwright.config.ts`, and
+`apps/public-site/scripts/lighthouse.ts`.
+
+## Acceptance criteria
+
+### S1: One resolver, each app's ports
+
+**Given** a worktree whose `.env.worktree` names both apps' ports
+**When** either app's dev server, preview, E2E suite or Lighthouse run starts
+**Then** it listens on that app's ports from the file, resolved by the one module in
+`scripts/worktree/`
+**And** with no file, each app takes its own defaults, as today
+**And** a missing or invalid port fails with the same message as today, naming the
+variable
+
+### S2: No copy remains
+
+**Given** the change
+**When** a reader searches the apps for a port resolver
+**Then** neither app holds one, and the module's cases are tested once, in the root
+package's suite
+
+## Decisions
+
+- **D1** (owner, 2026-11-23, STY-095 grilling round 4): record the duplication as a
+  chore and run it in the alignment sequence, right after STY-095, whose renames settle
+  the site's script names first.
+
+## Out of scope
+
+- The language preference both apps resolve alike: STY-096 gives the site's copy the
+  editor's shape, with no shared package (STY-096 D4).

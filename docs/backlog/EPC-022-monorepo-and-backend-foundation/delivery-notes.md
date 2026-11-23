@@ -11,3 +11,9 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   step 3, or the scenario itself), with no words about merging; the PR's _Needs you_
   lists the cut-over's steps. The observation, once made, goes into the archived
   record's Delivery in a later commit.
+- **A public-site change the public can see waits for the owner's eye**: a pull request
+  that changes what the public site shows (its text, marks, font, icons or look, as
+  STY-096, STY-097 and STY-099 do) puts its before/after screenshots in the PR and is
+  merged only once the owner has seen them and approved, even in a run authorised to
+  merge (owner, 2026-11-23, STY-095 grilling). A change with no visible difference on
+  the site merges as the run allows.

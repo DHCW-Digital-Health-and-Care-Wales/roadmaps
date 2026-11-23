@@ -7,7 +7,7 @@
 - **Depends on**: STY-095 (hard)
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one small module moved and two callers repointed
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/272
 
 ## Summary
 

@@ -77,10 +77,14 @@ field's `keepFocus` holds focus in its title until then. An Escape pressed in th
 reaches the field's `onKeyDown`, which closes the field and drops its title, and closes
 the dialog as well.
 
-`expand` in `roadmap-detail-page-quick-add.test.tsx` now waits, through
-`expectOpeningFocus`, for the dialog's title to take focus before it returns. All nine
-of its callers wait, the three that discard the dialog it returns among them: "does
-nothing on a click outside the dialog" clicked at once too.
+`roadmap-detail-page-quick-add.test.tsx` gains `chooseMoreDetails`, which chooses "Add
+more details" and waits, through `expectOpeningFocus`, for the dialog's title to take
+focus. `expand` ends with it, so all nine of its callers wait, the three that discard
+the dialog it returns among them: "does nothing on a click outside the dialog" clicked
+at once too. The three cases of "%s adds nothing and brings Next's field back, …", which
+move the cursor before expanding and so do not call `expand`, call it too: they typed
+into the dialog's Description at once, and failed the same way under the delay below.
+The S2 test of the opened form now reads the title's focus once `expand` has waited.
 
 The sweep for the same race in other tests is DEF-030's: a key pressed in a menu or
 dialog straight after it opens. The edit dialog's Escape in

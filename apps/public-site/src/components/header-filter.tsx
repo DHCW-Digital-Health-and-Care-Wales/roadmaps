@@ -1,5 +1,4 @@
 import { ListFilter, X } from "lucide-react"
-import { organisation } from "../lib/content"
 import {
   firstCardOnScreen,
   focusCard,
@@ -7,11 +6,9 @@ import {
   openOrgFilter,
   ORG_FILTER_ID,
 } from "../lib/focus"
-import { fill, useLanguage } from "../lib/i18n"
+import { useTranslation } from "react-i18next"
 import { setOrgFilter } from "../lib/router"
-import { UI } from "../lib/strings"
 import { type OrganisationId, NO_ORG_FILTER } from "../lib/types"
-import { T } from "./t"
 
 /** Opens the filter panel, scrolling to it. */
 const openFilter = () => {
@@ -37,8 +34,8 @@ function clearFilter() {
  * which opens the filter, and a button to clear it.
  */
 export function FilterChip({ org }: { org: OrganisationId }) {
-  const { tr } = useLanguage()
-  const { short } = organisation(org)
+  const { t } = useTranslation()
+  const short = t(`organisations.${org}.short`)
 
   return (
     <div className="hidden sm:block">
@@ -50,19 +47,15 @@ export function FilterChip({ org }: { org: OrganisationId }) {
         >
           <ListFilter aria-hidden="true" className="h-4 w-4 shrink-0" />
           <span className="sr-only">
-            <T
-              value={fill(UI.filteredByOrganisation, { organisation: short })}
-            />
+            {t("filter.filteredByOrganisation", { organisation: short })}
           </span>
-          <span aria-hidden="true">
-            <T value={short} />
-          </span>
+          <span aria-hidden="true">{short}</span>
         </button>
         <button
           type="button"
           onClick={clearFilter}
-          aria-label={tr(UI.clearFilter)}
-          title={tr(UI.clearFilter)}
+          aria-label={t("filter.clearFilter")}
+          title={t("filter.clearFilter")}
           className="rounded-r-full border-l border-white/40 py-1.5 pl-1.5 pr-2 hover:bg-white/15"
         >
           <X aria-hidden="true" className="h-4 w-4" />
@@ -77,8 +70,8 @@ export function FilterChip({ org }: { org: OrganisationId }) {
  * of height `--filter-strip-height`, which index.css moves the page down by.
  */
 export function FilterStrip({ org }: { org: OrganisationId }) {
-  const { tr } = useLanguage()
-  const { short } = organisation(org)
+  const { t } = useTranslation()
+  const short = t(`organisations.${org}.short`)
 
   return (
     <div
@@ -92,17 +85,17 @@ export function FilterStrip({ org }: { org: OrganisationId }) {
       >
         <ListFilter aria-hidden="true" className="h-4 w-4 shrink-0" />
         <span className="truncate">
-          <T value={fill(UI.filteredBy, { organisation: short })} />
+          {t("filter.filteredBy", { organisation: short })}
         </span>
       </button>
       <button
         type="button"
         onClick={clearFilter}
-        aria-label={tr(UI.clearFilter)}
+        aria-label={t("filter.clearFilter")}
         className="inline-flex shrink-0 items-center gap-1 rounded-sm px-2 py-1 font-medium hover:bg-white/15"
       >
         <X aria-hidden="true" className="h-4 w-4" />
-        <T value={UI.clear} />
+        {t("filter.clear")}
       </button>
     </div>
   )

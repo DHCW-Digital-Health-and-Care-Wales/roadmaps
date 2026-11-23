@@ -1,4 +1,10 @@
-import { LANGUAGES, rememberLang, useLanguage } from "../lib/i18n"
+import { useTranslation } from "react-i18next"
+import {
+  languageEndonyms,
+  storeLanguagePreference,
+  supportedLanguages,
+  useLanguage,
+} from "../i18n"
 import { onNavigate, pathFor, useOrgFilter, withOrgFilter } from "../lib/router"
 
 /**
@@ -9,26 +15,27 @@ import { onNavigate, pathFor, useOrgFilter, withOrgFilter } from "../lib/router"
 export function LanguageToggle() {
   const { lang, route } = useLanguage()
   const filter = useOrgFilter()
+  const { t } = useTranslation()
 
   return (
     <div
       role="group"
-      aria-label="Dewis iaith / Choose language"
+      aria-label={t("site.chooseLanguage")}
       className="inline-flex rounded-sm border border-white/40"
     >
-      {LANGUAGES.map((option) => {
-        const isActive = lang === option.value
-        const path = pathFor(option.value, route.slug)
+      {supportedLanguages.map((option) => {
+        const isActive = lang === option
+        const path = pathFor(option, route.slug)
         // The filter is in the link too, so it is kept in a new tab.
         const href = withOrgFilter(path, filter)
         return (
           <a
-            key={option.value}
+            key={option}
             href={href}
-            lang={option.value}
-            hrefLang={option.value}
+            lang={option}
+            hrefLang={option}
             onClick={(event) => {
-              rememberLang(option.value)
+              storeLanguagePreference(option)
               const { search, hash } = window.location
               onNavigate(`${path}${search}${hash}`, { scroll: false })(event)
             }}
@@ -39,7 +46,7 @@ export function LanguageToggle() {
                 : "bg-transparent text-white hover:bg-white/15"
             }`}
           >
-            {option.label}
+            {languageEndonyms[option]}
           </a>
         )
       })}

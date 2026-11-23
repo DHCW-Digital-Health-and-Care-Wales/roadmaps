@@ -107,8 +107,9 @@ up as a dropdown with **Data → Data validation**): `Public Health & Apps`,
 of the landing page; roadmaps with a blank category are listed last under "Other
 roadmaps", which has no jump link. Any other value is reported as a sheet warning and
 treated as blank. Within a category, roadmaps are sorted by title. The categories'
-Welsh names, descriptions, icons and colours are the public site's
-(`apps/public-site/src/lib/content.ts`); the sheet only picks one.
+Welsh names and descriptions (`apps/public-site/src/i18n/locales/`) and their icons and
+colours (`apps/public-site/src/lib/content.ts`) are the public site's; the sheet only
+picks one.
 
 **Roadmap tabs**: one row per item, in any column order.
 

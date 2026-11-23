@@ -1,18 +1,16 @@
 import { ArrowRight, Building2 } from "lucide-react"
-import type { Roadmap, OrgFilter } from "../lib/types"
-import { fill, useLanguage } from "../lib/i18n"
-import { HORIZONS, organisation } from "../lib/content"
+import { Trans, useTranslation } from "react-i18next"
+import { useLanguage } from "../i18n"
+import { HORIZON_IDS, type Roadmap, type OrgFilter } from "../lib/types"
 import {
   countItems,
   countOf,
   filterItems,
   formatDate,
-  roadmapSummary,
 } from "../lib/roadmap-helpers"
 import { onNavigate, pathFor, withOrgFilter } from "../lib/router"
-import { UI } from "../lib/strings"
 import { FamilyLabel } from "./family-label"
-import { T } from "./t"
+import { ContentText } from "./content-text"
 
 /**
  * A landing page card linking to a roadmap. While filtered, it says how many
@@ -26,10 +24,10 @@ export function ProductCard({
   filter: OrgFilter
 }) {
   const { lang } = useLanguage()
+  const { t } = useTranslation()
   const href = withOrgFilter(pathFor(lang, roadmap.slug), filter)
   const { meta } = roadmap
   const accent = meta.colour
-  const summary = roadmapSummary(roadmap)
   const headingId = `product-${roadmap.slug}`
 
   return (
@@ -48,7 +46,7 @@ export function ProductCard({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 overflow-hidden text-xs text-ink-700">
           {meta.statusLabel.en ? (
             <span>
-              <T value={meta.statusLabel} />
+              <ContentText value={meta.statusLabel} />
             </span>
           ) : null}
           {meta.lastUpdated ? (
@@ -63,10 +61,11 @@ export function ProductCard({
                   ·
                 </span>
               ) : null}
-              <T value={UI.updated} />{" "}
-              <time dateTime={meta.lastUpdated}>
-                {formatDate(meta.lastUpdated, lang)}
-              </time>
+              <Trans
+                i18nKey="landing.updated"
+                values={{ date: formatDate(meta.lastUpdated, t) }}
+                components={{ time: <time dateTime={meta.lastUpdated} /> }}
+              />
             </span>
           ) : null}
         </div>
@@ -85,15 +84,18 @@ export function ProductCard({
             onClick={onNavigate(href)}
             className="after:absolute after:inset-0 after:content-[''] focus-visible:shadow-none focus-visible:outline-hidden group-hover:underline"
           >
-            <T value={meta.title} />
+            <ContentText value={meta.title} />
           </a>
         </h3>
 
-        {summary.en ? (
-          <p className="mt-3 line-clamp-4 leading-relaxed text-ink-900">
-            <T value={summary} />
-          </p>
-        ) : null}
+        {/* The service description, or the generic intro without one. */}
+        <p className="mt-3 line-clamp-4 leading-relaxed text-ink-900">
+          {meta.serviceDescription.en ? (
+            <ContentText value={meta.serviceDescription} />
+          ) : (
+            t("roadmap.intro")
+          )}
+        </p>
 
         {/* mt-auto pins the counts and link to the bottom, so they line up across a row. */}
         <div className="mt-auto pt-5">
@@ -102,26 +104,24 @@ export function ProductCard({
               <Building2 aria-hidden="true" className="h-4 w-4 shrink-0" />
               <span>
                 <strong className="font-semibold text-heading">
-                  <T value={countOf(countItems(roadmap, filter))} />
+                  {countOf(countItems(roadmap, filter), t)}
                 </strong>{" "}
-                <T
-                  value={fill(UI.itemsFor, {
-                    organisation: organisation(filter.org).short,
-                  })}
-                />
+                {t("landing.itemsFor", {
+                  organisation: t(`organisations.${filter.org}.short`),
+                })}
               </span>
             </p>
           ) : null}
           <ul className="flex flex-wrap gap-y-1 text-base">
-            {HORIZONS.map((horizon, i) => (
-              <li key={horizon.id} className="flex items-baseline gap-1">
+            {HORIZON_IDS.map((id, i) => (
+              <li key={id} className="flex items-baseline gap-1">
                 <span className="font-semibold text-heading">
-                  {filterItems(roadmap.items[horizon.id], filter).length}
+                  {filterItems(roadmap.items[id], filter).length}
                 </span>
                 <span className="text-ink-700">
-                  <T value={horizon.label} />
+                  {t(`horizons.${id}.label`)}
                 </span>
-                {i < HORIZONS.length - 1 ? (
+                {i < HORIZON_IDS.length - 1 ? (
                   <span aria-hidden="true" className="mx-2 text-ink-500">
                     ·
                   </span>
@@ -135,7 +135,7 @@ export function ProductCard({
           aria-hidden="true"
           className="inline-flex items-center gap-1 pt-6 font-medium text-action"
         >
-          <T value={UI.viewRoadmap} />
+          {t("landing.viewRoadmap")}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </p>
       </div>

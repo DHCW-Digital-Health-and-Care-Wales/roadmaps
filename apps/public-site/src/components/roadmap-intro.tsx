@@ -1,13 +1,12 @@
 import type { ReactNode } from "react"
+import { Trans, useTranslation } from "react-i18next"
+import { useLanguage } from "../i18n"
 import type { RoadmapMeta, OrgFilter } from "../lib/types"
-import { useLanguage } from "../lib/i18n"
-import { ROADMAP_INTRO } from "../lib/content"
 import { formatDate } from "../lib/roadmap-helpers"
 import { pathFor, withOrgFilter } from "../lib/router"
-import { UI } from "../lib/strings"
 import { BackLink } from "./back-link"
 import { FamilyLabel } from "./family-label"
-import { T } from "./t"
+import { ContentText } from "./content-text"
 
 /**
  * Title section, rendered as the page's primary heading. A link back to all
@@ -32,15 +31,17 @@ export function RoadmapIntro({
   children?: ReactNode
 }) {
   const { lang } = useLanguage()
+  const { t } = useTranslation()
   const back = withOrgFilter(pathFor(lang, null), filter)
   const metaItems: { key: string; content: ReactNode }[] = []
   if (meta.statusLabel.en) {
     metaItems.push({
       key: "status",
       content: (
-        <>
-          <T value={UI.status} />: <T value={meta.statusLabel} />
-        </>
+        <Trans
+          i18nKey="roadmap.status"
+          components={{ status: <ContentText value={meta.statusLabel} /> }}
+        />
       ),
     })
   }
@@ -48,23 +49,18 @@ export function RoadmapIntro({
     metaItems.push({
       key: "updated",
       content: (
-        <>
-          <T value={UI.lastUpdated} />:{" "}
-          <time dateTime={meta.lastUpdated}>
-            {formatDate(meta.lastUpdated, lang)}
-          </time>
-        </>
+        <Trans
+          i18nKey="roadmap.lastUpdated"
+          values={{ date: formatDate(meta.lastUpdated, t) }}
+          components={{ time: <time dateTime={meta.lastUpdated} /> }}
+        />
       ),
     })
   }
   if (meta.productLead) {
     metaItems.push({
       key: "lead",
-      content: (
-        <>
-          <T value={UI.productLead} />: {meta.productLead}
-        </>
-      ),
+      content: t("roadmap.productLead", { name: meta.productLead }),
     })
   }
 
@@ -87,7 +83,7 @@ export function RoadmapIntro({
             href={back}
             className="float-left mr-8 xl:col-start-1 xl:row-start-1 xl:justify-self-start"
           >
-            <T value={UI.allRoadmaps} />
+            {t("roadmap.allRoadmaps")}
           </BackLink>
           {controls ? (
             <div className="min-w-0 xl:col-start-2 xl:row-span-2 xl:row-start-1">
@@ -110,7 +106,7 @@ export function RoadmapIntro({
                 </FamilyLabel>{" "}
               </>
             ) : null}
-            <T value={meta.title} />
+            <ContentText value={meta.title} />
           </h1>
 
           {metaItems.length > 0 ? (
@@ -139,15 +135,15 @@ export function RoadmapIntro({
           {meta.vision.en ? (
             <div id="vision" className="mt-8 max-w-3xl">
               <h2 className="text-2xl font-bold text-heading">
-                <T value={UI.vision} />
+                {t("roadmap.vision")}
               </h2>
               <p className="mt-4 whitespace-pre-line text-lg leading-relaxed text-ink-900">
-                <T value={meta.vision} />
+                <ContentText value={meta.vision} />
               </p>
             </div>
           ) : (
             <p className="mt-6 max-w-3xl text-lg leading-relaxed text-ink-900">
-              <T value={ROADMAP_INTRO} />
+              {t("roadmap.intro")}
             </p>
           )}
           {children}

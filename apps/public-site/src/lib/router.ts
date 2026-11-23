@@ -4,7 +4,7 @@ import {
   useSyncExternalStore,
   type MouseEvent,
 } from "react"
-import { isLang, type Lang } from "./i18n"
+import { isLanguage, type Language } from "../i18n/languages"
 import { isOrganisationId, NO_ORG_FILTER, type OrgFilter } from "./types"
 
 /**
@@ -19,7 +19,7 @@ const BASE = import.meta.env.BASE_URL
 
 /** `lang` is null outside a language folder; `slug` is null on a landing page. */
 export interface Route {
-  lang: Lang | null
+  lang: Language | null
   slug: string | null
 }
 
@@ -46,13 +46,13 @@ export function routeFromPath(pathname: string): Route {
     .replace(/(^|\/)index\.html$/, "")
     .replace(/\/+$/, "")
   const [first, ...rest] = path.split("/")
-  const lang = isLang(first) ? first : null
+  const lang = isLanguage(first) ? first : null
   const slug = lang ? rest.join("/") : path
   return { lang, slug: slug ? decode(slug) : null }
 }
 
 /** A product page, or the landing page when `slug` is null or empty. */
-export function pathFor(lang: Lang, slug: string | null): string {
+export function pathFor(lang: Language, slug: string | null): string {
   return slug
     ? `${BASE}${lang}/${encodeURIComponent(slug)}/`
     : `${BASE}${lang}/`

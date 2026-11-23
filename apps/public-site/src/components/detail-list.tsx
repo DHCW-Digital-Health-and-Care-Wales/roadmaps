@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import type { DetailLine } from "../lib/types"
-import { T } from "./t"
+import { ContentText } from "./content-text"
 
 /** Builds nested lists from `level`, so "- " lines sit under the line above. */
 export function DetailList({
@@ -26,7 +26,7 @@ export function DetailList({
       }
       nodes.push(
         <li key={index}>
-          <T value={line.text} />
+          <ContentText value={line.text} />
           {children}
         </li>,
       )

@@ -6,7 +6,8 @@ import { App } from "./app"
 import { LanguageProvider } from "./components/language-provider"
 import snapshot from "../e2e/fixtures/roadmaps.json"
 import { renderDataFiles, renderPages } from "./entry-server"
-import { UI } from "./lib/strings"
+import { cy } from "./i18n/locales/cy"
+import { en } from "./i18n/locales/en"
 
 const SITE = "https://example.org/product-roadmaps/"
 const pages = await renderPages(SITE)
@@ -151,8 +152,8 @@ describe("prerender", () => {
     expect(page?.html).toContain("We couldn’t find that page.")
     expect(page?.html).toContain('<div lang="cy"')
     expect(page?.html).toContain('href="/product-roadmaps/cy/"')
-    expect(page?.html).toContain(UI.phaseBannerText.cy)
-    expect(page?.html).toContain(UI.phaseBannerText.en)
+    expect(page?.html).toContain(cy.site.phaseBanner)
+    expect(page?.html).toContain(en.site.phaseBanner)
   })
 
   it.each(

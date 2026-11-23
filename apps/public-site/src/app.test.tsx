@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { App } from "./app"
 import { LanguageProvider } from "./components/language-provider"
 import { titleWithFamily } from "./lib/roadmap-helpers"
-import { UI } from "./lib/strings"
+import { en } from "./i18n/locales/en"
 import type { Roadmap } from "./lib/types"
 import snapshot from "../e2e/fixtures/roadmaps.json"
 
@@ -101,7 +101,7 @@ describe("App routing", () => {
     "/product-roadmaps/en/nope/",
   ])("shows the phase banner on %s", (path) => {
     renderAt(path)
-    expect(screen.getByText(UI.phaseBannerText.en)).toBeTruthy()
+    expect(screen.getByText(en.site.phaseBanner)).toBeTruthy()
   })
 
   it("shows the about section on the landing page only", () => {

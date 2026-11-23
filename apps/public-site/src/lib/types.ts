@@ -1,16 +1,16 @@
 /**
  * Roadmap content model. Content comes from a Google Sheet snapshot made at
  * build time in .data/roadmaps.json (see scripts/sync-roadmaps.ts); text shared by
- * every roadmap lives in src/lib/content.ts. Display text is language-keyed;
- * Welsh comes from optional "(cy)" sheet columns and empty Welsh falls back to
- * English (src/lib/i18n.ts).
+ * every roadmap is in the catalogues (src/i18n/locales/). Display text is
+ * language-keyed; Welsh comes from optional "(cy)" sheet columns and empty
+ * Welsh falls back to English (src/i18n/localised.ts).
  */
 
 // The single source of truth for where a card can appear. The sheet parser,
 // the snapshot schema and the page content are all built from these lists.
 export const HORIZON_IDS = ["now", "next", "later"] as const
 
-/** The fixed sections shown around the horizons (see src/lib/content.ts). */
+/** The fixed sections shown around the horizons (see `sections` in src/i18n/locales/). */
 export const SECTION_IDS = [
   "recently-delivered",
   "delivered-this-year",
@@ -29,7 +29,7 @@ export type Placement = (typeof PLACEMENT_IDS)[number]
 /**
  * Landing page categories, in display order. Each id is the kebab-case of the
  * English name the sheet's "Category" dropdown uses (CATEGORY_SHEET_VALUES).
- * Display names and descriptions are in src/lib/content.ts.
+ * Display names and descriptions are in the catalogues (src/i18n/locales/).
  */
 export const CATEGORY_IDS = [
   "public-health-apps",
@@ -57,8 +57,8 @@ export const CATEGORY_SHEET_VALUES: Record<CategoryId, string> = {
  * lower-case code the sheet's "Organisations" column uses
  * (ORGANISATION_SHEET_VALUES) without punctuation, so 'pi' for "P&I", and is
  * the `org` value in filter URLs.
- * 'national' is work for every organisation in Wales. Names are in
- * src/lib/content.ts.
+ * 'national' is work for every organisation in Wales. Names are in the
+ * catalogues (src/i18n/locales/).
  */
 export const ORGANISATION_IDS = [
   "national",

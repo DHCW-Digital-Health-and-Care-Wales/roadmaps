@@ -1,5 +1,7 @@
 import logoImage from "../assets/dhcw-logo.png"
-import { useLanguage } from "../lib/i18n"
+import type { ParseKeys } from "i18next"
+import { useTranslation } from "react-i18next"
+import { useLanguage } from "../i18n"
 import { FEEDBACK_URL, REPO_URL } from "../lib/links"
 import {
   dataPathFor,
@@ -9,14 +11,14 @@ import {
   withOrgFilter,
   type View,
 } from "../lib/router"
-import type { Localised, OrgFilter } from "../lib/types"
-import { UI } from "../lib/strings"
-import { T } from "./t"
+import type { OrgFilter } from "../lib/types"
+
+const opensInNewTab = { target: "_blank", rel: "noreferrer" }
 
 interface FooterLink {
   key: string
   href: string
-  label: Localised
+  label: ParseKeys
   /**
    * `app` links switch the layout in place, so they need JavaScript; `route`
    * links are real pages that JavaScript opens without a reload.
@@ -39,26 +41,27 @@ export function SiteFooter({
   view: View
   filter: OrgFilter
 }) {
-  const { lang, tr } = useLanguage()
+  const { lang } = useLanguage()
+  const { t } = useTranslation()
   const hasJs = useHasJs()
   const toList = view !== "list"
   const links: FooterLink[] = [
     {
       key: "feedback",
       href: FEEDBACK_URL,
-      label: UI.giveFeedback,
+      label: "site.giveFeedback",
       kind: "external",
     },
     {
       key: "accessibility",
       href: pathFor(lang, "accessibility"),
-      label: UI.accessibilityHeading,
+      label: "infoPages.accessibility.heading",
       kind: "route",
     },
     {
       key: "privacy",
       href: pathFor(lang, "privacy"),
-      label: UI.privacyHeading,
+      label: "infoPages.privacy.heading",
       kind: "route",
     },
     ...(dataSlug
@@ -66,9 +69,9 @@ export function SiteFooter({
           {
             key: "data",
             href: dataPathFor(dataSlug),
-            label: UI.roadmapData,
-            kind: "page" as const,
-          },
+            label: "footer.roadmapData",
+            kind: "page",
+          } satisfies FooterLink,
           ...(hasJs
             ? [
                 {
@@ -77,9 +80,9 @@ export function SiteFooter({
                     `${pathFor(lang, dataSlug)}${toList ? "?view=list" : ""}`,
                     filter,
                   ),
-                  label: toList ? UI.listViewLink : UI.cardViewLink,
-                  kind: "app" as const,
-                },
+                  label: toList ? "footer.listView" : "footer.cardView",
+                  kind: "app",
+                } satisfies FooterLink,
               ]
             : []),
         ]
@@ -87,10 +90,15 @@ export function SiteFooter({
     {
       key: "licence",
       href: `${REPO_URL}/blob/main/LICENSE`,
-      label: UI.licence,
+      label: "footer.licence",
       kind: "external",
     },
-    { key: "github", href: REPO_URL, label: UI.onGitHub, kind: "external" },
+    {
+      key: "github",
+      href: REPO_URL,
+      label: "footer.onGitHub",
+      kind: "external",
+    },
   ]
 
   return (
@@ -98,10 +106,10 @@ export function SiteFooter({
       <div className="mx-auto max-w-content">
         <img
           src={logoImage}
-          alt={tr(UI.organisation)}
+          alt={t("site.organisation")}
           className="h-12 w-auto object-contain"
         />
-        <nav aria-label={tr(UI.footerNav)} className="mt-6">
+        <nav aria-label={t("footer.nav")} className="mt-6">
           <ul className="flex flex-wrap gap-x-6 gap-y-2">
             {links.map((link) => (
               <li key={link.key}>
@@ -115,18 +123,16 @@ export function SiteFooter({
                         : undefined
                   }
                   className="text-sm underline underline-offset-4 hover:no-underline"
-                  {...(link.kind === "external"
-                    ? { target: "_blank", rel: "noreferrer" }
-                    : {})}
+                  {...(link.kind === "external" ? opensInNewTab : {})}
                 >
-                  <T value={link.label} />
+                  {t(link.label)}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
         <p className="mt-6 text-sm text-white/80">
-          <T value={UI.organisationFooter} />
+          {t("site.organisationFooter")}
         </p>
       </div>
     </footer>

@@ -1,9 +1,8 @@
-import { useLanguage } from "../lib/i18n"
+import { useTranslation } from "react-i18next"
+import { useLanguage } from "../i18n"
 import { INFO_PAGES } from "../lib/info-pages"
 import { pathFor, type InfoPageId } from "../lib/router"
-import { UI } from "../lib/strings"
 import { ArrowLink } from "../components/arrow-link"
-import { T } from "../components/t"
 
 /**
  * The accessibility statement or privacy note, on a page of its own: the
@@ -13,6 +12,7 @@ import { T } from "../components/t"
  */
 export function InfoPage({ page }: { page: InfoPageId }) {
   const { lang } = useLanguage()
+  const { t } = useTranslation()
   const { heading, paragraphs } = INFO_PAGES[page]
   const home = pathFor(lang, null)
 
@@ -23,20 +23,18 @@ export function InfoPage({ page }: { page: InfoPageId }) {
           tabIndex={-1}
           className="mx-auto max-w-content text-3xl font-bold text-heading"
         >
-          <T value={heading} />
+          {t(heading)}
         </h1>
       </div>
       <div className="page-body">
         <div className="mx-auto max-w-content">
           <div className="max-w-3xl space-y-4 leading-relaxed text-ink-900">
             {paragraphs.map((paragraph) => (
-              <p key={paragraph.en}>
-                <T value={paragraph} />
-              </p>
+              <p key={paragraph}>{t(paragraph)}</p>
             ))}
           </div>
           <ArrowLink href={home} className="mt-8">
-            <T value={UI.viewAllRoadmaps} />
+            {t("site.viewAllRoadmaps")}
           </ArrowLink>
         </div>
       </div>

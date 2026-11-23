@@ -1,16 +1,22 @@
 import type { MouseEvent } from "react"
 import { Building2, Check, Map as MapIcon } from "lucide-react"
-import { organisation } from "../lib/content"
+import { useTranslation } from "react-i18next"
 import { keepInPlace } from "../lib/focus"
-import { fill, useLanguage } from "../lib/i18n"
 import { includesAllWales } from "../lib/roadmap-helpers"
 import { setOrgFilter, useHasJs, useOrgFilter } from "../lib/router"
-import { UI } from "../lib/strings"
 import { type OrganisationId, NO_ORG_FILTER } from "../lib/types"
-import { T } from "./t"
 
 const pill =
   "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium"
+
+const looks = {
+  plain:
+    "border-border-strong bg-surface text-ink-700 hover:border-action hover:text-action",
+  pressed: "border-heading bg-heading text-white hover:bg-navy",
+  // All of Wales while a filter takes all-Wales work in.
+  included:
+    "border-heading bg-surface-muted text-heading hover:border-action hover:text-action",
+}
 
 /**
  * The organisations a roadmap item is for. Each is a toggle button: pressing
@@ -25,7 +31,7 @@ export function OrgPills({
   organisations: readonly OrganisationId[]
   className?: string
 }) {
-  const { tr } = useLanguage()
+  const { t } = useTranslation()
   const hasJs = useHasJs()
   const filter = useOrgFilter()
 
@@ -43,11 +49,9 @@ export function OrgPills({
 
   return (
     <p className={`flex flex-wrap items-center gap-1.5 ${className}`}>
-      <span className="sr-only">
-        <T value={UI.organisationsLabel} />{" "}
-      </span>
+      <span className="sr-only">{t("filter.organisations")} </span>
       {organisations.map((id) => {
-        const { name, short } = organisation(id)
+        const short = t(`organisations.${id}.short`)
         const Icon = id === "national" ? MapIcon : Building2
         if (!hasJs) {
           return (
@@ -56,28 +60,28 @@ export function OrgPills({
               className={`${pill} border-border-strong bg-surface text-ink-700`}
             >
               <Icon aria-hidden="true" className="h-3 w-3 shrink-0" />
-              <T value={short} />
+              {short}
             </span>
           )
         }
         const pressed = id === filter.org
-        let look =
-          "border-border-strong bg-surface text-ink-700 hover:border-action hover:text-action"
-        if (pressed) look = "border-heading bg-heading text-white hover:bg-navy"
+        let look = looks.plain
+        if (pressed) look = looks.pressed
         else if (id === "national" && includesAllWales(filter)) {
-          look =
-            "border-heading bg-surface-muted text-heading hover:border-action hover:text-action"
+          look = looks.included
         }
         return (
           <button
             key={id}
             type="button"
             aria-pressed={pressed}
-            title={tr(
+            title={
               pressed
-                ? UI.showAllItemsAgain
-                : fill(UI.showOnlyWorkFor, { organisation: name }),
-            )}
+                ? t("filter.showAllItemsAgain")
+                : t("filter.showOnlyWorkFor", {
+                    organisation: t(`organisations.${id}.name`),
+                  })
+            }
             onClick={toggle(id)}
             className={`${pill} ${look} underline-offset-2 hover:underline`}
           >
@@ -86,10 +90,7 @@ export function OrgPills({
             ) : (
               <Icon aria-hidden="true" className="h-3 w-3 shrink-0" />
             )}
-            <span className="sr-only">
-              <T value={UI.filterByPill} />
-            </span>{" "}
-            <T value={short} />
+            <span className="sr-only">{t("filter.byPill")}</span> {short}
           </button>
         )
       })}

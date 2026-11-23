@@ -1,13 +1,22 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { ReactNode } from "react"
-import type { Localised } from "../lib/types"
-import { DEFAULT_LANGUAGE, LanguageContext, t } from "../lib/i18n"
+import { I18nextProvider } from "react-i18next"
+import type { i18n } from "i18next"
+import {
+  createI18n,
+  defaultLanguage,
+  LanguageContext,
+  supportedLanguages,
+  type Language,
+} from "../i18n"
 import { useRoute, type Route } from "../lib/router"
 
 /**
- * Provides the current route, its language (from the URL path) and a
- * translation helper, and keeps the document `lang` attribute in sync. The
- * prerender passes `serverRoute` because there is no URL to read.
+ * Provides the current route, its language (from the URL path) and an i18next
+ * instance in that language, and keeps the document `lang` attribute in sync.
+ * Each language has its own instance, so a change of language renders the new
+ * page in one pass. The prerender passes `serverRoute` because there is no URL
+ * to read.
  */
 export function LanguageProvider({
   serverRoute,
@@ -17,20 +26,26 @@ export function LanguageProvider({
   children: ReactNode
 }) {
   const route = useRoute(serverRoute)
-  const lang = route.lang ?? DEFAULT_LANGUAGE
+  const lang = route.lang ?? defaultLanguage
+  const [instances] = useState(
+    () =>
+      Object.fromEntries(
+        supportedLanguages.map((language) => [
+          language,
+          createI18n({ language }),
+        ]),
+      ) as Record<Language, i18n>,
+  )
 
   useEffect(() => {
     document.documentElement.lang = lang
   }, [lang])
 
-  const value = useMemo(
-    () => ({
-      lang,
-      route,
-      tr: (localised: Localised) => t(localised, lang),
-    }),
-    [lang, route],
-  )
+  const value = useMemo(() => ({ lang, route }), [lang, route])
 
-  return <LanguageContext value={value}>{children}</LanguageContext>
+  return (
+    <I18nextProvider i18n={instances[lang]}>
+      <LanguageContext value={value}>{children}</LanguageContext>
+    </I18nextProvider>
+  )
 }

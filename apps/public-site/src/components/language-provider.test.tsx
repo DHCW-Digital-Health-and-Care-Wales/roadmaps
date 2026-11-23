@@ -7,16 +7,21 @@ import {
   waitFor,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { LANG_STORAGE_KEY, preferredLang, useLanguage } from "../lib/i18n"
+import { useTranslation } from "react-i18next"
+import { useLanguage } from "../i18n"
 import { LanguageProvider } from "./language-provider"
 import { LanguageToggle } from "./language-toggle"
 
 function Probe() {
   const { lang, route } = useLanguage()
+  const { t } = useTranslation()
   return (
-    <p>
-      {lang} {route.slug}
-    </p>
+    <>
+      <p>
+        {lang} {route.slug}
+      </p>
+      <p>{t("site.backToTop")}</p>
+    </>
   )
 }
 
@@ -73,8 +78,9 @@ describe("LanguageToggle", () => {
     expect(window.location.hash).toBe("#roadmap")
     expect(scrollTo).not.toHaveBeenCalled()
     expect(screen.getByText("cy a")).toBeTruthy()
+    expect(screen.getByText("Nôl i’r brig")).toBeTruthy()
     expect(document.documentElement.lang).toBe("cy")
-    expect(window.localStorage.getItem(LANG_STORAGE_KEY)).toBe("cy")
+    expect(window.localStorage.getItem("dhcw-product-roadmaps-lang")).toBe("cy")
   })
 
   it("goes back to the other language with the browser's Back", async () => {
@@ -96,20 +102,5 @@ describe("LanguageToggle", () => {
     const before = window.history.length
     fireEvent.click(screen.getByRole("link", { name: "English" }))
     expect(window.history.length).toBe(before)
-  })
-})
-
-describe("preferredLang", () => {
-  it("prefers the stored choice, then a Welsh browser, then the default", () => {
-    const languages = vi.spyOn(navigator, "languages", "get")
-    languages.mockReturnValue(["cy-GB", "en"])
-    window.localStorage.setItem(LANG_STORAGE_KEY, "en")
-    expect(preferredLang()).toBe("en")
-
-    window.localStorage.clear()
-    expect(preferredLang()).toBe("cy")
-
-    languages.mockReturnValue(["en-GB", "cym"])
-    expect(preferredLang()).toBe("en")
   })
 })

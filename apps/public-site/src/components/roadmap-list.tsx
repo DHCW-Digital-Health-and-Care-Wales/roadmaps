@@ -1,17 +1,16 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import type { Roadmap, OrgFilter } from "../lib/types"
-import { fill, useLanguage } from "../lib/i18n"
 import {
   countInParentheses,
   isExpandable,
+  placementHeading,
   placementHeadingId,
   roadmapGroups,
   showsPlacement,
 } from "../lib/roadmap-helpers"
-import { UI } from "../lib/strings"
 import { EmptyItems } from "./empty-items"
 import { RoadmapListItem } from "./roadmap-list-item"
-import { T } from "./t"
 
 const linkButton = "text-action underline underline-offset-4 hover:decoration-2"
 
@@ -27,7 +26,7 @@ export function RoadmapList({
   roadmap: Roadmap
   filter: OrgFilter
 }) {
-  const { tr } = useLanguage()
+  const { t } = useTranslation()
   const [open, setOpen] = useState<ReadonlySet<string>>(() => new Set())
 
   const groups = roadmapGroups(roadmap, filter).filter((g) =>
@@ -56,7 +55,7 @@ export function RoadmapList({
     >
       <div className="mx-auto max-w-content">
         <div className="max-w-3xl">
-          <nav aria-label={tr(UI.atAGlance)}>
+          <nav aria-label={t("roadmap.atAGlance")}>
             <ul className="grid grid-cols-2 gap-2 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none">
               {groups
                 .filter((g) => g.glance)
@@ -71,16 +70,12 @@ export function RoadmapList({
                         {g.items.length < g.total ? (
                           <span className="text-base font-normal text-ink-700">
                             {" "}
-                            <T
-                              value={fill(UI.ofTotal, {
-                                total: String(g.total),
-                              })}
-                            />
+                            {t("roadmap.ofTotal", { total: g.total })}
                           </span>
                         ) : null}
                       </span>
                       <span className="text-sm text-ink-700">
-                        <T value={g.heading} />
+                        {placementHeading(g.id, t)}
                       </span>
                     </a>
                   </li>
@@ -97,7 +92,7 @@ export function RoadmapList({
                   setOpen(new Set(expandable))
                 }}
               >
-                <T value={UI.openAll} />
+                {t("roadmap.openAll")}
               </button>
               <button
                 type="button"
@@ -106,7 +101,7 @@ export function RoadmapList({
                   setOpen(new Set())
                 }}
               >
-                <T value={UI.closeAll} />
+                {t("roadmap.closeAll")}
               </button>
             </div>
           ) : null}
@@ -121,17 +116,15 @@ export function RoadmapList({
                 id={placementHeadingId(g.id)}
                 className="border-b-2 border-heading pb-2 text-2xl font-bold text-heading"
               >
-                <T value={g.heading} />
+                {placementHeading(g.id, t)}
                 {filter.org ? (
                   <>
                     {" "}
                     <span className="text-lg font-normal text-ink-700">
-                      <T
-                        value={countInParentheses({
-                          shown: g.items.length,
-                          total: g.total,
-                        })}
-                      />
+                      {countInParentheses(
+                        { shown: g.items.length, total: g.total },
+                        t,
+                      )}
                     </span>
                   </>
                 ) : null}

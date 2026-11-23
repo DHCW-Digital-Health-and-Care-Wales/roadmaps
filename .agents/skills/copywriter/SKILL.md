@@ -1,6 +1,6 @@
 ---
 name: copywriter
-description: The product's voice and copy rules, in English and Welsh. Use whenever a task adds or edits a string in `apps/editor/src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
+description: The product's voice and copy rules, in English and Welsh, for the editor and the public site. Use whenever a task adds or edits a string in either app's `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
 user-invocable: true
 ---
 
@@ -13,7 +13,8 @@ They come to get a job done: move an item, sharpen its outcome, fix a tag. The
 interface copy should be nearly invisible, earning attention only when
 something needs a decision or has gone wrong. What the Product Lead publishes is shown
 on a separate public site, so the interface also helps them write it well: field
-labels, hints and examples are copy too.
+labels, hints and examples are copy too. The public site's own copy follows
+the same rules in the register _The public site_ sets.
 
 **Two things carry the rules, and this is only one of them.** The type system
 and the linter hold the mechanics: `pnpm typecheck` fails on a missing or extra
@@ -145,6 +146,30 @@ English spelling.
 Welsh runs longer than English. When Welsh cannot fit, shorten the English too
 rather than let one language spill. Mobile hides some labels (`common.shortAppName`);
 a string that must fit a 375px header needs a short form.
+
+## The public site
+
+`apps/public-site/src/i18n/locales/en.ts` and `cy.ts` hold the public site's
+interface and the fixed text it owns about horizons, sections, categories and
+organisations; roadmap content is sheet data, never catalogue text. The
+working order holds, with these differences of register and mechanics:
+
+- **Write for the public reader**: health boards, Welsh Government
+  stakeholders, DHCW staff, patients and the public, who come to see what DHCW
+  plans, not to do a job. Say what a page shows in their words, with none of
+  the editor's vocabulary (Product Lead, publish, pending, spreadsheet).
+- **Keep plans provisional**: roadmaps carry no dates and are not fixed
+  plans, so no string promises when or whether something is delivered.
+- **Roadmap is _trywydd_** here (plural _trywyddion_), with the singular
+  after a number and its mutation (_2 drywydd_, _3 thrywydd_);
+  `landing.roadmapCount_*` in `cy.ts` shows the pattern.
+- **Interpolate counts as `{{count}}`**, unformatted: the prerendered page
+  and the browser's render must give the same text.
+- **Put sheet content inside a sentence through `<Trans>`** with a named
+  element (`"Status: <status/>"`), so only English shown in place of Welsh is
+  marked `lang="en"`.
+- **List each new or changed Welsh string in the PR** for a fluent speaker's
+  check: the site is public, so its Welsh is read before it merges.
 
 ## The authority
 

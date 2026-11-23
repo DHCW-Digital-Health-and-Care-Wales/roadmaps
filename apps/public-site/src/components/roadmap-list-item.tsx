@@ -1,13 +1,12 @@
 import { useId } from "react"
 import { ChevronDown } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { RoadmapItem } from "../lib/types"
-import { DETAILS_HEADING } from "../lib/content"
 import { isExpandable } from "../lib/roadmap-helpers"
-import { UI } from "../lib/strings"
 import { DetailList } from "./detail-list"
 import { OrgPills } from "./org-pills"
 import { RichText } from "./rich-text"
-import { T } from "./t"
+import { ContentText } from "./content-text"
 
 /**
  * One row in the list view. The title opens the outcome and details when the
@@ -23,11 +22,12 @@ export function RoadmapListItem({
   open: boolean
   onToggle: () => void
 }) {
+  const { t } = useTranslation()
   const panelId = useId()
   const expandable = isExpandable(item)
   const title = (
     <span className="text-lg font-bold">
-      <T value={item.title} />
+      <ContentText value={item.title} />
     </span>
   )
 
@@ -71,17 +71,13 @@ export function RoadmapListItem({
         >
           {item.outcome ? (
             <div>
-              <p className="font-bold">
-                <T value={UI.outcome} />
-              </p>
+              <p className="font-bold">{t("roadmap.outcome")}</p>
               <RichText value={item.outcome} className="mt-1" />
             </div>
           ) : null}
           {item.details ? (
             <div>
-              <p className="font-bold">
-                <T value={DETAILS_HEADING} />
-              </p>
+              <p className="font-bold">{t("roadmap.details")}</p>
               <DetailList items={item.details} className="mt-1" />
             </div>
           ) : null}
@@ -92,7 +88,7 @@ export function RoadmapListItem({
         <p className="mt-2 flex flex-wrap gap-1.5 text-xs">
           {item.phase ? (
             <span className="rounded-sm border border-nhs-wales-blue px-2 py-0.5 font-bold text-nhs-wales-blue">
-              <T value={item.phase} />
+              <ContentText value={item.phase} />
             </span>
           ) : null}
           {item.labels?.map((label) => (
@@ -100,7 +96,7 @@ export function RoadmapListItem({
               key={label.en}
               className="rounded-sm bg-surface-muted px-2 py-0.5 font-medium text-ink-700"
             >
-              <T value={label} />
+              <ContentText value={label} />
             </span>
           ))}
         </p>

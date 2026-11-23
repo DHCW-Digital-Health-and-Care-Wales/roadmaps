@@ -1,8 +1,7 @@
-import { HORIZON_NOTE, HORIZONS } from "../lib/content"
+import { useTranslation } from "react-i18next"
 import type { View } from "../lib/router"
 import { placementHeadingId } from "../lib/roadmap-helpers"
-import { UI } from "../lib/strings"
-import { T } from "./t"
+import { HORIZON_IDS } from "../lib/types"
 
 const horizonLink =
   "text-action underline underline-offset-4 hover:decoration-2"
@@ -16,7 +15,8 @@ const horizonLink =
  */
 export function HorizonExplainer({ view }: { view: View }) {
   const headingId = "horizons-explainer-heading"
-  const note = <T value={HORIZON_NOTE} />
+  const { t } = useTranslation()
+  const note = t("roadmap.horizonNote")
 
   return (
     <section
@@ -27,25 +27,25 @@ export function HorizonExplainer({ view }: { view: View }) {
     >
       <div className="mx-auto max-w-content">
         <h2 id={headingId} className="text-2xl font-bold text-heading">
-          <T value={UI.horizonsHeading} />
+          {t("roadmap.horizonsHeading")}
         </h2>
 
         {view === "list" ? (
           <div className="max-w-3xl">
             <p className="mt-4 leading-relaxed text-ink-700">{note}</p>
             <dl className="mt-6 divide-y divide-border border-y border-border">
-              {HORIZONS.map((horizon) => (
-                <div key={horizon.id} className="py-3">
+              {HORIZON_IDS.map((id) => (
+                <div key={id} className="py-3">
                   <dt className="text-lg font-bold">
                     <a
-                      href={`#${placementHeadingId(horizon.id)}`}
+                      href={`#${placementHeadingId(id)}`}
                       className={horizonLink}
                     >
-                      <T value={horizon.label} />
+                      {t(`horizons.${id}.label`)}
                     </a>
                   </dt>
                   <dd className="mt-1 leading-relaxed text-ink-900">
-                    <T value={horizon.definition} />
+                    {t(`horizons.${id}.definition`)}
                   </dd>
                 </div>
               ))}
@@ -54,18 +54,18 @@ export function HorizonExplainer({ view }: { view: View }) {
         ) : (
           <>
             <dl className="mt-4 grid gap-x-8 gap-y-3 md:grid-cols-3">
-              {HORIZONS.map((horizon) => (
-                <div key={horizon.id}>
+              {HORIZON_IDS.map((id) => (
+                <div key={id}>
                   <dt className="font-bold">
                     <a
-                      href={`#${placementHeadingId(horizon.id)}`}
+                      href={`#${placementHeadingId(id)}`}
                       className={horizonLink}
                     >
-                      <T value={horizon.label} />
+                      {t(`horizons.${id}.label`)}
                     </a>
                   </dt>
                   <dd className="mt-1 leading-relaxed text-ink-700">
-                    <T value={horizon.definition} />
+                    {t(`horizons.${id}.definition`)}
                   </dd>
                 </div>
               ))}

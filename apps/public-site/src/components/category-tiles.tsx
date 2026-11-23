@@ -1,13 +1,11 @@
-import {
-  categorySectionId,
-  roadmapCount,
-  type CategoryTile,
-} from "../lib/roadmap-helpers"
-import { UI } from "../lib/strings"
+import { useTranslation } from "react-i18next"
+import { categorySectionId, type CategoryTile } from "../lib/roadmap-helpers"
 import { CategoryIcon } from "./category-icon"
-import { T } from "./t"
 
 const NAV_ID = "categories"
+
+const tileClass =
+  "flex h-full gap-3.5 rounded-card border border-border bg-surface px-5 py-4 text-ink-900 no-underline"
 
 /**
  * Jump links to each category's section, with the number of matches. A
@@ -15,12 +13,13 @@ const NAV_ID = "categories"
  * Nothing is shown if there are no tiles.
  */
 export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
+  const { t } = useTranslation()
   if (tiles.length === 0) return null
 
   return (
     <nav id={NAV_ID} aria-labelledby={`${NAV_ID}-heading`} className="mt-8">
       <h2 id={`${NAV_ID}-heading`} className="sr-only">
-        <T value={UI.browseCategories} />
+        {t("landing.browseCategories")}
       </h2>
       <ul className="card-gap grid sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map(({ category, count }) => {
@@ -31,19 +30,17 @@ export function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
                 <span
                   className={`block text-lg font-bold text-heading ${count ? "group-hover:underline" : ""}`}
                 >
-                  <T value={category.label} />
+                  {t(`categories.${category.id}.label`)}
                 </span>
                 <span className="mt-0.5 block text-sm text-ink-700">
-                  <T value={category.description} />
+                  {t(`categories.${category.id}.description`)}
                 </span>
                 <span className="mt-1.5 block text-sm text-ink-700">
-                  <T value={roadmapCount(count)} />
+                  {t("landing.roadmapCount", { count })}
                 </span>
               </span>
             </>
           )
-          const tileClass =
-            "flex h-full gap-3.5 rounded-card border border-border bg-surface px-5 py-4 text-ink-900 no-underline"
           return (
             <li key={category.id}>
               {count ? (

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it } from "vitest"
-import { ROADMAP_INTRO } from "../lib/content"
+import { en } from "../i18n/locales/en"
 import { NO_ORG_FILTER, type Roadmap, type RoadmapMeta } from "../lib/types"
 import { LanguageProvider } from "./language-provider"
 import { RoadmapIntro } from "./roadmap-intro"
@@ -62,6 +62,33 @@ describe("RoadmapIntro", () => {
     expect(screen.getByText(/Arweinydd cynnyrch: Alex Jones/)).toBeTruthy()
   })
 
+  it("marks only the English status inside the Welsh line", () => {
+    renderIntro(
+      { statusLabel: loc("Beta"), lastUpdated: "2026-10-01" },
+      "/product-roadmaps/cy/x/",
+    )
+    const status = screen.getByText("Beta")
+    expect(status.getAttribute("lang")).toBe("en")
+    expect(status.parentElement?.textContent).toBe("Statws: Beta")
+    // Nothing between the line and the page's own <html lang="cy">.
+    expect(status.parentElement?.closest("[lang]")?.tagName).toBe("HTML")
+    const updated = screen.getByText("1 Hydref 2026")
+    expect(updated.tagName).toBe("TIME")
+    // After the separating dot.
+    expect(updated.parentElement?.textContent).toBe(
+      "·Diweddarwyd ddiwethaf: 1 Hydref 2026",
+    )
+
+    cleanup()
+    renderIntro(
+      { statusLabel: loc("Beta", "Beta (cy)") },
+      "/product-roadmaps/cy/x/",
+    )
+    const welsh = screen.getByText("Statws: Beta (cy)")
+    expect(welsh.closest("[lang]")?.tagName).toBe("HTML")
+    expect(welsh.querySelector("[lang]")).toBeNull()
+  })
+
   it("hides the product lead and its separator when blank", () => {
     renderIntro({
       statusLabel: loc("Beta"),
@@ -90,13 +117,13 @@ describe("RoadmapIntro", () => {
     expect(heading.textContent).toBe("Our vision")
     expect(heading.parentElement?.id).toBe("vision")
     expect(screen.getByText("Where we are heading")).toBeTruthy()
-    expect(screen.queryByText(ROADMAP_INTRO.en)).toBeNull()
+    expect(screen.queryByText(en.roadmap.intro)).toBeNull()
   })
 
   it("falls back to the generic intro, with no heading, when there is no vision", () => {
     renderIntro({ vision: loc("") })
     expect(screen.queryByRole("heading", { level: 2 })).toBeNull()
-    expect(screen.getByText(ROADMAP_INTRO.en)).toBeTruthy()
+    expect(screen.getByText(en.roadmap.intro)).toBeTruthy()
   })
 
   it("keeps the back link, controls, title, vision and children in that order", () => {

@@ -109,9 +109,9 @@ report in the conversation only.
      sleeps where fake timers or the clock fit, an adapter without the shared
      repository contract. A repeated check: a rule's cases asserted above the
      lowest seam that holds them (the repository contract's cases are not
-     repeats), an E2E assertion its page test already
-     makes, a theme, language or width run that cannot fail alone, or cases
-     differing only in data left as separate tests (`apps/editor/AGENTS.md`,
+     repeats), an E2E assertion its page test already makes, a theme,
+     language or width run that cannot fail alone, or cases differing only in
+     data left as separate tests (`apps/editor/AGENTS.md`,
      `apps/editor/tests/e2e/AGENTS.md`).
    - **Meta code.** A test or check that would fail on a semantically
      identical rewrite of what it checks (a snapshot of markup, a reordered

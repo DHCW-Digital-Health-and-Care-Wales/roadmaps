@@ -138,9 +138,10 @@ verification deletes its one-off scripts and rename guards in the same PR.
 
 Follow the owning guide and existing patterns; invoke `copywriter` before
 writing user-facing copy, `shadcn` for UI components and `domain-modeling` for
-terminology or ADRs, when their triggers apply. Update unit, component and E2E
-coverage, including the GIS and Sheets fakes in `apps/editor/tests/e2e/` when a UI or API
-contract changes. Use deterministic scripts for simple textual replacements;
+terminology or ADRs, when their triggers apply. Put each test at the lowest
+seam that holds it (`apps/editor/AGENTS.md`) and add E2E only as
+`apps/editor/tests/e2e/AGENTS.md` (_What earns an E2E test_) sets; update the GIS
+and Sheets fakes in `apps/editor/tests/e2e/` when a UI or API contract changes. Use deterministic scripts for simple textual replacements;
 use a cheaper worker when each site needs inspection. The main agent
 integrates and checks the result.
 

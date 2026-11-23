@@ -107,7 +107,11 @@ report in the conversation only.
      the unit under test or of what MSW and the fakes cover, assertions on
      implementation (class names, call counts) rather than role and name,
      sleeps where fake timers or the clock fit, an adapter without the shared
-     repository contract.
+     repository contract. A repeated check: a rule's cases asserted above the
+     lowest seam that holds them, an E2E assertion its page test already
+     makes, a theme, language or width run that cannot fail alone, or cases
+     differing only in data left as separate tests (`apps/editor/AGENTS.md`,
+     `apps/editor/tests/e2e/AGENTS.md`).
    - **Meta code.** A test or check that would fail on a semantically
      identical rewrite of what it checks (a snapshot of markup, a reordered
      workflow `needs`, a renamed job); an exception list over about 10 entries;

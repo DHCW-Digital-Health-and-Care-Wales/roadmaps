@@ -132,7 +132,7 @@ Owner answers of 2026-11-23 (STY-089 grilling), recorded in STY-089 D2–D16:
     config, data and code live: a package only for code two or more apps import that
     outlives the Sheets format.
 
-Owner answers of 2026-11-23 (STY-090 grilling), recorded in STY-090 D1–D27 and ADR-017
+Owner answers of 2026-11-23 (STY-090 grilling), recorded in STY-090 D1–D34 and ADR-017
 _STY-090 amendments_:
 
 19. **The API's paths**: contract routes under `/api/v1`, the probes `/health` and

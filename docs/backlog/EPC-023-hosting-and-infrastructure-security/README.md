@@ -132,7 +132,8 @@ lives:_
   decided: on the editor's host, `/api/v1/*`, `/health` and `/ready` reach the API and
   the rest the editor's files, while the public host answers only the public routes
   (ADR-020); the `Host` that Cloud Run's probes send must pass the API's allow-list
-  (STY-090 S5); and the probes are anonymous and query the database, so either the load
+  (STY-090 S5); the production server's own loggers follow STY-090 S7's allow-list;
+  and the probes are anonymous and query the database, so either the load
   balancer routes no probe path publicly or the global per-address ceiling covers them.
 
 ### Operations

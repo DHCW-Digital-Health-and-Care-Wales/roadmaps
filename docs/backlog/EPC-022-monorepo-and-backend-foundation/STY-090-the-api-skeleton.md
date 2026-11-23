@@ -7,7 +7,8 @@
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-086 (hard), STY-087 (hard: its hooks and gate, which the API joins)
 - **Binding ADRs**: ADR-017, including §STY-090 amendments; ADR-020's response rules
-  (ADR-017 §ADR-020 amendments); ADR-016 §Workspace tooling, §CI
+  (ADR-017 §ADR-020 amendments); ADR-018's application-log allow-list; ADR-016 §Workspace
+  tooling, §CI
 - **Suggested model**: Opus — the conventions every later API story copies
 
 ## Summary
@@ -81,7 +82,7 @@ never includes the submitted input, a traceback or exception text (D14, D17, D23
 
 **And** a body over 1 MiB is refused before it is read whole, with or without a
 `Content-Length`; ruff's banned-API rule fails any import of `HTTPException`; and the
-500 is logged with its request ID, as S7 sets (D28)
+500 is logged with its request ID, as S7 sets (D28, D30)
 
 ### S5: Every response carries ADR-020's headers
 
@@ -95,9 +96,9 @@ never includes the submitted input, a traceback or exception text (D14, D17, D23
 
 ### S6: Settings fail closed
 
-**Given** the API started with no `ROADMAPS_ENV`
+**Given** the API started with no `ROADMAPS_ENV`, or with a setting below that is bad
 **When** it starts
-**Then** production rules apply: no `/docs` and no live OpenAPI route, and start-up
+**Then** an unset `ROADMAPS_ENV` gets production rules: no `/docs` and no live OpenAPI route, and start-up
 stops with a message naming each bad setting, never its value, when the database URL or
 the allowed hosts are unset or empty, when `ROADMAPS_ENV` is other than `local`, `test`
 or `production`, or when the allowed hosts hold a wildcard outside local (D12, D33)
@@ -115,9 +116,12 @@ written while serving a request carries its ID, which the API generates, never t
 caller's `X-Request-ID` (D6, D26, D33)
 **And** each line holds only allow-listed fields (ADR-018): an access line the method,
 the path without its query string, the status, the duration and the request ID; a 500
-the exception's type and stack frames, never its message; and the engine hides SQL
-parameters. A test plants a query string and an exception value and finds neither in
-the log (D30)
+the exception's type and stack frames, never its message; `/ready`'s 503 warning the
+code, the exception's type and the request ID, never its message; and the engine hides
+SQL parameters. The server's own access and error loggers (uvicorn's) write nothing
+outside the allow-list, on stdout or stderr. A test runs the real server as `api:dev`
+starts it, plants a query string and an exception value, and finds neither on either
+stream (D30, D34)
 **And** every response carries the request ID in `X-Request-ID`, so a reported 500
 finds its log line (D15)
 
@@ -270,9 +274,8 @@ the editor's Vite config. S1 is an observed run.
 - **D27** (agent, 2026-11-23, confirmed by the owner in round 8): the package is
   `roadmaps_api` in a `src/` layout; the Compose file is `apps/api/compose.yaml`;
   outside a worktree the ports are 8000 and 15432; PostgreSQL binds to 127.0.0.1;
-  `/ready`'s query times out after about two seconds. Gives S1, S3. The fallback was
-  55432 when confirmed; the review moved it out of Linux's ephemeral range, which the
-  worktree script avoids.
+  `/ready`'s query times out after about two seconds. Gives S1, S3. The fallback port
+  confirmed was 55432; D34 moves it.
 - **D28** (agent, 2026-11-23, review): a `Host` the settings do not list gets 400, as
   Starlette's `TrustedHostMiddleware` answers, and a body limit counts bytes read, not
   only a declared `Content-Length`. Gives S4.
@@ -294,6 +297,11 @@ the editor's Vite config. S1 is an observed run.
   leave open: an unknown `ROADMAPS_ENV`, an empty setting or a wildcard host stops
   start-up; a caller's `X-Request-ID` is never used; images are pinned by digest; the
   slot reaper removes the database as teardown does. Changes S2, S6, S7, S10.
+- **D34** (agent, 2026-11-23, after the review cap): D30's allow-list covers the
+  server's own loggers and `/ready`'s warning, proved on a real server run, since
+  `TestClient` never runs uvicorn, which logs the query string and re-raised
+  exceptions; and the fallback database port is 15432, over D27's 55432, which sits in
+  Linux's ephemeral range that the worktree script avoids. Changes S7, D27.
 
 ## Starting point
 

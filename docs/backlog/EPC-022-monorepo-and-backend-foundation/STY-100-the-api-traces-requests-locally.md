@@ -34,9 +34,12 @@ _Not acceptance criteria._
   by digest, on fixed ports bound to 127.0.0.1 (UI 16686, OTLP 4318) for every worktree, and each API names its service with its slot
   (`roadmaps-api-31`). `api:dev` exports only when Jaeger answers or
   `OTEL_EXPORTER_OTLP_ENDPOINT` is set; no slot ports are added (owner, 2026-11-23,
-  STY-090 grilling round 4).
+  STY-090 grilling round 4). The pin and the loopback binding are from STY-090's
+  security review (STY-090 D33).
 - Probes that succeed make no span (STY-090 D20); tests and CI export nothing
   (ADR-017).
 - Open for its criteria (STY-090's security review): whether an inbound `traceparent`
   is honoured, and from whom, since OpenTelemetry's default propagators take it from any
   caller and the trace ID becomes the request ID.
+- Spans hold STY-090 S7's allow-list (STY-090 D30): no query string (`url.query`), no
+  exception message and no SQL parameters, with a planted-value test as in S7.

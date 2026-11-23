@@ -64,9 +64,11 @@ and English-only pluralisation are not acceptable.
 From the owner's STY-095 grilling (2026-11-23, STY-096 D2–D4, STY-098 D1–D2); the rest
 of the decision stands.
 
-- **The public site follows this decision too**, from STY-096: its interface text and
-  the fixed text it owns are typed catalogues with the six Welsh plural forms, under
-  the same lint, while roadmap content stays data in both languages.
+- **The public site's interface text moves to react-i18next**, from STY-096: it and the
+  fixed text the site owns become typed catalogues with the six Welsh plural forms,
+  while roadmap content stays data in both languages. The site's own location, its
+  language toggle and its browser-language rule (Welsh when any browser language is
+  Welsh) stay its own (STY-096 D7, STY-099).
 - **English shown in place of Welsh is marked** (WCAG 2.2 SC 3.1.2) in both apps:
   roadmap content resolves to its text and the language it is in, and renders through
   one component that sets `lang` when that differs from the page's; content set inside

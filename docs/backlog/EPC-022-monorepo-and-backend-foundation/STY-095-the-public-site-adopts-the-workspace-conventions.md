@@ -84,7 +84,7 @@ the shared file
 - **D2** (owner, 2026-11-23, grilling round 1): alignment is prioritised: this story and
   its sequence come next on the repository track, before STY-089; the API track carries
   on beside it. Scope stays as the placeholder set it, with no shared code package and
-  no visual change.
+  no visual alignment (the design tokens are STY-099).
 - **D3** (owner, 2026-11-23, round 1): split into three stories over one: this story
   (renames, the shared bases, the guide lift), STY-096 (the interface text) and STY-097
   (dependency versions and the one choices). Amends D1: the built output is compared in

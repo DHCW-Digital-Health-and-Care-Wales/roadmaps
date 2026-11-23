@@ -116,8 +116,10 @@ records it split into:
     file), CHO-044 (one dev-ports resolver), STY-096 (the site's interface text on
     react-i18next), STY-097 (one version per shared dependency, one font) and STY-098
     (the editor marks English shown in place of Welsh), each merged before the next.
-    The public sees no change but STY-096's new Welsh count forms and STY-097's font and package updates, whose screenshots the owner sees before approving the merge. The site's design
-    tokens follow as a placeholder, STY-099; shared code packages are out of scope.
+    The public sees no change but STY-096's new Welsh count forms and `lang` marks and
+    STY-097's font and package updates; the owner sees both stories' screenshots before
+    approving their merges. The site's design tokens follow as a placeholder, STY-099;
+    shared code packages are out of scope.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._

@@ -8,7 +8,8 @@
   only code owner; STY-088: the shared ESLint base comes with STY-095, and
   `product-roadmaps` protected as `main` is; STY-095: a shared TypeScript base, the
   shared conventions file, one package per job; STY-096: the public site's text without
-  i18next; STY-089: where shared config, data and code live)
+  i18next; STY-089: where shared config, data and code live; CHO-045 and CHO-046: the
+  ESLint base's focus handlers and one owner per React rule)
 
 ## Context
 
@@ -203,6 +204,18 @@ _Layout and name_ and _The public site_ stands.
   format.
 - **Code the Sheets format retires stays in each app**, duplicated rather than shared:
   the editor's test-only CSV reader and the public site's CSV parser (ADR-015).
+
+### CHO-045 and CHO-046 amendments
+
+From the owner's decisions after the audit of STY-095's lint disables (2026-11-23,
+CHO-045 D1, CHO-046 D1). The ESLint base still takes the stricter setting of each app.
+
+- **jsx-a11y's interaction rules do not count `onFocus` and `onBlur`.** On an element
+  no keyboard reaches, they only observe focus bubbling up from a control inside it;
+  `eslint.base.ts` sets the rules' handlers.
+- **react-hooks owns each React rule it and `@eslint-react` both run**, so a finding
+  has one rule name and React's own exemptions; `eslint.base.ts` turns off
+  `@eslint-react`'s copies (`ownedByReactHooks`).
 
 ## Consequences
 

@@ -89,7 +89,7 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
       summary={
         tags.length > 0 ? (
           // English, being edited: no Welsh to stand in for.
-          <TagList tags={tags.map(unmarked)} />
+          <TagList tags={tags.map((name) => ({ ...unmarked(name), name }))} />
         ) : null
       }
       none={t("roadmaps.edit.tags.none")}

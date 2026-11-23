@@ -8,11 +8,11 @@
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 import {
   type Conflict,
+  type ItemTarget,
   NO_CHANGES,
   type RoadmapChanges,
 } from "@/domain/roadmap/roadmap-changes"
 import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
-import type { LocalisedText } from "@/domain/roadmap/localised-text"
 import type { AppErrorKind } from "@/lib/errors"
 import { createExternalStore } from "@/lib/external-store"
 
@@ -33,14 +33,14 @@ export type PublishNotice = { action: PublishAction } & (
   | { kind: "published" }
   /**
    * Nothing was written: a co-lead changed what was edited or reordered (`conflicts`,
-   * those still to decide in the review), or edited items are gone (`removed`, their
-   * loaded titles; their changes are already discarded). Gone once nothing is left of
+   * those still to decide in the review), or edited items are gone (`removed`, as
+   * loaded; their changes are already discarded). Gone once nothing is left of
    * either.
    */
   | {
       kind: "refused"
       conflicts: readonly Conflict[]
-      removed: readonly LocalisedText[]
+      removed: readonly ItemTarget[]
     }
   | { kind: "failed"; error: AppErrorKind }
 )

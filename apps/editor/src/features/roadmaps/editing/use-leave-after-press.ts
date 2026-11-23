@@ -49,11 +49,12 @@ export function useLeaveAfterPress(
       leaveAtReleaseRef.current = null
       leave?.()
     }
+    let tabbed: ReturnType<typeof setTimeout> | undefined
     const key = (event: KeyboardEvent) => {
       if (event.key !== "Tab") return
       tabbingRef.current = true
-      // eslint-disable-next-line @eslint-react/web-api-no-leaked-timeout -- Fire and forget: it only clears a flag, so nothing needs cleaning up.
-      setTimeout(() => {
+      clearTimeout(tabbed)
+      tabbed = setTimeout(() => {
         tabbingRef.current = false
       })
     }
@@ -68,7 +69,9 @@ export function useLeaveAfterPress(
       window.removeEventListener("keydown", key, true)
       pressingRef.current = false
       pressedOutsideRef.current = false
+      tabbingRef.current = false
       leaveAtReleaseRef.current = null
+      clearTimeout(tabbed)
       clearTimeout(timerRef.current)
     }
   }, [watching])

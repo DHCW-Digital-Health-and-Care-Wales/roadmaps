@@ -94,7 +94,7 @@ export function usePublish(
             action,
             kind: "refused",
             conflicts: outcome.conflicts,
-            removed: outcome.missingItems.map((entry) => entry.item.title),
+            removed: outcome.missingItems,
           }
           break
         case "roadmap-not-found":

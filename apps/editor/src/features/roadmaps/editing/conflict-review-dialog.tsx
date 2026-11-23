@@ -18,6 +18,7 @@ import {
   type Conflict,
   type EditableItemField,
   isChoiceField,
+  type ItemTarget,
 } from "@/domain/roadmap/roadmap-changes"
 import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
@@ -55,8 +56,8 @@ export interface ConflictReviewDialogProps {
   conflicts: readonly OpenConflict[]
   /** The page's items, which an order's items are drawn from (`reviewedOrders`). */
   pageItems: readonly PageItem[]
-  /** The loaded titles of the edited items that are gone. */
-  removed: readonly LocalisedText[]
+  /** The edited items that are gone, as loaded. */
+  removed: readonly ItemTarget[]
   /** Whether any change is still pending. */
   hasPendingChanges: boolean
   onKeepMine: (conflict: Conflict) => void

@@ -129,7 +129,12 @@ export function ItemForm({
         fixed: {
           text:
             item.tags.length > 0 ? (
-              <TagList tags={item.tags.map(content)} />
+              <TagList
+                tags={item.tags.map((tag) => ({
+                  ...content(tag),
+                  name: tag.en,
+                }))}
+              />
             ) : (
               t("roadmaps.edit.tags.none")
             ),

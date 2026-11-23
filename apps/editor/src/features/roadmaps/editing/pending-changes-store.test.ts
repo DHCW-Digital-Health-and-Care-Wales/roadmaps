@@ -175,7 +175,7 @@ describe("createPendingChangesStore", () => {
       pending: "Product A2",
       current: "Product A, theirs",
     } as const
-    const gone = { en: "Gone", cy: "" }
+    const gone = { item: createTestRoadmapItem("Gone"), position: 0 }
     store.startPublish("producta")
     store.finishPublish("producta", {
       kind: "refused",

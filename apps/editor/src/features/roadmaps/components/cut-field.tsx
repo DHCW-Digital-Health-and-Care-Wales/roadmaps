@@ -1,14 +1,8 @@
-import {
-  Fragment,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type RefObject,
-} from "react"
+import { Fragment, useId, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
+import { useMeasure } from "@/lib/use-measure"
 import { cn } from "@/lib/utils"
 
 import type { ShownContent, ShownDetail } from "../shown-content"
@@ -71,41 +65,6 @@ function detailCuts(list: HTMLElement): string {
       return count > left && left > 0 ? left : 0
     })
     .join("")
-}
-
-/**
- * What `measure` reads of the element as it is drawn at its width now, as a string so
- * an unchanged answer draws nothing again: measured as the layout is made, so the card
- * does not move after it is first drawn; again when the content changes and when the
- * element's width does, the page's room following the navigation, not the window; and
- * once the fonts are ready, since the element's own box keeps its height as a font
- * changes the lines inside it.
- */
-function useMeasure(
-  element: RefObject<HTMLElement | null>,
-  content: string,
-  measure: (element: HTMLElement) => string,
-): string {
-  const [measured, setMeasured] = useState("")
-  useLayoutEffect(() => {
-    const current = element.current
-    if (!current) return
-    let ended = false
-    const read = () => {
-      // eslint-disable-next-line @eslint-react/set-state-in-effect -- Measures the laid-out element, which only exists after render.
-      if (!ended) setMeasured(measure(current))
-    }
-    read()
-    if (typeof ResizeObserver === "undefined") return
-    const observer = new ResizeObserver(read)
-    observer.observe(current)
-    void document.fonts.ready.then(read)
-    return () => {
-      ended = true
-      observer.disconnect()
-    }
-  }, [element, content, measure])
-  return measured
 }
 
 interface CutControlProps {

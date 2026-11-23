@@ -170,10 +170,11 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
 
   // The site root shows the default landing page; src/main.tsx redirects with
   // JavaScript, and the <noscript> refresh does so without.
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- the default language always has its landing page.
   const landing = languagePages.find(
     (page) => page.file === `${defaultLanguage}/index.html`,
-  )!
+  )
+  if (!landing)
+    throw new Error(`No ${defaultLanguage} landing page to serve at /`)
   const root: Page = {
     ...landing,
     file: "index.html",

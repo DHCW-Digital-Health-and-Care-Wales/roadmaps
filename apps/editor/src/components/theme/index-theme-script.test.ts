@@ -11,7 +11,10 @@ import { applyTheme, THEME_STORAGE_KEY } from "./theme-preference"
  * a rename on one side fails here, not in a browser nobody watches.
  */
 describe("index.html's no-flash theme script", () => {
-  const script = /<script>([\s\S]*?)<\/script>/.exec(indexHtml)?.[1] ?? ""
+  const script =
+    new DOMParser()
+      .parseFromString(indexHtml, "text/html")
+      .querySelector("script:not([src])")?.textContent ?? ""
 
   it("reads the key the app stores the theme under, for dark", () => {
     expect(script).toContain(

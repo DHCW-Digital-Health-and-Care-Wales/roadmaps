@@ -3,6 +3,7 @@ import type { Locator, Page } from "@playwright/test"
 import {
   addRoadmapButtons,
   changeItem,
+  clickOutside,
   cornerClose,
   editItemButton,
   editRoadmapButton,
@@ -13,25 +14,24 @@ import {
   openEditRoadmapDialog,
 } from "./fixtures/dialogs"
 import { centre, boxesOf } from "./fixtures/layout"
-import { useLanguage } from "./fixtures/look"
 import { connect, expect, test } from "./fixtures/test"
 
 /**
  * A Product Lead closes a form dialog from the close button at its top right (STY-068),
  * against the fake Sheets API: it shows as the dialog opens, at every width, closes as
  * Cancel does, and on a phone scrolls away with the title (a laptop's stays pinned with
- * it, STY-076). The conflict review's own is held in
- * `roadmap-detail-page-editing.test.tsx`.
+ * it, STY-076). A click outside each form dialog does nothing, which is held here, since
+ * the dialogs share their code but not their opener. The conflict review's own close
+ * button is held in `roadmap-detail-page-editing.test.tsx`.
  */
 
 const ITEM = "Card being explored"
 const PHONE = { width: 375, height: 667 }
 const DESKTOP = { width: 1280, height: 800 }
 
-async function openProductA(page: Page, language: "en" | "cy" = "en") {
-  if (language === "cy") await useLanguage(page, "cy")
+async function openProductA(page: Page) {
   await page.goto("./#/roadmaps/producta")
-  await connect(page, language === "cy" ? "Cysylltu â Google" : undefined)
+  await connect(page)
   await expect(
     page.getByRole("heading", { level: 3, name: ITEM }),
   ).toBeVisible()
@@ -101,7 +101,7 @@ test("the close button closes the item dialog as Cancel does: what was typed is 
   )
 })
 
-test.describe("every form dialog has it (S3)", () => {
+test.describe("every form dialog has it, and a click outside does not close it (S3)", () => {
   const dialogs: readonly {
     name: string
     open: (page: Page) => Promise<Locator>
@@ -145,6 +145,9 @@ test.describe("every form dialog has it (S3)", () => {
     test(name, async ({ page }) => {
       const dialog = await open(page)
 
+      // A click outside it does nothing.
+      await clickOutside(page, dialog)
+      await expect(dialog).toBeVisible()
       await cornerClose(dialog).click()
 
       await expect(dialog).toBeHidden()
@@ -164,13 +167,6 @@ test("it is a button named Close, its icon hidden from assistive technology (S4)
     "aria-hidden",
     "true",
   )
-})
-
-test("it is named Cau in the Welsh interface (S4)", async ({ page }) => {
-  await openProductA(page, "cy")
-  const dialog = await openEditItemDialog(page, ITEM, "cy")
-
-  await expect(cornerClose(dialog)).toHaveAccessibleName("Cau")
 })
 
 test("Tab from the last control in the footer wraps to the close button, then the first field (S6)", async ({

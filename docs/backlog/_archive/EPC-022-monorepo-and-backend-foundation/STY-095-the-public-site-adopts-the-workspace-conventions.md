@@ -1,14 +1,14 @@
 # STY-095: The public site adopts the workspace's code conventions
 
-- **Status**: Proposed — split and its acceptance criteria written in the owner's
-  grilling of 2026-11-23 (D2–D8); first of the alignment sequence
+- **Status**: Done
 - **Type**: Refactor
 - **Area**: Features/UI + CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-088 (hard)
 - **Binding ADRs**: ADR-016 §Workspace tooling, §Agent guides, §STY-095 amendments
 - **Suggested model**: Opus — renames across the site, lint and compiler settings shared
   by both apps, and a guide lift
+- **Delivered**: <PR URL>
 
 ## Summary
 
@@ -108,3 +108,68 @@ the shared file
 - One version per shared dependency, and the font: STY-097.
 - One dev-ports resolver for both apps: CHO-044.
 - The site's design tokens: STY-099.
+
+## Delivery
+
+### Departures
+
+- **S1**: the site's `eslint.config.js` becomes `eslint.config.ts` with `git mv`, but
+  its content is rewritten onto the base, so Git no longer pairs the two and
+  `git log --follow` stops at this change for it; each of the 45 renamed source, test
+  and page files keeps its history (agent).
+- **S2**: the base is a function, `reactAppConfig({ tsconfigRootDir, extraHOCs }, …app
+blocks)` in `eslint.base.ts`, so Prettier's block stays last after each app's own
+  rules and the type-aware parser reads each app's tsconfigs. Its React presets apply to
+  `src/` in both apps, where all their React code is: the site had applied react-hooks
+  and react-refresh to every file, and jsx-a11y and `@eslint-react` to `.tsx` only.
+  react-hooks takes `recommended-latest`, the stricter of the two apps' presets (agent).
+- **S2**: besides the rules S2 names, each app keeps one more of its own: the editor's
+  react-refresh allowance for TanStack Router's `createLink` (through the base's
+  `extraHOCs`), and the site's react-refresh exemption for its build-time
+  `src/entry-server.tsx` (agent).
+- **S2**: the ESLint plugins the base imports are the root package's dev dependencies,
+  at the versions the apps had, and each app drops those it no longer imports; the
+  lockfile moves them without a version change (agent).
+- **S2**: the editor's findings are fixed at their cause, behaviour kept: 68 refs renamed
+  to end in `Ref`, three state setters renamed, `useContext` replaced by `use`, and the
+  icon `publishedStateAction` returned moved into a `PublishedStateIcon` component.
+  Conditional rendering of a `ReactNode` prop now tests `Boolean(…)`, which renders
+  nothing for `0` where it rendered "0"; no caller passes a number. Twelve findings are
+  disabled on their line with a reason: focus observed bubbling up from controls inside
+  a card, row or header (three), measuring layout after render (two), static or
+  identity-less lists keyed by place (four), and one each for `flushSync`, a
+  fire-and-forget timeout and a run-once effect (agent).
+- **S3**: every TypeScript config in the workspace extends `tsconfig.base.json`, the root
+  package's and each app's Node and E2E configs as well as the application configs.
+  Each keeps its own target, libraries, module resolution and types, so the site keeps
+  its ES2020 target. The site drops `noUncheckedSideEffectImports`, which TypeScript 6
+  sets by default, and the editor's E2E config gains `allowImportingTsExtensions` from
+  the base (agent).
+- **S3**: where the parser and the snapshot schema leave an optional field `undefined`,
+  the site's types now say so (`RoadmapItem`'s optional fields, a warning's `row`, the
+  footer's `dataSlug`), so `exactOptionalPropertyTypes` holds with no change to what is
+  parsed or written; an information page's paragraphs are a non-empty tuple (agent).
+- **S4**: the shared file takes four rules from `apps/editor/AGENTS.md` word for word,
+  one of them with the editor's E2E and route clauses left in the editor's guide; "a
+  table-driven test is an `it.each`", which both apps' seams lines carried, moves there
+  from both (agent).
+- **S5**: the host was loaded, so the E2E suite (ARIA snapshots included) and Lighthouse
+  ran in the pull request's CI, not locally (agent).
+
+### Contract for dependents
+
+- A new React app's `eslint.config.ts` is `reactAppConfig({ tsconfigRootDir:
+import.meta.dirname }, …its own blocks)` from the root `eslint.base.ts`; its
+  tsconfigs extend the root `tsconfig.base.json`.
+- The site's interface text is still `src/lib/strings.ts` rendered by `<T>`, now in
+  `src/components/t.tsx`, for STY-096 to replace.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | observed: `git diff -M --name-status` against the base shows the 45 renames (similarity 73–100%), and `git log --follow` on `apps/public-site/src/app.tsx` reaches the site's first commit                            |
+| S2       | observed: `pnpm lint` passes with no warnings for the root and both apps                                                                                                                                              |
+| S3       | observed: `pnpm typecheck` passes for the root and both apps                                                                                                                                                          |
+| S4       | the guides in the diff, reviewed                                                                                                                                                                                      |
+| S5       | observed: the site built from the example data before and after; all 15 HTML, XML and JSON files match once the script's hashed name is masked, and the other assets are byte-identical; CI's E2E and Lighthouse jobs |

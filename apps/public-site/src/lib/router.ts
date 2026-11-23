@@ -4,7 +4,7 @@ import {
   useSyncExternalStore,
   type MouseEvent,
 } from "react"
-import { isLanguage, type Language } from "../i18n/languages"
+import { isLanguage, type Language } from "../i18n"
 import { isOrganisationId, NO_ORG_FILTER, type OrgFilter } from "./types"
 
 /**

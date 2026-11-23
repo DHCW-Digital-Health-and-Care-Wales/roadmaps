@@ -7,6 +7,7 @@ import {
   countOf,
   filterItems,
   formatDate,
+  roadmapSummary,
 } from "../lib/roadmap-helpers"
 import { onNavigate, pathFor, withOrgFilter } from "../lib/router"
 import { FamilyLabel } from "./family-label"
@@ -28,6 +29,7 @@ export function ProductCard({
   const href = withOrgFilter(pathFor(lang, roadmap.slug), filter)
   const { meta } = roadmap
   const accent = meta.colour
+  const summary = roadmapSummary(meta)
   const headingId = `product-${roadmap.slug}`
 
   return (
@@ -88,13 +90,8 @@ export function ProductCard({
           </a>
         </h3>
 
-        {/* The service description, or the generic intro without one. */}
         <p className="mt-3 line-clamp-4 leading-relaxed text-ink-900">
-          {meta.serviceDescription.en ? (
-            <ContentText value={meta.serviceDescription} />
-          ) : (
-            t("roadmap.intro")
-          )}
+          {summary ? <ContentText value={summary} /> : t("roadmap.intro")}
         </p>
 
         {/* mt-auto pins the counts and link to the bottom, so they line up across a row. */}

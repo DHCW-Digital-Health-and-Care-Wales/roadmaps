@@ -1,10 +1,5 @@
 export { createI18n } from "./create-i18n"
-export {
-  LanguageContext,
-  useLanguage,
-  useResolved,
-  type LanguageContextValue,
-} from "./language-context"
+export { LanguageContext, useLanguage, useResolved } from "./language-context"
 export { resolveLanguage, storeLanguagePreference } from "./language-preference"
 export {
   defaultLanguage,
@@ -13,4 +8,4 @@ export {
   supportedLanguages,
   type Language,
 } from "./languages"
-export { localise, resolve } from "./localised"
+export { localise } from "./localised"

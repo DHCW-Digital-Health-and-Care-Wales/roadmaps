@@ -80,6 +80,8 @@ export const en = {
     search: "Search roadmaps",
     findProduct: "Find a product",
     findProductHint: "Search by name, product family or description",
+    // Counts are `{{count}}`, unformatted, so the prerendered page and the
+    // browser's render give the same text.
     roadmapCount_one: "{{count}} roadmap",
     roadmapCount_other: "{{count}} roadmaps",
     showingRoadmaps: "Showing {{shown}} of {{total}} roadmaps",

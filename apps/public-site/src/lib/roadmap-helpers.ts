@@ -22,7 +22,6 @@ import {
   type Roadmap,
   type RoadmapItem,
   type RoadmapMeta,
-  type SectionId,
   NO_ORG_FILTER,
   type OrgFilter,
 } from "./types"
@@ -79,11 +78,13 @@ export function titleWithFamily({
   }
 }
 
+/** Whether a placement is one of the horizons, not one of the sections. */
+export const isHorizon = (id: Placement): id is Horizon =>
+  (HORIZON_IDS as readonly Placement[]).includes(id)
+
 /** The id of a horizon's or section's heading, the same in both layouts. */
 export function placementHeadingId(id: Placement): string {
-  return (HORIZON_IDS as readonly Placement[]).includes(id)
-    ? `horizon-${id}`
-    : `section-${id}`
+  return isHorizon(id) ? `horizon-${id}` : `section-${id}`
 }
 
 /**
@@ -91,7 +92,7 @@ export function placementHeadingId(id: Placement): string {
  * with no items at all is left out, but one the filter has emptied stays.
  */
 export const showsPlacement = (id: Placement, total: number): boolean =>
-  total > 0 || (HORIZON_IDS as readonly Placement[]).includes(id)
+  total > 0 || isHorizon(id)
 
 /**
  * Whether an item is for the filter's organisation. All-Wales items are for
@@ -205,9 +206,7 @@ export function itemsStatus(
 
 /** A section's heading or a horizon's name. */
 export const placementHeading = (id: Placement, t: TFunction): string =>
-  (HORIZON_IDS as readonly Placement[]).includes(id)
-    ? t(`horizons.${id as Horizon}.label`)
-    : t(`sections.${id as SectionId}.heading`)
+  isHorizon(id) ? t(`horizons.${id}.label`) : t(`sections.${id}.heading`)
 
 export interface PlacementGroup {
   id: Placement
@@ -240,6 +239,14 @@ export function roadmapGroups(
     ...sectionGroups("after"),
   ]
 }
+
+/**
+ * A roadmap's summary, for its landing page card and its pages' description:
+ * the service description, or null without one, when the generic intro
+ * (`roadmap.intro`) stands in.
+ */
+export const roadmapSummary = (meta: RoadmapMeta): Localised | null =>
+  meta.serviceDescription.en ? meta.serviceDescription : null
 
 export const categorySectionId = (category: Category) =>
   `category-${category.id}`
@@ -300,8 +307,9 @@ export function matchesSearch(
   const words = fold(query).split(/\s+/).filter(Boolean)
   if (words.length === 0) return true
   const { title, family, serviceDescription } = roadmap.meta
-  // Not roadmapSummary(): its generic fallback text would match every roadmap
-  // without a description. A family needs English to be shown, so to match.
+  // Not roadmapSummary(): the generic intro that stands in for a missing
+  // description would match every roadmap without one. A family needs English
+  // to be shown, so to match.
   const fields = family.en
     ? [title, family, serviceDescription]
     : [title, serviceDescription]

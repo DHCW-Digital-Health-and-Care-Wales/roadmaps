@@ -16,7 +16,7 @@ import {
   type Language,
 } from "./i18n"
 import { INFO_PAGES } from "./lib/info-pages"
-import { titleWithFamily } from "./lib/roadmap-helpers"
+import { roadmapSummary, titleWithFamily } from "./lib/roadmap-helpers"
 import { roadmaps } from "./lib/roadmaps"
 import { dataPathFor, INFO_PAGE_IDS, pathFor, type Route } from "./lib/router"
 
@@ -162,17 +162,16 @@ export async function renderPages(siteUrl: string): Promise<Page[]> {
             t(INFO_PAGES[id].paragraphs[0]),
           ),
         ),
-        ...roadmaps.map(({ slug, meta }) =>
-          languagePage(
+        ...roadmaps.map(({ slug, meta }) => {
+          const summary = roadmapSummary(meta)
+          return languagePage(
             lang,
             slug,
             localise(titleWithFamily(meta), lang),
-            meta.serviceDescription.en
-              ? localise(meta.serviceDescription, lang)
-              : t("roadmap.intro"),
+            summary ? localise(summary, lang) : t("roadmap.intro"),
             { hasData: true },
-          ),
-        ),
+          )
+        }),
       ]
     }),
   )

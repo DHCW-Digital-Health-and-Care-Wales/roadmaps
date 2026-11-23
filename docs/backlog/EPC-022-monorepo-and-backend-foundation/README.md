@@ -3,7 +3,8 @@
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
   STY-088 are done; the two apps' alignment comes next (owner, 2026-11-23), beside the
   API placeholders' acceptance criteria
-- **Progress**: 6 of 16 terminal (STY-085 to STY-088, STY-095, CHO-044); next selectable: STY-096
+- **Progress**: 6 of 16 terminal (STY-085 to STY-088, STY-095, CHO-044); STY-096 in
+  progress; next selectable: none
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -177,8 +178,8 @@ the seeder for any table it creates.
 _STY-085 to STY-088, STY-095 and CHO-044 are done. STY-089 to STY-093 are
 Placeholders until their acceptance criteria are written: ADR-016 (STY-089) and
 ADR-017 (STY-090–STY-093) are accepted. STY-094 is a Placeholder until the invitation
-story exists, and STY-099 until design input settles what the public sees. STY-096 to
-STY-098 are Proposed.
+story exists, and STY-099 until design input settles what the public sees. STY-096 is
+in progress; STY-097 and STY-098 are Proposed.
 Candidate scope, to split next: the first schema
 and its enforcement suite; people, identities, memberships, roles, assignments and
 invitations, with ADR-019's authorisation suite; the threat model, then sign-in with

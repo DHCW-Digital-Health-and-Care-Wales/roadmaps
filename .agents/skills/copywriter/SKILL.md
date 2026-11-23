@@ -109,17 +109,18 @@ from the shape rather than from a blank line.
 
 ## Working order
 
-1. Write the English first, in `apps/editor/src/i18n/locales/en.ts`. It is the source of
+1. Write the English first, in the app's `src/i18n/locales/en.ts`. It is the source of
    truth (ADR-008). Keys are camelCase, grouped by feature. Map codes with
    template keys (``t(`errors.${error.kind}`)``) so `satisfies Record<…>` makes
    a new kind without copy a type error.
-2. Add the Welsh to `apps/editor/src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
+2. Add the Welsh to the app's `src/i18n/locales/cy.ts` in the same change; `pnpm typecheck`
    fails until you do. The voice rules apply unchanged. Reuse the established
    terms: roadmap = _map trywydd_, spreadsheet = _taenlen_, connect = _cysylltu_
    (and see the existing strings for the rest).
 3. Plurals: `foo_one`/`foo_other` in English (optional `foo_zero`); Welsh needs
    all six of `foo_zero`, `foo_one`, `foo_two`, `foo_few`, `foo_many`,
-   `foo_other`. Call `t("foo", { count })` and format with `{{count, number}}`.
+   `foo_other`. Call `t("foo", { count })`, and in the editor format with
+   `{{count, number}}`.
    Welsh also mutates the noun after some numerals (_dau fap_, not _dau map_);
    `roadmaps.count_*` in `cy.ts` shows the pattern.
 4. `pnpm typecheck` (key parity and plural forms), then `pnpm lint` (no literal
@@ -152,7 +153,7 @@ a string that must fit a 375px header needs a short form.
 `apps/public-site/src/i18n/locales/en.ts` and `cy.ts` hold the public site's
 interface and the fixed text it owns about horizons, sections, categories and
 organisations; roadmap content is sheet data, never catalogue text. The
-working order holds, with these differences of register and mechanics:
+working order holds, in this register:
 
 - **Write for the public reader**: health boards, Welsh Government
   stakeholders, DHCW staff, patients and the public, who come to see what DHCW
@@ -163,13 +164,6 @@ working order holds, with these differences of register and mechanics:
 - **Roadmap is _trywydd_** here (plural _trywyddion_), with the singular
   after a number and its mutation (_2 drywydd_, _3 thrywydd_);
   `landing.roadmapCount_*` in `cy.ts` shows the pattern.
-- **Interpolate counts as `{{count}}`**, unformatted: the prerendered page
-  and the browser's render must give the same text.
-- **Put sheet content inside a sentence through `<Trans>`** with a named
-  element (`"Status: <status/>"`), so only English shown in place of Welsh is
-  marked `lang="en"`.
-- **List each new or changed Welsh string in the PR** for a fluent speaker's
-  check: the site is public, so its Welsh is read before it merges.
 
 ## The authority
 

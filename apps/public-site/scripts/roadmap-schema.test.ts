@@ -20,67 +20,94 @@ describe("roadmap snapshot schema", () => {
     expect(() => validateSnapshot([])).toThrow()
   })
 
-  it("rejects duplicate slugs", () => {
-    const [a] = valid()
-    expect(() => validateSnapshot([a, a])).toThrow(/Duplicate URL slugs/)
-  })
-
-  it("rejects an empty slug", () => {
-    const data = valid()
-    data[0].slug = ""
-    expect(() => validateSnapshot(data)).toThrow(/slug/)
-  })
-
-  it("rejects an invalid date", () => {
-    const data = valid()
-    data[0].meta.lastUpdated = "2026-02-31"
-    expect(() => validateSnapshot(data)).toThrow(/lastUpdated/)
-  })
-
-  it("rejects a colour that is not hex", () => {
-    const data = valid()
-    data[0].meta.colour = "red; background: url(x)"
-    expect(() => validateSnapshot(data)).toThrow(/hex colour/)
-  })
-
-  it("rejects an unknown category", () => {
-    const data: unknown[] = valid()
-    ;(data[0] as { meta: { category: string } }).meta.category = "dentistry"
-    expect(() => validateSnapshot(data)).toThrow(/category/)
-  })
-
-  it("rejects an unknown or empty organisation list", () => {
-    const data = valid()
-    const item = data[0].items.now[0] as unknown as Record<string, unknown>
-    item.organisations = ["cardiff"]
-    expect(() => validateSnapshot(data)).toThrow(/organisations/)
-    item.organisations = []
-    expect(() => validateSnapshot(data)).toThrow(/organisations/)
-  })
-
-  it("rejects a missing placement", () => {
-    const data: unknown[] = valid()
-    delete (data[0] as { items: Record<string, unknown> }).items.later
-    expect(() => validateSnapshot(data)).toThrow(/later/)
-  })
-
-  it("rejects plain strings for phase and labels", () => {
-    const data = valid()
-    const item = data[0].items.now[0] as unknown as Record<string, unknown>
-    item.phase = "Beta"
-    item.labels = ["Web"]
-    expect(() => validateSnapshot(data)).toThrow(/phase[\s\S]*labels/)
-  })
-
-  it("rejects Welsh with no English", () => {
-    const data = valid()
-    data[0].items.now[0].description = { en: "", cy: "Disgrifiad" }
-    expect(() => validateSnapshot(data)).toThrow(/Welsh text with no English/)
-  })
-
-  it("rejects an empty detail line", () => {
-    const data = valid()
-    data[0].items.now[0].details = [{ level: 0, text: { en: "", cy: "" } }]
-    expect(() => validateSnapshot(data)).toThrow(/Empty English text/)
+  // Each case breaks one rule of the snapshot, so they differ only in data.
+  type Roadmaps = ReturnType<typeof valid>
+  const nowItem = (data: Roadmaps) =>
+    data[0].items.now[0] as unknown as Record<string, unknown>
+  it.each<[string, (data: Roadmaps) => unknown, RegExp]>([
+    ["duplicate slugs", ([a]) => [a, a], /Duplicate URL slugs/],
+    [
+      "an empty slug",
+      (data) => {
+        data[0].slug = ""
+        return data
+      },
+      /slug/,
+    ],
+    [
+      "an invalid date",
+      (data) => {
+        data[0].meta.lastUpdated = "2026-02-31"
+        return data
+      },
+      /lastUpdated/,
+    ],
+    [
+      "a colour that is not hex",
+      (data) => {
+        data[0].meta.colour = "red; background: url(x)"
+        return data
+      },
+      /hex colour/,
+    ],
+    [
+      "an unknown category",
+      (data) => {
+        ;(data[0].meta as { category: string }).category = "dentistry"
+        return data
+      },
+      /category/,
+    ],
+    [
+      "an unknown organisation",
+      (data) => {
+        nowItem(data).organisations = ["cardiff"]
+        return data
+      },
+      /organisations/,
+    ],
+    [
+      "an empty organisation list",
+      (data) => {
+        nowItem(data).organisations = []
+        return data
+      },
+      /organisations/,
+    ],
+    [
+      "a missing placement",
+      (data) => {
+        delete (data[0].items as unknown as Record<string, unknown>).later
+        return data
+      },
+      /later/,
+    ],
+    [
+      "plain strings for phase and labels",
+      (data) => {
+        nowItem(data).phase = "Beta"
+        nowItem(data).labels = ["Web"]
+        return data
+      },
+      /phase[\s\S]*labels/,
+    ],
+    [
+      "Welsh with no English",
+      (data) => {
+        data[0].items.now[0].description = { en: "", cy: "Disgrifiad" }
+        return data
+      },
+      /Welsh text with no English/,
+    ],
+    [
+      "an empty detail line",
+      (data) => {
+        data[0].items.now[0].details = [{ level: 0, text: { en: "", cy: "" } }]
+        return data
+      },
+      /Empty English text/,
+    ],
+  ])("rejects %s", (_, break_, message) => {
+    expect(() => validateSnapshot(break_(valid()))).toThrow(message)
   })
 })

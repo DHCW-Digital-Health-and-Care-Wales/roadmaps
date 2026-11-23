@@ -55,22 +55,22 @@ describe("isExpandable", () => {
 describe("titleWithFamily", () => {
   const localised = (en: string, cy = "") => ({ en, cy })
 
-  it("puts the family in front of the title", () => {
-    expect(
-      titleWithFamily({
+  it.each([
+    [
+      "puts the family in front of the title",
+      {
         title: localised("Nursing Healthcare"),
         family: localised("Single Record"),
-      }),
-    ).toEqual({ en: "Single Record: Nursing Healthcare", cy: "" })
-  })
-
-  it("is just the title when there is no family", () => {
-    expect(
-      titleWithFamily({
-        title: localised("Vaccines", "Brechlynnau"),
-        family: localised(""),
-      }),
-    ).toEqual({ en: "Vaccines", cy: "Brechlynnau" })
+      },
+      { en: "Single Record: Nursing Healthcare", cy: "" },
+    ],
+    [
+      "is just the title when there is no family",
+      { title: localised("Vaccines", "Brechlynnau"), family: localised("") },
+      { en: "Vaccines", cy: "Brechlynnau" },
+    ],
+  ])("%s", (_, meta, expected) => {
+    expect(titleWithFamily(meta)).toEqual(expected)
   })
 
   it("falls back to English for each part separately in Welsh", () => {
@@ -163,35 +163,42 @@ describe("filterItems", () => {
 })
 
 describe("countItems", () => {
-  it("counts matches across every section and horizon", () => {
-    expect(countItems(productA, NO_ORG_FILTER)).toEqual({ shown: 9, total: 9 })
-    expect(countItems(productA, cardiff)).toEqual({ shown: 5, total: 9 })
-    expect(countItems(productA, cardiffOnly)).toEqual({ shown: 2, total: 9 })
-    expect(countItems(productA, allWales)).toEqual({ shown: 3, total: 9 })
-  })
+  it.each<[string, OrgFilter, { shown: number; total: number }]>([
+    ["without a filter", NO_ORG_FILTER, { shown: 9, total: 9 }],
+    [
+      "for Cardiff and Vale with all-Wales work",
+      cardiff,
+      { shown: 5, total: 9 },
+    ],
+    ["for Cardiff and Vale alone", cardiffOnly, { shown: 2, total: 9 }],
+    ["for all of Wales", allWales, { shown: 3, total: 9 }],
+  ])(
+    "counts matches across every section and horizon %s",
+    (_, filter, count) => {
+      expect(countItems(productA, filter)).toEqual(count)
+    },
+  )
 })
 
-describe("countText", () => {
-  it("shows the total only when items are hidden", () => {
-    expect(countText({ shown: 5, total: 5 })).toEqual({ en: "5", cy: "5" })
-    expect(countText({ shown: 2, total: 5 })).toEqual({
-      en: "2 of 5",
-      cy: "2 o 5",
-    })
-  })
-})
-
-describe("countInParentheses", () => {
-  it("localises and wraps filtered and unfiltered counts", () => {
-    expect(countInParentheses({ shown: 5, total: 5 })).toEqual({
-      en: "(5)",
-      cy: "(5)",
-    })
-    expect(countInParentheses({ shown: 2, total: 5 })).toEqual({
-      en: "(2 of 5)",
-      cy: "(2 o 5)",
-    })
-  })
+describe("countText and countInParentheses", () => {
+  it.each([
+    [
+      { shown: 5, total: 5 },
+      { en: "5", cy: "5" },
+      { en: "(5)", cy: "(5)" },
+    ],
+    [
+      { shown: 2, total: 5 },
+      { en: "2 of 5", cy: "2 o 5" },
+      { en: "(2 of 5)", cy: "(2 o 5)" },
+    ],
+  ])(
+    "show the total only when items are hidden: %o",
+    (count, text, parenthesised) => {
+      expect(countText(count)).toEqual(text)
+      expect(countInParentheses(count)).toEqual(parenthesised)
+    },
+  )
 })
 
 describe("emptyText", () => {
@@ -209,15 +216,11 @@ describe("emptyText", () => {
 })
 
 describe("showHiddenItems", () => {
-  it("counts the hidden items, in the singular for one", () => {
-    expect(showHiddenItems(1)).toEqual({
-      en: "Show 1 hidden item",
-      cy: "Dangos 1 eitem gudd",
-    })
-    expect(showHiddenItems(3)).toEqual({
-      en: "Show 3 hidden items",
-      cy: "Dangos 3 eitem gudd",
-    })
+  it.each([
+    [1, { en: "Show 1 hidden item", cy: "Dangos 1 eitem gudd" }],
+    [3, { en: "Show 3 hidden items", cy: "Dangos 3 eitem gudd" }],
+  ])("counts %i hidden, in the singular for one", (count, text) => {
+    expect(showHiddenItems(count)).toEqual(text)
   })
 })
 
@@ -235,40 +238,75 @@ describe("organisationsWithWork", () => {
 })
 
 describe("itemsStatus", () => {
-  const count = { shown: 5, total: 9 }
+  const cardiffName = "Cardiff and Vale University Health Board"
 
-  it("names the organisation in full, and any all-Wales work", () => {
-    expect(itemsStatus(count, cardiff).en).toBe(
-      "Showing 5 of 9 items for Cardiff and Vale University Health Board, including all-Wales work",
-    )
-    expect(itemsStatus(count, cardiff, { withAllWales: false }).en).toBe(
-      "Showing 5 of 9 items for Cardiff and Vale University Health Board",
-    )
-    expect(itemsStatus(count, cardiffOnly).en).toBe(
-      "Showing 5 of 9 items for Cardiff and Vale University Health Board",
-    )
-    expect(itemsStatus({ shown: 3, total: 9 }, allWales).en).toBe(
+  it.each<
+    [string, { shown: number; total: number }, OrgFilter, object, string]
+  >([
+    [
+      "names the organisation in full, and any all-Wales work",
+      { shown: 5, total: 9 },
+      cardiff,
+      {},
+      `Showing 5 of 9 items for ${cardiffName}, including all-Wales work`,
+    ],
+    [
+      "leaves all-Wales work out when asked",
+      { shown: 5, total: 9 },
+      cardiff,
+      { withAllWales: false },
+      `Showing 5 of 9 items for ${cardiffName}`,
+    ],
+    [
+      "names no all-Wales work when it is left out of the filter",
+      { shown: 5, total: 9 },
+      cardiffOnly,
+      {},
+      `Showing 5 of 9 items for ${cardiffName}`,
+    ],
+    [
+      "names all of Wales",
+      { shown: 3, total: 9 },
+      allWales,
+      {},
       "Showing 3 of 9 items for All Wales (national)",
-    )
+    ],
+    [
+      "gives the total without a filter",
+      { shown: 9, total: 9 },
+      NO_ORG_FILTER,
+      {},
+      "Showing all 9 items",
+    ],
+  ])("%s", (_, count, filter, options, expected) => {
+    expect(itemsStatus(count, filter, options).en).toBe(expected)
   })
 
-  it("gives the total without a filter", () => {
-    expect(itemsStatus({ shown: 9, total: 9 }, NO_ORG_FILTER)).toEqual({
-      en: "Showing all 9 items",
-      cy: "Yn dangos pob un o’r 9 eitem",
-    })
+  it("is in Welsh too", () => {
+    expect(itemsStatus({ shown: 9, total: 9 }, NO_ORG_FILTER).cy).toBe(
+      "Yn dangos pob un o’r 9 eitem",
+    )
   })
 })
 
 describe("formatDate", () => {
-  it("writes the day, month and year in each language", () => {
-    expect(formatDate("2026-06-01", "en")).toBe("1 June 2026")
-    expect(formatDate("2026-10-26", "cy")).toBe("26 Hydref 2026")
-  })
-
-  it("returns anything else unchanged", () => {
-    expect(formatDate("2026-13-01", "en")).toBe("2026-13-01")
-    expect(formatDate("soon", "cy")).toBe("soon")
+  it.each([
+    [
+      "writes the day, month and year in English",
+      "2026-06-01",
+      "en",
+      "1 June 2026",
+    ],
+    [
+      "writes the day, month and year in Welsh",
+      "2026-10-26",
+      "cy",
+      "26 Hydref 2026",
+    ],
+    ["returns an impossible date unchanged", "2026-13-01", "en", "2026-13-01"],
+    ["returns other text unchanged", "soon", "cy", "soon"],
+  ] as const)("%s", (_, date, lang, expected) => {
+    expect(formatDate(date, lang)).toBe(expected)
   })
 })
 
@@ -450,18 +488,35 @@ describe("filterGroups", () => {
 })
 
 describe("roadmapsStatus", () => {
-  it.each<[string, OrgFilter, string]>([
-    ["", NO_ORG_FILTER, "14 roadmaps"],
-    ["data", NO_ORG_FILTER, "Showing 12 of 14 roadmaps"],
+  it.each<[string, OrgFilter, string, string]>([
+    ["", NO_ORG_FILTER, "14 roadmaps", "14 trywydd"],
+    [
+      "data",
+      NO_ORG_FILTER,
+      "Showing 12 of 14 roadmaps",
+      "Yn dangos 12 o 14 trywydd",
+    ],
     [
       "",
       cardiff,
       "Showing 12 of 14 roadmaps for Cardiff and Vale, including all-Wales work",
+      "Yn dangos 12 o 14 trywydd ar gyfer Caerdydd a’r Fro, gan gynnwys gwaith Cymru gyfan",
     ],
-    ["", cardiffOnly, "Showing 12 of 14 roadmaps for Cardiff and Vale"],
-    ["", allWales, "Showing 12 of 14 roadmaps for All Wales"],
-  ])('for "%s" and %o is "%s"', (query, filter, expected) => {
-    expect(roadmapsStatus(12, 14, query, filter).en).toBe(expected)
+    [
+      "",
+      cardiffOnly,
+      "Showing 12 of 14 roadmaps for Cardiff and Vale",
+      "Yn dangos 12 o 14 trywydd ar gyfer Caerdydd a’r Fro",
+    ],
+    [
+      "",
+      allWales,
+      "Showing 12 of 14 roadmaps for All Wales",
+      "Yn dangos 12 o 14 trywydd ar gyfer Cymru gyfan",
+    ],
+  ])('for "%s" and %o is "%s"', (query, filter, en, cy) => {
+    const total = query || filter.org ? 12 : 14
+    expect(roadmapsStatus(total, 14, query, filter)).toEqual({ en, cy })
   })
 })
 

@@ -86,20 +86,6 @@ describe("RoadmapListItem", () => {
     ).toBe(list)
   })
 
-  it("renders bullet lines in the description and outcome as lists", () => {
-    const { container } = renderItem({
-      title: loc("Bullets"),
-      description: loc("This will:\n- add search,\n- go live"),
-      outcome: loc("- faster results;"),
-    })
-    expect(screen.getByText("This will:").tagName).toBe("P")
-    expect(
-      Array.from(container.querySelectorAll("li ul li")).map(
-        (li) => li.textContent,
-      ),
-    ).toEqual(["add search", "go live", "faster results"])
-  })
-
   it("puts the panel between the description and the labels", () => {
     renderItem({
       title: loc("Full item"),

@@ -54,6 +54,11 @@ Follow the file you are in, not `apps/editor/AGENTS.md`; the workspace's toolcha
   what stays in place as the page scrolls or filters, controls that show only at some
   widths, reflow at 320 px and 400% zoom, errors in the console, the axe scans and the
   ARIA snapshots. Lighthouse holds performance.
+- A Playwright test runs on desktop alone unless it is tagged: `{ tag: "@both" }` for
+  what a phone changes (the menu button, the header's filter strip), `{ tag: "@mobile-only" }`
+  for what only a phone has or holds best (the menu, 320 px reflow), as
+  `apps/public-site/playwright.config.ts` filters by tag. A page whose ARIA snapshot is
+  the same on a phone has a desktop file only.
 
 ## Commands and checks
 

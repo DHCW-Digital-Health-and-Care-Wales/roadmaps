@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-006, ADR-008, ADR-010
 - **Suggested model**: Sonnet — each width or choice is weighed against the
   breakpoints and branches it could reach
-- **Delivered**: _(add on delivery)_
+- **Delivered**: [PR #256](https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/256)
 
 ## Summary
 

@@ -2,10 +2,10 @@
 
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
   STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
-  the API skeleton (STY-090) are done; the other API placeholders' acceptance criteria
-  come next
+  the API skeleton (STY-090) are done; STY-100 is Proposed (owner, 2026-11-23); the
+  other API placeholders' acceptance criteria come next
 - **Progress**: 11 of 18 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
-  STY-098); next selectable: none until STY-091, STY-092 or STY-100 has its criteria
+  STY-098); next selectable: STY-100
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -147,6 +147,14 @@ _STY-090 amendments_:
     branch coverage; the gate before a PR runs only the apps a change touches. Tracing
     follows as STY-100; the image and the production server are EPC-023's.
 
+Owner answers of 2026-11-23 (STY-100 grilling), recorded in STY-100 D5–D14:
+
+21. **Tracing**: traces only, sent to one shared local Jaeger that keeps them in
+    memory; every request starts its own trace, ignoring a caller's `traceparent`;
+    database spans carry statement text with placeholders and never a value; nothing
+    is exported without an endpoint. Metrics, hosted export and sampling, and the load
+    balancer's trace header are EPC-023's.
+
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._
 
@@ -203,8 +211,8 @@ the seeder for any table it creates.
 | STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                                                 | API                        | STY-090     |       |
 | CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                        | —           |       |
 
-_STY-085 to STY-090, STY-095, CHO-044 and STY-096 to STY-098 are done.
-STY-091 to STY-093 and STY-100 are Placeholders until their acceptance criteria are
+_STY-085 to STY-090, STY-095, CHO-044 and STY-096 to STY-098 are done. STY-100 is
+Proposed; STY-091 to STY-093 are Placeholders until their acceptance criteria are
 written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
 settles what the public sees.

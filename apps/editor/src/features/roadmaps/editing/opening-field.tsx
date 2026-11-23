@@ -22,12 +22,12 @@ export interface OpeningFieldProps {
   /** Said of the field under its label, shut or open (STY-038 S5). */
   hint?: string | undefined
   /**
-   * The field's controls, drawn only while it is open; `setControl` is the `ref` of
+   * The field's controls, drawn only while it is open; `focusOnOpen` is the `ref` of
    * the one that takes focus as it opens, which is whenever that control is first
    * drawn, so give it to one that stays for as long as the field is open. What the
    * controls change is the caller's to hold, so shutting the field keeps it.
    */
-  children: (setControl: (control: HTMLElement | null) => void) => ReactNode
+  children: (focusOnOpen: (control: HTMLElement | null) => void) => ReactNode
   /**
    * Called as the field is shut by its button, for a field that holds more than its
    * controls show as kept, such as text typed but not yet added (STY-037 S19).

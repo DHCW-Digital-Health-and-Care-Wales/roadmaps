@@ -214,8 +214,7 @@ function DetailsEditor({
     const field = fieldsRef.current.get(current)
     if (field) place({ id: current, caret: field.value.length })
     onOpened()
-    // Only as the editor is first drawn.
-    // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- Runs once as the editor opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps -- Only as the editor is first drawn.
   }, [])
 
   const indexOf = (id: number) => lines.findIndex((line) => line.id === id)

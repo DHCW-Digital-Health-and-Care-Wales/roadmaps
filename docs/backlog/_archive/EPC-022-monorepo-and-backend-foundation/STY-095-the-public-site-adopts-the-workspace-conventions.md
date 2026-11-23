@@ -129,16 +129,20 @@ blocks)` in `eslint.base.ts`, so Prettier's block stays last after each app's ow
   `src/entry-server.tsx` (agent).
 - **S2**: the ESLint plugins the base imports are the root package's dev dependencies,
   at the versions the apps had, and each app drops those it no longer imports; the
-  lockfile moves them without a version change (agent).
+  lockfile moves them without a version change, and dedupes the transitive
+  `@eslint-community/eslint-utils` onto the 4.10.1 it already held (agent).
 - **S2**: the editor's findings are fixed at their cause, behaviour kept: 68 refs renamed
   to end in `Ref`, three state setters renamed, `useContext` replaced by `use`, and the
-  icon `publishedStateAction` returned moved into a `PublishedStateIcon` component.
+  icon `publishedStateAction` returned drawn by a `PublishedStateIcon` component that
+  takes the action's verb.
   Conditional rendering of a `ReactNode` prop now tests `Boolean(…)`, which renders
   nothing for `0` where it rendered "0"; no caller passes a number. Twelve findings are
   disabled on their line with a reason: focus observed bubbling up from controls inside
   a card, row or header (three), measuring layout after render (two), static or
   identity-less lists keyed by place (four), and one each for `flushSync`, a
-  fire-and-forget timeout and a run-once effect (agent).
+  fire-and-forget timeout and a run-once effect. The site disables two the same way: a
+  `flushSync` before measuring the new layout, and the landing page the default
+  language always has (agent).
 - **S3**: every TypeScript config in the workspace extends `tsconfig.base.json`, the root
   package's and each app's Node and E2E configs as well as the application configs.
   Each keeps its own target, libraries, module resolution and types, so the site keeps

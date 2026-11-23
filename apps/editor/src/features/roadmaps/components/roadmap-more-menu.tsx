@@ -142,10 +142,10 @@ function PublishedStateItem({
   onChoose: () => void
 }) {
   const { t } = useTranslation()
-  const { verb } = publishedStateAction(state)
+  const verb = publishedStateAction(state)
   return (
     <DropdownMenuItem disabled={!state.available} onClick={onChoose}>
-      <PublishedStateIcon state={state} aria-hidden="true" />
+      <PublishedStateIcon action={verb} aria-hidden="true" />
       {t(`roadmaps.publishRoadmap.action.${verb}`)}
     </DropdownMenuItem>
   )

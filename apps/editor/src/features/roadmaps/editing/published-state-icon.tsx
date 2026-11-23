@@ -1,12 +1,14 @@
 import { EyeOffIcon, GlobeIcon, type LucideProps } from "lucide-react"
 
-import type { PublishedState } from "./use-published-state"
+import type { publishedStateAction } from "./published-state-action"
 
-/** The icon of `publishedStateAction`: the globe to publish, the crossed eye to unpublish. */
+const ICONS = { publish: GlobeIcon, unpublish: EyeOffIcon }
+
+/** The icon of a `publishedStateAction`: the globe to publish, the crossed eye to unpublish. */
 export function PublishedStateIcon({
-  state,
+  action,
   ...props
-}: LucideProps & { state: PublishedState }) {
-  const Icon = state.publishing ? GlobeIcon : EyeOffIcon
+}: LucideProps & { action: ReturnType<typeof publishedStateAction> }) {
+  const Icon = ICONS[action]
   return <Icon {...props} />
 }

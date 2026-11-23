@@ -65,10 +65,10 @@ apps share, and these, the editor's own:
   a route, so route tests live elsewhere; commit the generated
   `apps/editor/src/routeTree.gen.ts` when routes change.
 - The seams of the root guide's test rule, lowest first: a domain or editing-state
-  function, a component, a page, the app. A rule
-  every repository adapter must honour keeps all its cases in the repository contract
-  (ADR-002), whatever a domain test also holds. What earns a Playwright spec is
-  `apps/editor/tests/e2e/AGENTS.md` (_What earns an E2E test_).
+  function, a component, a page, the app. A rule every repository adapter must honour
+  keeps all its cases in the repository contract (ADR-002), whatever a domain test also
+  holds. What earns a Playwright spec is `apps/editor/tests/e2e/AGENTS.md` (_What earns
+  an E2E test_).
 - Add shadcn components with the shadcn CLI, Base UI flavour; never Radix or a
   hand-rolled competing primitive.
 - Route every user-facing string (text, aria-labels, notices, titles) through `t()`, in

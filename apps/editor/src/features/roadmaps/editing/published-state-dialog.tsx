@@ -32,7 +32,7 @@ export interface PublishRoadmapButtonProps {
 export function PublishRoadmapButton({ state }: PublishRoadmapButtonProps) {
   const { t } = useTranslation()
   const ask = useSessionAction(state.ask)
-  const { verb } = publishedStateAction(state)
+  const verb = publishedStateAction(state)
   return (
     <Button
       variant="secondary"
@@ -44,7 +44,7 @@ export function PublishRoadmapButton({ state }: PublishRoadmapButtonProps) {
       }}
     >
       <PublishedStateIcon
-        state={state}
+        action={verb}
         data-icon="inline-start"
         aria-hidden="true"
       />

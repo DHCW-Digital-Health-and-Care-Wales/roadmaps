@@ -72,9 +72,9 @@ contract fail naming the file and line, and records the run in Scenario evidence
 **When** it runs `pnpm api:test`
 **Then** the database is the Compose file's, started by the script as it is locally,
 with no service container and no second copy of the image's digest in the workflow (D5)
-**And** the Compose test still fails a published port not bound to 127.0.0.1, its
-digest test goes, the image staying pinned by digest in the Compose file (D18), and
-Dependabot's entry no longer speaks of a digest to copy
+**And** the Compose test still fails a published port not bound to 127.0.0.1 and an
+image not pinned by digest, and loses only its comparison with the workflow's copy
+(D18); Dependabot's entry no longer speaks of a digest to copy
 
 ### S5: A log line tells one failure from another, by codes
 
@@ -201,10 +201,12 @@ job on the pull request.
   route reads it, so nothing past the limit is read, but a route that reads no body
   runs before a declared oversize is answered 413, and a streamed one is left unread.
   Narrows STY-090 S4's "refused before it is read whole". Changes S1.
-- **D18** (agent, 2026-11-24, review): the Compose test's digest test goes whole, its
-  pin-format assertion with its comparison, as D5's answer said, over keeping the
-  format check; the image stays pinned by digest in the Compose file (STY-090 D33),
-  which Dependabot refreshes. STY-091's harness note follows (STY-091 D2).
+- **D18** (owner, 2026-11-24, after review): the Compose test keeps its pin-format
+  assertion, the image matching `@sha256:` and 64 hex digits, and loses its comparison
+  with the workflow, which no longer holds a copy, over D5's wording that the whole
+  digest test goes (the agent's first reading, which a security review rated P3). The
+  image stays pinned by digest in the Compose file (STY-090 D33), which Dependabot
+  refreshes. STY-091's harness note follows (STY-091 D2). Gives S4.
 - **D19** (owner, 2026-11-24, review question): messages are written only with
   `ROADMAPS_ENV=local` and no `K_SERVICE`, as ADR-018 bounds the mock provider, over
   leaving the bound to EPC-023 or dropping local messages. Changes S6.
@@ -344,7 +346,7 @@ psycopg 3.3.9 installed:
 | S1       | `apps/api/tests/test_middleware.py` (`test_the_body_limit_counts_a_body_as_a_route_reads_it`, `test_the_host_allow_list_serves_only_the_listed_hosts`, `test_the_host_allow_list_comes_before_the_body_limit`); `apps/api/tests/test_errors.py` (`test_a_refusal_is_the_envelope_without_the_input`); `apps/api/tests/test_headers.py` (`test_every_response_carries_the_headers_and_no_cors`); red with `www_redirect=True` and with the body limit outside the allow-list                                                                                                         |
 | S2       | `apps/api/tests/test_settings.py` (`test_start_up_stops_naming_each_bad_setting_never_its_value`, a row per wildcard and environment); red with the wildcard check removed                                                                                                                                                                                                                                                                                                                                                                                                          |
 | S3       | observed run: a ruff-clean `from roadmaps_api.routes import probes` planted in `services/readiness.py`; `pnpm api:lint` exited 1, `roadmaps_api.services.readiness -> roadmaps_api.routes.probes (l.13)`; `apps/api/tests/test_check_transactions.py` keeps the transaction check's tests                                                                                                                                                                                                                                                                                           |
-| S4       | observed run: CI run 45412766678 (workflow_dispatch on `a478aa67`), job `API: verify`: no service container, `pnpm api:test` started Compose's `roadmaps-api-db-1`, healthy in 1.5 s, and passed at 100% coverage; the TCP healthcheck, added after it, recreated the slot's container healthy under `pnpm api:test` on `289af542`, and the PR's own run (45420460995) runs it in CI; `build/api-compose.test.ts` (`binds every published port to 127.0.0.1`)                                                                                                                       |
+| S4       | observed run: CI run 45412766678 (workflow_dispatch on `a478aa67`), job `API: verify`: no service container, `pnpm api:test` started Compose's `roadmaps-api-db-1`, healthy in 1.5 s, and passed at 100% coverage; the TCP healthcheck, added after it, recreated the slot's container healthy under `pnpm api:test` on `289af542`, and the PR's own run (45420460995) runs it in CI; `build/api-compose.test.ts` (`binds every published port to 127.0.0.1`, `pins its image by digest`)                                                                                           |
 | S5       | `apps/api/tests/test_logs.py` (`test_an_exception_s_line_tells_failures_apart_by_codes`, `test_a_refused_connection_and_a_wrong_password_differ_only_in_a_local_log`, `test_a_unique_violation_logs_its_sqlstate_and_constraint_never_the_value`, `test_the_chain_follows_each_cause_then_context_stopping_at_a_repeat`, `test_ready_s_503_logs_a_warning_with_the_code_and_the_exception_s_type`); `apps/api/tests/test_probes.py` (the frozen connection's deadline); red without the SQLSTATE, the constraint, the suppressed context, the repeat check or `/ready`'s `exc_info` |
 | S6       | `apps/api/tests/test_logs.py` (`test_only_a_developer_s_local_api_writes_messages`, a row per environment and marker, `test_a_message_that_cannot_be_formatted_is_left_out`); `apps/api/tests/test_server.py` (production's rules, and `test_a_local_server_writes_messages_and_uvicorn_s_information_lines`); red without the markers' check and with messages never written                                                                                                                                                                                                       |
 | S7       | `apps/api/tests/test_logs.py` (`test_only_a_developer_s_local_api_writes_messages`, uvicorn's level per environment); `apps/api/tests/test_server.py` (`test_the_server_logs_no_query_string_or_exception_text_on_either_stream`: uvicorn writes only warnings and up); red with uvicorn at information everywhere                                                                                                                                                                                                                                                                  |

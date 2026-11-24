@@ -6,11 +6,12 @@ import { parse } from "yaml"
 
 /**
  * The API's local database (apps/api/compose.yaml), which CI's API job starts too, is
- * reachable only from this machine.
+ * reachable only from this machine, and its image is pinned by digest.
  */
 const ROOT = join(import.meta.dirname, "..")
 
 interface Service {
+  image?: string
   ports?: (string | { host_ip?: string })[]
 }
 
@@ -34,6 +35,18 @@ describe("apps/api/compose.yaml", () => {
       expect(hostIp, `bind ${JSON.stringify(port)} to 127.0.0.1`).toBe(
         "127.0.0.1",
       )
+    }
+  })
+
+  it("pins each image by digest", () => {
+    const images = services.map((service) => service.image)
+
+    expect(images).not.toEqual([])
+    for (const image of images) {
+      expect(
+        image,
+        "Pin the image as name:tag@sha256:<64 hex digits>.",
+      ).toMatch(/@sha256:[0-9a-f]{64}$/)
     }
   })
 })

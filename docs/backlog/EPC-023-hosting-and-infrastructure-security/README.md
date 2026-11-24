@@ -103,6 +103,15 @@ lives:_
   backups in a UK location, checked at provisioning (ADR-015); a customer-managed key
   decided with the data protection assessment; Data Access audit logs on; request-log
   access restricted, since callback URLs carry OIDC codes.
+- **The roles and the migration step** (STY-091 D3, D11, D24, D26, D30): EPC-023
+  creates the migration and application logins (IAM principals, as above), never
+  with Cloud SQL's default `cloudsqlsuperuser` role, which `/ready` refuses, and runs
+  STY-091's bootstrap SQL file once to make the roles, their memberships and the
+  database's ownership. Run by Cloud SQL's non-superuser administrator, the file grants
+  that administrator the owner role, so its credential is the owner's: who holds it and
+  what logs its use are this epic's to name. Each deploy runs `api:migrate`'s command as the
+  migration login before the new version takes traffic, while the old one keeps
+  serving, and `/ready` is the service's startup and readiness probe.
 - **A restore drill**, run and recorded before go-live and after any change to backups,
   since a restore bypasses the history's immutability triggers.
 - **Secret Manager** for the Google client secret and any Entra certificate, read by the

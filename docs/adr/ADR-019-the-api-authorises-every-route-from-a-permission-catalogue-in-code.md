@@ -3,7 +3,8 @@
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   identity and authorisation grilling (2026-11-21) and their answers to its review;
   the options chosen are marked ✅.
-- Date: 2026-11-21
+- Date: 2026-11-21 (amended by STY-091, 2026-11-24: the one table without row-level
+  security)
 
 ## Context
 
@@ -153,6 +154,13 @@ The analysis behind both is
 - **Lint**: permission names are referenced only through the enumeration, never as
   string literals outside it (a test over the API's source, beside ADR-017's ruff and
   import-linter).
+
+### STY-091 amendments
+
+- **Every table but one** (_Enforcement_, owner, 2026-11-24, STY-091 D28): the test
+  that every table has row-level security enabled and forced, with a policy, reads
+  ADR-015's closed list of exceptions, which holds only Alembic's `alembic_version`
+  (ADR-015 _STY-091 amendments_).
 
 ## Consequences
 

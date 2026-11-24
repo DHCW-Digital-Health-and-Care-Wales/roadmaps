@@ -3,9 +3,11 @@
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
-  the owner's STY-090 grilling (_STY-090 amendments_).
+  the owner's STY-090 grilling (_STY-090 amendments_) and STY-091 grilling (_STY-091
+  amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
-  STY-090: URL paths, tracing after the skeleton)
+  STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
+  and the test workers)
 
 ## Context
 
@@ -170,6 +172,37 @@ _Operation_ stands.
 - **OpenTelemetry follows the skeleton** in STY-100, not in STY-090 itself. Until then
   each log line and response carries a generated request ID, which STY-100 makes the
   trace ID.
+
+### STY-091 amendments
+
+From the owner's STY-091 grilling and its review questions (2026-11-24, STY-091 D3 to
+D14, D17, D24 to D27 and D29); the rest of _Migrations_, _Tests_ and _Operation_ stands.
+STY-091 records the agent's decisions that build on them.
+
+- **A bootstrap outside Alembic creates ADR-015's roles.** One idempotent SQL file, with
+  no credential, makes three no-login roles: the owner, which owns the database and so
+  `public`; the migration role, which switches to the owner; and the application's
+  role. Each login is a member of exactly one of the last two. The file revokes
+  `TEMPORARY` on the database and the owner's default `EXECUTE` on routines from
+  `PUBLIC`. Locally and in CI a runner creates two password logins first; where the API
+  is hosted, EPC-023 creates the logins and runs the same file.
+- **Migrations upgrade only,** numbered `0001_<slug>` in one line, in the package, each
+  run as the owner role and reviewed by hand, with autogenerate only drafting. A check
+  fails two heads, a gap or a repeat in the numbers, and another fails models that
+  differ from the migrations. Each revision grants the application's role what it needs;
+  there is no default grant.
+- **Every revision stays compatible with the version before it,** since that version
+  serves while a deploy migrates: `/ready` is ready at the code's latest revision or at
+  one numbered above it, and not ready behind it, at another slug, at a value of another
+  form, or with no revision or several.
+- **`/ready` serves only a login that holds the application's role and nothing more:**
+  no `SUPERUSER`, `BYPASSRLS`, `CREATEROLE`, `CREATEDB` or `REPLICATION`, membership of
+  no role outside a closed list STY-091 names, no object owned, and no `CREATE` or
+  `TEMPORARY` on the database or `CREATE` on any schema.
+- **The test workers** are pytest-xdist's, as many as the machine has cores and at most
+  four, each on its own clone of the template.
+- **The seeder follows the first schema story,** which creates `tenants`, rather than
+  the migrations alone; the rest of _Operation_'s seeder stands.
 
 ## Consequences
 

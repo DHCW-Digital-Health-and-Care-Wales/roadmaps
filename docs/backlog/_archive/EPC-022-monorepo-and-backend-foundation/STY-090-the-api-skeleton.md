@@ -9,7 +9,7 @@
   (ADR-017 §ADR-020 amendments); ADR-018's application-log allow-list; ADR-016 §Workspace
   tooling, §CI
 - **Suggested model**: Opus — the conventions every later API story copies
-- **Delivered**: _(the PR, added once it exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/286
 
 ## Summary
 

@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs"
-import { join, relative } from "node:path"
+import { basename, extname, join, relative } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
@@ -17,6 +17,25 @@ const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist"])
 const RECORDS_GUIDE_DIRECTORY = join(ROOT, "docs")
 
 /**
+ * Every guide file the policy names (docs/operations/authoring-agent-instructions.md):
+ * an `AGENTS.md` or `CLAUDE.md` anywhere, each file under these directories, and these
+ * files, which the app guides tell every agent to follow.
+ */
+const GUIDE_DIRECTORIES = [".agents/skills", ".claude/agents"]
+const GUIDE_FILES = ["apps/typescript-react-conventions.md"]
+const GUIDE_NAMES = new Set(["AGENTS.md", "CLAUDE.md"])
+const BINARY_EXTENSIONS = new Set([".png"])
+
+/**
+ * A record ID a guide shows as an example of the format, not as a citation of a record:
+ * the guide, then the IDs it may show. A test below fails when the example goes, so the
+ * list cannot outlive it.
+ */
+const FORMAT_EXAMPLES: Readonly<Record<string, readonly string[]>> = {
+  ".agents/skills/implement-story/references/pull-requests.md": ["STY-010"],
+}
+
+/**
  * Not preceded by a letter or digit, nor followed by a digit, since `\b` treats `_` as
  * part of a word and so missed an ID set in italics (`_STY-… amendments_`, an ADR
  * section's name), which a reviewer caught instead. Review by February 2027.
@@ -27,19 +46,43 @@ function read(path: string): string {
   return readFileSync(join(ROOT, path), "utf8")
 }
 
-function findGuides(directory: string): string[] {
+function listFiles(
+  directory: string,
+  isSkipped: (path: string) => boolean,
+): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name)
     if (entry.isDirectory()) {
-      const skipped =
-        entry.name.startsWith(".") ||
-        SKIPPED_DIRECTORIES.has(entry.name) ||
-        path === RECORDS_GUIDE_DIRECTORY
-      return skipped ? [] : findGuides(path)
+      return isSkipped(path) ? [] : listFiles(path, isSkipped)
     }
-    return entry.name === "AGENTS.md" ? [relative(ROOT, path)] : []
+    return [relative(ROOT, path)]
   })
 }
+
+function findGuides(): string[] {
+  const guideNamed = listFiles(
+    ROOT,
+    (path) =>
+      basename(path).startsWith(".") ||
+      SKIPPED_DIRECTORIES.has(basename(path)) ||
+      path === RECORDS_GUIDE_DIRECTORY,
+  ).filter((path) => GUIDE_NAMES.has(basename(path)))
+  const guideDirectories = GUIDE_DIRECTORIES.flatMap((directory) =>
+    listFiles(join(ROOT, directory), (path) =>
+      SKIPPED_DIRECTORIES.has(basename(path)),
+    ),
+  ).filter((path) => !BINARY_EXTENSIONS.has(extname(path)))
+  return [...guideNamed, ...guideDirectories, ...GUIDE_FILES]
+}
+
+function citedRecordIds(path: string): string[] {
+  const examples = FORMAT_EXAMPLES[path] ?? []
+  return (read(path).match(RECORD_ID) ?? []).filter(
+    (id) => !examples.includes(id),
+  )
+}
+
+const guides = findGuides()
 
 describe("agent guides", () => {
   it(`keeps the root AGENTS.md within ${String(ROOT_GUIDE_WORD_BUDGET)} words`, () => {
@@ -63,11 +106,38 @@ describe("agent guides", () => {
     expect(text.match(RECORD_ID) !== null).toBe(isRecordId)
   })
 
-  it.each(findGuides(ROOT))("%s cites no backlog record IDs", (path) => {
+  it.each([
+    "AGENTS.md",
+    "apps/editor/AGENTS.md",
+    "apps/typescript-react-conventions.md",
+    ".agents/skills/threat-review/SKILL.md",
+    ".agents/skills/implement-story/references/pull-requests.md",
+    ".claude/agents/code-reviewer.md",
+  ])("reads the guide file %s", (path) => {
+    expect(guides).toContain(path)
+  })
+
+  it.each(["docs/AGENTS.md", ".agents/skills/shadcn/assets/shadcn.png"])(
+    "leaves %s unread",
+    (path) => {
+      expect(guides).not.toContain(path)
+    },
+  )
+
+  it.each(guides)("%s cites no backlog record IDs", (path) => {
     expect(
-      read(path).match(RECORD_ID) ?? [],
+      citedRecordIds(path),
       `${path} cites records: state the rule itself and cite its ADR; a delivery's ` +
-        "history belongs in the record and its PR.",
+        "history belongs in the record and its PR. A deliberate example of the format " +
+        "goes in FORMAT_EXAMPLES.",
     ).toEqual([])
   })
+
+  it.each(Object.entries(FORMAT_EXAMPLES))(
+    "%s still shows its format example",
+    (path, ids) => {
+      const shown = read(path).match(RECORD_ID) ?? []
+      expect(shown).toEqual(expect.arrayContaining([...ids]))
+    },
+  )
 })

@@ -1,7 +1,8 @@
 """The test app: the API as `create_app` builds it, plus routes that only tests mount.
 
 The probes take no input and never fail unexpectedly, so the 422 and 500 cases need a
-route of their own. The server test runs `create_test_app` under uvicorn.
+route of their own, and the body limit a route that reads no body. The server test runs
+`create_test_app` under uvicorn.
 """
 
 import os
@@ -9,7 +10,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Annotated, Final
 
-from fastapi import APIRouter, FastAPI, Query
+from fastapi import APIRouter, FastAPI, Query, Request
 from fastapi.responses import PlainTextResponse
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
@@ -27,7 +28,7 @@ PLANTED: Final = "PLANTED-VALUE-7f3a"
 
 
 def database_url() -> str:
-    """The test database, which `scripts/api.sh test` or CI's service container gives."""
+    """The test database, the Compose file's, which `scripts/api.sh test` starts."""
     url = os.environ.get("ROADMAPS_TEST_DATABASE_URL")
     if not url:
         msg = "Run the tests with pnpm api:test, which sets ROADMAPS_TEST_DATABASE_URL."
@@ -47,8 +48,20 @@ class Echo(BaseModel):
     name: str
 
 
+unread_router = APIRouter(prefix="/test")
+
+
+@unread_router.post("/unread")
+def unread(request: Request) -> dict[str, str]:
+    """Answers without reading the body, counting each call."""
+    request.app.state.unread_calls += 1
+    return {"status": "ok"}
+
+
 def add_test_routes(app: FastAPI) -> FastAPI:
     router = APIRouter(prefix="/test")
+    app.state.unread_calls = 0
+    app.include_router(unread_router)
 
     @router.post("/echo")
     def echo(body: Echo, count: Annotated[int, Query()] = 1) -> dict[str, object]:

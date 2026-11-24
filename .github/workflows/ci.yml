@@ -344,9 +344,8 @@ jobs:
           if-no-files-found: ignore
 
   # The API (apps/api): ruff, import-linter, the transaction check, ty and pytest at 100%
-  # branch coverage, through its pnpm scripts, which run uv. Its tests reach a database
-  # in a service container, the image of apps/api/compose.yaml, by the same digest
-  # (build/api-compose.test.ts).
+  # branch coverage, through its pnpm scripts, which run uv. pnpm api:test starts the
+  # database of apps/api/compose.yaml, as it does locally, in the runner's Docker.
   api-verify:
     name: "API: verify"
     needs: changes
@@ -354,24 +353,6 @@ jobs:
     if: needs.changes.outputs.api != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    services:
-      postgres:
-        image: postgres:18@sha256:f5cbc081c25690710f3fc6f4c61a7565382bae01ca0d0f2028a53d7926b85a20
-        # A throwaway database on the runner, never reachable from outside it.
-        env:
-          POSTGRES_USER: roadmaps
-          POSTGRES_PASSWORD: roadmaps
-          POSTGRES_DB: roadmaps
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready --username=roadmaps --dbname=roadmaps"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 30
-    env:
-      # scripts/api.sh test uses it rather than starting a Compose database.
-      ROADMAPS_TEST_DATABASE_URL: postgresql+psycopg://roadmaps:roadmaps@127.0.0.1:5432/roadmaps
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

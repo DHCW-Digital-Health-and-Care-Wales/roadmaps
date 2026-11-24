@@ -38,5 +38,6 @@ origin.
 Settings come from environment variables only, which `pnpm api:dev` sets for the slot:
 `ROADMAPS_ENV` (`local`, `test` or `production`, the default),
 `ROADMAPS_DATABASE_URL` (`postgresql+psycopg://…`) and `ROADMAPS_ALLOWED_HOSTS` (the
-`Host` names served, comma-separated). A missing or bad one stops start-up, naming it.
-Every log line is JSON on stdout.
+`Host` names served, comma-separated, never a wildcard). A missing or bad one stops
+start-up, naming it. Every log line is JSON on stdout; only a local API's lines carry
+an exception's or another library's message.

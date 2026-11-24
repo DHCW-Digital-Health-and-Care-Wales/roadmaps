@@ -1,7 +1,8 @@
-"""S8: the layering checks fail a planted violation, naming its file and line."""
+"""The transaction check fails a route or repository ending a transaction (ADR-017).
 
-import os
-import shutil
+import-linter's layers contract is configured, not written here, so no test runs it.
+"""
+
 import subprocess
 import sys
 from pathlib import Path
@@ -11,53 +12,6 @@ import pytest
 from tools import check_transactions
 
 API_DIR = Path(__file__).parent.parent
-PACKAGE = API_DIR / "src" / "roadmaps_api"
-
-
-def lint_imports(source: Path, cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(  # noqa: S603 - the test's own interpreter and arguments
-        [Path(sys.executable).parent / "lint-imports", "--no-cache"],
-        cwd=cwd,
-        env={**os.environ, "PYTHONPATH": str(source)},
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-
-def test_import_linter_keeps_the_api_s_layers() -> None:
-    result = lint_imports(API_DIR / "src", API_DIR)
-
-    assert result.returncode == 0, result.stdout
-    assert "0 broken" in result.stdout
-
-
-UPWARD_IMPORTS = {
-    "a service importing a route": ("services/readiness.py", "roadmaps_api.routes.probes"),
-    "a repository importing a service": (
-        "repositories/readiness.py",
-        "roadmaps_api.services.readiness",
-    ),
-    "a repository importing a route": ("repositories/readiness.py", "roadmaps_api.routes"),
-}
-
-
-@pytest.mark.parametrize(("module", "imported"), UPWARD_IMPORTS.values(), ids=UPWARD_IMPORTS)
-def test_import_linter_fails_an_import_of_a_layer_above(
-    tmp_path: Path, module: str, imported: str
-) -> None:
-    source = tmp_path / "src"
-    shutil.copytree(PACKAGE, source / "roadmaps_api")
-    shutil.copy(API_DIR / "pyproject.toml", tmp_path)
-    planted = source / "roadmaps_api" / module
-    lines = planted.read_text().splitlines()
-    planted.write_text("\n".join([f"import {imported}  # planted", *lines]) + "\n")
-
-    result = lint_imports(source, tmp_path)
-
-    importer = "roadmaps_api." + module.removesuffix(".py").replace("/", ".")
-    assert result.returncode == 1
-    assert f"{importer} -> {imported} (l.1)" in result.stdout
 
 
 def test_the_transaction_check_passes_the_api_s_routes_and_repositories(

@@ -45,9 +45,9 @@ updates:
       uv:
         patterns: ["*"]
 
-  # The API's local database image, pinned by digest in apps/api/compose.yaml. CI's API
-  # job pins the same digest (.github/workflows/ci.yml), which this entry cannot update:
-  # build/api-compose.test.ts fails the pull request until it is copied there.
+  # The API's database image, pinned by digest in apps/api/compose.yaml, which CI's API
+  # job starts as pnpm api:test does locally, so this entry's pull request is the whole
+  # update.
   - package-ecosystem: docker-compose
     directory: /apps/api
     schedule:

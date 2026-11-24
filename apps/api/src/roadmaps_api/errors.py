@@ -2,7 +2,8 @@
 
 Routes and services raise an `ApiError`; FastAPI's own 404, 405 and 422 are wrapped in
 the same envelope here. A refusal never carries the submitted input, a traceback or an
-exception's text.
+exception's text. The two exceptions are Starlette's middleware's plain-text refusals, a
+400 for a `Host` not allowed and a 413 for a body over the limit (`create_app`).
 """
 
 from collections.abc import Mapping
@@ -23,8 +24,6 @@ class ErrorCode(StrEnum):
     NOT_FOUND = "request.not_found"
     METHOD_NOT_ALLOWED = "request.method_not_allowed"
     INVALID = "request.invalid"
-    BODY_TOO_LARGE = "request.body_too_large"
-    HOST_NOT_ALLOWED = "request.host_not_allowed"
     SERVICE_NOT_READY = "service.not_ready"
     INTERNAL_ERROR = "server.internal_error"
 
@@ -37,11 +36,6 @@ _ERRORS: Final[dict[ErrorCode, tuple[HTTPStatus, str]]] = {
         "This path does not accept this method.",
     ),
     ErrorCode.INVALID: (HTTPStatus.UNPROCESSABLE_CONTENT, "The request is not valid."),
-    ErrorCode.BODY_TOO_LARGE: (
-        HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
-        "The request body is too large.",
-    ),
-    ErrorCode.HOST_NOT_ALLOWED: (HTTPStatus.BAD_REQUEST, "This host is not served here."),
     ErrorCode.SERVICE_NOT_READY: (
         HTTPStatus.SERVICE_UNAVAILABLE,
         "The service is not ready.",
@@ -102,7 +96,9 @@ def register_error_handlers(app: FastAPI) -> None:
     def fastapi_refusal(_request: Request, exc: HTTPException) -> JSONResponse:
         refusal = _FASTAPI_REFUSALS.get(HTTPStatus(exc.status_code))
         if refusal is None:
-            # FastAPI raises no other status itself: any other is an unexpected error.
+            # FastAPI raises no other status itself: any other is an unexpected error,
+            # except the body limit's 413, raised as a route reads the body, which
+            # Starlette's middleware answers in its own plain text.
             raise exc
         code, params = refusal
         # A 405's Allow header among them (RFC 9110).

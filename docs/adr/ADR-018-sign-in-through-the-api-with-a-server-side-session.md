@@ -4,7 +4,8 @@
   identity and authorisation grilling (2026-11-21) and their answers to its review;
   the options chosen are marked ✅. It supersedes ADR-003 for the API data source;
   ADR-003 stands for the Sheets adapter until the deployed editor switches to the API.
-- Date: 2026-11-21
+  Amended by the owner's STY-101 grilling (_STY-101 amendments_).
+- Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages)
 
 ## Context
 
@@ -279,6 +280,25 @@ shape it:
   record: written and reviewed by DHCW's cyber security team before any identity code is
   built (Option 18). **An independent penetration test** comes before the deployed
   editor switches to the API.
+
+### STY-101 amendments
+
+From the owner's STY-101 grilling (2026-11-24, STY-101 D6, D7, D12, D19 and D22); the
+rest of _Records and retention_ stands.
+
+- **The allow-list takes codes and names**: an exception's line carries its type, the
+  types of the exceptions it was raised from, and a database error's SQLSTATE and
+  constraint name as psycopg's diagnostics give them, beside its stack frames; never
+  its message, a detail or a value.
+- **A database function the repository writes never sets a diagnostic field from a
+  value**, since PostgreSQL lets a function set SQLSTATE, a constraint's name and the
+  other fields a line could carry.
+- **Messages are written only on a developer's own machine**: an exception's message and
+  a third party's formatted message reach a line only with `ROADMAPS_ENV=local` and
+  none of Cloud Run's markers (`K_SERVICE`, `CLOUD_RUN_JOB`, `CLOUD_RUN_WORKER_POOL`),
+  as _The API runs the sign-in_ bounds the mock provider. Test, production, an unset or invalid
+  environment, anything on Cloud Run and a line written before the settings are read
+  write none (`Settings.writes_messages`, `apps/api/src/roadmaps_api/settings.py`).
 
 ## Consequences
 

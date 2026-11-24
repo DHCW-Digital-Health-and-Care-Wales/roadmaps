@@ -1,4 +1,4 @@
-"""S6: settings come from environment variables only and fail closed."""
+"""Settings come from environment variables only and fail closed."""
 
 from pathlib import Path
 
@@ -19,13 +19,13 @@ def test_an_unset_environment_gets_production_rules() -> None:
     assert settings.database_url == URL
 
 
-def test_a_local_environment_serves_the_live_openapi_and_may_list_wildcards() -> None:
+def test_a_local_environment_serves_the_live_openapi() -> None:
     settings = load_settings(
-        {**VALID, "ROADMAPS_ENV": "local", "ROADMAPS_ALLOWED_HOSTS": "localhost, *"}
+        {**VALID, "ROADMAPS_ENV": "local", "ROADMAPS_ALLOWED_HOSTS": "localhost, 127.0.0.1"}
     )
 
     assert settings.serves_live_openapi
-    assert settings.allowed_hosts == ("localhost", "*")
+    assert settings.allowed_hosts == ("localhost", "127.0.0.1")
 
 
 BAD = {
@@ -51,14 +51,14 @@ BAD = {
         {"ROADMAPS_ALLOWED_HOSTS": "api.example,,b.example"},
         ["ROADMAPS_ALLOWED_HOSTS"],
     ),
-    "a wildcard host in production": (
-        {"ROADMAPS_ALLOWED_HOSTS": "*.example"},
-        ["ROADMAPS_ALLOWED_HOSTS"],
-    ),
-    "a wildcard host in test": (
-        {"ROADMAPS_ENV": "test", "ROADMAPS_ALLOWED_HOSTS": "*"},
-        ["ROADMAPS_ALLOWED_HOSTS"],
-    ),
+    **{
+        f"{pattern} among the hosts with ROADMAPS_ENV {environment or 'unset'}": (
+            {"ROADMAPS_ENV": environment, "ROADMAPS_ALLOWED_HOSTS": f"localhost,{pattern}"},
+            ["ROADMAPS_ALLOWED_HOSTS"],
+        )
+        for pattern in ("*", "*.example")
+        for environment in ("local", "test", "production", None)
+    },
     "several bad settings": (
         {"ROADMAPS_ENV": "prod", "ROADMAPS_DATABASE_URL": None, "ROADMAPS_ALLOWED_HOSTS": None},
         ["ROADMAPS_ENV", "ROADMAPS_DATABASE_URL", "ROADMAPS_ALLOWED_HOSTS"],
@@ -81,6 +81,7 @@ def test_start_up_stops_naming_each_bad_setting_never_its_value(
         assert name in str(raised.value)
     assert "SECRET-PASSWORD" not in str(raised.value)
     assert "staging" not in str(raised.value)
+    assert "*" not in str(raised.value)
 
 
 def test_settings_come_from_the_environment_never_a_dotenv_file(

@@ -5,8 +5,7 @@
 #   db-up    start the slot's PostgreSQL 18 container if it is not running
 #   db-down  stop and remove it, keeping its data volume
 #   dev      db-up, then the API with reload on the slot's API_PORT
-#   test     db-up, then pytest under coverage; with ROADMAPS_TEST_DATABASE_URL set
-#            (CI's service container), that database instead
+#   test     db-up, then pytest under coverage against it, locally and in CI
 #
 # Ports and the Compose project come from the .env.worktree that
 # scripts/worktree/worktree.sh writes; outside a worktree the API takes 8000 and its
@@ -61,10 +60,8 @@ case "${1:-}" in
     ;;
   test)
     shift
-    if [ -z "${ROADMAPS_TEST_DATABASE_URL:-}" ]; then
-      db_up
-      export ROADMAPS_TEST_DATABASE_URL="$DATABASE_URL"
-    fi
+    db_up
+    export ROADMAPS_TEST_DATABASE_URL="$DATABASE_URL"
     uv run --locked coverage erase
     uv run --locked coverage run -m pytest "$@"
     uv run --locked coverage combine --quiet

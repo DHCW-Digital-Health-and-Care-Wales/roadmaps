@@ -6,10 +6,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from sqlalchemy.orm import sessionmaker
+from starlette.middleware.body_limit import RequestBodyLimitMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from roadmaps_api.database import create_database_engine
 from roadmaps_api.errors import register_error_handlers
-from roadmaps_api.middleware import BodyLimit, HostAllowList, RequestContext
+from roadmaps_api.middleware import RequestContext
 from roadmaps_api.routes import api_v1, probes
 from roadmaps_api.settings import Settings, SettingsError, load_settings
 
@@ -60,8 +62,14 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(probes.router)
     app.include_router(api_v1.router)
     # Added innermost first: a request meets RequestContext, then the Host allow-list,
-    # then the body limit.
-    app.add_middleware(BodyLimit, max_bytes=settings.max_body_bytes)
-    app.add_middleware(HostAllowList, allowed_hosts=settings.allowed_hosts)
+    # then the body limit. Both answer in Starlette's plain text, not the envelope
+    # (ADR-017 _Errors_). The limit counts a body as a route reads it: nothing past it is
+    # read, a declared oversize body is answered 413 once the route answers, and a
+    # streamed one a route never reads gets the route's own answer (ADR-020).
+    app.add_middleware(RequestBodyLimitMiddleware, max_body_size=settings.max_body_bytes)
+    # The `Host` header only, never `X-Forwarded-Host`; no redirect to a `www.` name.
+    app.add_middleware(
+        TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts, www_redirect=False
+    )
     app.add_middleware(RequestContext)
     return app

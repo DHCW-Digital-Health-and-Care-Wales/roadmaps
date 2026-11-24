@@ -2,11 +2,11 @@
 
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
   STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
-  the API skeleton (STY-090) are done; STY-100 is Proposed (owner, 2026-11-23), and
-  STY-101, from the owner's review of the skeleton, too (owner, 2026-11-24), and STY-091
-  (owner, 2026-11-24); the other API placeholders' acceptance criteria come next
-- **Progress**: 11 of 20 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
-  STY-098); next selectable: STY-101 (CHO-048 is done)
+  the API skeleton (STY-090) and, from the owner's review of it, STY-101 are done;
+  STY-100 is Proposed (owner, 2026-11-23), and STY-091 (owner, 2026-11-24); the other API
+  placeholders' acceptance criteria come next
+- **Progress**: 12 of 20 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
+  STY-098, STY-101); next selectable: STY-091 and STY-100 (STY-101 is done)
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -249,7 +249,7 @@ emptying, with a test (D15).
 | STY-098 | [The editor marks English in place of Welsh](../_archive/EPC-022-monorepo-and-backend-foundation/STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)             | Domain + Features/UI       | STY-097         | ✅    |
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                | STY-098         |       |
 | STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                                                 | API                        | STY-101         |       |
-| STY-101 | [The skeleton leans on its framework](STY-101-the-api-skeleton-leans-on-its-framework.md)                                                                                 | API + CI/CD + Docs         | CHO-048         |       |
+| STY-101 | [The skeleton leans on its framework](../_archive/EPC-022-monorepo-and-backend-foundation/STY-101-the-api-skeleton-leans-on-its-framework.md)                             | API + CI/CD + Docs         | CHO-048         | ✅    |
 | CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                        | —               |       |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                        | —               |       |
 

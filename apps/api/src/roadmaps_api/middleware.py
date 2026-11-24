@@ -1,21 +1,19 @@
-"""ASGI middleware for ADR-020's response rules, outermost first in `create_app`.
+"""The API's own ASGI middleware, outermost in `create_app`, for ADR-020's response rules.
 
 `RequestContext` gives each request its ID, sets the headers on every response, writes
 the access line (named as `access_log` names it) and answers an unexpected error
 itself, so nothing reaches Starlette's or uvicorn's own error handling, which would log
-the exception's message. Inside it, `HostAllowList` refuses a `Host` the settings do
-not list, and `BodyLimit` refuses a body over the limit before it is read whole.
+the exception's message. Inside it, Starlette's own middleware holds the `Host`
+allow-list and the body limit (`create_app`), so their refusals carry the headers too.
 """
 
 import logging
-import re
 import secrets
 import time
-from collections.abc import Iterable
 from http import HTTPStatus
 from typing import Final
 
-from starlette.datastructures import Headers, MutableHeaders
+from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from roadmaps_api.access_log import method_name, route_template
@@ -93,85 +91,3 @@ class RequestContext:
                     },
                 )
             request_id_var.reset(token)
-
-
-# A name or a bracketed IPv6 literal, then at most a port.
-_HOST: Final = re.compile(r"(?P<name>\[[0-9a-f:.]+\]|[^\[\]:]+)(?::\d*)?")
-
-
-def _host_name(host: str) -> str | None:
-    """The host without its port, or None for a header that is no host."""
-    match = _HOST.fullmatch(host)
-    return match["name"] if match else None
-
-
-def _host_matches(host: str, pattern: str) -> bool:
-    if pattern == "*":
-        return True
-    if pattern.startswith("*."):
-        return host.endswith(pattern[1:])
-    return host == pattern
-
-
-class HostAllowList:
-    """Reads the `Host` header only, never `X-Forwarded-Host` (ADR-020)."""
-
-    def __init__(self, app: ASGIApp, allowed_hosts: Iterable[str]) -> None:
-        self.app = app
-        self.allowed_hosts = tuple(allowed_hosts)
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-        host = _host_name(Headers(scope=scope).get("host", "").lower())
-        if host is not None and any(_host_matches(host, pattern) for pattern in self.allowed_hosts):
-            await self.app(scope, receive, send)
-            return
-        await error_response(ErrorCode.HOST_NOT_ALLOWED)(scope, receive, send)
-
-
-class BodyLimit:
-    """Refuses a body over `max_bytes`, declared or streamed, before it is read whole.
-
-    A declared `Content-Length` over the limit is refused unread. Otherwise the body is
-    read here, chunk by chunk, up to the limit, and handed on: FastAPI turns an error
-    raised while it reads a body into a 400, so the limit cannot be raised from there.
-    """
-
-    def __init__(self, app: ASGIApp, max_bytes: int) -> None:
-        self.app = app
-        self.max_bytes = max_bytes
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http":
-            await self.app(scope, receive, send)
-            return
-        too_large = error_response(ErrorCode.BODY_TOO_LARGE)
-        declared = Headers(scope=scope).get("content-length", "")
-        if declared.isdigit() and int(declared) > self.max_bytes:
-            await too_large(scope, receive, send)
-            return
-
-        chunks: list[bytes] = []
-        received = 0
-        while True:
-            message = await receive()
-            if message["type"] != "http.request":
-                # The client went away: the app sees the disconnect as it would have.
-                break
-            chunk = message.get("body", b"")
-            received += len(chunk)
-            if received > self.max_bytes:
-                await too_large(scope, receive, send)
-                return
-            chunks.append(chunk)
-            if not message.get("more_body", False):
-                message = {"type": "http.request", "body": b"".join(chunks), "more_body": False}
-                break
-        pending = [message]
-
-        async def replay() -> Message:
-            return pending.pop() if pending else await receive()
-
-        await self.app(scope, replay, send)

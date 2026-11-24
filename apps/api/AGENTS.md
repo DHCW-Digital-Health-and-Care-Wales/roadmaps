@@ -24,23 +24,31 @@ the root, unversioned (ADR-017's amendments).
 ## Errors and responses
 
 - Refuse with `ApiError(ErrorCode.…)` (`apps/api/src/roadmaps_api/errors.py`); every
-  refusal is `{detail, code, params}`. A new code joins `ErrorCode` with its status and
-  detail, and the editor's API adapter maps it (ADR-017 _Errors_).
+  refusal is `{detail, code, params}`, except Starlette's plain-text 400 for a `Host`
+  not allowed and 413 for a body over the limit. A new code joins `ErrorCode` with its
+  status and detail, and the editor's API adapter maps it (ADR-017 _Errors_).
 - Never put submitted input, an exception's text or a traceback in a response.
-- The middleware (`apps/api/src/roadmaps_api/middleware.py`) sets ADR-020's headers on
-  every response, the `Host` allow-list and the 1 MiB body limit; send no CORS header.
+- `RequestContext` (`apps/api/src/roadmaps_api/middleware.py`) sets ADR-020's headers
+  on every response; Starlette's middleware, wired in `create_app`, holds the `Host`
+  allow-list and the 1 MiB body limit, which counts a body only as a route reads it
+  (ADR-020's _STY-101 amendments_); send no CORS header.
 
 ## Logs (ADR-018 _Records and retention_)
 
 - Log a constant event name with allow-listed `extra` fields
   (`ALLOWED_EXTRA_FIELDS` in `apps/api/src/roadmaps_api/logs.py`); the formatter drops
-  any other field, and a third party's message. A field joins the allow-list only when
-  it is an ID, a code, a type, a name or a number, never a value a caller or a person
-  supplied.
+  any other field. A field joins the allow-list only when it is an ID, a code, a type, a
+  name or a number, never a value a caller or a person supplied.
+- An exception's and a third party's message reach a line only with `ROADMAPS_ENV=local`
+  and none of Cloud Run's markers (`Settings.writes_messages`); elsewhere uvicorn's
+  loggers write from warning up, since their information lines would hold no text.
 - Name a request in a log line by its route's template, or `unmatched`, and a method
   HTTP defines, never as the caller sent them (`apps/api/src/roadmaps_api/access_log.py`).
-- Log an exception with `logger.exception` or `exc_info`: the line keeps its type and
-  frames, never its message.
+- Log an exception with `logger.exception` or `exc_info`: the line keeps its type, the
+  types it was raised from, a database error's SQLSTATE and constraint name, and its
+  frames.
+- A database function never sets SQLSTATE, a constraint's name or another diagnostic
+  field from a value, since the log writes them.
 
 ## Settings
 

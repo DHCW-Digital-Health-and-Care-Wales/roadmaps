@@ -1,8 +1,9 @@
-"""S6, S7: the real server, run as `pnpm api:dev` runs it, logs only allow-listed fields.
+"""The real server, run as `pnpm api:dev` runs it, logs only allow-listed fields.
 
 `TestClient` never runs uvicorn, whose own loggers write the query string and the
 message of an exception that reaches them, so these tests start uvicorn itself, with
-reload, the log configuration and the environment `scripts/api.sh dev` uses.
+reload and the log configuration `scripts/api.sh dev` uses, under production's rules,
+which write no message; one local case shows the messages a developer's API writes.
 """
 
 import json
@@ -13,7 +14,8 @@ import subprocess
 import sys
 import time
 import warnings
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,11 +23,12 @@ import httpx2
 import pytest
 
 from roadmaps_api import app, server
+from roadmaps_api.settings import load_settings
 from tests.support import DOWN_DATABASE_URL, PLANTED
 
 API_DIR = Path(__file__).parent.parent
-DEV_ENVIRONMENT = {
-    "ROADMAPS_ENV": "local",
+SERVER_ENVIRONMENT = {
+    "ROADMAPS_ENV": "production",
     "ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL,
     "ROADMAPS_ALLOWED_HOSTS": "127.0.0.1,localhost",
 }
@@ -81,14 +84,18 @@ def wait_until_up(base: str) -> None:
     pytest.fail("the server did not start")
 
 
-@pytest.fixture
-def served(tmp_path: Path) -> Iterator[tuple[str, subprocess.Popen[bytes]]]:
+@contextmanager
+def serving_with_reload(
+    tmp_path: Path, environment: dict[str, str]
+) -> Generator[tuple[str, subprocess.Popen[bytes]]]:
     port = free_port()
     serve = (
         "from roadmaps_api.server import serve; "
-        f"serve(port={port}, reload=True, app='tests.support:create_test_app')"
+        "from roadmaps_api.settings import load_settings; "
+        f"serve(port={port}, reload=True, app='tests.support:create_test_app', "
+        "settings=load_settings())"
     )
-    process = run_server(["-c", serve], DEV_ENVIRONMENT, tmp_path)
+    process = run_server(["-c", serve], environment, tmp_path)
     try:
         base = f"http://127.0.0.1:{port}"
         wait_until_up(base)
@@ -96,6 +103,12 @@ def served(tmp_path: Path) -> Iterator[tuple[str, subprocess.Popen[bytes]]]:
     finally:
         if process.poll() is None:
             os.killpg(process.pid, signal.SIGKILL)
+
+
+@pytest.fixture
+def served(tmp_path: Path) -> Iterator[tuple[str, subprocess.Popen[bytes]]]:
+    with serving_with_reload(tmp_path, SERVER_ENVIRONMENT) as server:
+        yield server
 
 
 def test_the_server_logs_no_query_string_or_exception_text_on_either_stream(
@@ -127,7 +140,30 @@ def test_the_server_logs_no_query_string_or_exception_text_on_either_stream(
     [failure] = [line for line in lines if line.get("message") == "request.failed"]
     assert failure["exception_type"] == "builtins.ValueError"
     assert failure["request_id"] == failed.headers["X-Request-ID"]
-    assert any(line["logger"] == "uvicorn.error" for line in lines)
+    # uvicorn's warnings arrive (the request it could not parse); its start and stop
+    # lines, which would hold no text, do not.
+    uvicorn = [line for line in lines if str(line["logger"]).startswith("uvicorn")]
+    assert uvicorn
+    assert {line["level"] for line in uvicorn} <= {"warning", "error", "critical"}
+
+
+def test_a_local_server_writes_messages_and_uvicorn_s_information_lines(
+    tmp_path: Path,
+) -> None:
+    with serving_with_reload(tmp_path, {**SERVER_ENVIRONMENT, "ROADMAPS_ENV": "local"}) as (
+        base,
+        process,
+    ):
+        httpx2.get(f"{base}/test/boom")
+        run = finish(process, tmp_path)
+
+    lines = run.lines()
+    [failure] = [line for line in lines if line.get("message") == "request.failed"]
+    assert failure["exception_message"] == PLANTED
+    assert any(
+        line["logger"] == "uvicorn.error" and line["level"] == "info" and line["message"]
+        for line in lines
+    )
 
 
 BAD_DATABASE_URLS = {
@@ -140,7 +176,7 @@ BAD_DATABASE_URLS = {
 def test_bad_settings_stop_the_server_naming_each_one_never_its_value(
     tmp_path: Path, url: str
 ) -> None:
-    environment = {**DEV_ENVIRONMENT, "ROADMAPS_ENV": PLANTED, "ROADMAPS_DATABASE_URL": url}
+    environment = {**SERVER_ENVIRONMENT, "ROADMAPS_ENV": PLANTED, "ROADMAPS_DATABASE_URL": url}
 
     process = run_server(
         ["-m", "roadmaps_api.server", "--port", str(free_port())], environment, tmp_path
@@ -161,12 +197,14 @@ def test_the_command_line_starts_the_server_on_its_port_with_reload(
 ) -> None:
     started: list[dict[str, object]] = []
     monkeypatch.setattr(server, "serve", lambda **options: started.append(options))
-    for name, value in DEV_ENVIRONMENT.items():
+    for name, value in SERVER_ENVIRONMENT.items():
         monkeypatch.setenv(name, value)
 
     server.main(["--port", "8123", "--reload"])
 
-    assert started == [{"port": 8123, "reload": True}]
+    [options] = started
+    assert (options["port"], options["reload"]) == (8123, True)
+    assert options["settings"] == load_settings()
 
 
 @pytest.mark.usefixtures("json_logging")
@@ -176,7 +214,7 @@ def test_the_factory_exits_logging_a_failure_s_type_never_its_text(
     def fail(_url: str) -> None:
         raise ValueError(PLANTED)
 
-    for name, value in DEV_ENVIRONMENT.items():
+    for name, value in SERVER_ENVIRONMENT.items():
         monkeypatch.setenv(name, value)
     monkeypatch.setattr(app, "create_database_engine", fail)
 
@@ -204,7 +242,7 @@ def test_the_factory_exits_on_bad_settings(monkeypatch: pytest.MonkeyPatch) -> N
 def test_the_factory_sends_python_s_warnings_to_the_log_without_their_text(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    for name, value in DEV_ENVIRONMENT.items():
+    for name, value in SERVER_ENVIRONMENT.items():
         monkeypatch.setenv(name, value)
     app.factory()
     # What `warnings.warn` calls to show a warning, once the filters let it through.

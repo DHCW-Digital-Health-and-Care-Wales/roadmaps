@@ -29,3 +29,7 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **Row-level security does not cover `TRUNCATE` or `REFERENCES`**: PostgreSQL applies
   neither to policies, so the first schema story's enforcement suite also proves the
   application's role holds neither on any table.
+- **A local API's log lines hold messages**: `ROADMAPS_ENV=local` writes an exception's
+  and a third party's message (ADR-018 _STY-101 amendments_), so an API test that
+  asserts no planted value reaches the log runs under test's or production's rules
+  (`apps/api/tests/conftest.py`'s `lines` fixture, or production's settings).

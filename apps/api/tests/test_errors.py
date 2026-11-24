@@ -1,21 +1,16 @@
-"""S4: every refusal is the envelope, with a stable code, and never echoes the input."""
+"""Every refusal is the envelope, with a stable code, and never echoes the input.
 
-import json
-from collections.abc import Callable, Iterator
+The two exceptions, the `Host` allow-list's 400 and the body limit's 413, are
+Starlette's plain text (`test_middleware.py`).
+"""
+
+from collections.abc import Callable
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
-from roadmaps_api.settings import MAX_BODY_BYTES
 from tests.support import PLANTED
-
-
-def too_large_stream() -> Iterator[bytes]:
-    chunk = PLANTED.encode().ljust(64 * 1024, b"x")
-    for _ in range(MAX_BODY_BYTES // len(chunk) + 1):
-        yield chunk
-
 
 REFUSALS = {
     "an unknown path": (
@@ -60,24 +55,6 @@ REFUSALS = {
         "request.invalid",
         {"errors": [{"loc": ["body"], "type": "body_unreadable"}]},
     ),
-    "a declared body over 1 MiB": (
-        lambda c: c.post("/test/echo", content=PLANTED.encode().ljust(MAX_BODY_BYTES + 1)),
-        413,
-        "request.body_too_large",
-        {},
-    ),
-    "a streamed body over 1 MiB, with no Content-Length": (
-        lambda c: c.post("/test/echo", content=too_large_stream()),
-        413,
-        "request.body_too_large",
-        {},
-    ),
-    "a Host the settings do not list": (
-        lambda c: c.get("/health", headers={"Host": f"{PLANTED}.example"}),
-        400,
-        "request.host_not_allowed",
-        {},
-    ),
     "a route raising an unexpected error": (
         lambda c: c.get("/test/boom"),
         500,
@@ -111,18 +88,6 @@ def test_a_refusal_is_the_envelope_without_the_input(
     assert isinstance(body["detail"], str)
     assert PLANTED not in response.text
     assert "Traceback" not in response.text
-
-
-def test_a_body_at_the_limit_is_read(client: TestClient) -> None:
-    name = "a" * (MAX_BODY_BYTES - len(json.dumps({"name": ""})))
-    response = client.post(
-        "/test/echo",
-        content=json.dumps({"name": name}),
-        headers={"Content-Type": "application/json"},
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {"name": name, "count": 1}
 
 
 def test_a_valid_request_passes_through(client: TestClient) -> None:

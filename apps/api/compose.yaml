@@ -1,12 +1,12 @@
-# The API's local database, one per worktree slot (ADR-017 Operation). Run it through
-# `pnpm api:db:up` or `pnpm api:dev` (scripts/api.sh), which name the Compose project
-# for the slot and set DB_PORT from it. The credentials are for this local container
-# alone, reachable only from this machine.
+# The API's local database, one per worktree slot (ADR-017 Operation), and the one CI's
+# API job tests against. Run it through `pnpm api:db:up`, `pnpm api:dev` or
+# `pnpm api:test` (scripts/api.sh), which name the Compose project for the slot and set
+# DB_PORT from it. The credentials are for this local container alone, reachable only
+# from this machine (build/api-compose.test.ts).
 services:
   db:
-    # Pinned by digest, the same as CI's service container (.github/workflows/ci.yml);
-    # build/api-compose.test.ts holds the two together. Find the digest with:
-    # docker buildx imagetools inspect postgres:18
+    # Pinned by digest, which Dependabot refreshes (.github/dependabot.yml). Find the
+    # digest with: docker buildx imagetools inspect postgres:18
     image: postgres:18@sha256:f5cbc081c25690710f3fc6f4c61a7565382bae01ca0d0f2028a53d7926b85a20
     environment:
       POSTGRES_USER: roadmaps

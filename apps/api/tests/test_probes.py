@@ -15,6 +15,7 @@ from sqlalchemy.engine import make_url
 
 from roadmaps_api.database import MAX_OVERFLOW, POOL_SIZE
 from roadmaps_api.repositories.readiness import ReadinessRepository
+from tests.conftest import Lines
 from tests.support import DOWN_DATABASE_URL, database_url, make_settings, serving
 
 # About two seconds, with room for a loaded machine.
@@ -163,7 +164,9 @@ class FreezingProxy:
             sock.close()
 
 
-def test_ready_gives_up_on_a_pooled_connection_whose_database_stops_answering() -> None:
+def test_ready_gives_up_on_a_pooled_connection_whose_database_stops_answering(
+    lines: Lines,
+) -> None:
     url = make_url(database_url())
     proxy = FreezingProxy((url.host or "127.0.0.1", url.port or 5432))
     try:
@@ -179,6 +182,12 @@ def test_ready_gives_up_on_a_pooled_connection_whose_database_stops_answering() 
             assert time.monotonic() - started < DEADLINE
     finally:
         proxy.close()
+    # The probe's own deadline, which its warning tells from a failed connection.
+    [warning] = [line for line in lines.read() if line.get("message") == "readiness.failed"]
+    assert (warning["exception_type"], warning["exception_causes"]) == (
+        "builtins.TimeoutError",
+        [],
+    )
 
 
 def test_ready_lets_an_unexpected_error_through_as_a_500(

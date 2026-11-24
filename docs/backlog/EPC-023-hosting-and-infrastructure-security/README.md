@@ -103,6 +103,11 @@ lives:_
   backups in a UK location, checked at provisioning (ADR-015); a customer-managed key
   decided with the data protection assessment; Data Access audit logs on; request-log
   access restricted, since callback URLs carry OIDC codes.
+- **The roles and the migration step** (STY-091 D3, D11): EPC-023 creates the migration
+  and application logins, then runs STY-091's bootstrap SQL file once, as the instance's
+  administrator, to make the owner role and the database's ownership; each deploy runs
+  `api:migrate`'s command as the migration login before the new version takes traffic,
+  while the old one keeps serving.
 - **A restore drill**, run and recorded before go-live and after any change to backups,
   since a restore bypasses the history's immutability triggers.
 - **Secret Manager** for the Google client secret and any Entra certificate, read by the

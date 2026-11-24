@@ -3,9 +3,11 @@
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
-  the owner's STY-090 grilling (_STY-090 amendments_).
+  the owner's STY-090 grilling (_STY-090 amendments_) and STY-091 grilling (_STY-091
+  amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
-  STY-090: URL paths, tracing after the skeleton)
+  STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
+  and the test workers)
 
 ## Context
 
@@ -170,6 +172,30 @@ _Operation_ stands.
 - **OpenTelemetry follows the skeleton** in STY-100, not in STY-090 itself. Until then
   each log line and response carries a generated request ID, which STY-100 makes the
   trace ID.
+
+### STY-091 amendments
+
+From the owner's STY-091 grilling (2026-11-24, STY-091 D3 to D14 and D17); the rest of
+_Migrations_, _Tests_ and _Operation_ stands.
+
+- **A bootstrap outside Alembic creates ADR-015's roles.** One idempotent SQL file makes
+  the no-login owner role, lets the migration login switch into it and makes it the
+  database's owner, so it owns `public`; it holds no credential. Locally and in CI a
+  runner creates the migration and application logins first; where the API is hosted,
+  EPC-023 creates them and runs the same file.
+- **Migrations upgrade only,** numbered `0001_<slug>` in one line, in the package, each
+  run as the owner role and reviewed by hand, with autogenerate only drafting. A check
+  fails two heads or a gap in the numbers, and another fails models that differ from the
+  migrations. Each revision grants the application's login what it needs; there are no
+  default privileges.
+- **Every revision stays compatible with the version before it,** since that version
+  serves while a deploy migrates: `/ready` is ready at or ahead of the code's latest
+  revision, a revision it does not know being ahead, and not ready behind it or with
+  none.
+- **`/ready` refuses an unsafe login:** a superuser, `BYPASSRLS`, an owner of any object,
+  or a member of the owner role or the migration login.
+- **The test workers** are pytest-xdist's, as many as the machine has cores and at most
+  four, each on its own clone of the template.
 
 ## Consequences
 

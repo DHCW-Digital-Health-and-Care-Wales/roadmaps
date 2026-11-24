@@ -34,11 +34,15 @@ _Not acceptance criteria._
   (rows the migrations insert are restored after it);
   `apps/api/tests/integration/AGENTS.md`.
 - `/ready` answers 503 `service.not_ready` until the database is at the code's Alembic
-  head (owner, 2026-11-23, STY-090 D21); STY-090's `postgres:18` CI service container
-  is the one this harness grows (STY-090 D5).
+  head (owner, 2026-11-23, STY-090 D21); the `postgres:18`
+  database CI's API job tests against is the one this harness grows: STY-090's service
+  container until STY-101 is delivered, then the Compose file's (D2).
 
 ## Decisions
 
 - **D1** (owner, 2026-11-23, STY-090 grilling round 6, STY-090 D21): `/ready` also
   answers 503 `service.not_ready` until the database is at the code's Alembic head, over
   connectivity only, so a version deployed before its migration step takes no traffic.
+- **D2** (owner, 2026-11-24, STY-101 grilling round 1, STY-101 D5): CI's API job starts
+  the Compose database, as `pnpm api:test` does locally, over STY-090 D5's service
+  container, so the harness grows that one.

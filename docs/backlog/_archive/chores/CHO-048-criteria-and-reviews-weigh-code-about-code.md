@@ -8,7 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — three short edits, written with the `writing-for-agents`
   skill
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/292
 
 ## Summary
 

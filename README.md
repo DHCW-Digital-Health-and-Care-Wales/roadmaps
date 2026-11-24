@@ -21,6 +21,10 @@ This repository is one pnpm workspace
   [`product-roadmaps`](https://github.com/DHCW-Digital-Health-and-Care-Wales/product-roadmaps)
   repository publishes it from `main` here, nightly and by hand, and takes the public's
   feedback as issues.
+- [`apps/api/`](apps/api/README.md): the API that will replace the spreadsheet, a
+  FastAPI service over PostgreSQL
+  ([ADR-017](docs/adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md)),
+  run locally and in CI only for now.
 
 Licensed under the [MIT License](LICENSE).
 
@@ -35,31 +39,36 @@ Licensed under the [MIT License](LICENSE).
 You need Node.js 26 (see `.nvmrc`) and pnpm, e.g.
 `npm install --global pnpm` (see <https://pnpm.io/installation>); any recent pnpm switches
 itself to the version pinned in `packageManager` (Node 25+ no longer ships Corepack).
-Then:
+You also need [uv](https://docs.astral.sh/uv/getting-started/installation/), which
+fetches the API's pinned Python, and Docker with Compose, which runs the API's database:
+the push hook's `pnpm typecheck` runs the API's ty through uv, and `pnpm test` runs the
+API's tests against that database. Then:
 
 ```sh
 git clone https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps.git
 cd roadmaps
 pnpm install --frozen-lockfile
+(cd apps/api && uv sync --locked)
 ```
 
 The install also installs the Git hooks (`lefthook.yml`): a commit formats its staged
-files with Prettier and runs the touched package's ESLint on them, and a push runs
-`pnpm typecheck`. `LEFTHOOK=0 git …` skips them for one command; CI runs the same
+files with Prettier and runs the touched package's ESLint on them (ruff format and fix,
+for the API's Python), and a push runs `pnpm typecheck`, ty included. `LEFTHOOK=0 git …` skips them for one command; CI runs the same
 checks in full.
 
-Each app's README says how to run it: [the editor's](apps/editor/README.md#getting-started)
-and [the public site's](apps/public-site/README.md#run-locally). Root scripts that run one
-app carry its prefix (`pnpm editor:dev`, `editor:test`, `site:sync`, `site:dev`, …), and
+Each app's README says how to run it: [the editor's](apps/editor/README.md#getting-started),
+[the public site's](apps/public-site/README.md#run-locally) and
+[the API's](apps/api/README.md#run-locally). Root scripts that run one app carry its
+prefix (`pnpm editor:dev`, `editor:test`, `site:sync`, `site:dev`, `api:dev`, …), and
 those for the root package's own checks the prefix `repo:`; the checks below run across
 every package (`pnpm build` builds the public site from its last `pnpm site:sync`, or
 from `ROADMAPS_DATA=e2e/fixtures/roadmaps.json`):
 
 ```sh
-pnpm typecheck      # TypeScript, every package
-pnpm lint           # ESLint, zero warnings allowed
+pnpm typecheck      # TypeScript, every package, and ty for the API
+pnpm lint           # ESLint, zero warnings allowed, and the API's checks
 pnpm format:check   # Prettier over the whole repository (pnpm format to fix)
-pnpm test           # Vitest, every package
+pnpm test           # Vitest, every package, and the API's pytest (starts its database)
 pnpm test:docs      # the Markdown tests alone (links, agent guides)
 pnpm build          # every app's production build
 ```

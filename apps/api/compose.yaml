@@ -1,0 +1,27 @@
+# The API's local database, one per worktree slot (ADR-017 Operation). Run it through
+# `pnpm api:db:up` or `pnpm api:dev` (scripts/api.sh), which name the Compose project
+# for the slot and set DB_PORT from it. The credentials are for this local container
+# alone, reachable only from this machine.
+services:
+  db:
+    # Pinned by digest, the same as CI's service container (.github/workflows/ci.yml);
+    # build/api-compose.test.ts holds the two together. Find the digest with:
+    # docker buildx imagetools inspect postgres:18
+    image: postgres:18@sha256:f5cbc081c25690710f3fc6f4c61a7565382bae01ca0d0f2028a53d7926b85a20
+    environment:
+      POSTGRES_USER: roadmaps
+      POSTGRES_PASSWORD: roadmaps
+      POSTGRES_DB: roadmaps
+    ports:
+      - "127.0.0.1:${DB_PORT:?run through scripts/api.sh, which sets it}:5432"
+    volumes:
+      # PostgreSQL 18's image keeps its data under /var/lib/postgresql/18/docker.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "--username=roadmaps", "--dbname=roadmaps"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  db-data:

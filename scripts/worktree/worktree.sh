@@ -1,19 +1,23 @@
 #!/usr/bin/env bash
 # Give a git worktree ports of its own, so several sessions (T3 Code threads,
 # parallel agents) can run each app's dev server and E2E suite (`pnpm editor:dev`,
-# `pnpm site:test:e2e`, …) side by side on one host.
+# `pnpm site:test:e2e`, `pnpm api:dev`, …) side by side on one host.
 #
 # Each worktree claims a numbered slot, and the slot fixes a block of host
 # ports, written to .env.worktree at the repository's root, one file for every
 # app. Each app's vite.config.ts and playwright.config.ts (and the public site's
-# Lighthouse script) read that file through scripts/worktree/dev-ports.ts;
-# without it they keep their canonical ports (the editor 5173 dev and 4173
-# preview and E2E, the public site 5174 and 4174), so a main checkout is
+# Lighthouse script) read that file through scripts/worktree/dev-ports.ts, and the
+# API's commands through apps/api/scripts/api.sh, which also names the slot's
+# database container's Compose project from it; without it they keep their
+# canonical ports (the editor 5173 dev and 4173 preview and E2E, the public site
+# 5174 and 4174, the API 8000 and its database 15432), so a main checkout is
 # unaffected.
 #
-#   setup      claim a slot, write .env.worktree, install dependencies, create
-#              apps/editor/.env.local (idempotent: t3.json runs it on create)
-#   teardown   stop whatever listens on the slot's ports, release the slot
+#   setup      claim a slot, write .env.worktree, install dependencies (pnpm's,
+#              and the API's with uv), create apps/editor/.env.local (idempotent:
+#              t3.json runs it on create)
+#   teardown   stop whatever listens on the slot's ports, remove the slot's
+#              database container and its volume, release the slot
 #   info       print this worktree's ports
 set -euo pipefail
 
@@ -28,7 +32,24 @@ PORT_BASE=21000
 MAX_SLOT=99
 # A slot's ports, in offset order from its base: the one place the layout is
 # written down.
-PORT_VARS=(DEV_PORT PREVIEW_PORT SITE_DEV_PORT SITE_PREVIEW_PORT)
+PORT_VARS=(DEV_PORT PREVIEW_PORT SITE_DEV_PORT SITE_PREVIEW_PORT API_PORT DB_PORT)
+
+# The Compose project of a slot's database container (apps/api/compose.yaml).
+db_project() {
+  echo "roadmaps-slot-$1"
+}
+
+# Removes a slot's database container and its volume, so the slot's next worktree
+# starts with an empty database. By project name alone, with no Compose file, so it
+# works for a worktree already deleted. Fails, naming the fix, when Docker is installed
+# but cannot remove them (its daemon stopped, say): the caller then keeps the slot, so
+# no worktree inherits the data. A host without Docker has no database to remove.
+remove_database() {
+  command -v docker >/dev/null 2>&1 || return 0
+  ( cd / && docker compose --project-name "$1" down --volumes --remove-orphans >/dev/null 2>&1 ) && return 0
+  echo "worktree: could not remove Compose project $1; start Docker and rerun, or run docker compose --project-name $1 down --volumes" >&2
+  return 1
+}
 
 port_in_use() {
   (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null || (exec 3<>"/dev/tcp/::1/$1") 2>/dev/null
@@ -84,6 +105,8 @@ reap_stale_slots() {
     path="$(sed -n 1p "$file")"
     [ -d "$path" ] && continue
     grep -qxF "worktree $path" <<<"$listed" && continue
+    # Kept until its database is gone, so the slot's next worktree starts empty.
+    remove_database "$(db_project "$(basename "$file")")" || continue
     rm -f "$file"
     echo "worktree: reclaimed slot $(basename "$file") from deleted $path"
   done
@@ -146,6 +169,7 @@ ensure_env() {
     for offset in "${!PORT_VARS[@]}"; do
       echo "${PORT_VARS[$offset]}=$((base + offset))"
     done
+    echo "API_DB_PROJECT=$(db_project "$SLOT")"
   } > "$ENV_FILE.tmp.$$"
   mv -f "$ENV_FILE.tmp.$$" "$ENV_FILE"
   # shellcheck disable=SC1090
@@ -175,10 +199,16 @@ stop_port() {
 }
 
 setup() {
+  command -v uv >/dev/null 2>&1 || {
+    echo "worktree: uv is required for apps/api; install it (https://docs.astral.sh/uv/getting-started/installation/) and rerun pnpm worktree:setup" >&2
+    exit 1
+  }
   ensure_env
 
   echo "==> dependencies"
   ( cd "$ROOT" && pnpm install --frozen-lockfile )
+  # Fetches the API's pinned Python too (apps/api/.python-version).
+  ( cd "$ROOT/apps/api" && uv sync --locked )
 
   # `pnpm editor:dev` needs the editor's .env.local: vite dev does not read
   # .env.production.
@@ -194,11 +224,19 @@ teardown() {
   if [ -f "$ENV_FILE" ]; then
     # shellcheck disable=SC1090
     . "$ENV_FILE"
-    local var
+    # The database first, so stopping DB_PORT's listener below finds none; if Docker
+    # cannot remove it, DB_PORT is Docker's own listener, left alone.
+    local removed=true var
+    if [ -n "${WORKTREE_SLOT:-}" ]; then
+      remove_database "${API_DB_PROJECT:-$(db_project "$WORKTREE_SLOT")}" || removed=false
+    fi
     for var in "${PORT_VARS[@]}"; do
+      [ "$removed" = false ] && [ "$var" = DB_PORT ] && continue
       # A file written before a port was added lacks its line.
       if [ -n "${!var:-}" ]; then stop_port "${!var}"; fi
     done
+    # The slot stays claimed until its database is gone.
+    [ "$removed" = true ] || exit 1
   fi
   lock
   release_slot
@@ -216,6 +254,8 @@ Worktree slot $WORKTREE_SLOT
   pnpm site:dev                         http://localhost:$SITE_DEV_PORT/product-roadmaps/
   pnpm site:preview, site:test:e2e,     http://localhost:$SITE_PREVIEW_PORT/product-roadmaps/
     site:lighthouse
+  pnpm api:dev                          http://127.0.0.1:$API_PORT
+  pnpm api:db:up, api:test (database)   127.0.0.1:$DB_PORT
 EOF
 }
 

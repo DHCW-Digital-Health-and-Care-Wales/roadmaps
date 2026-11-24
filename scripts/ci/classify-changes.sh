@@ -4,29 +4,34 @@
 # manual run). Otherwise it reads a pull request's changed paths on stdin, one per line,
 # and fails closed: a path it cannot place in documentation or one app's directory runs
 # every app's jobs, the root's configuration, the lockfile and the workflows included
-# (STY-087 S5, STY-088 S4).
+# (STY-087 S5, STY-088 S4, STY-090 S10).
 set -euo pipefail
 
 if [ "${1:-}" = "--all" ]; then
   echo "editor=true"
   echo "site=true"
+  echo "api=true"
   exit 0
 fi
 
 editor=false
 site=false
+api=false
 while IFS= read -r path || [ -n "$path" ]; do
   case "$path" in
     "" | docs/* | *.md) ;;
     apps/editor/*) editor=true ;;
     apps/public-site/*) site=true ;;
+    apps/api/*) api=true ;;
     apps/*/*) ;;
     *)
       editor=true
       site=true
+      api=true
       ;;
   esac
 done
 
 echo "editor=$editor"
 echo "site=$site"
+echo "api=$api"

@@ -27,17 +27,17 @@ describe("classify-changes.sh", () => {
       "Markdown anywhere",
       ["README.md", "apps/editor/AGENTS.md", "apps/public-site/README.md"],
     ],
-    ["another app's directory", ["apps/api/app.py"]],
+    ["a directory under apps/ that is no app", ["apps/other/app.py"]],
     ["no files", []],
   ])("skips every app's jobs for %s", (_case, paths) => {
-    expect(classify(...paths)).toBe("editor=false\nsite=false\n")
+    expect(classify(...paths)).toBe("editor=false\nsite=false\napi=false\n")
   })
 
   it.each([
     ["the editor's code", ["apps/editor/src/main.tsx"]],
     ["the editor's E2E snapshots", ["apps/editor/tests/e2e/a-snapshots/b.yml"]],
   ])("runs only the editor's jobs for %s", (_case, paths) => {
-    expect(classify(...paths)).toBe("editor=true\nsite=false\n")
+    expect(classify(...paths)).toBe("editor=true\nsite=false\napi=false\n")
   })
 
   it.each([
@@ -47,7 +47,17 @@ describe("classify-changes.sh", () => {
       ["apps/public-site/e2e/__snapshots__/structure.spec.ts/a.aria.yml"],
     ],
   ])("runs only the public site's jobs for %s", (_case, paths) => {
-    expect(classify(...paths)).toBe("editor=false\nsite=true\n")
+    expect(classify(...paths)).toBe("editor=false\nsite=true\napi=false\n")
+  })
+
+  it.each([
+    ["the API's code", ["apps/api/src/roadmaps_api/app.py"]],
+    [
+      "the API's lockfile and Compose file",
+      ["apps/api/uv.lock", "apps/api/compose.yaml"],
+    ],
+  ])("runs only the API's jobs for %s", (_case, paths) => {
+    expect(classify(...paths)).toBe("editor=false\nsite=false\napi=true\n")
   })
 
   it.each([
@@ -61,11 +71,15 @@ describe("classify-changes.sh", () => {
     ["a file directly under apps/", ["apps/editor"]],
     ["one code file among documentation", ["docs/a.md", "eslint.config.ts"]],
     [
-      "both apps' code",
-      ["apps/editor/src/main.tsx", "apps/public-site/src/main.tsx"],
+      "every app's code",
+      [
+        "apps/editor/src/main.tsx",
+        "apps/public-site/src/main.tsx",
+        "apps/api/src/roadmaps_api/app.py",
+      ],
     ],
   ])("runs every app's jobs for %s", (_case, paths) => {
-    expect(classify(...paths)).toBe("editor=true\nsite=true\n")
+    expect(classify(...paths)).toBe("editor=true\nsite=true\napi=true\n")
   })
 
   it("reads a last path with no newline after it", () => {
@@ -73,10 +87,12 @@ describe("classify-changes.sh", () => {
       input: "docs/a.md\napps/public-site/src/main.tsx",
       encoding: "utf8",
     })
-    expect(result.stdout).toBe("editor=false\nsite=true\n")
+    expect(result.stdout).toBe("editor=false\nsite=true\napi=false\n")
   })
 
   it("runs every app's jobs with --all, whatever the paths", () => {
-    expect(run(["--all"], ["docs/a.md"])).toBe("editor=true\nsite=true\n")
+    expect(run(["--all"], ["docs/a.md"])).toBe(
+      "editor=true\nsite=true\napi=true\n",
+    )
   })
 })

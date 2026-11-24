@@ -6,9 +6,11 @@ import { pathToFileURL } from "node:url"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
+  API_PORT,
   EDITOR_PORTS,
   PUBLIC_SITE_PORTS,
   resolveDevPorts,
+  resolveServicePort,
 } from "./dev-ports.ts"
 
 const WORKTREE_ENV = [
@@ -18,6 +20,8 @@ const WORKTREE_ENV = [
   "PREVIEW_PORT=21031",
   "SITE_DEV_PORT=21032",
   "SITE_PREVIEW_PORT=21033",
+  "API_PORT=21034",
+  "DB_PORT=21035",
   "",
 ].join("\n")
 
@@ -116,4 +120,22 @@ describe("resolveDevPorts", () => {
       )
     },
   )
+
+  describe("resolveServicePort", () => {
+    it("keeps the API's default port outside a parallel worktree", () => {
+      expect(resolveServicePort(API_PORT, envFile())).toBe(8000)
+    })
+
+    it("reads the API's own port from the shared .env.worktree", () => {
+      expect(resolveServicePort(API_PORT, envFile(WORKTREE_ENV))).toBe(21034)
+    })
+
+    it("rejects a file that predates the API's port, naming it and the fix", () => {
+      expect(() =>
+        resolveServicePort(API_PORT, envFile("WORKTREE_SLOT=3\n")),
+      ).toThrow(
+        ".env.worktree has no valid API_PORT; rerun pnpm worktree:setup to rewrite it",
+      )
+    })
+  })
 })

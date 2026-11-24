@@ -1,0 +1,101 @@
+[project]
+name = "roadmaps-api"
+version = "0.0.0"
+requires-python = "==3.15.*"
+dependencies = [
+  "fastapi>=0.163",
+  "psycopg[binary]>=3.3.9",
+  "sqlalchemy>=2.1.9",
+  "uvicorn>=0.54",
+]
+
+[dependency-groups]
+dev = [
+  "coverage>=7.10",
+  "httpx2>=2.16",
+  "import-linter>=2.16",
+  "pytest>=9.2",
+  # Exact: a bump can change their rules, so each is a deliberate change with its fixes
+  # (ADR-017 Tooling).
+  "ruff==0.17.5",
+  "ty==0.0.104",
+]
+
+[build-system]
+requires = ["uv_build>=0.13,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv]
+# One uv everywhere: setup-uv in CI reads it from here.
+required-version = "==0.13.4"
+# A release younger than a week is never resolved, as pnpm's minimumReleaseAge holds
+# back the workspace's (pnpm-workspace.yaml), so a compromised one is usually found and
+# pulled first.
+exclude-newer = "7 days"
+
+[tool.ruff]
+line-length = 100
+target-version = "py315"
+src = ["src", "."]
+
+[tool.ruff.lint]
+select = ["ALL"]
+# Each rule left out, with its reason (ADR-017 Tooling):
+ignore = [
+  "COM812", # trailing commas are the formatter's, which this rule fights
+  "CPY001", # no copyright header: the licence is the repository's
+  "D1",     # a docstring only where it says what the code does not
+  "D203",   # conflicts with D211: no blank line before a class docstring
+  "D213",   # conflicts with D212: a docstring's summary starts on its first line
+  "D401",   # a docstring may say what a thing is, not only command
+  "TC00",   # imports stay eager: FastAPI reads annotations at run time, and moving
+  #           them into TYPE_CHECKING blocks or lazy imports would hide from it what
+  #           it needs, for no gain at start-up
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",    # pytest asserts with assert
+  "PLR2004", # a test's expected numbers are its subject
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"fastapi.HTTPException".msg = "Raise roadmaps_api.errors.ApiError, whose code the envelope carries (ADR-017 Errors)."
+"fastapi.exceptions.HTTPException".msg = "Raise roadmaps_api.errors.ApiError, whose code the envelope carries (ADR-017 Errors)."
+"starlette.exceptions.HTTPException".msg = "Raise roadmaps_api.errors.ApiError, whose code the envelope carries (ADR-017 Errors)."
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[tool.importlinter]
+root_package = "roadmaps_api"
+
+[[tool.importlinter.contracts]]
+name = "A route calls a service, a service a repository, never upwards (ADR-017 Layering)"
+type = "layers"
+layers = [
+  "roadmaps_api.app",
+  "roadmaps_api.routes",
+  "roadmaps_api.services",
+  "roadmaps_api.repositories",
+]
+
+[tool.pytest]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["--strict-markers", "--strict-config", "-ra"]
+filterwarnings = ["error"]
+xfail_strict = true
+
+[tool.coverage.run]
+branch = true
+source = ["src/roadmaps_api", "tools"]
+# The server test runs the API in a subprocess, as pnpm api:dev does.
+patch = ["subprocess"]
+parallel = true
+sigterm = true
+
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+skip_covered = true

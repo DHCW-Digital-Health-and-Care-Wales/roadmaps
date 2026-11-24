@@ -27,7 +27,16 @@ pre-commit:
       glob: "*.{ts,tsx}"
       run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
 
+    # Formats and fixes, as Prettier does, and restages; a finding ruff cannot fix stops
+    # the commit.
+    - name: ruff (api)
+      root: apps/api/
+      glob: "*.py"
+      run: uv run --locked ruff format {staged_files} && uv run --locked ruff check --fix {staged_files}
+      stage_fixed: true
+
 pre-push:
   jobs:
+    # TypeScript's and, through apps/api's package, ty's.
     - name: typecheck
       run: pnpm typecheck

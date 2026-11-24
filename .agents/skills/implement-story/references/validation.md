@@ -5,9 +5,19 @@ Read `package.json`, `apps/editor/package.json`, the tool configuration (`apps/e
 The commands below identify families; the scripts remain authoritative. Run
 from the repository root.
 
-The full gate before a PR is
-`pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm build && pnpm editor:test:e2e`.
-The table says what each kind of change additionally needs.
+The full gate before a PR runs what CI runs for the change: the root's
+`pnpm format:check && pnpm repo:typecheck && pnpm repo:lint && pnpm repo:test`, then
+the gate of each app that `scripts/ci/classify-changes.sh` marks for the changed paths
+(`git diff --name-only <base> | scripts/ci/classify-changes.sh`), so a root file that
+runs every app's CI jobs runs every app's gate:
+
+| App         | Its gate                                                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- |
+| editor      | `pnpm editor:typecheck && pnpm editor:lint && pnpm editor:test && pnpm editor:build && pnpm editor:test:e2e`               |
+| public site | `pnpm site:typecheck && pnpm site:lint && pnpm site:test && ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm site:build`      |
+| API         | `pnpm api:lint && pnpm api:typecheck && pnpm api:test`; `api:test` starts the slot's database in Docker, as `api:dev` does |
+
+The table below says what each kind of change additionally needs.
 
 | Changed contract             | Required evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

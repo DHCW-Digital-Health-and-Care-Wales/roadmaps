@@ -5,6 +5,7 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vitest/config"
 
+import { apiProxy } from "./build/api-proxy.ts"
 import { resolveBasePath } from "./build/resolve-base-path.ts"
 import { resolveBuildVersion } from "./build/resolve-build-version.ts"
 import {
@@ -40,7 +41,12 @@ export default defineConfig({
   },
   // Strict, so a busy port fails instead of drifting onto another worktree's port or
   // onto an origin the OAuth client does not list.
-  server: { port: ports.dev, strictPort: true },
+  server: {
+    port: ports.dev,
+    strictPort: true,
+    // To this worktree's API, else port 8000's.
+    proxy: apiProxy(),
+  },
   preview: { port: ports.preview, strictPort: true },
   build: {
     // Long-lived chunks: app code changes on every deploy, React and the other

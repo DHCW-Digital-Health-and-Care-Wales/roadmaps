@@ -72,9 +72,9 @@ writes_).
   `docs/operations/authoring-agent-instructions.md` (_Where it goes_); its history goes
   in the record's Delivery section. This file holds only rules that recur across most
   work.
-- Records, ADRs and analyses follow `docs/AGENTS.md`. Before editing an agent guide, a
-  skill or an agent definition, read the `writing-for-agents` skill and
-  `docs/operations/authoring-agent-instructions.md`.
+- Stories, chores, defects, epics, ADRs and analyses follow `docs/AGENTS.md`. Before
+  editing an agent guide, a skill or an agent definition, read the `writing-for-agents`
+  skill and `docs/operations/authoring-agent-instructions.md`.
 - Skills live in `.agents/skills/` (`.claude/skills` links to it); if your runtime's
   catalogue lacks one, read its `SKILL.md`. `.claude/agents/` holds briefs for fresh
   reviewers and workers.

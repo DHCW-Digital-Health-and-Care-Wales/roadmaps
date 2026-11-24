@@ -16,7 +16,12 @@ const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist"])
 /** The top-level `docs/` defines the record ID format, so its guide is exempt. */
 const RECORDS_GUIDE_DIRECTORY = join(ROOT, "docs")
 
-const RECORD_ID = /\b(?:STY|DEF|CHO|EPC)-\d{3}\b/g
+/**
+ * Bounded by any non-alphanumeric, since `\b` treats `_` as part of a word and so missed
+ * an ID set in italics (`_STY-… amendments_`, an ADR section's name), which a reviewer
+ * caught instead. Review by February 2027.
+ */
+const RECORD_ID = /(?<![A-Za-z\d])(?:STY|DEF|CHO|EPC)-\d{3}(?!\d)/g
 
 function read(path: string): string {
   return readFileSync(join(ROOT, path), "utf8")
@@ -46,6 +51,17 @@ describe("agent guides", () => {
         "(docs/operations/authoring-agent-instructions.md, Where it goes) rather than " +
         "deleting a live one; ask the owner when nothing can move.",
     ).toBeLessThanOrEqual(ROOT_GUIDE_WORD_BUDGET)
+  })
+
+  it.each([
+    ["STY-101", true],
+    ["(ADR-020, _STY-101 amendments_)", true],
+    ["_DEF-031_", true],
+    ["XSTY-101", false],
+    ["STY-1010", false],
+  ])("reads %j as a record ID: %s", (text, isRecordId) => {
+    expect(RECORD_ID.test(text)).toBe(isRecordId)
+    RECORD_ID.lastIndex = 0
   })
 
   it.each(findGuides(ROOT))("%s cites no backlog record IDs", (path) => {

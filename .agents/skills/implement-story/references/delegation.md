@@ -99,7 +99,10 @@ notifications, use this lifecycle at every nesting level:
    Tell the user what is pending and its pinned head; give an expected
    duration only from observed runs.
 4. On notification, consume the result, match it to the saved task and
-   reviewed head, and update the handoff. Act on findings. If another required
+   reviewed head, and update the handoff. While a reviewer sharing the
+   checkout still runs, a final pass included, leave the checkout's files as
+   found: it reads them beside the pinned diff, so a fix or a deliberate break
+   made meanwhile is what it reviews. Then act on findings. If another required
    review is pending, yield again; continue once every required review has
    passed the required head.
 5. Treat failed, cancelled or interrupted workers, pending questions and

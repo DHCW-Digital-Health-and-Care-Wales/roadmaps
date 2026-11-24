@@ -120,14 +120,15 @@ component regression, observe its intended failure, then implement the smallest
 coherent change. Slice a large story (a new repository method, several routes, a
 rewritten screen) so each such scenario's test goes red before the code that
 passes it. Any other behaviour (layout, copy, a review fix) may take its test
-after the code, once that test is shown red by breaking the finished code;
-record the red in Delivery's Scenario evidence. Red shown by breaking finished
-code proves a test discriminates, not that it came first: on a test-first
-change, report it as a departure, never as TDD evidence. Undo a break from a
-copy of the file saved before it: `git checkout -- <file>` puts back the last
-commit, without the uncommitted work around the break. A Playwright test may
-follow working code, since its selectors may not exist before; that order is no
-departure.
+after the code, once that test is shown red by breaking each condition of the
+finished code it covers, since a condition whose break leaves it green is
+untested or dead; record the red in Delivery's Scenario evidence. Red shown
+by breaking finished code proves a test discriminates, not that it came first:
+on a test-first change, report it as a departure, never as TDD evidence. Undo a
+break from a copy of the file saved before it: `git checkout -- <file>` puts
+back the last commit, without the uncommitted work around the break. A
+Playwright test may follow working code, since its selectors may not exist
+before; that order is no departure.
 
 A value with no behaviour of its own to assert (a retry count, a chunk group,
 a CI job graph) is evidenced by an observed run showing its effect, recorded in

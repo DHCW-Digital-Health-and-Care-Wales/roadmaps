@@ -2,4 +2,4 @@ interface:
   display_name: "UX Prototypes"
   short_description: "Alternative UX designs: screen frames or a working component"
 policy:
-  allow_implicit_invocation: false
+  allow_implicit_invocation: true

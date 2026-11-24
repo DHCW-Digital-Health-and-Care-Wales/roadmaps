@@ -1,7 +1,6 @@
 ---
 name: ux-prototypes
-description: Prototype UX design alternatives as static screen frames or a working component for the owner to choose from.
-disable-model-invocation: true
+description: Prototype UX designs before a feature is built, as alternatives for the owner to choose from. Use for "prototype ux designs for x", as static frames of planned screens on desktop and phone, or as a working component, one field or control to try inside the card or form that holds it.
 ---
 
 # UX prototypes

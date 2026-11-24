@@ -1,5 +1,0 @@
-interface:
-  display_name: "Orchestrate"
-  short_description: "Deliver a sequence of backlog items, one delegated PR per item"
-policy:
-  allow_implicit_invocation: false

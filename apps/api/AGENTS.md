@@ -23,39 +23,30 @@ the root, unversioned (ADR-017's amendments).
 
 ## Errors and responses
 
-- Refuse with `ApiError(ErrorCode.…)` (`apps/api/src/roadmaps_api/errors.py`); every
-  refusal is `{detail, code, params}`, except Starlette's plain-text 400 for a `Host`
-  not allowed and 413 for a body over the limit. A new code joins `ErrorCode` with its
-  status and detail, and the editor's API adapter maps it (ADR-017 _Errors_).
-- Never put submitted input, an exception's text or a traceback in a response.
-- `RequestContext` (`apps/api/src/roadmaps_api/middleware.py`) sets ADR-020's headers
-  on every response; Starlette's middleware, wired in `create_app`, holds the `Host`
-  allow-list and the 1 MiB body limit, which counts a body only as a route reads it
-  (ADR-020's amendments); send no CORS header.
+- Refuse with `ApiError(ErrorCode.…)` (`apps/api/src/roadmaps_api/errors.py`). Add each
+  new code to `ErrorCode` with its status and detail, and map it in the editor's API
+  adapter (ADR-017 _Errors_).
+- Never put submitted input, an exception's text or a traceback in a response, and send
+  no CORS header (`apps/api/src/roadmaps_api/middleware.py`, ADR-020).
 
 ## Logs (ADR-018 _Records and retention_)
 
 - Log a constant event name with allow-listed `extra` fields
-  (`ALLOWED_EXTRA_FIELDS` in `apps/api/src/roadmaps_api/logs.py`); the formatter drops
-  any other field. A field joins the allow-list only when it is an ID, a code, a type, a
-  name or a number, never a value a caller or a person supplied.
-- An exception's and a third party's message reach a line only with `ROADMAPS_ENV=local`
-  and none of Cloud Run's markers (`Settings.writes_messages`); elsewhere uvicorn's
-  loggers write from warning up, since their information lines would hold no text.
-- Name a request in a log line by its route's template, or `unmatched`, and a method
-  HTTP defines, never as the caller sent them (`apps/api/src/roadmaps_api/access_log.py`).
-- Log an exception with `logger.exception` or `exc_info`: the line keeps its type, the
-  types it was raised from, a database error's SQLSTATE and constraint name, and its
-  frames.
-- A database function never sets SQLSTATE, a constraint's name or another diagnostic
-  field from a value, since the log writes them.
+  (`ALLOWED_EXTRA_FIELDS` in `apps/api/src/roadmaps_api/logs.py`, which drops anything
+  else). Add a field to the allow-list only when it is an ID, a code, a type, a name or
+  a number, never a value a caller or person supplied.
+- Name a request in a log line by its route template (or `unmatched`) and a defined HTTP
+  method, never as the caller sent them (`apps/api/src/roadmaps_api/access_log.py`).
+- Log exceptions with `logger.exception` or `exc_info` rather than formatting them into
+  the message. Never set a database function's SQLSTATE, constraint name or other
+  diagnostic field from a data value, since the log writes them.
 
 ## Settings
 
-- Settings come from environment variables only, `ROADMAPS_*`
-  (`apps/api/src/roadmaps_api/settings.py`), never a `.env` file. A new setting fails
-  closed: a missing or bad value stops start-up, naming the setting, never its value; an
-  unset `ROADMAPS_ENV` gets production's rules.
+- Read settings from `ROADMAPS_*` environment variables only
+  (`apps/api/src/roadmaps_api/settings.py`), never a `.env` file. Fail closed on missing
+  or invalid values, naming the setting and never its value; an unset `ROADMAPS_ENV`
+  takes production rules.
 
 ## Commands and checks
 
@@ -65,6 +56,7 @@ the root, unversioned (ADR-017's amendments).
 - Run Python through uv from `apps/api` (`uv run --locked …`); add a dependency with
   `uv add`, which resolves only releases a week old.
 - A `# noqa` names its rule and why.
-- Test through FastAPI's `TestClient` (`serving` in `apps/api/tests/support.py`); a
-  behaviour only uvicorn shows, such as its own logging, through the real server
-  (`apps/api/tests/test_server.py`).
+- The seams of the root guide's test rule, lowest first: a pure helper, a repository or
+  service, FastAPI's `TestClient` (`apps/api/tests/support.py`), then the real uvicorn
+  server (`apps/api/tests/test_server.py`) only for server-level behaviour such as its
+  own logging.

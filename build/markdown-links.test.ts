@@ -1,9 +1,3 @@
-import { execFileSync } from "node:child_process"
-import { existsSync, readFileSync } from "node:fs"
-import { dirname, join } from "node:path"
-
-import { describe, expect, it } from "vitest"
-
 /**
  * Every relative link in the repository's Markdown names a file that exists. A record
  * moves to `_archive/` when it closes (docs/AGENTS.md), which breaks the links into it
@@ -12,7 +6,17 @@ import { describe, expect, it } from "vitest"
  * one directory too high, caught only in review, and earlier moves had broken 14 links
  * in two delivery-run records. Review by February 2027 whether it has caught any since.
  */
-const ROOT = join(import.meta.dirname, "..")
+import { existsSync, readFileSync } from "node:fs"
+import { dirname, join } from "node:path"
+
+import { describe, expect, it } from "vitest"
+
+import {
+  CODE_FENCE_SOURCE,
+  HTML_COMMENT_SOURCE,
+  listRepositoryFiles,
+  ROOT,
+} from "./markdown-helpers.ts"
 
 /** Templates whose links are placeholders. */
 const EXEMPT_PATHS = new Set([
@@ -27,14 +31,12 @@ const EXEMPT_PATHS = new Set([
  */
 const NOT_PROSE = new RegExp(
   [
-    // A fence of backticks or tildes, closed by a bare one at least as long, or by the end.
-    /^[ \t]*(?<fence>(?<mark>`|~)\k<mark>{2,})[^\n]*\n[\s\S]*?(?:^[ \t]*\k<fence>\k<mark>*[ \t]*$|(?![\s\S]))/,
-    /<!--[\s\S]*?-->/,
+    CODE_FENCE_SOURCE,
+    HTML_COMMENT_SOURCE,
     // A code span, closed by as many backticks as open it, within its paragraph.
-    /(?<!`)(?<ticks>`+)(?!`)(?:(?!\n[ \t]*\n)[\s\S])*?(?<!`)\k<ticks>(?!`)/,
-  ]
-    .map((pattern) => pattern.source)
-    .join("|"),
+    /(?<!`)(?<ticks>`+)(?!`)(?:(?!\n[ \t]*\n)[\s\S])*?(?<!`)\k<ticks>(?!`)/
+      .source,
+  ].join("|"),
   "gm",
 )
 /**
@@ -57,13 +59,7 @@ function relativeTargets(markdown: string): string[] {
 
 /** Tracked and untracked Markdown files that `.gitignore` leaves in, as they are on disk. */
 function findMarkdown(): string[] {
-  return execFileSync(
-    "git",
-    ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "*.md"],
-    { cwd: ROOT, encoding: "utf8" },
-  )
-    .split("\0")
-    .filter((path) => path !== "" && existsSync(join(ROOT, path)))
+  return listRepositoryFiles("*.md")
 }
 
 describe("markdown links", () => {

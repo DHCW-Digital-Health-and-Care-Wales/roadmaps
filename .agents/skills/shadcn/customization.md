@@ -1,5 +1,7 @@
 # Customization & Theming
 
+> **IMPORTANT:** In this repository, run `apps/editor/node_modules/.bin/shadcn <subcommand> --cwd apps/editor` for every `npx shadcn@latest` example below (never `dlx @latest`).
+
 Components reference semantic CSS variable tokens. Change the variables to change every component.
 
 ## Contents

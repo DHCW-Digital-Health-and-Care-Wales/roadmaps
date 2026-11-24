@@ -3,7 +3,6 @@ name: threat-review
 description: >-
   Security review of a diff, branch or PR, code or a design record, from the attacker's
   side. Use beside code-review and quality-review on a security-relevant PR.
-user-invocable: true
 ---
 
 # Threat review
@@ -52,8 +51,10 @@ secrets, tokens and keys unread, values and metadata alike.
    (ADR-007), the database's isolation and
    history (ADR-015), the repository's ruleset (ADR-016), the API stack (ADR-017), sign-in
    and sessions (ADR-018), authorisation (ADR-019), origins and HTTP hardening
-   (ADR-020), with the protections they leave to the infrastructure; the `apps/editor/AGENTS.md` rules on
-   tokens and untrusted data. An accepted ADR's risks, and the exceptions it states (a
+   (ADR-020), with the protections they leave to the infrastructure; the area
+   guides' security rules (`apps/editor/AGENTS.md` on tokens and untrusted data,
+   `apps/api/AGENTS.md` on error responses, log hygiene, settings and no CORS,
+   and `apps/public-site/AGENTS.md` on privacy and third-party calls). An accepted ADR's risks, and the exceptions it states (a
    value it lets travel in a URL, a request it exempts from a rule), are the owner's:
    not findings unless the change widens them or makes their statement false.
 4. **Apply the lenses**: every general lens, then each area lens the change reaches.

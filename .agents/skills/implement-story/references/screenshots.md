@@ -12,7 +12,7 @@ account, token or spreadsheet.
 
 Use headless Playwright (Chromium is installed in `~/.cache/ms-playwright`)
 against `pnpm editor:dev` (`cp apps/editor/.env.example apps/editor/.env.local` first if it is missing), or
-the `playwright-cli` skill. Fake Google with `page.route`: serve a stub for
+read `.agents/skills/playwright-cli/SKILL.md`. Fake Google with `page.route`: serve a stub for
 `https://accounts.google.com/gsi/client` and fulfil
 `https://sheets.googleapis.com/**`, reusing `FakeGis` and `FakeSheets` from
 `apps/editor/tests/e2e/fixtures/` directly. Do not use `apps/editor/tests/e2e/fixtures/test.ts` against
@@ -36,6 +36,10 @@ navigating: the app is light until the user chooses dark (ADR-005), so
 
 Cover desktop (1280 px) and phone (375 px), light and dark mode where relevant,
 in English, and in Welsh (`cy`) only when the record or the owner asks for it.
+For `apps/public-site/`, build and preview the fixture data instead
+(`ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm site:build && pnpm site:preview --port <free port> --strictPort`,
+served under `/product-roadmaps/`); no Google fakes are needed, and base-revision
+baselines follow the same scratch-directory pattern below.
 Save captures under `.artifacts/screenshots/<record-id>/` at the root of your
 checkout (git-ignored) with descriptive names, e.g.
 `s1-roadmaps-desktop-dark-en-after.png`.
@@ -53,10 +57,13 @@ impossible, record the missing baseline and blocker; never reconstruct it from
 an already edited UI or label an after capture as before. Do not reset the
 checkout merely to obtain a baseline: extract the base revision into a scratch
 directory (`git archive <base> | tar -x -C <scratch-dir>`), symlink its
-`node_modules` (the root's and `apps/editor/`'s) to the checkout's, copy the checkout's ignored `apps/editor/.env*.local`
-files so both builds and the fakes share one config, and capture it with
-`pnpm editor:build && pnpm editor:preview --port <free port> --strictPort` run there (the
-checkout's preview port, 4173 or its `PREVIEW_PORT`, belongs to E2E).
+`node_modules` (the root's and the touched app's: `apps/editor/` or
+`apps/public-site/`) to the checkout's, copy the checkout's ignored
+`apps/editor/.env*.local` files for editor captures so both builds and the fakes
+share one config, and capture it with that app's build and preview command on a
+free port (`pnpm editor:build && pnpm editor:preview --port <free port> --strictPort`,
+or `ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm site:build && pnpm site:preview --port <free port> --strictPort`;
+the checkout's preview port belongs to E2E).
 
 After the review fixes, capture the matching after states with comparable
 viewport, data and navigation. Publish every pair and every new capture in the

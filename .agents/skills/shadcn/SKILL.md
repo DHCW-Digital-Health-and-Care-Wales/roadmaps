@@ -1,26 +1,22 @@
 ---
 name: shadcn
-description: Manages shadcn components and projects — adding, searching, fixing, debugging, styling, and composing UI. Provides project context, component docs, and usage examples. Applies when working with shadcn/ui, component registries, presets, --preset codes, or any project with a components.json file. Also triggers for "shadcn init", "create an app with --preset", or "switch to --preset".
-user-invocable: false
+description: Add, inspect and compose shadcn/ui components (Base UI flavour) under `apps/editor/src/components/ui/`.
+disable-model-invocation: true
 ---
 
 # shadcn/ui
 
-For this repository, the generated components in `apps/editor/src/components/ui/` (`apps/editor/components.json`, style `base-nova`, primitives from Base UI per ADR-005) define the component contract. Add components with `pnpm dlx shadcn@latest add <name> --cwd apps/editor` and keep them close to upstream: edit a generated file only for a reason the diff makes obvious, and say why in its header comment (ADR-010). Apply the upstream guidance below only where it matches what is installed: list `apps/editor/src/components/ui/` before reaching for a component; anything missing is a `shadcn add` away and arrives with its own rules.
+For this repository, the generated components in `apps/editor/src/components/ui/` (`apps/editor/components.json`, style `base-nova`, primitives from Base UI per ADR-005) define the component contract. Add components with the locally installed binary `apps/editor/node_modules/.bin/shadcn add <name> --cwd apps/editor` (never `dlx @latest`, which bypasses the lockfile and release-age wait) and keep them close to upstream: edit a generated file only for a reason the diff makes obvious, and say why in its header comment (ADR-010). Apply the upstream guidance below only where it matches what is installed: list `apps/editor/src/components/ui/` before reaching for a component; anything missing is a `shadcn add` away and arrives with its own rules.
 
 User-facing copy in any component goes through `t()` in English and Welsh (ADR-008); `components/ui` itself carries no copy.
 
 A framework for building ui, components and design systems. Components are added as source code to the user's project via the CLI.
 
-> **IMPORTANT:** Run all CLI commands using the project's package runner: `npx shadcn@latest`, `pnpm dlx shadcn@latest`, or `bunx --bun shadcn@latest` — based on the project's `packageManager`. Examples below use `npx shadcn@latest` but substitute the correct runner for the project.
+> **IMPORTANT:** In this repository, substitute `apps/editor/node_modules/.bin/shadcn <subcommand> --cwd apps/editor` for every `npx shadcn@latest` example below.
 
 ## Current Project Context
 
-```json
-!`pnpm dlx shadcn@latest info --json --cwd apps/editor 2>/dev/null || echo '{"error": "No shadcn project found. Run shadcn init first."}'`
-```
-
-The JSON above contains the project config and installed components. Use `npx shadcn@latest docs <component>` to get documentation and example URLs for any component.
+Run `apps/editor/node_modules/.bin/shadcn info --json --cwd apps/editor` when you need the current project config and installed components, and `apps/editor/node_modules/.bin/shadcn docs <component> --cwd apps/editor` for documentation URLs.
 
 ## Principles
 
@@ -141,7 +137,7 @@ These are the most common patterns that differentiate correct shadcn/ui code. Fo
 
 ## Key Fields
 
-The injected project context contains these key fields:
+`apps/editor/node_modules/.bin/shadcn info --json --cwd apps/editor` returns these key fields:
 
 - **`aliases`** → use the actual alias prefix for imports (e.g. `@/`, `~/`), never hardcode.
 - **`isRSC`** → when `true`, components using `useState`, `useEffect`, event handlers, or browser APIs need `"use client"` at the top of the file. Always reference this field when advising on the directive.
@@ -168,7 +164,7 @@ npx shadcn@latest docs button dialog select
 
 ## Workflow
 
-1. **Get project context** — already injected above. Run `npx shadcn@latest info` again if you need to refresh.
+1. **Get project context** — run `apps/editor/node_modules/.bin/shadcn info --json --cwd apps/editor` when you need the current config and installed components.
 2. **Check installed components first** — before running `add`, always check the `components` list from project context or list the `resolvedPaths.ui` directory. Don't import components that haven't been added, and don't re-add ones already installed.
 3. **Find components** — `npx shadcn@latest search`.
 4. **Get docs and examples** — run `npx shadcn@latest docs <component>` to get URLs, then fetch them. Use `npx shadcn@latest view` to browse registry items you haven't installed. To preview changes to installed components, use `npx shadcn@latest add --diff`.

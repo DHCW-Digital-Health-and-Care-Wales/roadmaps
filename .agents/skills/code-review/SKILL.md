@@ -4,7 +4,6 @@ description: >-
   Review a diff, branch or PR for correctness: requirements coverage, regressions,
   async state, security, untrusted data and runtime contracts. Use for a code review
   and before raising a PR; maintainability belongs to quality-review.
-user-invocable: true
 ---
 
 # Code review
@@ -57,13 +56,18 @@ not post, change code, merge or message other people as part of reviewing.
    no other risk.
 5. **Verify plausible findings** with a concrete trigger and an observed or
    code-derived failure path. Run a focused test, minimal reproduction or
-   computed-style check when useful, outputs and caches under `/tmp`:
-   `cd apps/editor && ./node_modules/.bin/vitest related --run <files> --no-cache --fsModuleCachePath /tmp/<dir>`.
-   Run binaries from `./node_modules/.bin/` (the editor's in `apps/editor/`), never through pnpm (`pnpm exec`
-   or a `pnpm <script>`), which can reinstall the checkout's `node_modules`
-   under the agent that shares it. Never run a command that changes state (a
-   commit, a push, a deploy, a merge). Passing tests are evidence, not proof;
-   never claim a check you only read.
+   computed-style check when useful, keeping scratch outputs and caches under
+   `/tmp`:
+   - Editor or public site: `cd apps/<editor|public-site> && ./node_modules/.bin/vitest related --run <files> --no-cache --fsModuleCachePath /tmp/<dir>`.
+     Run binaries from `./node_modules/.bin/`, never through pnpm (`pnpm exec`
+     or a `pnpm <script>`), which can reinstall the checkout's `node_modules`
+     under the agent that shares it.
+   - API: `cd apps/api && uv run --locked pytest -o cache_dir=/tmp/pytest-cache <test_file>`
+     (only when no database container or repo write is needed).
+
+   Never run a command that changes state (a commit, a push, a deploy, a merge).
+   Passing tests are evidence, not proof; never claim a check you only read.
+
 6. **Filter.** Report defects the change introduces or materially exposes, tied
    to a changed line or affected contract, after ruling out an intentional
    exception. A rule ESLint, TypeScript strict or the i18n catalogue types
@@ -76,64 +80,50 @@ not post, change code, merge or message other people as part of reviewing.
 For each relevant requirement, distinguish implemented, partial, missing and
 unverifiable; quote it for a mismatch and show the implementation path.
 
-- Trace each scenario through every auth state (`initializing`, `ready`,
-  `connecting`, `connected`, `expired`, `error`), width, language, theme and
-  entry point it names (the account menu, the hero button, a deep link, a
-  reload) to the control the user meets, including what completes a branch that
-  hands off or defers. Where a change replaces a surface, carried-over behavior
-  may be what the story changes.
+- Trace each scenario through every applicable state (for the editor: auth states
+  `initializing`, `ready`, `connecting`, `connected`, `expired`, `error`; for the
+  public site: JS-off prerender and hydrated states; for the API: unauthenticated,
+  invalid, not-ready and failure paths), width, language, theme and entry point it
+  names to the control or response the caller meets, including what completes a
+  branch that hands off or defers. Where a change replaces a surface, carried-over
+  behavior may be what the story changes.
 - Look for omitted refusal and expiry branches, empty and loading states, a
   failed read shown as "no results", an error shown as an empty list, mobile
-  layouts that drop a control (the header's account menu offers Connect or
-  Reconnect, but a signed-out page still needs its own), and behavior beyond
-  the request. Scope growth is a finding only when it creates a concrete risk
-  or contradicts the request.
+  layouts that drop a control (in the editor, the header's account menu offers
+  Connect or Reconnect, but a signed-out page still needs its own), and behavior
+  beyond the request. Scope growth is a finding only when it creates a concrete
+  risk or contradicts the request.
 
 ## Tooling already enforces
 
-Do not spend findings on these; check only that the change does not evade them
-(`eslint-disable`, `@ts-expect-error`, a cast, a moved file):
+Do not spend findings on rules CI already enforces; inspect the touched app's
+config (`eslint.base.ts`, `apps/editor/eslint.config.ts`,
+`apps/editor/build/design-token-lint.ts`, `apps/editor/build/e2e-lint.ts`,
+`apps/public-site/eslint.config.ts`, `apps/api/pyproject.toml`,
+`apps/api/tools/check_transactions.py`) and flag only evasions (`eslint-disable`,
+`# noqa` without reason, `@ts-expect-error`, casts, re-exports, moved files) and
+these blind spots:
 
-- **Layer imports** (`apps/editor/eslint.config.ts`, `no-restricted-imports`, `@/` and
-  relative paths alike): `domain/` imports no framework, TanStack, UI/copy
-  package or other layer; `infrastructure/` imports no React/TanStack/UI,
-  `features`, `app`, `routes`, `components` or `i18n`; `features/` imports no
-  `infrastructure`, `app` or `routes`; `components/` and `i18n/` import no
-  `infrastructure`, `features`, `app` or `routes`; `lib/` imports no other
-  layer.
-- **The `google` global** (including `window.google`) outside
-  `apps/editor/src/infrastructure/google-identity/`.
-- **Literal copy**: `i18next/no-literal-string` rejects literal JSX text and
-  literal `aria-label`, `title`, `alt`, `placeholder` and `label` attributes in
-  `apps/editor/src/**/*.tsx` (not tests, `apps/editor/src/test/`, `components/ui/`). It does **not**
-  cover `.ts` files, props other than those attributes, template strings, or
-  strings built in hooks, so copy can still slip through.
-- **Design tokens** (`apps/editor/build/design-token-lint.ts`, ADR-010): Tailwind's
-  colours, type, radii and shadows, arbitrary design values, opacity tints,
-  `dark:` colours, ad-hoc focus styles and design properties in inline styles
-  or SVG paint attributes, in `apps/editor/src/**` (not tests). It reads classes only
-  where the plugin looks by default (`className`, `cn()`, `cva()` …), in a
-  `…Variants({ className })` call and in variables named `…Classes` or
-  `…_CLASSES`, and rejects a variable of any other name in a `className` or
-  `cn()` value. It reads styles only in a `style` attribute (which must hold
-  an object literal) or an object typed `CSSProperties`. A class string held
-  anywhere else, such as a variable passed to `cva()`, or a style object under
-  another prop, is unchecked.
-- `@typescript-eslint` strict-type-checked rules (no `any`, unsafe calls,
-  floating promises, `unbound-method`), React Hooks rules and `jsx-a11y`
-  basics. Catalogue parity is a `pnpm typecheck` error (`cy.ts` is
-  `satisfies Catalogue<…>`), so a missing key does not need a finding, but a
-  wrong or unnatural translation does not fail anything.
+- **Literal copy**: `i18next/no-literal-string` checks JSX and configured
+  attributes in `src/**/*.tsx`, not `.ts` files, non-configured props or strings
+  built in hooks; catalogue parity checks keys, not Welsh translation accuracy.
+- **Design tokens**: `apps/editor/build/design-token-lint.ts` checks default
+  class/style sites, not class strings stored outside configured variable names
+  or style objects passed under non-`style` props.
+- **API checks**: `apps/api/tools/check_transactions.py` matches direct
+  `.commit()`/`.rollback()`/`.begin()` calls in routes and repositories, not
+  renamed wrappers; `ruff` and `ty` do not verify log-value provenance or
+  uvicorn-only behaviour.
 
 ## Lenses
 
 Apply every general lens below, then read each area's lenses the diff reaches:
 
-- `references/auth.md`: sign-in, the session, the access token or anything
-  that sends it.
-- `references/data.md`: the repository, an adapter, a parser, a query or a
-  mutation.
-- `references/ui.md`: a route, a component, copy, styles or the base path.
+- `references/auth.md`: editor sign-in, session, access token or anything that sends it.
+- `references/data.md`: editor repository, adapter, parser, query or mutation.
+- `references/ui.md`: editor route, component, copy, styles or base path.
+- `references/public-site.md`: anything under `apps/public-site/`.
+- `references/api.md`: anything under `apps/api/`.
 
 General lenses:
 
@@ -199,13 +189,13 @@ General lenses:
 
 Read each where the diff reaches it; this skill does not restate them.
 
-- `apps/editor/AGENTS.md`: layering and conventions.
-- `docs/adr/` (index in its `README.md`): layers and ports, OAuth and the
-  session, routing, UI stack, testing, Pages, i18n, the data source's tabs,
-  the DHCW look and publishing. A deviation updates or supersedes the ADR in
-  the same change.
+- `apps/editor/AGENTS.md`, `apps/public-site/AGENTS.md`, `apps/api/AGENTS.md`,
+  and `apps/typescript-react-conventions.md`: each app's layering and conventions.
+- `apps/editor/tests/e2e/AGENTS.md` and `apps/editor/src/styles/AGENTS.md`:
+  editor E2E fixture API, hermetic guard and design-token rules.
+- `docs/adr/` (index in its `README.md`): binding architecture decisions across
+  all three apps. A deviation updates or supersedes the ADR in the same change.
 - The epic's `delivery-notes.md`: checks that hold only for that epic.
-- `apps/editor/tests/e2e/AGENTS.md`: fixture API, hermetic guard and conventions.
 - `docs/AGENTS.md`: the records guide, for backlog, ADR and run records.
 - `docs/backlog/`: the story, defect or chore being delivered, with its
   acceptance criteria and status.

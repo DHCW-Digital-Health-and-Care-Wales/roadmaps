@@ -250,7 +250,9 @@ export class FakeSheets {
   /**
    * A co-lead's edit straight to the spreadsheet, seen by later reads: the cell under
    * `header` in the row of `tab` whose first cell is `key` (an item's title, or a
-   * roadmap's `Sheet`), or that whole row deleted when `value` is `null`.
+   * roadmap's `Sheet`), or that whole row deleted when `value` is `null`. Only an item
+   * with an ID can conflict: publish once first (`publishOnce` in `dialogs.ts`) to give
+   * every item its ID before calling this.
    */
   coLead(tab: string, key: string, header: string, value: string | null): void {
     this.spreadsheet = this.spreadsheet.map((sheet) => {

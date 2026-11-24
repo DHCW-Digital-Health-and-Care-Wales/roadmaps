@@ -12,7 +12,7 @@ manage the **public roadmaps** of the products they lead in the Roadmap Editor, 
 only by DHCW staff. A **separate app, the public site**, reads the same shared data
 source and shows the roadmaps to the public, so what a Product Lead publishes goes
 public through it. The data source's format is a contract with the public site: any change to
-what is written, or how, is stated in its record and its PR (README, _What the editor
+what is written, or how, is stated in its record and its PR (`README.md`, _What the editor
 writes_).
 
 | Area                          | Its guide                                                                            |
@@ -26,9 +26,10 @@ writes_).
 
 ## Commands
 
-- Run the workspace's scripts from the root: a script for one app carries its prefix
-  (`pnpm editor:dev`), and `lint`, `typecheck`, `test`, `build`, `format:check` and
-  `test:docs` run across the workspace. Each app's guide gives its preconditions.
+- Run the workspace's scripts from the root: a script for one app or the root
+  package carries its prefix (`pnpm editor:dev`, `pnpm repo:test`), and `lint`,
+  `typecheck`, `test`, `build`, `format:check` and `test:docs` run across the
+  workspace. Each app's guide gives its preconditions.
 - Before a PR, run the checks implement-story's `references/validation.md` sets
   for the kind of change.
 - In a shared checkout, or a scratch directory whose `node_modules` links to it, run
@@ -71,9 +72,9 @@ writes_).
   `docs/operations/authoring-agent-instructions.md` (_Where it goes_); its history goes
   in the record's Delivery section. This file holds only rules that recur across most
   work.
-- Records, ADRs and analyses follow `docs/AGENTS.md`. Before editing an agent guide, a
-  skill or an agent definition, read the `writing-for-agents` skill and
-  `docs/operations/authoring-agent-instructions.md`.
+- Stories, chores, defects, epics, ADRs and analyses follow `docs/AGENTS.md`. Before
+  editing an agent guide, a skill or an agent definition, read the `writing-for-agents`
+  skill and `docs/operations/authoring-agent-instructions.md`.
 - Skills live in `.agents/skills/` (`.claude/skills` links to it); if your runtime's
   catalogue lacks one, read its `SKILL.md`. `.claude/agents/` holds briefs for fresh
   reviewers and workers.

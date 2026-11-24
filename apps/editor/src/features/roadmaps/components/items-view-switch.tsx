@@ -20,7 +20,7 @@ export interface ItemsViewSwitchProps {
  * What holds a button of the switch, drawn under it and over it: DHCW's grey, with a
  * dark inner ring, while the button is pressed. The holder carries it, not the button,
  * which is transparent over it: on the button it would sort after the focus fill and
- * hide it (`src/styles/AGENTS.md`), where over it the ring still shows with the fill.
+ * hide it (`apps/editor/AGENTS.md`), where over it the ring still shows with the fill.
  */
 const holderClasses =
   "relative flex shrink-0 rounded-lg bg-background has-aria-pressed:bg-secondary-hover has-aria-pressed:after:pointer-events-none has-aria-pressed:after:absolute has-aria-pressed:after:inset-0 has-aria-pressed:after:rounded-lg has-aria-pressed:after:inset-ring-2 has-aria-pressed:after:inset-ring-foreground"

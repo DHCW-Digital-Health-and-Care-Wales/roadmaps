@@ -41,8 +41,8 @@ A record not yet grilled has open questions where its scenarios will be. Ask
 the owner before drawing for them: list each open question that bears on the
 journeys, with its options, and ask which they want.
 
-- **Narrow**: settle the questions first, by the `grilling` skill, so the
-  designs cover only what is left.
+- **Narrow**: settle the questions first by reading `.agents/skills/grilling/SKILL.md`
+  (or invoking `grilling` where the runtime allows), so the designs cover only what is left.
 - **Explore**: leave them open, so the designs show every option and help
   decide.
 

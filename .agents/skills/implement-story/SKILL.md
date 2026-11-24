@@ -113,9 +113,12 @@ blocking decisions resolved or explicitly separated.
 If entering here for an ad-hoc change, capture the affected UI baselines per
 `references/screenshots.md` before implementation edits, just as in step 2.
 
-A defect fix, a change to `domain/` and a pending-edit rule (what
+A defect fix, a change to `domain/`, a pending-edit rule (what
 `apps/editor/src/features/roadmaps/editing/` keeps, shows or drops while a change is
-pending) are test-first, even when it is a review fix: write the unit or
+pending), a public-site parser/sync rule (`apps/public-site/scripts/`,
+`apps/public-site/src/lib/`) or an API service, repository, error, logging or
+settings rule (`apps/api/`) are test-first, even when it is a review fix: write
+the unit or
 component regression, observe its intended failure, then implement the smallest
 coherent change. Slice a large story (a new repository method, several routes, a
 rewritten screen) so each such scenario's test goes red before the code that
@@ -138,10 +141,11 @@ test of the property. Work that completes a migration, a rename or a one-off
 verification deletes its one-off scripts and rename guards in the same PR.
 
 Follow the owning guide and existing patterns; invoke `copywriter` before
-writing user-facing copy, `shadcn` for UI components and `domain-modeling` for
-terminology or ADRs, when their triggers apply. Place each test, E2E included,
-where the root `AGENTS.md` and the app's guide set; update the GIS and Sheets
-fakes in `apps/editor/tests/e2e/` when a UI or API contract changes. Use deterministic
+writing user-facing copy and `domain-modeling` for terminology or ADRs when
+their triggers apply, and read `.agents/skills/shadcn/SKILL.md` when adding or
+composing UI components. Place each test, E2E included,
+where the root `AGENTS.md` and the app's guide set; update the editor's GIS and
+Sheets fakes in `apps/editor/tests/e2e/` when its UI or Sheets contract changes. Use deterministic
 scripts for simple textual replacements; use a cheaper worker when each site
 needs inspection. The main agent integrates and checks the result.
 

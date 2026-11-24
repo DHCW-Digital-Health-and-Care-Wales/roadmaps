@@ -96,7 +96,8 @@ None.
 STY-101's criteria and review, and the grillings of STY-091 to STY-093, run under the
 three rules: the story template's _Acceptance criteria_ note (S1), `quality-review`'s
 _Reimplementation_ and _Meta code_ bullets (S2) and `threat-review`'s _Proportionality_
-lens (S3). Each keeps the wiring of an ADR's control under a standing test (D3).
+lens (S3). The template note and the _Meta code_ bullet keep the wiring of an ADR's
+control under a standing test (D3).
 
 ### Scenario evidence
 

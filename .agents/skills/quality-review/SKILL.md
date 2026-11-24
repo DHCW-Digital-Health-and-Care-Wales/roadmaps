@@ -85,8 +85,8 @@ report in the conversation only.
    - **Reimplementation.** A new helper where one exists (`cn`, `AppError`
      helpers, `createExternalStore`, `StatusPanel`, `ReconnectButton`,
      `renderWithProviders`, the in-memory repository, the fakes); code that
-     hand-writes what an installed dependency provides, unless the site states
-     what the dependency cannot do; same concept named differently across
+     hand-writes what an installed dependency provides, unless the call site
+     states what the dependency cannot do; same concept named differently across
      layers (`remove`/`delete`/`clear`, `roadmap`/`sheet`/`board`).
    - **Dead or false text.** No-op assignments, unused parameters, exports or
      branches, suppressions with no reason, comments that went stale,

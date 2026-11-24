@@ -1,6 +1,6 @@
 ---
 name: ux-prototypes
-description: Prototype UX designs before a feature is built, as alternatives for the owner to choose from. Use for "prototype ux designs for x", as static frames of planned screens on desktop and phone, or as a working component, one field or control to try inside the card or form that holds it.
+description: Prototype UX design alternatives as static screen frames or a working component for the owner to choose from.
 disable-model-invocation: true
 ---
 
@@ -42,8 +42,8 @@ A record not yet grilled has open questions where its scenarios will be. Ask
 the owner before drawing for them: list each open question that bears on the
 journeys, with its options, and ask which they want.
 
-- **Narrow**: settle the questions first, by the `grilling` skill, so the
-  designs cover only what is left.
+- **Narrow**: settle the questions first by reading `.agents/skills/grilling/SKILL.md`
+  (or invoking `grilling` where the runtime allows), so the designs cover only what is left.
 - **Explore**: leave them open, so the designs show every option and help
   decide.
 

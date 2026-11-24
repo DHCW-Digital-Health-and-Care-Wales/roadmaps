@@ -1,0 +1,5 @@
+interface:
+  display_name: "Playwright CLI"
+  short_description: "Drive a browser and debug Playwright tests from the command line"
+policy:
+  allow_implicit_invocation: false

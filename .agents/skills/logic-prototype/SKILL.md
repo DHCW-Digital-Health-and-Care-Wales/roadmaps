@@ -1,6 +1,6 @@
 ---
 name: logic-prototype
-description: Build a throwaway logic prototype, one HTML file anyone can click through, to answer a question about a state model, business rule or data shape. Use when a design question is what a rule or state model should do, not how a screen looks or a control is worked.
+description: Build a single-file interactive HTML prototype to validate a state model, business rule or data shape.
 disable-model-invocation: true
 ---
 

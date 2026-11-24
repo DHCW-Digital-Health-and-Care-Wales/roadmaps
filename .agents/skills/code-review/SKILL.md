@@ -64,8 +64,10 @@ not post, change code, merge or message other people as part of reviewing.
      under the agent that shares it.
    - API: `cd apps/api && uv run --locked pytest -o cache_dir=/tmp/pytest-cache <test_file>`
      (only when no database container or repo write is needed).
-     Never run a command that changes state (a commit, a push, a deploy, a merge).
-     Passing tests are evidence, not proof; never claim a check you only read.
+
+   Never run a command that changes state (a commit, a push, a deploy, a merge).
+   Passing tests are evidence, not proof; never claim a check you only read.
+
 6. **Filter.** Report defects the change introduces or materially exposes, tied
    to a changed line or affected contract, after ruling out an intentional
    exception. A rule ESLint, TypeScript strict or the i18n catalogue types
@@ -94,27 +96,24 @@ unverifiable; quote it for a mismatch and show the implementation path.
 
 ## Tooling already enforces
 
-Do not spend findings on rules CI already enforces; read the touched app's
+Do not spend findings on rules CI already enforces; inspect the touched app's
 config (`eslint.base.ts`, `apps/editor/eslint.config.ts`,
-`apps/editor/build/design-token-lint.ts`, `apps/public-site/eslint.config.ts`,
-`apps/api/pyproject.toml`, `apps/api/tools/check_transactions.py`) and check
-only that the change does not evade them (`eslint-disable`, `# noqa` without
-reason, `@ts-expect-error`, a cast, a re-export, a moved file):
+`apps/editor/build/design-token-lint.ts`, `apps/editor/build/e2e-lint.ts`,
+`apps/public-site/eslint.config.ts`, `apps/api/pyproject.toml`,
+`apps/api/tools/check_transactions.py`) and flag only evasions (`eslint-disable`,
+`# noqa` without reason, `@ts-expect-error`, casts, re-exports, moved files) and
+these blind spots:
 
-- **Editor and public site**: TypeScript strict + `@typescript-eslint`
-  strict-type-checked, React Hooks, `jsx-a11y`, `i18next/no-literal-string` on
-  `src/**/*.tsx` (not `.ts` files, non-configured props or strings built in
-  hooks), and catalogue key parity (`cy.ts` vs `en.ts`, though wrong or
-  unnatural Welsh still passes). Editor-only: layer `no-restricted-imports`,
-  the `google` global ban outside `google-identity/`, `cn` import rule, design
-  token lint (covers default class/style sites; misses class strings stored
-  outside configured variable names or non-`style` props), and E2E lint
-  (`apps/editor/build/e2e-lint.ts`).
-- **API**: `ruff` (`select = ["ALL"]`, `TID251` banning `HTTPException` in
-  favour of `ApiError`, `G` rules banning formatted log messages), `ty` strict
-  typecheck, `import-linter` layer direction, `apps/api/tools/check_transactions.py`
-  (no `commit`/`rollback`/`begin` in routes or repositories), and 100% branch
-  coverage.
+- **Literal copy**: `i18next/no-literal-string` checks JSX and configured
+  attributes in `src/**/*.tsx`, not `.ts` files, non-configured props or strings
+  built in hooks; catalogue parity checks keys, not Welsh translation accuracy.
+- **Design tokens**: `apps/editor/build/design-token-lint.ts` checks default
+  class/style sites, not class strings stored outside configured variable names
+  or style objects passed under non-`style` props.
+- **API checks**: `apps/api/tools/check_transactions.py` matches direct
+  `.commit()`/`.rollback()`/`.begin()` calls in routes and repositories, not
+  renamed wrappers; `ruff` and `ty` do not verify log-value provenance or
+  uvicorn-only behaviour.
 
 ## Lenses
 

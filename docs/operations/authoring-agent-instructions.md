@@ -7,9 +7,10 @@ agent definitions under `.claude/agents/`, skill instructions under
 `build/agent-guides.test.ts` checks the root guide's size, that no guide file
 but the docs guide, which defines the record ID format, cites a record ID (bar the
 format example it lists), that every `AGENTS.md` has a sibling `@AGENTS.md`
-`CLAUDE.md`, that repo-root paths in `AGENTS.md` files exist, and that
-`disable-model-invocation: true` in a `SKILL.md` matches any sibling
-`agents/openai.y*ml`; review judges the rest.
+`CLAUDE.md`, that repo-root paths in `AGENTS.md` files exist, and that each
+`SKILL.md` setting `disable-model-invocation: true` has a sibling
+`agents/openai.y*ml` with `allow_implicit_invocation: false`; review judges the
+rest.
 
 Root guides are read at onboarding; nested guides and skills are read when
 their scope or trigger applies. Each extra line consumes attention on every

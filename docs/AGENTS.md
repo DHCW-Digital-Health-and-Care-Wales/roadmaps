@@ -41,10 +41,11 @@ the next free number across the live tree, `docs/backlog/_archive/` and open PRs
 - A record that departs from its claim says so in Delivery; an owner's change
   of mind is a Decisions entry. Never reword the Acceptance criteria.
 - After any record change (an owner's answer, a moved obligation, a new or edited
-  scenario), grep its IDs and terms across `docs/` — using `rg -n -U -i` for multi-word
-  terms wrapped across line breaks (e.g. `rg -n -U -i 'group\s+assignment' docs`) — and
-  fix every statement it makes false, including any claim that a field or stored state
-  exists without naming the record that provides it.
+  scenario), grep its IDs and terms across live `docs/` (excluding
+  `docs/backlog/_archive/`) — using `rg -n -U -i` for multi-word terms wrapped across
+  line breaks (e.g. `rg -n -U -i 'group\s+assignment' docs`) — and fix every statement it
+  makes false, including any claim that a field or stored state exists without naming
+  the record that provides it.
 - In the same sweep, search live docs (ignoring `docs/backlog/_archive/`) for leftover
   status claims (`rg -n -i 'undecided|no selection|still open|stay(s)? open|remain(s)? open|wait(s)? for|awaiting|unselected|not selected|not yet' docs`)
   and triage every hit.

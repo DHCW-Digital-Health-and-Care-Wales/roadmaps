@@ -1,7 +1,6 @@
 # apps/editor/tests/e2e — Playwright
 
-End-to-end tests of the production build, with Google faked (ADR-006). Paths are from the
-repository root.
+End-to-end tests of the production build, with Google faked (ADR-006).
 
 ## Fakes and fixtures
 
@@ -10,8 +9,8 @@ repository root.
   gets the fakes and the hermetic guard. Import nothing from `apps/editor/src/`: tests
   drive the app as a user does, through roles and copy.
 - `gis` (`apps/editor/tests/e2e/fixtures/fake-gis.ts`) fakes Google Identity Services and
-  `sheets` (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`) the Sheets API over
-  `fixtures/sheets/`; their docblocks are the API (writes record in `sheets.writes`,
+  `sheets` (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`) the Sheets API over the
+  root `fixtures/sheets/`; their docblocks are the API (writes record in `sheets.writes`,
   never `reads`).
 - Anything the real APIs would reject, any request to another origin, and any access
   token reaching storage, cookies, the URL or the console fail the test at teardown.

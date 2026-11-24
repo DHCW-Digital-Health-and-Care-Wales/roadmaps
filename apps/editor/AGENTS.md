@@ -94,7 +94,8 @@ apps share, and these, the editor's own:
   focus utilities with a state variant (`focus-visible:` or `has-focus-visible:`): each
   is the style alone — `focus-visible:focus-fill` (buttons, button-styled links, menu
   items), `focus-visible:focus-ring` / `has-focus-visible:focus-ring` (cards, inputs) or
-  `focus-visible:focus-link` (text links). Carry no `aria-*:` background on a focusable
-  element itself, as it sorts after and hides `focus-fill`.
+  `focus-visible:focus-link` (text links). Put an `aria-*:` background on a
+  non-focusable wrapper (`apps/editor/src/features/roadmaps/components/items-view-switch.tsx`'s
+  holder); on the focusable element itself it sorts after and hides `focus-fill`.
 - Call the auth client's `connect()` synchronously inside the click handler, with no
   `await` before it, or the browser blocks Google's popup (ADR-003).

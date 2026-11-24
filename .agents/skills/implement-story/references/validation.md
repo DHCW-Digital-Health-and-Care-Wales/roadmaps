@@ -75,7 +75,7 @@ in a log (`setsid nohup sh -c '<cmd>; echo "exit=$?"' > /tmp/<name>.log 2>&1 &`)
 and read that log before relying on it.
 
 A fix made between review rounds, before it is pushed, needs the tests of its
-changed files and their consumers (`cd apps/<editor|public-site> && ./node_modules/.bin/vitest related --run <files>`, with `<files>` relative to the app; for the API, `pnpm api:test`, or `cd apps/api && uv run --locked pytest <test_file>` for one non-DB file since `pnpm api:test` enforces 100% package coverage),
+changed files and their consumers (`cd apps/<editor|public-site> && ./node_modules/.bin/vitest related --run <files>`, with `<files>` relative to the app; for the API, `pnpm api:test`, or `cd apps/api && uv run --locked pytest <test_file>` for one non-DB file since `pnpm api:test` fails a single-file run on its 100% package coverage),
 with `pnpm lint`, `pnpm typecheck` and `pnpm format:check`, plus the Playwright
 specs of any journey it changes; with those green, commit it and start the next
 round's reviewers. Every head you push gets the full gate first, on its

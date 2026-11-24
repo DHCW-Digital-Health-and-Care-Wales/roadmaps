@@ -25,14 +25,11 @@ report in the conversation only.
 
 - **Bugs, races, security holes.** List one noticed in passing under "Handed
   off"; never let it displace a quality finding.
-- **Anything a tool enforces.** ESLint (`eslint.base.ts`,
-  `apps/editor/eslint.config.ts`, `apps/public-site/eslint.config.ts`), Prettier
-  (`pnpm format:check`), TypeScript strict (including `cy.ts` parity with
-  `en.ts`), `actionlint`, and in `apps/api/` `ruff` (including `TID251` for
-  `ApiError`), `ty`, `import-linter`, `apps/api/tools/check_transactions.py` and
-  100% branch coverage. Flag only what the tool cannot see: copy built in `.ts`
-  files, a layer leak through a re-export, an `eslint-disable` or `# noqa` with
-  no reason.
+- **Anything a tool enforces.** Formatting (`pnpm format:check`), `actionlint`,
+  and the app lint, type, layering and coverage configs listed in
+  `.agents/skills/code-review/SKILL.md` (_Tooling already enforces_). Flag only
+  evasions (`eslint-disable` or `# noqa` without reason, layer leaks through
+  re-exports) and the blind spots that section names.
 - **Taste with no cost.** If you cannot say what it makes easier, cheaper or
   safer for the next reader, drop it.
 

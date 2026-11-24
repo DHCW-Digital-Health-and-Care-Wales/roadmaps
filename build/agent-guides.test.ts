@@ -1,8 +1,9 @@
-import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
 import { basename, dirname, extname, join } from "node:path"
 
 import { describe, expect, it } from "vitest"
+
+import { listRepositoryFiles, ROOT, SKIPPED_PROSE } from "./markdown-helpers.ts"
 
 /**
  * The root guide loads into every agent session, so its size is a budget and it holds
@@ -10,7 +11,6 @@ import { describe, expect, it } from "vitest"
  * Incident: by November 2026 the root guide had grown to about 9,900 words, 87% of them
  * a per-delivery handoff log. Review the budget's headroom by February 2027.
  */
-const ROOT = join(import.meta.dirname, "..")
 const ROOT_GUIDE_WORD_BUDGET = 1200
 
 /**
@@ -45,18 +45,6 @@ function read(path: string): string {
   return readFileSync(join(ROOT, path), "utf8")
 }
 
-/** The repository's files by Git, so a guide in a dot-directory or under `docs/` counts. */
-function listRepositoryFiles(): string[] {
-  const listing = execFileSync(
-    "git",
-    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-    { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
-  )
-  return listing
-    .split("\0")
-    .filter((path) => path !== "" && existsSync(join(ROOT, path)))
-}
-
 function selectGuides(paths: readonly string[]): string[] {
   return paths.filter(
     (path) =>
@@ -89,15 +77,6 @@ const REPO_ROOT_PREFIX =
 const PLACEHOLDER = /[<>*…{}$]/
 const GITIGNORED_PATH =
   /(?:^|\/)(?:\.env[^/]*\.local|\.data|node_modules|\.artifacts)(?:\/|$)/
-const SKIPPED_PROSE = new RegExp(
-  [
-    /^[ \t]*(?<fence>(?<mark>`|~)\k<mark>{2,})[^\n]*\n[\s\S]*?(?:^[ \t]*\k<fence>\k<mark>*[ \t]*$|(?![\s\S]))/,
-    /<!--[\s\S]*?-->/,
-  ]
-    .map((pattern) => pattern.source)
-    .join("|"),
-  "gm",
-)
 const INLINE_CODE =
   /(?<!`)(?<ticks>`+)(?!`)(?<content>(?:(?!\n[ \t]*\n)[\s\S])*?)(?<!`)\k<ticks>(?!`)/g
 
@@ -190,7 +169,12 @@ function invocationPolicyMismatches(
       `${dir}/agents/openai.yaml`,
       `${dir}/agents/openai.yml`,
     ].find((candidate) => pathSet.has(candidate))
-    if (!openaiPath) continue
+    if (!openaiPath) {
+      mismatches.push(
+        `missing ${dir}/agents/openai.yaml with allow_implicit_invocation: false to match ${skillPath}`,
+      )
+      continue
+    }
     if (
       !/^\s*allow_implicit_invocation:\s*false(?:\s|$)/m.test(
         readContent(openaiPath),
@@ -348,6 +332,7 @@ describe("agent guides", () => {
       ".agents/skills/commented/SKILL.md": disabled,
       ".agents/skills/commented/agents/openai.yml":
         "# allow_implicit_invocation: false\n",
+      ".agents/skills/missing/SKILL.md": disabled,
       ".agents/skills/model-invoked/SKILL.md": "---\nname: y\n---\n",
       ".agents/skills/model-invoked/agents/openai.yaml":
         "policy:\n  allow_implicit_invocation: true\n",
@@ -357,6 +342,7 @@ describe("agent guides", () => {
     ).toEqual([
       ".agents/skills/true/agents/openai.yaml must set allow_implicit_invocation: false to match .agents/skills/true/SKILL.md",
       ".agents/skills/commented/agents/openai.yml must set allow_implicit_invocation: false to match .agents/skills/commented/SKILL.md",
+      "missing .agents/skills/missing/agents/openai.yaml with allow_implicit_invocation: false to match .agents/skills/missing/SKILL.md",
     ])
   })
 

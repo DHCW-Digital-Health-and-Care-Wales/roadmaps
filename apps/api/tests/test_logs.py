@@ -20,6 +20,7 @@ from httpx2 import Response
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.routing import Route, Router
 from starlette.types import ASGIApp
 
 from roadmaps_api.app import create_app
@@ -119,24 +120,39 @@ def plain_app() -> ASGIApp:
     return PlainTextResponse("raw")
 
 
+def starlette_router() -> ASGIApp:
+    return Router([Route("/items/{item_id}", lambda _request: PlainTextResponse("item"))])
+
+
 # Where an app is mounted, the app, and a path it answers. A mount at the root takes
-# what no route of the API does.
+# what no route of the API does; the last row's path, under the mount, is the API's own
+# live OpenAPI route's.
 MOUNTS = {
-    "a FastAPI app under a template": ("/tenants/{tenant}", mounted_app, f"/tenants/{PLANTED}"),
-    "a FastAPI app at the root": ("/", mounted_app, ""),
-    "an app with no routes under a path": ("/raw", plain_app, "/raw"),
-    "an app with no routes at the root": ("/", plain_app, ""),
+    "a FastAPI app under a template": (
+        "/tenants/{tenant}",
+        mounted_app,
+        f"/tenants/{PLANTED}/items/1",
+    ),
+    "a FastAPI app at the root": ("/", mounted_app, f"/items/{PLANTED}"),
+    "a Starlette router under a path": ("/sub", starlette_router, f"/sub/items/{PLANTED}"),
+    "a Starlette router at the root": ("/", starlette_router, f"/items/{PLANTED}"),
+    "an app with no routes at the root": ("/", plain_app, f"/items/{PLANTED}"),
+    "an app with no routes, at a path the API routes": (
+        "/raw",
+        plain_app,
+        "/raw/api/v1/openapi.json",
+    ),
 }
 
 
-@pytest.mark.parametrize(("path", "mounted", "prefix"), MOUNTS.values(), ids=MOUNTS)
+@pytest.mark.parametrize(("path", "mounted", "request_path"), MOUNTS.values(), ids=MOUNTS)
 def test_a_request_a_mounted_app_handled_is_unmatched(
-    lines: Lines, path: str, mounted: Callable[[], ASGIApp], prefix: str
+    lines: Lines, path: str, mounted: Callable[[], ASGIApp], request_path: str
 ) -> None:
-    app = create_app(make_settings())
+    app = create_app(make_settings(environment=Environment.LOCAL))
     app.mount(path, mounted())
     with TestClient(app) as client:
-        assert client.get(f"{prefix}/items/{PLANTED}").status_code == 200
+        assert client.get(request_path).status_code == 200
 
     [access] = [line for line in lines.read() if line.get("message") == "request"]
     assert access["route"] == "unmatched"

@@ -314,12 +314,13 @@ psycopg 3.3.9 installed:
   that crosses the limit, then refused; no route gets more than the limit. ADR-020's
   amendment and `create_app`'s comment say so; S1's "no more than the limit is ever
   read" holds for what a route reads.
-- **S8: a mounted app is known by the app in the scope** (agent, from review): a mount
-  at `/` adds nothing to the root path, so `access_log` takes a request as a mounted
-  app's when the scope's `app` is no longer the API, as a Starlette or FastAPI app sets
-  it wherever it is mounted; any other mounted app leaves no template for the lookups
-  (FastAPI's router records no route in the scope). One table holds each kind of mount,
-  at the root and under a path; the old mount-matching fixtures went with the code.
+- **S8: a mounted app leaves no template** (agent, from review): the access line takes a
+  template only from what FastAPI records for the API's own routes and from the API's
+  own Starlette routes, matched against the path the request arrived with, never from
+  the scope's `route`, which a mounted app's router sets to a route of its own. So a
+  mount at `/`, which adds nothing to the root path, and a mounted Starlette router are
+  `unmatched` too, with no code matching mounts. One table holds each kind of mount; the
+  old mount-matching fixtures went with the code.
 
 ### Contract for dependents
 
@@ -346,5 +347,5 @@ psycopg 3.3.9 installed:
 | S5       | `apps/api/tests/test_logs.py` (`test_an_exception_s_line_tells_failures_apart_by_codes`, `test_a_refused_connection_and_a_wrong_password_differ_only_in_a_local_log`, `test_a_unique_violation_logs_its_sqlstate_and_constraint_never_the_value`, `test_the_chain_follows_each_cause_then_context_stopping_at_a_repeat`, `test_ready_s_503_logs_a_warning_with_the_code_and_the_exception_s_type`); `apps/api/tests/test_probes.py` (the frozen connection's deadline); red without the SQLSTATE, the constraint, the suppressed context, the repeat check or `/ready`'s `exc_info` |
 | S6       | `apps/api/tests/test_logs.py` (`test_only_a_developer_s_local_api_writes_messages`, a row per environment and marker, `test_a_message_that_cannot_be_formatted_is_left_out`); `apps/api/tests/test_server.py` (production's rules, and `test_a_local_server_writes_messages_and_uvicorn_s_information_lines`); red without the markers' check and with messages never written                                                                                                                                                                                                       |
 | S7       | `apps/api/tests/test_logs.py` (`test_only_a_developer_s_local_api_writes_messages`, uvicorn's level per environment); `apps/api/tests/test_server.py` (`test_the_server_logs_no_query_string_or_exception_text_on_either_stream`: uvicorn writes only warnings and up); red with uvicorn at information everywhere                                                                                                                                                                                                                                                                  |
-| S8       | `apps/api/tests/test_logs.py` (`test_a_request_a_mounted_app_handled_is_unmatched`, a row per kind of mount, at the root and under a path; `test_the_access_line_names_the_route_by_its_template_never_the_path`); red without the scope's `app` check                                                                                                                                                                                                                                                                                                                              |
+| S8       | `apps/api/tests/test_logs.py` (`test_a_request_a_mounted_app_handled_is_unmatched`, a row per kind of mount, at the root and under a path; `test_the_access_line_names_the_route_by_its_template_never_the_path`); red when the scope's `route` names a mounted route, and when the API's Starlette routes are matched against the path a mount left                                                                                                                                                                                                                                |
 | S9       | ADR-017, ADR-018 and ADR-020 _STY-101 amendments_; `apps/api/AGENTS.md`, `apps/api/README.md`; `pnpm api:lint`, `pnpm api:typecheck`, `pnpm api:test` at 100% branch coverage                                                                                                                                                                                                                                                                                                                                                                                                       |

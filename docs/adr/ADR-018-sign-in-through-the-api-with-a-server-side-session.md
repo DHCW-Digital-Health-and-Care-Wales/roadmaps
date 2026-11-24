@@ -298,7 +298,8 @@ rest of _Records and retention_ stands.
   none of Cloud Run's markers (`K_SERVICE`, `CLOUD_RUN_JOB`, `CLOUD_RUN_WORKER_POOL`),
   the mock provider's bound in _The API runs the sign-in_ widened from a service to a
   job and a worker pool. Test, production, an unset or invalid environment, anything on
-  Cloud Run and a line written before the settings are read write none (`Settings.writes_messages`, `apps/api/src/roadmaps_api/settings.py`).
+  Cloud Run and a line written before the settings are read write none
+  (`Settings.writes_messages`, `apps/api/src/roadmaps_api/settings.py`).
 
 ## Consequences
 

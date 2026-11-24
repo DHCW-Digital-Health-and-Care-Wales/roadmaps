@@ -33,7 +33,7 @@ export interface ServicePort {
   readonly default: number
 }
 
-/** The API's, which the editor's dev server proxies `/api` to. */
+/** The API's, which the editor's dev server proxies `/api` to; 8000 is apps/api/scripts/api.sh's too. */
 export const API_PORT: ServicePort = { variable: "API_PORT", default: 8000 }
 
 const WORKTREE_ENV = new URL("../../.env.worktree", import.meta.url)

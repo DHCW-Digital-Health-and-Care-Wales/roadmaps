@@ -220,8 +220,8 @@ pnpm editor:typecheck  # tsc -b over app, config and E2E projects
 pnpm editor:lint       # ESLint, zero warnings allowed (includes layering, i18n and design-token rules)
 pnpm format:check      # Prettier over the whole repository (pnpm format to fix)
 pnpm editor:test       # Vitest unit + component tests; no network, no Google
-pnpm test:docs      # the Markdown tests alone (links, agent guides)
-pnpm editor:build   # production build into apps/editor/dist/
+pnpm test:docs         # the Markdown tests alone (links, agent guides)
+pnpm editor:build      # production build into apps/editor/dist/
 
 pnpm --filter @roadmaps/editor exec playwright install --with-deps chromium   # once per @playwright/test version
 pnpm editor:test:e2e  # builds, serves with vite preview on :4173 (a worktree's own port), fakes GIS + Sheets

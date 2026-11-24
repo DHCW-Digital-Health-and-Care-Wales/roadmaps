@@ -22,6 +22,9 @@ def factory() -> FastAPI:
     An exception left to uvicorn reaches the interpreter, or a reload worker's process,
     which prints it, with its text, on stderr; here it is logged as its type and frames.
     """
+    # Python's warnings go to the JSON log, not to stderr with their text: set here, for
+    # the process uvicorn runs, not in `create_app`, which tests and scripts call too.
+    logging.captureWarnings(capture=True)
     try:
         return create_app(load_settings())
     except SettingsError:
@@ -33,8 +36,6 @@ def factory() -> FastAPI:
 
 
 def create_app(settings: Settings) -> FastAPI:
-    # Python's warnings go to the JSON log, not to stderr with their text.
-    logging.captureWarnings(capture=True)
     engine = create_database_engine(settings.database_url)
 
     @asynccontextmanager

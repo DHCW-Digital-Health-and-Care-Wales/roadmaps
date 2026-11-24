@@ -18,10 +18,15 @@ def client() -> Iterator[TestClient]:
 
 @pytest.fixture
 def json_logging() -> Iterator[None]:
-    """The API's log configuration, as uvicorn applies it, undone after the test."""
+    """The API's log configuration, as uvicorn and its factory apply it.
+
+    After the test the root's handlers and level are restored and warnings are no longer
+    captured (the factory captures them); the named loggers keep their settings.
+    """
     root = logging.getLogger()
     handlers, level = root.handlers[:], root.level
     logging.config.dictConfig(LOG_CONFIG)
     yield
+    logging.captureWarnings(capture=False)
     root.handlers[:] = handlers
     root.setLevel(level)

@@ -16,7 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from roadmaps_api.database import create_database_engine
 from roadmaps_api.logs import JsonFormatter, StdoutHandler
-from roadmaps_api.settings import MAX_BODY_BYTES
+from roadmaps_api.settings import MAX_BODY_BYTES, Environment
 from tests.support import PLANTED, database_url, make_settings, serving
 
 
@@ -71,6 +71,21 @@ ROUTES = {
         lambda c: c.get(f"/test/items/{PLANTED}"),
         200,
         "/test/items/{item_id}",
+    ),
+    "a route of a router included in another": (
+        lambda c: c.get(f"/test/nested/{PLANTED}"),
+        200,
+        "/test/nested/{item_id}",
+    ),
+    "a route of a router included under a prefix": (
+        lambda c: c.get(f"/test/admin/things/{PLANTED}"),
+        200,
+        "/test/admin/things/{thing_id}",
+    ),
+    "an included route whose own path is a probe's": (
+        lambda c: c.get("/test/admin/health"),
+        200,
+        "/test/admin/health",
     ),
     "a route in a mounted app": (
         lambda c: c.get(f"/test/tenants/{PLANTED}/items/{PLANTED}"),
@@ -127,6 +142,26 @@ def test_the_access_line_names_the_route_by_its_template_never_the_path(
 
     [access] = [line for line in lines.read() if line.get("message") == "request"]
     assert (access["route"], access["status"]) == (route, status)
+
+
+def test_the_access_line_names_the_live_openapi_route(lines: Lines) -> None:
+    with serving(make_settings(environment=Environment.LOCAL)) as client:
+        assert client.get("/api/v1/openapi.json").status_code == 200
+
+    [access] = [line for line in lines.read() if line.get("message") == "request"]
+    assert access["route"] == "/api/v1/openapi.json"
+
+
+@pytest.mark.parametrize(
+    ("method", "logged"), [("GET", "GET"), ("PATCH", "PATCH"), (PLANTED, "_OTHER")]
+)
+def test_the_access_line_names_only_a_method_http_defines(
+    client: TestClient, lines: Lines, method: str, logged: str
+) -> None:
+    client.request(method, "/nowhere")
+
+    [access] = [line for line in lines.read() if line.get("message") == "request"]
+    assert access["method"] == logged
 
 
 def test_each_request_gets_its_own_id(client: TestClient) -> None:
@@ -188,14 +223,6 @@ def test_another_library_s_message_and_arguments_are_dropped(lines: Lines) -> No
     assert "message" not in foreign_args
     assert own["message"] == "event %s"
     assert "message" not in own_object
-
-
-def test_a_warning_reaches_the_log_without_its_text(lines: Lines) -> None:
-    with serving(make_settings()):
-        logging.getLogger("py.warnings").warning("x.py:1: UserWarning: %s", PLANTED)
-
-    [line] = lines.read()
-    assert line["logger"] == "py.warnings"
 
 
 def test_the_engine_hides_sql_parameters() -> None:

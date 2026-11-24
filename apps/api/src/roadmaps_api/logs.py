@@ -22,8 +22,8 @@ PACKAGE: Final = "roadmaps_api"
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 # The `extra` fields a line may hold. Each is an ID, a code, a type, a name or a number,
-# never a value a caller or a person supplied: a request is named by its route's
-# template, never its path (STY-090 D35).
+# never a value a caller or a person supplied: an access line names its request by its
+# route's template and a method HTTP defines (`access_log`), never as the caller sent it.
 ALLOWED_EXTRA_FIELDS: Final = frozenset(
     {
         "method",

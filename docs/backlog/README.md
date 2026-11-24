@@ -87,6 +87,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-044](_archive/chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                       | One dev-ports resolver serves both apps (EPC-022's alignment sequence, after STY-095)                                               | Done           |
 | [CHO-045](_archive/chores/CHO-045-the-lint-disables-sty-095-added-are-fixed-at-their-cause.md)                   | The lint disables STY-095 added are fixed at their cause                                                                            | Done           |
 | [CHO-046](_archive/chores/CHO-046-one-plugin-owns-each-react-rule.md)                                            | One plugin owns each React rule that react-hooks and `@eslint-react` both run                                                       | Done           |
+| [CHO-047](chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                            | A 422 never names a key the caller chose (EPC-022, from STY-090's security review)                                                  | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

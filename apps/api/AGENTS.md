@@ -5,10 +5,8 @@ repository root.
 
 ## What this is
 
-A synchronous FastAPI service on Python 3.15 over PostgreSQL 18, through SQLAlchemy 2.1
-and psycopg 3 (ADR-017), that will replace the Google spreadsheet behind the editor and
-the public site. The editor reaches it on its own origin: its dev server proxies `/api`
-here (ADR-020). Contract routes live under `/api/v1`; the platform's probes, `/health`
+A synchronous FastAPI service over PostgreSQL, through SQLAlchemy and psycopg (ADR-017).
+The editor reaches it on its own origin: its dev server proxies `/api` here (ADR-020). Contract routes live under `/api/v1`; the platform's probes, `/health`
 and `/ready`, at the root, unversioned (ADR-017's amendments).
 
 ## Layering (ADR-017)
@@ -17,9 +15,10 @@ and `/ready`, at the root, unversioned (ADR-017's amendments).
   it (`roadmaps_api.routes`, `.services`, `.repositories`; `roadmaps_api.app` composes
   them). Routes stay thin and synchronous (`def`).
 - Only a service ends a transaction; a route or repository never calls `commit()`,
-  `rollback()` or `begin()` on a session. `/ready` (`routes/probes.py`,
-  `services/readiness.py`, `repositories/readiness.py`) is the worked example, its
-  service given to the route as a dependency.
+  `rollback()` or `begin()` on a session. `/ready` is the worked example
+  (`apps/api/src/roadmaps_api/routes/probes.py`, with its service and repository under
+  `services/` and `repositories/` beside it), its service given to the route as a
+  dependency.
 
 ## Errors and responses
 
@@ -35,10 +34,10 @@ and `/ready`, at the root, unversioned (ADR-017's amendments).
 - Log a constant event name with allow-listed `extra` fields
   (`ALLOWED_EXTRA_FIELDS` in `apps/api/src/roadmaps_api/logs.py`); the formatter drops
   any other field, and a third party's message. A field joins the allow-list only when
-  it is an ID, a code, a type, a name or a number.
-- Name a request in a log line by its route's template (`route_template` in
-  `apps/api/src/roadmaps_api/middleware.py`), or `unmatched`, never by the path a caller
-  sent.
+  it is an ID, a code, a type, a name or a number, never a value a caller or a person
+  supplied.
+- Name a request in a log line by its route's template, or `unmatched`, and a method
+  HTTP defines, never as the caller sent them (`apps/api/src/roadmaps_api/access_log.py`).
 - Log an exception with `logger.exception` or `exc_info`: the line keeps its type and
   frames, never its message.
 

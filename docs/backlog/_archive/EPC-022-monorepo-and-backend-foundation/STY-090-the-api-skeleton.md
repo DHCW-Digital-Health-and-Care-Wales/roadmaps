@@ -347,9 +347,10 @@ Audited at `e4117b10`:
 
 - **S2: a slot whose database cannot be removed stays claimed** (agent, from review):
   when Docker is installed but cannot remove the slot's Compose project (its daemon
-  stopped), teardown fails naming the fix and the reaper leaves the slot for a later
-  run, so no worktree inherits the data; a host without Docker has none to remove. The
-  tests came after the code, shown red against the script before it.
+  stopped), teardown still stops the slot's other listeners, then fails naming the fix,
+  and the reaper leaves the slot for a later run, so no worktree inherits the data; a
+  host without Docker has none to remove. The tests came after the code, shown red
+  against the script before it.
 - **S3: `/ready` checks in a thread of its own, against one deadline** (agent, from
   review): a database that stops answering on a connection already pooled gives the
   driver no error and no timeout, so `ReadinessService` runs the check with its own
@@ -374,20 +375,27 @@ Audited at `e4117b10`:
   logs a failure's type and frames and exits 1; `python -m roadmaps_api.server` checks
   the settings first, so bad ones end the command; and a database URL SQLAlchemy cannot
   parse (an unencoded `@` in a password) is a bad setting, not an engine error quoting
-  it. `Settings`' repr leaves the URL out.
-- **S7: the route's template as the router left it** (agent, from D35): the access line
-  reads the route Starlette and FastAPI leave in the request's scope after routing (a
-  405's partial match among them), prefixed by the templates of the mounts the request
-  passed through; a mounted app with no routes is its template and `{path:path}`. A
-  request refused before routing (a bad `Host`, a body over the limit), an unknown path
-  and a redirect to the path with or without its trailing slash are `unmatched`. The
-  test came after the code, shown red by logging the path instead.
+  it. `Settings`' repr leaves the URL out. Python's warnings reach the log through the
+  factory, which captures them for the process uvicorn runs.
+- **S7: the route's template as routing left it, and a known method** (agent, from D35
+  and review), in `apps/api/src/roadmaps_api/access_log.py`: the template FastAPI
+  matched, with every prefix its routers were included under (from the request's
+  scope, `fastapi.effective_route_context`, which FastAPI 0.163 keeps but does not
+  document, so each case is a test row and a FastAPI bump that changes it fails
+  there), else a Starlette route's (the live OpenAPI JSON's); prefixed by the templates
+  of the mounts the request passed through; a mounted app with no routes is its
+  template and `{path:path}`; a 405 names the route that takes the path. A request
+  refused before routing (a bad `Host`, a body over the limit), an unknown path and a
+  redirect to the path with or without its trailing slash are `unmatched`. A method
+  HTTP does not define is logged as `_OTHER`, as OpenTelemetry names it, since HTTP
+  accepts any token there. The tests came after the code, shown red by logging the path,
+  the included router's own fragment and the raw method instead.
 - **Residuals S4 and S5 leave** (agent, from review): a 422's `loc` names the key it
   failed on, which a caller chooses for a model that forbids extra keys or takes a
-  dictionary (no route has one yet); and uvicorn answers a request it cannot parse (a
-  bad header line, a non-numeric `Content-Length`) with its own fixed `400` text, before
-  the middleware, so without S5's headers or a request ID: the edge's to normalise
-  (EPC-023).
+  dictionary (no route has one yet): CHO-047; and uvicorn answers a request it cannot
+  parse (a bad header line, a non-numeric `Content-Length`) with its own fixed `400`
+  text, before the middleware, so without S5's headers or a request ID: listed in
+  EPC-023's README, for its edge or production server.
 - **S7: another library's log message is dropped, not only its arguments** (agent):
   uvicorn formats some exceptions into its messages (`"Error loading ASGI app. %s" %
 exc`), so a line from a logger outside `roadmaps_api` carries only its time, level,
@@ -426,7 +434,8 @@ exc`), so a line from a logger outside `roadmaps_api` carries only its time, lev
   `roadmaps_api.logs.request_id_var`; STY-100 replaces the first with the trace ID.
   `PROBE_PATHS` is where STY-100 leaves successful probes untraced.
 - **Logs**: `ALLOWED_EXTRA_FIELDS` in `roadmaps_api.logs` is the allow-list a new field
-  joins.
+  joins; `roadmaps_api.access_log` names a request's route and method, as STY-100's spans
+  will (its D5).
 - **Tests**: `tests/support.py` (`make_settings`, `add_test_routes`, `database_url()`
   from `ROADMAPS_TEST_DATABASE_URL`); STY-091's harness replaces `database_url()` and
   grows CI's `api-verify` service container.

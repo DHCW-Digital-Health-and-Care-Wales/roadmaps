@@ -227,6 +227,12 @@ describe("worktree.sh teardown", () => {
       /could not remove Compose project roadmaps-slot-\d+; start Docker and rerun/,
     )
     expect(readdirSync(registry)).toContain(String(slot))
+    // The dev servers still stop; Docker's own listener on DB_PORT is left alone.
+    const base = 21000 + slot * 10
+    const stopped = called("lsof").map((call) => /tcp:(\d+)/.exec(call)?.[1])
+    expect(stopped).toContain(String(base))
+    expect(stopped).toContain(String(base + 4))
+    expect(stopped).not.toContain(String(base + 5))
   })
 
   it("removes the slot's database container and its volume, and releases the slot", async () => {

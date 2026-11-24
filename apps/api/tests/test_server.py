@@ -12,6 +12,7 @@ import socket
 import subprocess
 import sys
 import time
+import warnings
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -108,6 +109,9 @@ def test_the_server_logs_no_query_string_or_exception_text_on_either_stream(
     with socket.create_connection(("127.0.0.1", port)) as raw:
         raw.sendall(f"GET /?{PLANTED} HTTP/1.1\r\nHost: 127.0.0.1\r\n{PLANTED}\r\n\r\n".encode())
         raw.recv(1024)
+    with socket.create_connection(("127.0.0.1", port)) as raw:
+        raw.sendall(f"{PLANTED} /health HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n".encode())
+        raw.recv(1024)
     run = finish(process, tmp_path)
 
     assert PLANTED not in run.stdout
@@ -193,3 +197,19 @@ def test_the_factory_exits_on_bad_settings(monkeypatch: pytest.MonkeyPatch) -> N
         app.factory()
 
     assert exited.value.code == 1
+
+
+@pytest.mark.usefixtures("json_logging")
+def test_the_factory_sends_python_s_warnings_to_the_log_without_their_text(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    for name, value in DEV_ENVIRONMENT.items():
+        monkeypatch.setenv(name, value)
+    app.factory()
+    # What `warnings.warn` calls to show a warning, once the filters let it through.
+    warnings.showwarning(UserWarning(PLANTED), UserWarning, "x.py", 1)
+
+    captured = capsys.readouterr()
+    [line] = [json.loads(text) for text in captured.out.splitlines()]
+    assert line["logger"] == "py.warnings"
+    assert PLANTED not in captured.out + captured.err

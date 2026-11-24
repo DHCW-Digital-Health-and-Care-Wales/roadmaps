@@ -135,6 +135,10 @@ lives:_
   (STY-090 S5); the production server's own loggers follow STY-090 S7's allow-list;
   and the probes are anonymous and query the database, so either the load
   balancer routes no probe path publicly or the global per-address ceiling covers them.
+  uvicorn answers a request it cannot parse (a bad header line, two `Host` headers, a
+  `Content-Length` that is no number) with its own fixed `400` text, before the API's
+  middleware, so without STY-090 S5's headers or a request ID: the edge refuses such
+  requests, or the production server is configured to.
 
 ### Operations
 

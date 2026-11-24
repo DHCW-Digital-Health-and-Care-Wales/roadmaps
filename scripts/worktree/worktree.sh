@@ -224,16 +224,19 @@ teardown() {
   if [ -f "$ENV_FILE" ]; then
     # shellcheck disable=SC1090
     . "$ENV_FILE"
-    # The database first, so stopping DB_PORT's listener below finds none.
+    # The database first, so stopping DB_PORT's listener below finds none; if Docker
+    # cannot remove it, DB_PORT is Docker's own listener, left alone.
+    local removed=true var
     if [ -n "${WORKTREE_SLOT:-}" ]; then
-      # The slot stays claimed until its database is gone.
-      remove_database "${API_DB_PROJECT:-$(db_project "$WORKTREE_SLOT")}" || exit 1
+      remove_database "${API_DB_PROJECT:-$(db_project "$WORKTREE_SLOT")}" || removed=false
     fi
-    local var
     for var in "${PORT_VARS[@]}"; do
+      [ "$removed" = false ] && [ "$var" = DB_PORT ] && continue
       # A file written before a port was added lacks its line.
       if [ -n "${!var:-}" ]; then stop_port "${!var}"; fi
     done
+    # The slot stays claimed until its database is gone.
+    [ "$removed" = true ] || exit 1
   fi
   lock
   release_slot

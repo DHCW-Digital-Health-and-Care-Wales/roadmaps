@@ -1,9 +1,10 @@
 # CI for pull requests and main; deploys the editor from main to GitHub Pages once every
 # check passes (ADR-007), and checks the public site, which product-roadmaps publishes
-# from main, and the API. The Repository job runs every time, Dependency review on all but a push to
-# main, each app's jobs when the app can be affected, and CI result, the one check main's
-# ruleset requires, fails when any of them fails (.github/rulesets/main.json). Actions
-# are pinned to commit SHAs; Dependabot keeps them current.
+# from main, and the API. The Repository job runs every time, Dependency review on all
+# but a push to main, each app's jobs when the app can be affected, and CI result, the
+# one check main's ruleset requires, fails when any of them fails
+# (.github/rulesets/main.json). Actions are pinned to commit SHAs; Dependabot keeps them
+# current.
 name: CI/CD
 
 on:

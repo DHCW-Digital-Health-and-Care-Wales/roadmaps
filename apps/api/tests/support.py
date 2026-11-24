@@ -66,6 +66,26 @@ def add_test_routes(app: FastAPI) -> FastAPI:
     def item(item_id: str) -> dict[str, str]:
         return {"item": item_id}
 
+    # Routers included in another, under a prefix of their own and one given at include
+    # time, as the contract's resources will be under /api/v1.
+    nested = APIRouter(prefix="/nested")
+
+    @nested.get("/{item_id}")
+    def nested_item(item_id: str) -> dict[str, str]:
+        return {"item": item_id}
+
+    admin = APIRouter()
+
+    @admin.get("/things/{thing_id}")
+    def thing(thing_id: str) -> dict[str, str]:
+        return {"thing": thing_id}
+
+    @admin.get("/health")
+    def admin_health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    router.include_router(nested)
+    router.include_router(admin, prefix="/admin")
     app.include_router(router)
 
     # A mounted app, under a template of its own, and a mounted app with no routes.

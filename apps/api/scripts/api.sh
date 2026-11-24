@@ -30,6 +30,7 @@ if [ -f "$ENV_FILE" ]; then
     exit 1
   fi
 else
+  # The editor's dev proxy falls back to the same 8000 (scripts/worktree/dev-ports.ts).
   API_PORT=8000
   DB_PORT=15432
   DB_PROJECT=roadmaps-api

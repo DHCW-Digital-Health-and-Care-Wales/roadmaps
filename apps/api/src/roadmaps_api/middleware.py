@@ -1,9 +1,9 @@
 """ASGI middleware for ADR-020's response rules, outermost first in `create_app`.
 
 `RequestContext` gives each request its ID, sets the headers on every response, writes
-the access line, naming the request's route by its template, never by the path the
-caller sent (STY-090 D35), and answers an unexpected error itself, so nothing reaches Starlette's
-or uvicorn's own error handling, which would log the exception's message. Inside it,
+the access line (named as `access_log` names it) and answers an unexpected error
+itself, so nothing reaches Starlette's or uvicorn's own error handling, which would log
+the exception's message. Inside it,
 `HostAllowList` refuses a `Host` the settings do not list, and `BodyLimit` refuses a
 body over the limit before it is read whole.
 """
@@ -12,14 +12,14 @@ import logging
 import re
 import secrets
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from http import HTTPStatus
 from typing import Final
 
 from starlette.datastructures import Headers, MutableHeaders
-from starlette.routing import BaseRoute, Match, Mount
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from roadmaps_api.access_log import method_name, route_template
 from roadmaps_api.errors import ErrorCode, error_response
 from roadmaps_api.logs import request_id_var
 
@@ -38,41 +38,6 @@ SECURITY_HEADERS: Final = {
 # Platform probes: a success writes no access line (a failure still does).
 PROBE_PATHS: Final = frozenset({"/health", "/ready"})
 SUCCESS: Final = range(HTTPStatus.OK, HTTPStatus.MULTIPLE_CHOICES)
-# The access line's route when none matches: an unknown path, or one answered by a
-# redirect to another.
-UNMATCHED: Final = "unmatched"
-
-
-def _mounts(routes: Sequence[BaseRoute], scope: Scope) -> list[Mount]:
-    """The mounts a request passes through, outermost first, as routing finds them."""
-    for route in routes:
-        if isinstance(route, Mount):
-            match, child_scope = route.matches(dict(scope))
-            if match is Match.FULL:
-                return [route, *_mounts(route.routes, {**scope, **child_scope})]
-    return []
-
-
-def route_template(entry: Scope, routed: Scope) -> str:
-    """The template of the route that answered a request, never the path it was sent to.
-
-    `entry` is the request's scope before routing, `routed` after it, where Starlette
-    and FastAPI leave the route they chose (a 405's among them). A mount's template
-    prefixes its routes'; a mounted app with no routes is its template and
-    `{path:path}`; a request no route took, refused before routing, unknown or answered
-    by a redirect, is `unmatched`.
-    """
-    mounts: list[Mount] = []
-    if routed.get("root_path", "") != entry.get("root_path", ""):
-        mounts = _mounts(getattr(entry.get("app"), "routes", ()), entry)
-    prefix = "".join(mount.path for mount in mounts)
-    route = routed.get("route")
-    path = None if isinstance(route, Mount) else getattr(route, "path", None)
-    if isinstance(path, str):
-        return prefix + path
-    if mounts and not mounts[-1].routes:
-        return f"{prefix}/{{path:path}}"
-    return UNMATCHED
 
 
 def new_request_id() -> str:
@@ -119,7 +84,7 @@ class RequestContext:
                 logger.info(
                     "request",
                     extra={
-                        "method": scope["method"],
+                        "method": method_name(scope),
                         "route": route,
                         "status": status,
                         "duration_ms": round((time.perf_counter() - started) * 1000, 1),

@@ -4,7 +4,7 @@
   STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
   the API skeleton (STY-090) are done; the other API placeholders' acceptance criteria
   come next
-- **Progress**: 11 of 17 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
+- **Progress**: 11 of 18 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
   STY-098); next selectable: none until STY-091, STY-092 or STY-100 has its criteria
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
@@ -201,6 +201,7 @@ the seeder for any table it creates.
 | STY-098 | [The editor marks English in place of Welsh](../_archive/EPC-022-monorepo-and-backend-foundation/STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)             | Domain + Features/UI       | STY-097     | ✅    |
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                | STY-098     |       |
 | STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                                                 | API                        | STY-090     |       |
+| CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                        | —           |       |
 
 _STY-085 to STY-090, STY-095, CHO-044 and STY-096 to STY-098 are done.
 STY-091 to STY-093 and STY-100 are Placeholders until their acceptance criteria are

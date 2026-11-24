@@ -142,6 +142,11 @@ lives:_
 
 ### Operations
 
+- **Hosted tracing and metrics** (STY-100 D5, D6, D11 and D15, 2026-11-23 and -24): where the
+  API's traces go when hosted and how they are sampled, whether to trust the load
+  balancer's trace header (the API ignores inbound trace context until then), and any
+  metrics, which STY-100 leaves out. Spans keep only allow-listed attribute keys
+  (STY-100 S4, D15), and trace retention in the hosted backend is this epic's to set.
 - **Platform jobs** (ADR-019): the right to start each limited to named principals,
   granted just in time (Privileged Access Manager, or a two-person IAM grant procedure
   for two or three operators) rather than standing; Cloud Run's Data Access audit logs

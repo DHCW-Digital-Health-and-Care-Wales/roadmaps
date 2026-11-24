@@ -175,27 +175,34 @@ _Operation_ stands.
 
 ### STY-091 amendments
 
-From the owner's STY-091 grilling (2026-11-24, STY-091 D3 to D14 and D17); the rest of
-_Migrations_, _Tests_ and _Operation_ stands.
+From the owner's STY-091 grilling and its review questions (2026-11-24, STY-091 D3 to
+D14, D17 and D24 to D29); the rest of _Migrations_, _Tests_ and _Operation_ stands.
 
-- **A bootstrap outside Alembic creates ADR-015's roles.** One idempotent SQL file makes
-  the no-login owner role, lets the migration login switch into it and makes it the
-  database's owner, so it owns `public`; it holds no credential. Locally and in CI a
-  runner creates the migration and application logins first; where the API is hosted,
-  EPC-023 creates them and runs the same file.
+- **A bootstrap outside Alembic creates ADR-015's roles.** One idempotent SQL file, with
+  no credential, makes three no-login roles: the owner, which owns the database and so
+  `public`; the migration role, holding the owner with `SET` and without `INHERIT`; and
+  the application's role. Each login is a member of exactly one of the last two. The file
+  revokes `TEMPORARY` on the database and the owner's default `EXECUTE` on routines from
+  `PUBLIC`. Run by a non-superuser administrator, it grants that administrator `SET` on
+  the owner role, so the administrator's credential is the owner's. Locally and in CI a
+  runner creates two password logins first; where the API is hosted, EPC-023 creates the
+  logins and runs the same file.
 - **Migrations upgrade only,** numbered `0001_<slug>` in one line, in the package, each
   run as the owner role and reviewed by hand, with autogenerate only drafting. A check
-  fails two heads or a gap in the numbers, and another fails models that differ from the
-  migrations. Each revision grants the application's login what it needs; there are no
-  default privileges.
+  fails two heads, a gap or a repeat in the numbers, and another fails models that
+  differ from the migrations. Each revision grants the application's role what it needs;
+  there is no default grant.
 - **Every revision stays compatible with the version before it,** since that version
-  serves while a deploy migrates: `/ready` is ready at or ahead of the code's latest
-  revision, a revision it does not know being ahead, and not ready behind it or with
-  none.
-- **`/ready` refuses an unsafe login:** a superuser, `BYPASSRLS`, an owner of any object,
-  or a member of the owner role or the migration login.
+  serves while a deploy migrates: `/ready` is ready at the code's latest revision or at
+  one numbered above it, and not ready behind it, at another slug, at a value of another
+  form, or with no revision or several.
+- **`/ready` serves only a login that holds the application's role and nothing more:**
+  no `SUPERUSER`, `BYPASSRLS`, `CREATEROLE`, `CREATEDB` or `REPLICATION`, membership of
+  no other role, no object owned, and no `CREATE` or `TEMPORARY` on the database or
+  `CREATE` on any schema.
 - **The test workers** are pytest-xdist's, as many as the machine has cores and at most
-  four, each on its own clone of the template.
+  four, each on its own clone of the template; emptying the tables between tests leaves
+  `alembic_version` alone.
 
 ## Consequences
 

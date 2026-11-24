@@ -5,7 +5,8 @@
 - **Type**: Feature
 - **Area**: API
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
-- **Depends on**: STY-091 (hard)
+- **Depends on**: STY-091 (hard), the first schema story, which creates `tenants`
+  (hard; not yet written)
 - **Binding ADRs**: ADR-017 §Operation
 - **Suggested model**: Sonnet — a small harness the schema stories extend
 
@@ -27,3 +28,9 @@ _Not acceptance criteria._
 - The command and a root `api:seed` script; a fixed seed; a hand-written Welsh phrase
   list; the DHCW tenant.
 - Proposed defaults: factories with Faker; refusing any environment but local and test.
+
+## Decisions
+
+- **D1** (owner, 2026-11-24, STY-091 review question, STY-091 D27): this story follows
+  the first schema story, which creates `tenants`, so the DHCW tenant has a table to be
+  seeded into, over a seeder with no factory or `tenants` in STY-091.

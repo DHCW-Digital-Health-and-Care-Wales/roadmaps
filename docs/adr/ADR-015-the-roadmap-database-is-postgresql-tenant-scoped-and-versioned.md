@@ -6,7 +6,8 @@
   past content viewable; nothing may preclude a tenancy per NHS Wales organisation;
   technical detail is settled during EPC-022.
 - Date: 2026-11-20 (amended by ADR-018 and ADR-019, 2026-11-21: identities, sessions,
-  invitations, definer functions, permissions and platform jobs)
+  invitations, definer functions, permissions and platform jobs; by STY-091, 2026-11-24:
+  the roles' shape and `alembic_version`)
 
 ## Context
 
@@ -345,6 +346,19 @@ stands.
   holders of `roadmaps:edit` and by holders of `roadmaps:edit-any`.
 - **Roles** (_Roles, operation and data protection_): platform jobs run under their
   own database role and service account.
+
+### STY-091 amendments
+
+From the owner's STY-091 review questions (2026-11-24, STY-091 D26 and D28). Where these
+bullets differ from the text above, they hold; the rest stands.
+
+- **Roles** (_Roles, operation and data protection_): the migration and application
+  roles are no-login roles holding every grant, and each login, a password login locally
+  or an IAM principal where the API is hosted, is a member of exactly one. Migrations
+  run as a login of the migration role, switched to the owner.
+- **Row-level security on every table** (_Tenancy_) has one exception, a closed list of
+  one: Alembic's `alembic_version`, which holds one revision string and no tenant's
+  data, read by the application's role and written only by the owner.
 
 ## Consequences
 

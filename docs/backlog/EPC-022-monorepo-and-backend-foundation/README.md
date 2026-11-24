@@ -153,8 +153,9 @@ STY-100 D5–D15:
 21. **Tracing**: traces only, sent to one shared local Jaeger that keeps them in
     memory; every request starts its own trace, ignoring a caller's `traceparent`;
     spans keep only allow-listed attribute keys, and database spans carry statement
-    text with placeholders, never a value; nothing is exported without an endpoint. Metrics, hosted export and sampling, and the load
-    balancer's trace header are EPC-023's.
+    text with placeholders, never a value; nothing is exported without an endpoint.
+    Metrics, hosted export and sampling, and the load balancer's trace header are
+    EPC-023's.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._

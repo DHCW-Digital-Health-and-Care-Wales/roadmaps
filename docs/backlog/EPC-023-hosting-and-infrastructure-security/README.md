@@ -142,7 +142,7 @@ lives:_
 
 ### Operations
 
-- **Hosted tracing and metrics** (owner, 2026-11-23, STY-100 D5, D6, D11): where the
+- **Hosted tracing and metrics** (STY-100 D5, D6, D11 and D15, 2026-11-23 and -24): where the
   API's traces go when hosted and how they are sampled, whether to trust the load
   balancer's trace header (the API ignores inbound trace context until then), and any
   metrics, which STY-100 leaves out. Spans keep only allow-listed attribute keys

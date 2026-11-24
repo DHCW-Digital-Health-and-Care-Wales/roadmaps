@@ -6,7 +6,7 @@
   STY-101, from the owner's review of the skeleton, too (owner, 2026-11-24); the other
   API placeholders' acceptance criteria come next
 - **Progress**: 11 of 20 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
-  STY-098); next selectable: CHO-048 (standalone), then STY-101
+  STY-098); next selectable: STY-101 (CHO-048 is done)
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary

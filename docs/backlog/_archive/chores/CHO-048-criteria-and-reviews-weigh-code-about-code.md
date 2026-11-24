@@ -1,7 +1,6 @@
 # CHO-048: The story template and two review skills weigh code about code
 
-- **Status**: Proposed — the owner's three edits from STY-101's grilling (2026-11-24);
-  delivered before STY-101
+- **Status**: Done
 - **Type**: Docs
 - **Area**: Docs
 - **Epic**: standalone
@@ -9,6 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — three short edits, written with the `writing-for-agents`
   skill
+- **Delivered**: _(add on delivery)_
 
 ## Summary
 
@@ -84,3 +84,25 @@ none cites a record ID or an incident, and the root `AGENTS.md` is unchanged
 ## Out of scope
 
 - STY-090's own instances, which STY-101 removes.
+
+## Delivery
+
+### Departures
+
+None.
+
+### Contract for dependents
+
+STY-101's criteria and review, and the grillings of STY-091 to STY-093, run under the
+three rules: the story template's _Acceptance criteria_ note (S1), `quality-review`'s
+_Reimplementation_ and _Meta code_ bullets (S2) and `threat-review`'s _Proportionality_
+lens (S3). Each keeps the wiring of an ADR's control under a standing test (D3).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                       |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `docs/backlog/_templates/story.md`: one sentence in the _Acceptance criteria_ note, with the D3 exception (observed read of the diff)                                                                                         |
+| S2       | `.agents/skills/quality-review/SKILL.md`: a clause each in _Reimplementation_ and _Meta code_ (observed read of the diff)                                                                                                     |
+| S3       | `.agents/skills/threat-review/SKILL.md`: the _Proportionality_ lens counts owned code and lost diagnosability (observed read of the diff)                                                                                     |
+| S4       | the diff's three guide files each sharpen an existing line or bullet, the story template's note by one sentence (the PR says why it grows); no record ID or incident in the guide text; root `AGENTS.md` absent from the diff |

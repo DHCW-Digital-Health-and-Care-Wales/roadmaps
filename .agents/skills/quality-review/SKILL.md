@@ -84,9 +84,10 @@ report in the conversation only.
      a context or the router already reaches.
    - **Reimplementation.** A new helper where one exists (`cn`, `AppError`
      helpers, `createExternalStore`, `StatusPanel`, `ReconnectButton`,
-     `renderWithProviders`, the in-memory repository, the fakes); same concept
-     named differently across layers (`remove`/`delete`/`clear`,
-     `roadmap`/`sheet`/`board`).
+     `renderWithProviders`, the in-memory repository, the fakes); code that
+     hand-writes what an installed dependency provides, unless the site states
+     what the dependency cannot do; same concept named differently across
+     layers (`remove`/`delete`/`clear`, `roadmap`/`sheet`/`board`).
    - **Dead or false text.** No-op assignments, unused parameters, exports or
      branches, suppressions with no reason, comments that went stale,
      including "left for S0n" or "TODO" after the story closed. Beyond the
@@ -114,7 +115,9 @@ report in the conversation only.
      data left as separate tests (the root `AGENTS.md` and the app's guide).
    - **Meta code.** A test or check that would fail on a semantically
      identical rewrite of what it checks (a snapshot of markup, a reordered
-     workflow `needs`, a renamed job); an exception list over about 10 entries;
+     workflow `needs`, a renamed job); a standing test of a tool the
+     repository did not write, unless it holds the wiring of a control an ADR
+     relies on; an exception list over about 10 entries;
      a new gate with no motivating incident, review date or severity that
      warrants it. Fix: assert the invariant, pay the list off at its source or
      move exceptions inline, record the reason and date.

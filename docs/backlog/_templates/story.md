@@ -73,7 +73,10 @@ which layers it touches (`domain/`, `infrastructure/`, `features/`, `routes/`,
 _One scenario per observable behaviour, numbered S1, S2… and never renumbered.
 Cover refusal, loading, empty, error and expired-session states and Welsh
 where they exist. A scenario added by an owner decision carries its source in
-the heading._
+the heading. A scenario that a tool the repository only configures (a linter,
+a framework limit) fails a violation is held by one observed run of a planted
+violation, in Scenario evidence; a check the repository wrote, and its wiring
+of a control an ADR relies on, keep a standing test._
 
 ### S1: <what it proves>
 

@@ -88,7 +88,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-045](_archive/chores/CHO-045-the-lint-disables-sty-095-added-are-fixed-at-their-cause.md)                   | The lint disables STY-095 added are fixed at their cause                                                                            | Done           |
 | [CHO-046](_archive/chores/CHO-046-one-plugin-owns-each-react-rule.md)                                            | One plugin owns each React rule that react-hooks and `@eslint-react` both run                                                       | Done           |
 | [CHO-047](chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                            | A 422 never names a key the caller chose (EPC-022, from STY-090's security review)                                                  | Proposed       |
-| [CHO-048](chores/CHO-048-criteria-and-reviews-weigh-code-about-code.md)                                          | The story template and two review skills weigh code about code (from STY-101's grilling)                                            | Proposed       |
+| [CHO-048](_archive/chores/CHO-048-criteria-and-reviews-weigh-code-about-code.md)                                 | The story template and two review skills weigh code about code (from STY-101's grilling)                                            | Done           |
 | [CHO-049](chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                           | Every route's wait on the database has a deadline (EPC-022, from STY-101's grilling)                                                | Placeholder    |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.

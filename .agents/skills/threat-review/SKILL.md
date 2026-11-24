@@ -103,8 +103,10 @@ secrets, tokens and keys unread, values and metadata alike.
   owner's bypass, an approver, a deploy identity), list every holder of the credential
   that role carries, agent sessions and machines included, and show what binds each.
 - **Proportionality.** A control's cost against this tool's scale (a handful of editors
-  per tenant): a cheaper control with the same assurance is a finding; a missing
-  expensive one with no realistic actor is not.
+  per tenant), counting the code the repository must then own and what an operator can
+  no longer see or diagnose, not only the cost of building it: a cheaper control with
+  the same assurance is a finding; a missing expensive one with no realistic actor is
+  not.
 
 ## Area lenses
 

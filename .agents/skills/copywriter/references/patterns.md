@@ -368,7 +368,7 @@ built from `common.duration.*` plurals, never concatenated.
 
 ## Write hold
 
-**Shape:** a dialog over the whole app when a write can't be read back (DEF-015). The
+**Shape:** a dialog over the whole app when a write can't be read back. The
 title says what was written, as fact when the write answered ("Your changes were
 published"), as possible when its answer was lost ("…may have been published"). One
 line says why the page may be wrong and that the reader must refresh first; the only

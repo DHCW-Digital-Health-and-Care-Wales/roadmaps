@@ -2,10 +2,11 @@
 
 Read the `writing-for-agents` skill before changing agent guides or skills.
 This policy governs `AGENTS.md` (and the `CLAUDE.md` that only imports it),
-agent definitions under `.claude/agents/` and skill instructions under
-`.agents/skills/`. `build/agent-guides.test.ts` checks the root guide's size
-and that no `AGENTS.md` outside the top-level `docs/` cites a record ID; review judges the
-rest.
+agent definitions under `.claude/agents/`, skill instructions under
+`.agents/skills/` and `apps/typescript-react-conventions.md`.
+`build/agent-guides.test.ts` checks the root guide's size and that no guide file
+but the docs guide, which defines the record ID format, cites a record ID, bar the
+format example it lists; review judges the rest.
 
 Root guides are read at onboarding; nested guides and skills are read when
 their scope or trigger applies. Each extra line consumes attention on every
@@ -112,8 +113,9 @@ Read the `AGENTS.md` along each changed path's directory ancestry, including
 referenced cross-area conventions; explicit conditional navigation avoids
 loading unrelated rules.
 
-A delivery PR changes a **guide file** (an `AGENTS.md` or `CLAUDE.md`, or
-any file under `.agents/skills/` or `.claude/agents/`) in two cases:
+A delivery PR changes a **guide file** (an `AGENTS.md` or `CLAUDE.md`,
+`apps/typescript-react-conventions.md`, or any file under `.agents/skills/` or
+`.claude/agents/`) in two cases:
 
 - **The owner asked for the change**: the Summary or acceptance criteria of
   the record it delivers, as they stand on the base branch, or the owner's

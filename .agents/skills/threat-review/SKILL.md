@@ -52,7 +52,7 @@ secrets, tokens and keys unread, values and metadata alike.
    (ADR-007), the database's isolation and
    history (ADR-015), the repository's ruleset (ADR-016), the API stack (ADR-017), sign-in
    and sessions (ADR-018), authorisation (ADR-019), origins and HTTP hardening
-   (ADR-020), with infrastructure-held protections in EPC-023; the `apps/editor/AGENTS.md` rules on
+   (ADR-020), with the protections they leave to the infrastructure; the `apps/editor/AGENTS.md` rules on
    tokens and untrusted data. An accepted ADR's risks, and the exceptions it states (a
    value it lets travel in a URL, a request it exempts from a rule), are the owner's:
    not findings unless the change widens them or makes their statement false.
@@ -135,7 +135,7 @@ Each names a class of defect; the ADR holds the rule it is judged against.
   released, or taken with no release-age wait. In CI's design: a path filter that fails
   open; a gate that passes on a job that never ran; a required check any writer can
   post; a bypass that is the routine path.
-- **Infrastructure** (ADR-020, EPC-023): a grant wider than its job; a
+- **Infrastructure** (ADR-020): a grant wider than its job; a
   long-lived key; a database reachable from outside; an action no log attributes, or
   a log readable by more people than need it; real data outside production.
 - **A design record** (an ADR, epic, analysis or story that records a security

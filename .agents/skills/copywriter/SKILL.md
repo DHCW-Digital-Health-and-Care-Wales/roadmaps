@@ -19,8 +19,8 @@ the same rules in the register _The public site_ sets.
 **Two things carry the rules, and this is only one of them.** The type system
 and the linter hold the mechanics: `pnpm typecheck` fails on a missing or extra
 key and a missing Welsh plural form, and `pnpm lint` rejects literal JSX text
-and literal `aria-label`/`title`/`alt`/`placeholder` attributes
-(`i18next/no-literal-string`). Nothing checks the voice. This file and the
+and configured user-facing attributes (`i18next/no-literal-string` in each app's
+`eslint.config.ts`). Nothing checks the voice. This file and the
 reviewers (`quality-review`) are the only gate on it, so apply it deliberately.
 
 ## The voice, in four lines
@@ -126,8 +126,8 @@ from the shape rather than from a blank line.
 4. `pnpm typecheck` (key parity and plural forms), then `pnpm lint` (no literal
    strings in JSX or attributes; `.ts` files are not covered, so keep copy out
    of them).
-5. Update any Vitest test or Playwright spec asserting a string you changed;
-   E2E locates things by accessible name and visible copy (`apps/editor/tests/e2e/AGENTS.md`).
+5. Update any Vitest test, Playwright spec or ARIA snapshot asserting a string
+   you changed (`apps/editor/tests/e2e/AGENTS.md`, `apps/public-site/AGENTS.md`).
 6. **Welsh is machine-assisted**, and a fluent speaker reads all of `cy.ts`
    before launch (`apps/editor/README.md`, _Languages_). List the Welsh strings you added or
    changed in the PR's Copy section, with any doubt a reviewer raised about

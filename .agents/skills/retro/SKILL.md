@@ -28,16 +28,17 @@ Trace each piece of friction to its cause, checking these categories:
 - **Navigation**: did finding the right file take long? Is there a hidden
   dependency between files that a **navigation pointer** would expose?
 - **Automated checks**: could a type, lint or test check have caught a
-  mistake the agent made? Read the existing config first (`apps/editor/tsconfig*.json`,
-  `apps/editor/eslint.config.ts`, `apps/editor/vite.config.ts`'s `test` block, `apps/editor/playwright.config.ts`,
-  `.github/workflows/ci.yml`): an existing check that is unwired or silently
-  broken is the finding, not a reinvention.
+  mistake the agent made? Read the existing config first (`eslint.base.ts`,
+  each touched app's `tsconfig*.json`, `eslint.config.ts`, `vite.config.ts`'s
+  `test` block and `playwright.config.ts`, `apps/api/pyproject.toml`,
+  `apps/api/tools/`, `.github/workflows/ci.yml`): an existing check that is
+  unwired or silently broken is the finding, not a reinvention.
 - **Coding standards**: did a reviewer miss a mistake? A **mechanical**
   violation (a syntactic pattern, banned API, import shape, file location)
   earns a deterministic check with a regression case. Build it at the highest
-  rung that works: a type error; an existing ESLint rule, or a new
-  `no-restricted-imports` or `no-restricted-syntax` rule in
-  `apps/editor/eslint.config.ts`; a Vitest test; only then a custom script. Put its
+  rung that works: a type error; an existing lint rule, or a new rule in
+  `eslint.base.ts`, an app's `eslint.config.ts` or `apps/api/pyproject.toml`;
+  a unit test; only then a custom script. Put its
   incident and a review date about 90 days out in a comment at its head.
   A slip that is not mechanical goes where the next reader of that code meets
   it: a comment at the site, or nowhere when the code already says it.

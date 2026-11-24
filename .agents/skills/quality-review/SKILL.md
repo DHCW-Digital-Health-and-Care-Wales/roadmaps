@@ -26,13 +26,14 @@ report in the conversation only.
 
 - **Bugs, races, security holes.** List one noticed in passing under "Handed
   off"; never let it displace a quality finding.
-- **Anything a tool enforces.** ESLint (strict type-checked rules, React Hooks,
-  `jsx-a11y`, the per-layer `no-restricted-imports` blocks, the `google` global
-  restriction and `i18next/no-literal-string` in `apps/editor/eslint.config.ts`), Prettier
+- **Anything a tool enforces.** ESLint (`eslint.base.ts`,
+  `apps/editor/eslint.config.ts`, `apps/public-site/eslint.config.ts`), Prettier
   (`pnpm format:check`), TypeScript strict (including `cy.ts` parity with
-  `en.ts`) and `actionlint`. Flag only what the tool cannot see: copy built in
-  `.ts` files, a layer leak through a re-export, an `eslint-disable` with no
-  reason.
+  `en.ts`), `actionlint`, and in `apps/api/` `ruff` (including `TID251` for
+  `ApiError`), `ty`, `import-linter`, `apps/api/tools/check_transactions.py` and
+  100% branch coverage. Flag only what the tool cannot see: copy built in `.ts`
+  files, a layer leak through a re-export, an `eslint-disable` or `# noqa` with
+  no reason.
 - **Taste with no cost.** If you cannot say what it makes easier, cheaper or
   safer for the next reader, drop it.
 
@@ -57,11 +58,12 @@ report in the conversation only.
 3. **Look for** what a linter cannot:
    - **Wrong layer.** Business decisions (what an expired session keeps on
      screen, which kinds are retryable, how a roadmap is derived from a
-     worksheet) in a component or in the wrong adapter; Sheets or Google terms
-     (`sheetId`, worksheet, range, status codes) in `features/`, `components/`
-     or a `Roadmap` field; HTTP outside `infrastructure/`; a route module doing
-     a feature page's job; a feature reaching `app/`; a shared building block
-     in a feature that `components/` or `lib/` should own (or the reverse).
+     worksheet, or API domain logic in a route or repository) in the wrong
+     layer; Sheets or Google terms (`sheetId`, worksheet, range, status codes)
+     in editor `features/`, `components/` or a `Roadmap` field; HTTP outside
+     `infrastructure/`; a route module doing a feature page's or service's job;
+     a feature reaching `app/`; a shared building block in a feature that
+     `components/` or `lib/` should own (or the reverse).
    - **Wrong-direction dependency.** A dynamic import, a lazy `require` or a
      context hop to dodge a cycle: fix the direction, do not just hoist it.
    - **Names that understate.** A flag whose name covers less than its effect;
@@ -104,15 +106,17 @@ report in the conversation only.
      `AppError` kind chosen differently for the same cause in two adapters;
      error text rendered from `message` where a `kind` key exists.
    - **Tests.** Names that state the function rather than the behaviour,
-     copied setup that `renderWithProviders` or a fake already gives, mocks of
-     the unit under test or of what MSW and the fakes cover, assertions on
-     implementation (class names, call counts) rather than role and name,
-     sleeps where fake timers or the clock fit, an adapter without the shared
-     repository contract. A repeated check: a rule's cases asserted above the
-     lowest seam that holds them (the repository contract's cases are not
-     repeats), an E2E assertion its page test already makes, a theme,
-     language or width run that cannot fail alone, or cases differing only in
-     data left as separate tests (the root `AGENTS.md` and the app's guide).
+     copied setup that `renderWithProviders`, a fake or `apps/api/tests/support.py`
+     already gives, mocks of the unit under test or of what MSW, the fakes or
+     `TestClient` cover, assertions on implementation (class names, call counts)
+     rather than role and name, sleeps where fake timers or the clock fit, an
+     adapter without the shared repository contract, or API uvicorn-only
+     behaviour left untested by `apps/api/tests/test_server.py`. A repeated check: a rule's
+     cases asserted above the lowest seam that holds them (the repository
+     contract's cases are not repeats), an E2E assertion its unit/page test
+     already makes, a theme, language or width run that cannot fail alone, or
+     cases differing only in data left as separate tests (the root `AGENTS.md`
+     and the app's guide).
    - **Meta code.** A test or check that would fail on a semantically
      identical rewrite of what it checks (a snapshot of markup, a reordered
      workflow `needs`, a renamed job); a standing test of a tool the

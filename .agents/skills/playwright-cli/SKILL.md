@@ -6,12 +6,15 @@ description: Automate browser interactions, test web pages and work with Playwri
 # Browser Automation with playwright-cli
 
 In this repository, the repo's own guides and `pnpm` win over the upstream examples
-below. The E2E suite and its fakes for Google Identity Services and the Sheets API
-live in `apps/editor/tests/e2e/`; follow `apps/editor/tests/e2e/AGENTS.md` for its commands and conventions,
-and use `pnpm` for project dependencies. Read only the `references/` file a task needs.
+below. The editor's E2E suite and Google fakes live in `apps/editor/tests/e2e/`
+(`apps/editor/tests/e2e/AGENTS.md`); the public site's E2E suite lives in
+`apps/public-site/e2e/` (`apps/public-site/AGENTS.md`). Use `pnpm` for project
+dependencies and read only the `references/` file a task needs.
 
-Drive the app with `pnpm editor:dev` (needs `apps/editor/.env.local`, see `apps/editor/AGENTS.md`) or a
-build served by `pnpm editor:preview`. Real Google sign-in is not scriptable, so fake it as
+Drive the editor with `pnpm editor:dev` (needs `apps/editor/.env.local`, see `apps/editor/AGENTS.md`) or
+`pnpm editor:preview`, and the public site with
+`ROADMAPS_DATA=e2e/fixtures/roadmaps.json pnpm site:build && pnpm site:preview`.
+Real Google sign-in in the editor is not scriptable, so fake it as
 the suite does: `playwright-cli route` or `run-code` with `page.route` for
 `https://accounts.google.com/gsi/client` and `https://sheets.googleapis.com/**`
 (`references/request-mocking.md`), or reuse `apps/editor/tests/e2e/fixtures/fake-gis.ts` and

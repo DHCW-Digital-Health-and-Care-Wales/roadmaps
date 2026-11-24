@@ -1,11 +1,11 @@
 # STY-100: The API traces its requests, and a developer reads them in a local Jaeger
 
 - **Status**: Proposed — acceptance criteria from the owner's STY-100 grilling
-  (2026-11-23); delivered after STY-090
+  (2026-11-23); delivered after STY-101 (D21)
 - **Type**: Feature
 - **Area**: API
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
-- **Depends on**: STY-090 (hard)
+- **Depends on**: STY-090 (hard), STY-101 (hard)
 - **Binding ADRs**: ADR-017 §Operation, §STY-090 amendments; ADR-018's application-log
   allow-list
 - **Suggested model**: Opus — a span filter, a tail drop and a code-level propagator
@@ -202,6 +202,13 @@ file checks join STY-090's Compose test.
   name a request by its route's template (`http.route`), never by the
   path a caller sent (`url.path`); a request matching no route is named by its method
   alone (D13). Gives S4.
+- **D21** (owner, 2026-11-24, STY-101 grilling round 2, STY-101 D13): this story is
+  delivered after STY-101, which simplifies the middleware and route naming it builds
+  on, over tracing first; spans take none of STY-101's log changes (diagnostic codes,
+  messages when local) and keep D15's allow-list. Under STY-101 a request a mount
+  handled is `unmatched`, so its span is named by its method alone (D13), and S5's 413
+  is Starlette's, raised unread or while a route reads the body: still a 4xx, not a span
+  error.
 
 ## Out of scope
 

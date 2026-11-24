@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest"
 import { parse } from "yaml"
 
 /**
- * The API's local database (apps/api/compose.yaml) is reachable only from this machine,
- * and is the image CI's API job tests against, by the same digest.
+ * The API's local database (apps/api/compose.yaml), which CI's API job starts too, is
+ * reachable only from this machine, and its image is pinned by digest.
  */
 const ROOT = join(import.meta.dirname, "..")
 
@@ -21,9 +21,6 @@ function read(path: string): string {
 
 const compose = parse(read("apps/api/compose.yaml")) as {
   services: Record<string, Service>
-}
-const workflow = parse(read(".github/workflows/ci.yml")) as {
-  jobs: Record<string, { services?: Record<string, Service> }>
 }
 const services = Object.values(compose.services)
 
@@ -41,17 +38,15 @@ describe("apps/api/compose.yaml", () => {
     }
   })
 
-  it("pins each image by digest, the one CI's API job tests against", () => {
+  it("pins each image by digest", () => {
     const images = services.map((service) => service.image)
-    const ciImages = Object.values(
-      workflow.jobs["api-verify"]?.services ?? {},
-    ).map((service) => service.image)
 
-    expect(images).toHaveLength(1)
-    expect(images[0]).toMatch(/^postgres:18@sha256:[0-9a-f]{64}$/)
-    expect(
-      ciImages,
-      "Give api-verify's postgres service in .github/workflows/ci.yml the image of apps/api/compose.yaml.",
-    ).toEqual(images)
+    expect(images).not.toEqual([])
+    for (const image of images) {
+      expect(
+        image,
+        "Pin the image as name:tag@sha256:<64 hex digits>.",
+      ).toMatch(/@sha256:[0-9a-f]{64}$/)
+    }
   })
 })

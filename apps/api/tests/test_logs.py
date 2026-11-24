@@ -1,44 +1,42 @@
-"""S7: JSON lines on stdout, allow-listed fields only, tied to the response by its ID."""
+"""JSON lines on stdout, allow-listed fields only, tied to the response by its ID.
 
+An exception's line tells one failure from another by codes and names; only a
+developer's local API writes messages, and uvicorn's information lines with them.
+"""
+
+import contextlib
 import io
 import json
 import logging
-import logging.config
 import sys
 from collections.abc import Callable
 from typing import Any
 
+import psycopg
 import pytest
+from fastapi.responses import PlainTextResponse
 from fastapi.testclient import TestClient
 from httpx2 import Response
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.routing import Route, Router
+from starlette.types import ASGIApp
 
+from roadmaps_api.app import create_app
 from roadmaps_api.database import create_database_engine
-from roadmaps_api.logs import JsonFormatter, StdoutHandler
-from roadmaps_api.settings import MAX_BODY_BYTES, Environment
-from tests.support import PLANTED, database_url, make_settings, serving
-
-
-@pytest.fixture
-def lines(
-    capsys: pytest.CaptureFixture[str],
-    json_logging: None,  # noqa: ARG001 - requested for its configuration
-) -> Lines:
-    return Lines(capsys)
-
-
-class Lines:
-    def __init__(self, capsys: pytest.CaptureFixture[str]) -> None:
-        self._capsys = capsys
-
-    def read(self) -> list[dict[str, Any]]:
-        captured = self._capsys.readouterr()
-        assert captured.err == ""
-        assert PLANTED not in captured.out
-        parsed = [json.loads(line) for line in captured.out.splitlines()]
-        # The test client's own lines, one per request it sends.
-        return [line for line in parsed if line["logger"] != "httpx2"]
+from roadmaps_api.logs import JsonFormatter, StdoutHandler, exception_chain
+from roadmaps_api.settings import Environment, Settings, SettingsError, load_settings
+from tests.support import (
+    DOWN_DATABASE_URL,
+    PLANTED,
+    ConfigureLogging,
+    Lines,
+    database_url,
+    make_settings,
+    mounted_app,
+    serving,
+)
 
 
 def test_an_access_line_holds_the_allow_listed_fields_and_the_response_s_id(
@@ -87,26 +85,6 @@ ROUTES = {
         200,
         "/test/admin/health",
     ),
-    "a mounted app inside an included router": (
-        lambda c: c.get(f"/test/inc/sub/{PLANTED}/health"),
-        200,
-        "unmatched",
-    ),
-    "a route in a mounted app": (
-        lambda c: c.get(f"/test/tenants/{PLANTED}/items/{PLANTED}"),
-        200,
-        "/test/tenants/{tenant}/items/{item_id}",
-    ),
-    "a path a mounted app does not route": (
-        lambda c: c.get(f"/test/tenants/{PLANTED}/{PLANTED}"),
-        404,
-        "unmatched",
-    ),
-    "a mounted app with no routes": (
-        lambda c: c.get(f"/test/raw/{PLANTED}"),
-        200,
-        "/test/raw/{path:path}",
-    ),
     "an unknown path": (lambda c: c.get(f"/{PLANTED}"), 404, "unmatched"),
     "a redirect to the path without its trailing slash": (
         lambda c: c.get(f"/test/items/{PLANTED}/", follow_redirects=False),
@@ -118,17 +96,6 @@ ROUTES = {
         lambda c: c.post(f"/test/echo?{PLANTED}=1", json={}),
         422,
         "/test/echo",
-    ),
-    # Refused before routing, so no route took them.
-    "a body over the limit": (
-        lambda c: c.post("/test/echo", content=b"x" * (MAX_BODY_BYTES + 1)),
-        413,
-        "unmatched",
-    ),
-    "a refused Host": (
-        lambda c: c.get(f"/test/items/{PLANTED}", headers={"Host": "elsewhere.example"}),
-        400,
-        "unmatched",
     ),
     "an unexpected error": (lambda c: c.get("/test/boom"), 500, "/test/boom"),
     "a probe that fails": (lambda c: c.get("/ready"), 503, "/ready"),
@@ -147,6 +114,48 @@ def test_the_access_line_names_the_route_by_its_template_never_the_path(
 
     [access] = [line for line in lines.read() if line.get("message") == "request"]
     assert (access["route"], access["status"]) == (route, status)
+
+
+def plain_app() -> ASGIApp:
+    return PlainTextResponse("raw")
+
+
+def starlette_router() -> ASGIApp:
+    return Router([Route("/items/{item_id}", lambda _request: PlainTextResponse("item"))])
+
+
+# Where an app is mounted, the app, and a path it answers. A mount at the root takes
+# what no route of the API does; the last row's path, under the mount, is the API's own
+# live OpenAPI route's.
+MOUNTS = {
+    "a FastAPI app under a template": (
+        "/tenants/{tenant}",
+        mounted_app,
+        f"/tenants/{PLANTED}/items/1",
+    ),
+    "a FastAPI app at the root": ("/", mounted_app, f"/items/{PLANTED}"),
+    "a Starlette router under a path": ("/sub", starlette_router, f"/sub/items/{PLANTED}"),
+    "a Starlette router at the root": ("/", starlette_router, f"/items/{PLANTED}"),
+    "an app with no routes at the root": ("/", plain_app, f"/items/{PLANTED}"),
+    "an app with no routes, at a path the API routes": (
+        "/raw",
+        plain_app,
+        "/raw/api/v1/openapi.json",
+    ),
+}
+
+
+@pytest.mark.parametrize(("path", "mounted", "request_path"), MOUNTS.values(), ids=MOUNTS)
+def test_a_request_a_mounted_app_handled_is_unmatched(
+    lines: Lines, path: str, mounted: Callable[[], ASGIApp], request_path: str
+) -> None:
+    app = create_app(make_settings(environment=Environment.LOCAL))
+    app.mount(path, mounted())
+    with TestClient(app) as client:
+        assert client.get(request_path).status_code == 200
+
+    [access] = [line for line in lines.read() if line.get("message") == "request"]
+    assert access["route"] == "unmatched"
 
 
 def test_the_access_line_names_the_live_openapi_route(lines: Lines) -> None:
@@ -205,6 +214,8 @@ def test_ready_s_503_logs_a_warning_with_the_code_and_the_exception_s_type(
         "request_id": response.headers["X-Request-ID"],
         "code": "service.not_ready",
         "exception_type": "sqlalchemy.exc.OperationalError",
+        "exception_causes": ["psycopg.OperationalError"],
+        "stack": warning["stack"],
     }
     assert (access["route"], access["status"]) == ("/ready", 503)
 
@@ -219,7 +230,7 @@ def test_a_probe_that_succeeds_writes_no_access_line(lines: Lines) -> None:
 
 def test_another_library_s_message_and_arguments_are_dropped(lines: Lines) -> None:
     logging.getLogger("uvicorn.error").warning(f"Error loading ASGI app. {PLANTED}")  # noqa: G004
-    logging.getLogger("uvicorn.error").info("Started %s", PLANTED)
+    logging.getLogger("sqlalchemy.pool").warning("Lost %s", PLANTED)
     logging.getLogger("roadmaps_api.anything").info("event %s", PLANTED)
     logging.getLogger("roadmaps_api").info(ValueError(PLANTED))
 
@@ -268,3 +279,217 @@ def test_a_broken_stdout_drops_the_line_without_raising(
 
     monkeypatch.undo()
     assert capsys.readouterr().err == ""
+
+
+VALID = {"ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL, "ROADMAPS_ALLOWED_HOSTS": "localhost"}
+
+
+def settings_for(environ: dict[str, str]) -> Settings:
+    return load_settings({**VALID, **environ})
+
+
+def logged_lines(capsys: pytest.CaptureFixture[str]) -> list[dict[str, Any]]:
+    return [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+
+
+def log_failure(fail: Callable[[], object]) -> None:
+    try:
+        fail()
+    except Exception:
+        logging.getLogger("roadmaps_api.test").exception("failed")
+
+
+# Each environment, or `None` for a line written before the settings are read, and
+# whether its lines carry messages.
+ENVIRONMENTS = {
+    "local": ({"ROADMAPS_ENV": "local"}, True),
+    "test": ({"ROADMAPS_ENV": "test"}, False),
+    "production": ({"ROADMAPS_ENV": "production"}, False),
+    "unset": ({}, False),
+    "invalid": ({"ROADMAPS_ENV": "staging"}, False),
+    "local on a Cloud Run service": ({"ROADMAPS_ENV": "local", "K_SERVICE": "api"}, False),
+    "local in a Cloud Run job": ({"ROADMAPS_ENV": "local", "CLOUD_RUN_JOB": "job"}, False),
+    "local in a Cloud Run worker pool": (
+        {"ROADMAPS_ENV": "local", "CLOUD_RUN_WORKER_POOL": "pool"},
+        False,
+    ),
+    "before the settings are read": (None, False),
+}
+
+
+@pytest.mark.parametrize(("environ", "writes"), ENVIRONMENTS.values(), ids=ENVIRONMENTS)
+def test_only_a_developer_s_local_api_writes_messages(
+    configure_logging: ConfigureLogging,
+    capsys: pytest.CaptureFixture[str],
+    environ: dict[str, str] | None,
+    writes: bool,  # noqa: FBT001 - a table's column
+) -> None:
+    settings = None
+    if environ is not None:
+        with contextlib.suppress(SettingsError):
+            settings = settings_for(environ)
+    configure_logging(settings)
+    capsys.readouterr()
+
+    logging.getLogger("uvicorn.error").warning("Lost %s", PLANTED)
+    log_failure(lambda: int(PLANTED))
+
+    captured = capsys.readouterr()
+    foreign, failure = [json.loads(line) for line in captured.out.splitlines()]
+    assert failure["exception_type"] == "builtins.ValueError"
+    if writes:
+        assert foreign["message"] == f"Lost {PLANTED}"
+        assert PLANTED in failure["exception_message"]
+    else:
+        assert "message" not in foreign
+        assert "exception_message" not in failure
+        assert PLANTED not in captured.out + captured.err
+    # uvicorn's information lines are written only where their text is.
+    assert logging.getLogger("uvicorn.error").isEnabledFor(logging.INFO) is writes
+    assert logging.getLogger("uvicorn").isEnabledFor(logging.WARNING)
+
+
+def test_a_message_that_cannot_be_formatted_is_left_out(
+    configure_logging: ConfigureLogging, capsys: pytest.CaptureFixture[str]
+) -> None:
+    class UnprintableError(Exception):
+        def __str__(self) -> str:
+            raise RuntimeError
+
+    configure_logging(settings_for({"ROADMAPS_ENV": "local"}))
+
+    logging.getLogger("uvicorn.error").warning("%s and %s", "one")  # noqa: PLE1206 - the case
+    log_failure(lambda: (_ for _ in ()).throw(UnprintableError()))
+
+    foreign, failure = logged_lines(capsys)
+    assert foreign["message"] is None
+    assert failure["exception_message"] is None
+
+
+def connect(url: str) -> None:
+    engine = create_database_engine(url)
+    try:
+        with engine.connect():
+            pass
+    finally:
+        engine.dispose()
+
+
+def refused() -> None:
+    connect(DOWN_DATABASE_URL)
+
+
+def wrong_password() -> None:
+    connect(make_url(database_url()).set(password=PLANTED).render_as_string(hide_password=False))
+
+
+def connect_timeout() -> None:
+    raise psycopg.errors.ConnectionTimeout
+
+
+def cancelled_statement() -> None:
+    engine = create_database_engine(database_url())
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SET statement_timeout = '10ms'"))
+            connection.execute(text("SELECT pg_sleep(1)"))
+    finally:
+        engine.dispose()
+
+
+# Each failure, its type, the types it was raised from and its SQLSTATE.
+FAILURES = {
+    "a refused connection": (
+        refused,
+        "sqlalchemy.exc.OperationalError",
+        ["psycopg.OperationalError"],
+        None,
+    ),
+    "a wrong password": (
+        wrong_password,
+        "sqlalchemy.exc.OperationalError",
+        ["psycopg.OperationalError"],
+        None,
+    ),
+    "a connect timeout": (connect_timeout, "psycopg.errors.ConnectionTimeout", [], None),
+    "a cancelled statement": (
+        cancelled_statement,
+        "sqlalchemy.exc.OperationalError",
+        ["psycopg.errors.QueryCanceled"],
+        "57014",
+    ),
+}
+
+
+@pytest.mark.parametrize(("fail", "kind", "causes", "sqlstate"), FAILURES.values(), ids=FAILURES)
+def test_an_exception_s_line_tells_failures_apart_by_codes(
+    lines: Lines,
+    fail: Callable[[], None],
+    kind: str,
+    causes: list[str],
+    sqlstate: str | None,
+) -> None:
+    log_failure(fail)
+
+    [line] = lines.read()
+    assert (line["exception_type"], line["exception_causes"]) == (kind, causes)
+    assert line.get("sqlstate") == sqlstate
+    assert "constraint_name" not in line
+    assert line["stack"]
+
+
+def test_a_refused_connection_and_a_wrong_password_differ_only_in_a_local_log(
+    configure_logging: ConfigureLogging, capsys: pytest.CaptureFixture[str]
+) -> None:
+    configure_logging(settings_for({"ROADMAPS_ENV": "local"}))
+
+    log_failure(refused)
+    log_failure(wrong_password)
+
+    refusal, password = logged_lines(capsys)
+    assert refusal["exception_causes"] == password["exception_causes"]
+    assert refusal["exception_message"] != password["exception_message"]
+
+
+@pytest.mark.parametrize("environment", ["test", "production"])
+def test_a_unique_violation_logs_its_sqlstate_and_constraint_never_the_value(
+    configure_logging: ConfigureLogging, capsys: pytest.CaptureFixture[str], environment: str
+) -> None:
+    configure_logging(settings_for({"ROADMAPS_ENV": environment}))
+    engine = create_database_engine(database_url())
+    try:
+        with engine.connect() as connection:
+            connection.execute(
+                text("CREATE TABLE planted (value text CONSTRAINT planted_value_key UNIQUE)")
+            )
+            try:
+                insert = text("INSERT INTO planted VALUES (:value)")
+                log_failure(
+                    lambda: [connection.execute(insert, {"value": PLANTED}) for _ in range(2)]
+                )
+                connection.rollback()
+            finally:
+                connection.execute(text("DROP TABLE IF EXISTS planted"))
+                connection.commit()
+    finally:
+        engine.dispose()
+
+    captured = capsys.readouterr()
+    [line] = [json.loads(text) for text in captured.out.splitlines()]
+    assert line["exception_causes"] == ["psycopg.errors.UniqueViolation"]
+    assert (line["sqlstate"], line["constraint_name"]) == ("23505", "planted_value_key")
+    assert PLANTED not in captured.out + captured.err
+
+
+def test_the_chain_follows_each_cause_then_context_stopping_at_a_repeat() -> None:
+    cause, context, suppressed = KeyError(), IndexError(), LookupError()
+    raised = ValueError()
+    raised.__cause__ = cause
+    cause.__context__ = context
+    context.__context__ = suppressed
+    context.__suppress_context__ = True
+    looped = TypeError()
+    looped.__context__ = looped
+
+    assert exception_chain(raised) == [raised, cause, context]
+    assert exception_chain(looped) == [looped]

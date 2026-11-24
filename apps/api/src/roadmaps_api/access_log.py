@@ -8,16 +8,16 @@ The route is read from what routing leaves in the request's scope. FastAPI keeps
 template of the route it chose, with every prefix its routers were included under, in
 `scope["fastapi"]["effective_route_context"]` (FastAPI 0.163; not a documented
 interface, so `apps/api/tests/test_logs.py` pins each case and a FastAPI bump that
-changes it fails there); Starlette's own routes are matched against the app's. A mount
-adds its template in front, found by matching the mounts, since routing leaves only
-the concrete prefix in `root_path`.
+changes it fails there); the app's own Starlette routes are matched against the path the
+request arrived with. A request a mounted app handled is `unmatched`, whatever its
+routes, until a story mounts one.
 """
 
 from collections.abc import Sequence
 from http import HTTPMethod
 from typing import Final
 
-from starlette.routing import BaseRoute, Match, Mount, Route
+from starlette.routing import BaseRoute, Match, Route
 from starlette.types import Scope
 
 UNMATCHED: Final = "unmatched"
@@ -34,52 +34,31 @@ def route_template(entry: Scope, routed: Scope) -> str:
     """The template of the route that answered, or `unmatched`.
 
     `entry` is the request's scope before routing, `routed` after it. A request refused
-    before routing (a bad `Host`, a body over the limit), an unknown path and a redirect
-    to the path with or without its trailing slash are `unmatched`; a FastAPI route's
-    405 names the route that takes the path; a mounted app with no routes is its
-    mount's template and `{path:path}`. A request a mount handled where the app's own
-    routes show none (one inside an included router) is `unmatched` too, so no
-    fragment of its path's template stands for the whole.
+    before routing (a `Host` not allowed), an unknown path, a redirect to the path with
+    or without its trailing slash and a request a mounted app handled are `unmatched`; a
+    FastAPI route's 405 names the route that takes the path.
     """
+    # A mounted app, wherever it is mounted, leaves no template FastAPI recorded for the
+    # API, and the path the request arrived with matches no Starlette route of the API's,
+    # which would have taken it first.
     app_routes = getattr(entry.get("app"), "routes", ())
-    mounted = routed.get("root_path", "") != entry.get("root_path", "")
-    mounts = _mounts(app_routes, entry) if mounted else []
-    if mounted and not mounts:
-        return UNMATCHED
-    prefix = "".join(mount.path for mount in mounts)
-    path = _fastapi_template(routed) or _starlette_template(
-        mounts[-1].routes if mounts else app_routes, routed
-    )
-    if path is not None:
-        return prefix + path
-    if mounts and not mounts[-1].routes:
-        return f"{prefix}/{{path:path}}"
-    return UNMATCHED
-
-
-def _mounts(routes: Sequence[BaseRoute], scope: Scope) -> list[Mount]:
-    """The mounts a request passes through, outermost first, as routing finds them."""
-    for route in routes:
-        if isinstance(route, Mount):
-            match, child_scope = route.matches(dict(scope))
-            if match is Match.FULL:
-                return [route, *_mounts(route.routes, {**scope, **child_scope})]
-    return []
+    return _fastapi_template(routed) or _starlette_template(app_routes, entry) or UNMATCHED
 
 
 def _fastapi_template(routed: Scope) -> str | None:
-    """The template FastAPI matched, include prefixes and all."""
+    """The template FastAPI matched for the API's own routes, include prefixes and all.
+
+    Never the scope's `route`, which a mounted app's router sets to a route of its own.
+    """
     fastapi = routed.get("fastapi")
     context = fastapi.get("effective_route_context") if isinstance(fastapi, dict) else None
-    # A mount's own path is only a prefix, never a route's template.
-    route = None if isinstance(routed.get("route"), Mount) else routed.get("route")
-    path = getattr(context, "path", None) or getattr(route, "path", None)
+    path = getattr(context, "path", None)
     return path if isinstance(path, str) else None
 
 
-def _starlette_template(routes: Sequence[BaseRoute], routed: Scope) -> str | None:
+def _starlette_template(routes: Sequence[BaseRoute], entry: Scope) -> str | None:
     """A Starlette `Route`'s template (the live OpenAPI JSON's), which FastAPI does not record."""
     for route in routes:
-        if type(route) is Route and route.matches(dict(routed))[0] is Match.FULL:
+        if type(route) is Route and route.matches(dict(entry))[0] is Match.FULL:
             return route.path
     return None

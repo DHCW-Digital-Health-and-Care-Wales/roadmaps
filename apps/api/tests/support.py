@@ -1,16 +1,18 @@
 """The test app: the API as `create_app` builds it, plus routes that only tests mount.
 
 The probes take no input and never fail unexpectedly, so the 422 and 500 cases need a
-route of their own. The server test runs `create_test_app` under uvicorn.
+route of their own, and the body limit a route that reads no body. The server test runs
+`create_test_app` under uvicorn.
 """
 
+import json
 import os
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from typing import Annotated, Final
+from typing import Annotated, Any, Final
 
-from fastapi import APIRouter, FastAPI, Query
-from fastapi.responses import PlainTextResponse
+import pytest
+from fastapi import APIRouter, FastAPI, Query, Request
 from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
@@ -25,9 +27,27 @@ TEST_HOST: Final = "testserver"
 DOWN_DATABASE_URL: Final = "postgresql+psycopg://roadmaps:roadmaps@127.0.0.1:1/roadmaps"
 PLANTED: Final = "PLANTED-VALUE-7f3a"
 
+# Applies the API's log configuration for the settings (`configure_logging` in conftest).
+type ConfigureLogging = Callable[[Settings | None], None]
+
+
+class Lines:
+    """The JSON lines written on stdout, none holding the planted value."""
+
+    def __init__(self, capsys: pytest.CaptureFixture[str]) -> None:
+        self._capsys = capsys
+
+    def read(self) -> list[dict[str, Any]]:
+        captured = self._capsys.readouterr()
+        assert captured.err == ""
+        assert PLANTED not in captured.out
+        parsed = [json.loads(line) for line in captured.out.splitlines()]
+        # The test client's own lines, one per request it sends.
+        return [line for line in parsed if line["logger"] != "httpx2"]
+
 
 def database_url() -> str:
-    """The test database, which `scripts/api.sh test` or CI's service container gives."""
+    """The test database, the Compose file's, which `scripts/api.sh test` starts."""
     url = os.environ.get("ROADMAPS_TEST_DATABASE_URL")
     if not url:
         msg = "Run the tests with pnpm api:test, which sets ROADMAPS_TEST_DATABASE_URL."
@@ -49,10 +69,17 @@ class Echo(BaseModel):
 
 def add_test_routes(app: FastAPI) -> FastAPI:
     router = APIRouter(prefix="/test")
+    app.state.unread_calls = 0
 
     @router.post("/echo")
     def echo(body: Echo, count: Annotated[int, Query()] = 1) -> dict[str, object]:
         return {"name": body.name, "count": count}
+
+    @router.post("/unread")
+    def unread(request: Request) -> dict[str, str]:
+        """Answers without reading the body, counting each call."""
+        request.app.state.unread_calls += 1
+        return {"status": "ok"}
 
     @router.get("/boom")
     def boom() -> None:
@@ -84,32 +111,21 @@ def add_test_routes(app: FastAPI) -> FastAPI:
     def admin_health() -> dict[str, str]:
         return {"status": "ok"}
 
-    # A sub-app mounted on a router that is itself included, so the app's own routes
-    # show no mount for it.
-    hidden = FastAPI()
-
-    @hidden.get("/health")
-    def hidden_health() -> dict[str, str]:
-        return {"status": "ok"}
-
-    mounting = APIRouter()
-    mounting.mount("/sub/{who}", hidden)
-
     router.include_router(nested)
     router.include_router(admin, prefix="/admin")
-    router.include_router(mounting, prefix="/inc")
     app.include_router(router)
+    return app
 
-    # A mounted app, under a template of its own, and a mounted app with no routes.
-    tenant = FastAPI()
 
-    @tenant.get("/items/{item_id}")
-    def tenant_item(item_id: str) -> dict[str, str]:
+def mounted_app() -> FastAPI:
+    """An app with a route of its own, to mount."""
+    mounted = FastAPI()
+
+    @mounted.get("/items/{item_id}")
+    def mounted_item(item_id: str) -> dict[str, str]:
         return {"item": item_id}
 
-    app.mount("/test/tenants/{tenant}", tenant)
-    app.mount("/test/raw", PlainTextResponse("raw"))
-    return app
+    return mounted
 
 
 @contextmanager

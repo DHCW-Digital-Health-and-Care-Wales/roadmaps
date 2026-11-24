@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from roadmaps_api.database import TIMEOUT_SECONDS, Sessions
 from roadmaps_api.errors import ApiError, ErrorCode
-from roadmaps_api.logs import exception_type
 from roadmaps_api.repositories.readiness import ReadinessRepository
 
 logger = logging.getLogger(__name__)
@@ -41,13 +40,10 @@ class ReadinessService:
             return
         if not isinstance(error, SQLAlchemyError | TimeoutError):
             raise error
-        # The code and the exception's type only: its message names hosts and users.
+        # The line holds the exception's codes and names, and its message, which names
+        # hosts and users, only where the settings allow it (`logs`).
         logger.warning(
-            "readiness.failed",
-            extra={
-                "code": ErrorCode.SERVICE_NOT_READY.value,
-                "exception_type": exception_type(error),
-            },
+            "readiness.failed", exc_info=error, extra={"code": ErrorCode.SERVICE_NOT_READY.value}
         )
         raise ApiError(ErrorCode.SERVICE_NOT_READY) from None
 

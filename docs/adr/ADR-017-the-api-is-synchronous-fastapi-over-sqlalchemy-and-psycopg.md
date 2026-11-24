@@ -3,11 +3,11 @@
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
-  the owner's STY-090 grilling (_STY-090 amendments_) and STY-091 grilling (_STY-091
-  amendments_).
+  the owner's STY-090 grilling (_STY-090 amendments_), STY-091 grilling (_STY-091
+  amendments_) and STY-101 grilling (_STY-101 amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
   STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
-  and the test workers)
+  and the test workers; STY-101: two plain-text refusals, log messages)
 
 ## Context
 
@@ -203,6 +203,19 @@ STY-091 records the agent's decisions that build on them.
   four, each on its own clone of the template.
 - **The seeder follows the first schema story,** which creates `tenants`, rather than
   the migrations alone; the rest of _Operation_'s seeder stands.
+
+### STY-101 amendments
+
+From the owner's STY-101 grilling (2026-11-24, STY-101 D2, D7 and D10); the rest of
+_Errors_ and _Operation_ stands.
+
+- **Two refusals are not the envelope**: Starlette's middleware answers a `Host` the
+  allow-list does not name with a 400 and a body over the limit with a 413, each in its
+  own plain text (ADR-020's _STY-101 amendments_). Neither has a code, so the editor's
+  API adapter maps the two by their status.
+- **JSON logs write an exception's or a third party's message only on a developer's
+  own machine**, as ADR-018's _STY-101 amendments_ bound it; elsewhere uvicorn's
+  loggers write from warning up, since their information lines would hold no text.
 
 ## Consequences
 

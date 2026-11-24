@@ -20,6 +20,10 @@ ENV: Final = "ROADMAPS_ENV"
 DATABASE_URL: Final = "ROADMAPS_DATABASE_URL"
 ALLOWED_HOSTS: Final = "ROADMAPS_ALLOWED_HOSTS"
 
+# Set by Cloud Run in a service, a job and a worker pool: a local environment there still
+# writes no message to the log (ADR-018 _Records and retention_).
+CLOUD_RUN_MARKERS: Final = ("K_SERVICE", "CLOUD_RUN_JOB", "CLOUD_RUN_WORKER_POOL")
+
 DATABASE_URL_SCHEME: Final = "postgresql+psycopg://"
 # ADR-020's request body limit, one value for every route.
 MAX_BODY_BYTES: Final = 1024 * 1024
@@ -36,9 +40,12 @@ class Settings:
     environment: Environment
     # Out of the repr, so it never reaches an error's text.
     database_url: str = field(repr=False)
-    # Host names without a port; `*` and `*.example` forms only in a local environment.
+    # Host names without a port, never a wildcard.
     allowed_hosts: tuple[str, ...]
     max_body_bytes: int = MAX_BODY_BYTES
+    # Whether log lines carry an exception's and a third party's message: only a
+    # developer's own machine, never test, production or Cloud Run (ADR-018).
+    writes_messages: bool = False
 
     @property
     def serves_live_openapi(self) -> bool:
@@ -72,14 +79,19 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         invalid.append(DATABASE_URL)
 
     hosts = tuple(host.strip().lower() for host in environ.get(ALLOWED_HOSTS, "").split(","))
-    wildcard_refused = environment is not Environment.LOCAL and any("*" in host for host in hosts)
-    if not all(hosts) or wildcard_refused:
+    if not all(hosts) or any("*" in host for host in hosts):
         invalid.append(ALLOWED_HOSTS)
 
     if invalid:
         logger.error("settings.invalid", extra={"invalid_settings": invalid})
         raise SettingsError(invalid)
-    return Settings(environment=environment, database_url=database_url, allowed_hosts=hosts)
+    on_cloud_run = any(marker in environ for marker in CLOUD_RUN_MARKERS)
+    return Settings(
+        environment=environment,
+        database_url=database_url,
+        allowed_hosts=hosts,
+        writes_messages=environment is Environment.LOCAL and not on_cloud_run,
+    )
 
 
 def _is_database_url(url: str) -> bool:

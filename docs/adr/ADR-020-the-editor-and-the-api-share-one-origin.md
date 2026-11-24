@@ -2,7 +2,8 @@
 
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   identity and authorisation grilling (2026-11-21); the options chosen are marked ✅.
-- Date: 2026-11-21
+  Amended by the owner's STY-101 grilling (_STY-101 amendments_).
+- Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list)
 
 ## Context
 
@@ -55,9 +56,27 @@ and gave the editor's endpoints a CORS allow-list. Each Cloud Run service has it
 - **The API's own responses** carry `Cache-Control: no-store` on everything that is not
   public (redirects and refusals included), `nosniff`,
   `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` and a
-  same-origin resource policy; a request body limit (middleware, since Starlette sets
-  none); validation errors in ADR-017's envelope without the submitted input; and no
+  same-origin resource policy; a request body limit (Starlette's middleware, _STY-101
+  amendments_); validation errors in ADR-017's envelope without the submitted input; and no
   `/docs` or live OpenAPI route in production, where the committed document serves.
+
+### STY-101 amendments
+
+From the owner's STY-101 grilling (2026-11-24, STY-101 D2, D3 and D17); the rest of
+_The API's own responses_ stands.
+
+- **Starlette's own middleware holds the body limit and the `Host` allow-list**
+  (`create_app` in `apps/api/src/roadmaps_api/app.py`). Their refusals, a 400 for a
+  `Host` the allow-list does not name and a 413 for a body over the limit, are
+  Starlette's plain text, not ADR-017's envelope (its _STY-101 amendments_), and carry
+  the headers above.
+- **The limit bounds what a route reads of a body**: no route gets more than the limit,
+  and the read stops at the message that crosses it, so at most one message past the
+  limit is received. It counts a body only as the route reads it: a declared oversize
+  body to a route that reads none is answered 413 once that route has run, and a
+  streamed one is left unread, with the route's own answer.
+- **The allow-list names no wildcard, in any environment**, and never redirects a bare
+  name to its `www.` host.
 
 ## Consequences
 

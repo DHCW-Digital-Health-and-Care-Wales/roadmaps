@@ -187,25 +187,25 @@ D3–D33 and the _STY-091 amendments_ of ADR-015 and ADR-017:
     `pnpm api:dev` migrates first. STY-091 follows STY-101, and the seeder (STY-093)
     follows the first schema story, which creates `tenants`.
 
-Owner answers of 2026-11-24 (STY-092 grilling and review), recorded in STY-092 D1–D21
-and the _STY-092 amendments_ of ADR-016 and ADR-017:
+Owner answers of 2026-11-24 (STY-092 grilling and review), recorded in STY-092 D1–D18
+(with agent decisions D19–D22 in STY-092) and the _STY-092 amendments_ of ADR-016 and
+ADR-017:
 
 24. **The OpenAPI contract and generated schemas**: camelCase across the whole API JSON
-    contract via `ApiRequestModel` (`validate_by_name=False`, rejecting `snake_case` on
-    inbound bodies and query models; `extra="forbid"` deferred to CHO-047) and
-    `ApiResponseModel` (`validate_by_name=True`); `ErrorCode` and `ErrorResponse` injected
-    into `components.schemas` (served from local `/api/v1/openapi.json` too), with
-    FastAPI's built-in `HTTPValidationError`/`ValidationError` stripped;
-    `apps/api/openapi.json` (exported offline from constant production settings) and raw
+    contract via `ApiRequestModel` (`validate_by_name=False`, never binding `snake_case`
+    on inbound bodies, query models or nested request models; `extra="forbid"` deferred to
+    CHO-047) and `ApiResponseModel` (`validate_by_name=True`); `ErrorCode` and
+    `ErrorResponse` injected into `components.schemas` (served from local
+    `/api/v1/openapi.json` too), with FastAPI's built-in
+    `HTTPValidationError`/`ValidationError` stripped; `apps/api/openapi.json` and raw
     TypeScript in `packages/api-types/src/generated/` (types and `zod/mini` schemas only,
-    no SDK, no build step) both committed, Prettier-ignored and checked for drift in CI;
-    the editor maps the 5 skeleton codes and any non-envelope `400`/`413` onto existing
-    `AppErrorKind`s with a status fallback for edge `401`/`403`/`404`/`429`/`5xx`; ESLint
-    forbids `@roadmaps/api-types` everywhere in `apps/editor/src/` except
-    `src/infrastructure/**`; `knip` checks unused files, exports and dependencies across
-    the workspace in CI's `repository` job; `classify-changes.sh` routes
-    `packages/api-types/*` to `editor` and `api` only (skipping `site` until the public
-    site adopts the API).
+    no SDK, no build step) both committed and checked for drift in CI; the editor maps
+    the 5 skeleton codes and `400`/`413` refusals onto existing `AppErrorKind`s with a
+    status fallback for edge `401`/`403`/`404`/`429`/`5xx`; ESLint forbids
+    `@roadmaps/api-types` everywhere in `apps/editor/src/` except `src/infrastructure/**`;
+    `knip` checks unused files, exports and dependencies across the workspace in CI's
+    `repository` job; `classify-changes.sh` routes `packages/api-types/*` to `editor` and
+    `api` only (skipping `site` until the public site adopts the API).
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._
@@ -246,9 +246,10 @@ with the version before it, which serves while a deploy migrates (STY-091 D11), 
 grants the application's role exactly what its objects need, routines included, since
 `PUBLIC` gets no default grant (D5, D25); the first story
 whose migration inserts rows also makes the test harness put them back after each
-emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestModel` or
-`ApiResponseModel` (strict camelCase wire format) and a story that changes routes or
-`ErrorCode` regenerates `apps/api/openapi.json` and `packages/api-types` (`pnpm api:contract`).
+emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestModel`
+(including nested request models, never binding `snake_case`) or `ApiResponseModel`
+(camelCase wire format) and a story that changes routes or `ErrorCode` regenerates
+`apps/api/openapi.json` and `packages/api-types` (`pnpm api:contract`).
 
 ## Stories
 

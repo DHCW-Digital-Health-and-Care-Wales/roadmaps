@@ -42,12 +42,14 @@ runtime code changes.
 (`alias_generator=to_camel`, `serialize_by_alias=True`, `validate_by_alias=True`,
 `validate_by_name=True`, so Python builds responses in `snake_case` while serialising
 `camelCase`) and `ApiRequestModel` (`alias_generator=to_camel`, `serialize_by_alias=True`,
-`validate_by_alias=True`, `validate_by_name=False`, rejecting `snake_case` on inbound JSON
-bodies and `Annotated[Model, Query()]` query models, with `extra="forbid"` deferred to
-CHO-047 and the first request-body story); plain function query parameters do not pass
-through `ApiRequestModel`, so multi-word query parameters use `Annotated[Model, Query()]`
-or an explicit `alias`, and `ApiError.params` keeps camelCase keys by convention and tests
-(D1, D13, D17)
+`validate_by_alias=True`, `validate_by_name=False`, which never binds `snake_case` keys on
+inbound JSON bodies or `Annotated[Model, Query()]` query models: a required multi-word
+field answers 422 `missing` at its camelCase alias, while an optional/defaulted field
+ignores `snake_case` like any unknown key and keeps its default until `extra="forbid"` is
+enabled alongside CHO-047 on the first request-body or query-model story); every model
+reachable from a request, nested models included, inherits `ApiRequestModel`, plain
+function query parameters use `Annotated[Model, Query()]` or an explicit `alias`, and
+`ApiError.params` keeps camelCase keys by convention and tests (D1, D13, D17, D22)
 **And** `components.schemas` includes `ErrorCode`, enumerating every value of
 `roadmaps_api.errors.ErrorCode`, and `ErrorResponse` (`{detail, code, params}` with
 `params` typed as a free-form object), while FastAPI's default `HTTPValidationError` and
@@ -63,8 +65,8 @@ produces, and `/health` and `/ready` remain excluded from `paths`
 **Then** `pnpm api:openapi` builds the app from one constant production-rule `Settings`
 (credential-free placeholder database URL, fixed hosts, never reading `os.environ`) and
 writes deterministic JSON to `apps/api/openapi.json` from a tool under `apps/api/tools/`
-(covered under 100% branch coverage), producing identical output even when
-`ROADMAPS_ENV=local` is set in the shell (D3, D14, D21)
+(covered under 100% branch coverage), succeeding with every `ROADMAPS_*` variable unset
+and producing identical output under `ROADMAPS_ENV=local` (D3, D14, D21, D22)
 **And** `pnpm api:openapi:check` passes when `apps/api/openapi.json` matches `app.openapi()`
 and fails when any route or `ErrorCode` diverges, running in CI's `api-verify` job (D8)
 
@@ -128,8 +130,8 @@ are added (D5)
 block so per-layer flat-config blocks never override it (D6, D20)
 **And** a standing ESLint test proves the boundary rejects forbidden imports across every
 non-infrastructure folder (`domain/`, `features/`, `components/`, `app/`, `routes/`,
-`i18n/`, `lib/`, `test/`, `styles/`) and `src/` root files (`src/main.tsx`), including
-relative-path imports, while allowing `src/infrastructure/` (D16, D20)
+`i18n/`, `lib/`, `test/`, `styles/`) and a `src/` root file (`src/vite-env.d.ts`),
+including relative-path imports, while allowing `src/infrastructure/` (D16, D20, D22)
 
 ### S7: `knip` checks unused files, exports and dependencies across the workspace
 
@@ -165,23 +167,25 @@ D14)
 `apps/editor/AGENTS.md`, root `AGENTS.md`, `README.md`,
 `docs/operations/replacing-google-sheets.md` and
 `.agents/skills/implement-story/references/validation.md` are read
-**Then** they record `ApiRequestModel` and `ApiResponseModel`'s camelCase contract,
-`packages/api-types` and its import boundary, `knip`, and the contract generation and
-drift-check commands and pre-PR gate steps
+**Then** they record `ApiRequestModel` (including nested models reachable from a request)
+and `ApiResponseModel`'s camelCase contract, `packages/api-types` and its import boundary,
+`knip`, and the contract generation and drift-check commands and pre-PR gate steps
 
 ## Tests
 
-Unit tests hold S1 (`ApiRequestModel` rejecting `snake_case` body and query keys with 422,
-`ApiResponseModel` building from `snake_case` and serialising `camelCase`, `app.openapi()`
+Unit tests hold S1 (`ApiRequestModel` never binding `snake_case` on body and
+`Annotated[Model, Query()]` query models — 422 `missing` on a required field and 200 with
+the default retained on an optional field, plus a nested `ApiRequestModel` child;
+`ApiResponseModel` building from `snake_case` and serialising `camelCase`; `app.openapi()`
 including `ErrorCode` and `ErrorResponse` while stripping `HTTPValidationError` and
 `ValidationError` on a validating test route), S2 (the export and drift-check tool under
-`apps/api/tools/`, including invariance under `ROADMAPS_ENV=local`, at 100% branch
-coverage), S3 (full-directory `packages/api-types` drift check covering added, changed
-and removed files), S5 (one table-driven suite asserting both kind and retryability for
-every known `ErrorCode`, plain-text `400`/`413`, HTML proxy `413`, edge
+`apps/api/tools/`, with every `ROADMAPS_*` variable unset and under `ROADMAPS_ENV=local`,
+at 100% branch coverage), S3 (full-directory `packages/api-types` drift check covering
+added, changed and removed files), S5 (one table-driven suite asserting both kind and
+retryability for every known `ErrorCode`, plain-text `400`/`413`, HTML proxy `413`, edge
 `401`/`403`/`404`/`429`/`5xx`, malformed JSON, unknown `ErrorCode`, and non-2xx outside
 `4xx`/`5xx`), S6 (a standing ESLint wiring test across every non-infrastructure folder,
-`src/main.tsx`, relative-path imports and `src/infrastructure/`), and S8
+`src/vite-env.d.ts`, relative-path imports and `src/infrastructure/`), and S8
 (`scripts/ci/classify-changes.test.ts` rows for `packages/api-types/*` and an unknown
 `packages/<other>/…`). Per CHO-048, S5's compile-time failure of `pnpm editor:typecheck`
 on an unmapped `ErrorCode` and S7's `knip` detection of a planted unused export/file are
@@ -260,7 +264,8 @@ held by observed planted-violation runs in Scenario evidence.
   `Annotated[Model, Query()]` query models), over one `ApiModel` base that accepted
   undocumented `snake_case` spellings on the wire (which risked Cloud CDN cache-key
   discrepancies on public-read query parameters); `extra="forbid"` stays deferred to
-  CHO-047 and the first request-body story (CHO-047 D2). Refines D1, D13. Changes S1.
+  CHO-047 and the first request-body story (CHO-047 D2). Refines D1, D13; refined by D22.
+  Changes S1.
 - **D18** (owner, 2026-11-24, review question R2, security review): strip FastAPI's
   built-in `HTTPValidationError` and `ValidationError` schemas in `app.openapi()` and
   point generated 422 response refs to `ErrorResponse`, over leaving FastAPI's default
@@ -282,7 +287,16 @@ held by observed planted-violation runs in Scenario evidence.
   from one constant production-rule `Settings` (never reading `os.environ`, tested under
   `ROADMAPS_ENV=local`), compare the entire generated directory in `api-types:check`
   (added, changed and removed files), and keep an unknown `packages/<other>/…` fall-through
-  row in `classify-changes.test.ts`. Changes S2, S3, S8.
+  row in `classify-changes.test.ts`. Refined by D22. Changes S2, S3, S8.
+- **D22** (agent, 2026-11-24, after the review cap, round 2 re-checks): narrow S1/Tests
+  to Pydantic's actual `validate_by_name=False` behaviour without `extra="forbid"`
+  (required multi-word fields return 422 `missing` at their camelCase alias; optional
+  fields ignore `snake_case` and keep their default until CHO-047 enables `extra="forbid"`
+  on the first request-body or query-model story); require nested models reachable from a
+  request to inherit `ApiRequestModel` too; test S2 export with every `ROADMAPS_*` unset;
+  replace nonexistent `src/main.tsx` with `src/vite-env.d.ts` in S6/Tests (the editor's
+  entry is `src/app/main.tsx`, and `projectService: true` rejects nonexistent paths).
+  Changes S1, S2, S6, Tests.
 
 ## Starting point
 

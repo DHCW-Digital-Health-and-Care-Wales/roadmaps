@@ -1,5 +1,6 @@
-import { readdirSync, readFileSync } from "node:fs"
-import { basename, extname, join, relative } from "node:path"
+import { execFileSync } from "node:child_process"
+import { existsSync, readFileSync } from "node:fs"
+import { basename, extname, join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
@@ -12,24 +13,22 @@ import { describe, expect, it } from "vitest"
 const ROOT = join(import.meta.dirname, "..")
 const ROOT_GUIDE_WORD_BUDGET = 1200
 
-const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist"])
-/** The top-level `docs/` defines the record ID format, so its guide is exempt. */
-const RECORDS_GUIDE_DIRECTORY = join(ROOT, "docs")
-
 /**
  * Every guide file the policy names (docs/operations/authoring-agent-instructions.md):
  * an `AGENTS.md` or `CLAUDE.md` anywhere, each file under these directories, and these
  * files, which the app guides tell every agent to follow.
  */
-const GUIDE_DIRECTORIES = [".agents/skills", ".claude/agents"]
-const GUIDE_FILES = ["apps/typescript-react-conventions.md"]
+const GUIDE_DIRECTORIES = [".agents/skills/", ".claude/agents/"]
+const GUIDE_FILES = new Set(["apps/typescript-react-conventions.md"])
 const GUIDE_NAMES = new Set(["AGENTS.md", "CLAUDE.md"])
 const BINARY_EXTENSIONS = new Set([".png"])
+/** `docs/` defines the record ID format, so its own guide is exempt, and no other. */
+const RECORDS_GUIDES = new Set(["docs/AGENTS.md", "docs/CLAUDE.md"])
 
 /**
- * A record ID a guide shows as an example of the format, not as a citation of a record:
- * the guide, then the IDs it may show. A test below fails when the example goes, so the
- * list cannot outlive it.
+ * A record ID a guide shows once as an example of the format, not as a citation of a
+ * record: the guide, then the IDs it may show. A test below fails when the example goes,
+ * so the list cannot outlive it.
  */
 const FORMAT_EXAMPLES: Readonly<Record<string, readonly string[]>> = {
   ".agents/skills/implement-story/references/pull-requests.md": ["STY-010"],
@@ -46,43 +45,40 @@ function read(path: string): string {
   return readFileSync(join(ROOT, path), "utf8")
 }
 
-function listFiles(
-  directory: string,
-  isSkipped: (path: string) => boolean,
-): string[] {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name)
-    if (entry.isDirectory()) {
-      return isSkipped(path) ? [] : listFiles(path, isSkipped)
-    }
-    return [relative(ROOT, path)]
-  })
+/** The repository's files by Git, so a guide in a dot-directory or under `docs/` counts. */
+function listRepositoryFiles(): string[] {
+  const listing = execFileSync(
+    "git",
+    ["ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+    { cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  )
+  return listing
+    .split("\0")
+    .filter((path) => path !== "" && existsSync(join(ROOT, path)))
 }
 
-function findGuides(): string[] {
-  const guideNamed = listFiles(
-    ROOT,
+function selectGuides(paths: readonly string[]): string[] {
+  return paths.filter(
     (path) =>
-      basename(path).startsWith(".") ||
-      SKIPPED_DIRECTORIES.has(basename(path)) ||
-      path === RECORDS_GUIDE_DIRECTORY,
-  ).filter((path) => GUIDE_NAMES.has(basename(path)))
-  const guideDirectories = GUIDE_DIRECTORIES.flatMap((directory) =>
-    listFiles(join(ROOT, directory), (path) =>
-      SKIPPED_DIRECTORIES.has(basename(path)),
-    ),
-  ).filter((path) => !BINARY_EXTENSIONS.has(extname(path)))
-  return [...guideNamed, ...guideDirectories, ...GUIDE_FILES]
-}
-
-function citedRecordIds(path: string): string[] {
-  const examples = FORMAT_EXAMPLES[path] ?? []
-  return (read(path).match(RECORD_ID) ?? []).filter(
-    (id) => !examples.includes(id),
+      !RECORDS_GUIDES.has(path) &&
+      !BINARY_EXTENSIONS.has(extname(path)) &&
+      (GUIDE_NAMES.has(basename(path)) ||
+        GUIDE_FILES.has(path) ||
+        GUIDE_DIRECTORIES.some((directory) => path.startsWith(directory))),
   )
 }
 
-const guides = findGuides()
+/** Each example is exempt once: a second citation of its ID in the file still fails. */
+function citedRecordIds(path: string): string[] {
+  const cited: string[] = [...(read(path).match(RECORD_ID) ?? [])]
+  for (const example of FORMAT_EXAMPLES[path] ?? []) {
+    const index = cited.indexOf(example)
+    if (index !== -1) cited.splice(index, 1)
+  }
+  return cited
+}
+
+const guides = selectGuides(listRepositoryFiles())
 
 describe("agent guides", () => {
   it(`keeps the root AGENTS.md within ${String(ROOT_GUIDE_WORD_BUDGET)} words`, () => {
@@ -107,22 +103,36 @@ describe("agent guides", () => {
   })
 
   it.each([
-    "AGENTS.md",
-    "apps/editor/AGENTS.md",
-    "apps/typescript-react-conventions.md",
-    ".agents/skills/threat-review/SKILL.md",
-    ".agents/skills/implement-story/references/pull-requests.md",
-    ".claude/agents/code-reviewer.md",
-  ])("reads the guide file %s", (path) => {
-    expect(guides).toContain(path)
+    ["AGENTS.md", true],
+    ["apps/editor/AGENTS.md", true],
+    ["apps/editor/CLAUDE.md", true],
+    [".github/AGENTS.md", true],
+    ["docs/adr/AGENTS.md", true],
+    ["apps/typescript-react-conventions.md", true],
+    [".agents/skills/threat-review/SKILL.md", true],
+    [".agents/skills/implement-story/references/pull-requests.md", true],
+    [".claude/agents/code-reviewer.md", true],
+    ["docs/AGENTS.md", false],
+    ["docs/CLAUDE.md", false],
+    ["docs/backlog/README.md", false],
+    [".claude/skills", false],
+    [".agents/skills/shadcn/assets/shadcn.png", false],
+    ["apps/editor/src/main.tsx", false],
+  ])("reads %s as a guide file: %s", (path, isGuide) => {
+    expect(selectGuides([path]).length === 1).toBe(isGuide)
   })
 
-  it.each(["docs/AGENTS.md", ".agents/skills/shadcn/assets/shadcn.png"])(
-    "leaves %s unread",
-    (path) => {
-      expect(guides).not.toContain(path)
-    },
-  )
+  it("reads the repository's guides, skills and agent definitions", () => {
+    expect(guides).toEqual(
+      expect.arrayContaining([
+        "AGENTS.md",
+        "apps/editor/AGENTS.md",
+        "apps/typescript-react-conventions.md",
+        ".agents/skills/threat-review/SKILL.md",
+        ".claude/agents/code-reviewer.md",
+      ]),
+    )
+  })
 
   it.each(guides)("%s cites no backlog record IDs", (path) => {
     expect(

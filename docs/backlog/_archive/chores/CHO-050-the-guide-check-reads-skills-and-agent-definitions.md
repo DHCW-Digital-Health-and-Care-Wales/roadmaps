@@ -55,12 +55,16 @@ The example PR title in `pull-requests.md` passes, by an exemption the test stat
   "Epics shouldn't appear in SKILLS etc." → name the controls' future home another way;
   epics are not exempt. Changes: the threat-review fix of the Measurement's verdict.
 - **D2** (agent, 2026-11-24): the example exemption is a per-file list of the IDs a file
-  may show (`FORMAT_EXAMPLES`), over a marker comment in the guide or a whole-file
-  exemption, so a reader sees it beside the pattern and a second ID in the same file still
-  fails. A test fails when the example goes, so the list cannot outlive it.
-- **D3** (agent, 2026-11-24): the check reads every file under `.agents/skills/` and
-  `.claude/agents/` except images, as the policy says "any file", and a `CLAUDE.md` beside
-  a guide, over only Markdown, so a script or a config added there is covered too.
+  may show once (`FORMAT_EXAMPLES`), over a marker comment in the guide or a whole-file
+  exemption, so a reader sees it beside the pattern and a second citation of that ID, or
+  any other ID, in the same file still fails. A test fails when the example goes, so the
+  list cannot outlive it.
+- **D3** (agent, 2026-11-24): the check lists the repository's files through Git
+  (tracked and untracked, ignored files left out) and selects a guide from the path: any
+  `AGENTS.md` or `CLAUDE.md`, any file under `.agents/skills/` or `.claude/agents/` but
+  images, and the conventions file. A directory walk skipped dot-directories and all of
+  `docs/`, so a guide in `.github/` or under `docs/adr/` went unread; only `docs/AGENTS.md`
+  and `docs/CLAUDE.md`, which define the ID format, are exempt.
 
 ## Delivery
 
@@ -82,7 +86,7 @@ fails `pnpm repo:test` naming the file. A deliberate example of the ID format go
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                         |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `build/agent-guides.test.ts` (_reads the guide file %s_ for a skill, a reference, an agent definition and the conventions file; _cites no backlog record IDs_). Observed red before the fixes: it failed on `patterns.md` and `threat-review/SKILL.md`, naming each; the directory list cut to `.agents/skills` fails the agent-definition case |
-| S2       | `build/agent-guides.test.ts` (_cites no backlog record IDs_ passes `pull-requests.md` by `FORMAT_EXAMPLES`; _still shows its format example_ fails if the example goes; the example's ID changed fails both)                                                                                                                                    |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `build/agent-guides.test.ts` (_reads %s as a guide file_ for a skill, a reference, an agent definition, the conventions file, a `CLAUDE.md`, a guide in a dot-directory and one under `docs/`; _cites no backlog record IDs_). Observed red before the fixes: it failed on `patterns.md` and `threat-review/SKILL.md`, naming each. Breaks of the finished test, each failing as intended: an untracked `.github/AGENTS.md` citing a record, `CLAUDE.md` dropped from the names, the docs exemption widened to its directory |
+| S2       | `build/agent-guides.test.ts` (_cites no backlog record IDs_ passes `pull-requests.md` by `FORMAT_EXAMPLES`; _still shows its format example_ fails if the example goes). Observed red by breaks of the finished test: a second `STY-010` in that file fails; the example's ID changed fails both                                                                                                                                                                                                                             |

@@ -14,4 +14,4 @@ The conventions the editor and the public site share (ADR-016), beside each app'
 - **Routing**: the public site keeps its own router (`apps/public-site/src/lib/router.ts`),
   not the editor's TanStack Router: a static site prerendered and served per path, where
   the editor's router runs on hash history with no server rendering (ADR-004). Do not
-  align them (ADR-016, _STY-095 amendments_).
+  align them (ADR-016's amendment on the shared conventions).

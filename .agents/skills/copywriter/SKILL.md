@@ -155,7 +155,7 @@ interface and the fixed text it owns about horizons, sections, categories and
 organisations; roadmap content is sheet data, never catalogue text. The
 working order holds, in this register and with the site's own catalogue shape:
 
-- **Typed objects, read by property** (ADR-008, _STY-096 amendments_):
+- **Typed objects, read by property** (ADR-008's amendments):
   components read `useStrings()`, with no i18n library. A value filled in is a
   typed function (`({ organisation }) => …`), and a count is
   `plural("cy", { … })` with all six Welsh forms, unformatted; `cy.ts` must give

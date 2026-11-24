@@ -63,8 +63,8 @@ The example PR title in `pull-requests.md` passes, by an exemption the test stat
   (tracked and untracked, ignored files left out) and selects a guide from the path: any
   `AGENTS.md` or `CLAUDE.md`, any file under `.agents/skills/` or `.claude/agents/` but
   images, and the conventions file. A directory walk skipped dot-directories and all of
-  `docs/`, so a guide in `.github/` or under `docs/adr/` went unread; only `docs/AGENTS.md`
-  and `docs/CLAUDE.md`, which define the ID format, are exempt.
+  `docs/`, so a guide in `.github/` or under `docs/adr/` went unread; only `docs/AGENTS.md`,
+  which defines the ID format, is exempt.
 
 ## Delivery
 
@@ -79,8 +79,8 @@ The example PR title in `pull-requests.md` passes, by an exemption the test stat
 
 ### Contract for dependents
 
-A new guide file under `.agents/skills/` or `.claude/agents/`, or a record ID in one,
-fails `pnpm repo:test` naming the file. A deliberate example of the ID format goes in
+A record ID in any guide file, one added to the repository later included, fails
+`pnpm repo:test` naming the file. A deliberate example of the ID format goes in
 `FORMAT_EXAMPLES` in `build/agent-guides.test.ts`. The policy's list names
 `apps/typescript-react-conventions.md`.
 

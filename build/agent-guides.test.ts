@@ -23,7 +23,7 @@ const GUIDE_FILES = new Set(["apps/typescript-react-conventions.md"])
 const GUIDE_NAMES = new Set(["AGENTS.md", "CLAUDE.md"])
 const BINARY_EXTENSIONS = new Set([".png"])
 /** `docs/` defines the record ID format, so its own guide is exempt, and no other. */
-const RECORDS_GUIDES = new Set(["docs/AGENTS.md", "docs/CLAUDE.md"])
+const RECORDS_GUIDE = "docs/AGENTS.md"
 
 /**
  * A record ID a guide shows once as an example of the format, not as a citation of a
@@ -60,7 +60,7 @@ function listRepositoryFiles(): string[] {
 function selectGuides(paths: readonly string[]): string[] {
   return paths.filter(
     (path) =>
-      !RECORDS_GUIDES.has(path) &&
+      path !== RECORDS_GUIDE &&
       !BINARY_EXTENSIONS.has(extname(path)) &&
       (GUIDE_NAMES.has(basename(path)) ||
         GUIDE_FILES.has(path) ||
@@ -113,7 +113,7 @@ describe("agent guides", () => {
     [".agents/skills/implement-story/references/pull-requests.md", true],
     [".claude/agents/code-reviewer.md", true],
     ["docs/AGENTS.md", false],
-    ["docs/CLAUDE.md", false],
+    ["docs/CLAUDE.md", true],
     ["docs/backlog/README.md", false],
     [".claude/skills", false],
     [".agents/skills/shadcn/assets/shadcn.png", false],

@@ -6,7 +6,7 @@
   STY-101, from the owner's review of the skeleton, too (owner, 2026-11-24); the other
   API placeholders' acceptance criteria come next
 - **Progress**: 11 of 20 terminal (STY-085 to STY-090, STY-095, CHO-044, STY-096 to
-  STY-098); next selectable: STY-101, after the standalone CHO-048
+  STY-098); next selectable: CHO-048 (standalone), then STY-101
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -159,15 +159,15 @@ STY-100 D5–D15:
     EPC-023's.
 
 Owner answers of 2026-11-24 (review of STY-090 and STY-101 grilling), recorded in
-STY-101 D2–D16:
+STY-101 D2–D19:
 
 22. **The skeleton leans on its framework**: Starlette's body limit and `Host`
-    allow-list, whose two refusals are plain text, the envelope's only exceptions; no
-    wildcard host anywhere; a mounted app's request logged `unmatched`; logs gain an
-    exception's chain of types and a database error's SQLSTATE and constraint name, and
-    a local API alone writes messages; CI's API job uses the Compose database; a test
-    of a tool the repository only configures is an observed run, not a standing test
-    (CHO-048). `/ready`'s thread and 100% branch coverage stay; a deadline for every
+    allow-list, whose two refusals are plain text, the envelope's only exceptions, the
+    limit counting a body as a route reads it; no wildcard host anywhere; a mounted
+    app's request logged `unmatched`; logs gain an exception's chain of types and a
+    database error's SQLSTATE and constraint name, and only a local API off Cloud Run
+    writes messages; CI's API job uses the Compose database; a tool the repository only
+    configures is proved by an observed run, not a standing test (CHO-048). `/ready`'s thread and 100% branch coverage stay; a deadline for every
     route's database wait is CHO-049.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
@@ -198,7 +198,9 @@ audited weekly without a change to the audit, and uv takes a 7-day `exclude-newe
 ### The API's conventions
 
 Every API story follows ADR-017's layering, error envelope and test harness, with its
-routes under `/api/v1` (ADR-017 _STY-090 amendments_). A story
+routes under `/api/v1` (ADR-017 _STY-090 amendments_). From STY-101, two refusals are
+outside the envelope, Starlette's plain-text 400 for an unlisted `Host` and 413 for an
+oversize body, and the editor's API adapter maps them by status (STY-101 D2). A story
 that adds an error code maps it in the editor's API adapter (ADR-017 _Errors_), with
 copy in English and Welsh when it needs a new `AppError` kind, and adds factories to
 the seeder for any table it creates.
@@ -224,7 +226,7 @@ the seeder for any table it creates.
 | STY-098 | [The editor marks English in place of Welsh](../_archive/EPC-022-monorepo-and-backend-foundation/STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)             | Domain + Features/UI       | STY-097     | ✅    |
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                | STY-098     |       |
 | STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                                                 | API                        | STY-101     |       |
-| STY-101 | [The skeleton leans on its framework](STY-101-the-api-skeleton-leans-on-its-framework.md)                                                                                 | API + CI/CD + Docs         | STY-090     |       |
+| STY-101 | [The skeleton leans on its framework](STY-101-the-api-skeleton-leans-on-its-framework.md)                                                                                 | API + CI/CD + Docs         | CHO-048     |       |
 | CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                        | —           |       |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                        | —           |       |
 
@@ -251,7 +253,8 @@ D8), then STY-087, whose hooks and gate the API joins. Then two tracks run in
 parallel: the repository's (STY-088 into a protected `main`, then the alignment
 sequence STY-095, CHO-044, STY-096, STY-097 and STY-098, strictly in that order, each
 merged before the next starts, then STY-089 and the STY-099 placeholder) and the API's (STY-090, then STY-091, STY-092 and STY-101 in any order, with
-STY-093 after STY-091 and STY-100 after STY-101). CHO-031 (supply-chain checks) is done, beside STY-087. The
+STY-093 after STY-091, STY-101 after the standalone CHO-048 and STY-100 after
+STY-101). CHO-031 (supply-chain checks) is done, beside STY-087. The
 threat model comes before
 any identity story (ADR-018); STY-094 follows the invitation story. The schema
 stories follow STY-093, adding their factories; the editor's adapter follows STY-092.

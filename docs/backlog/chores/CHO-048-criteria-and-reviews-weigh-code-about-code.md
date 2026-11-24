@@ -37,12 +37,13 @@ or takes a security finding.
 
 ### S1: A story's criteria prove a configured tool once
 
-**Given** `docs/backlog/_templates/story.md` and `chore.md`
+**Given** `docs/backlog/_templates/story.md`
 **When** an agent writes a scenario that a tool the repository only configures (a
-linter's contract, a framework's middleware) fails a violation
-**Then** the template tells it to hold the scenario by one observed run of a planted
-violation, recorded in Scenario evidence, and to keep a standing test for a check the
-repository wrote (STY-101 D16)
+linter's contract, say) fails a violation
+**Then** the template tells it to hold the tool's own behaviour by one observed run of a
+planted violation, recorded in Scenario evidence, and to keep a standing test for a
+check the repository wrote and for the repository's wiring of a control an ADR relies
+on (STY-101 D16)
 
 ### S2: A rebuilt dependency is a quality finding
 
@@ -50,7 +51,7 @@ repository wrote (STY-101 D16)
 **When** a change hand-writes what an installed dependency provides
 **Then** the skill names it a finding unless the site states what the dependency cannot
 do, and its _Meta code_ bullet also names a standing test of a tool the repository did
-not write (STY-101 D16)
+not write, the wiring of a control an ADR relies on excepted (STY-101 D16)
 
 ### S3: A control's operating cost counts
 
@@ -75,6 +76,10 @@ none cites a record ID or an incident, and the root `AGENTS.md` is unchanged
 - **D2** (agent, 2026-11-24): no ratio or line-count gate and no root `AGENTS.md` line,
   since each rule governs one workflow and a gate on proportions is more code about
   code.
+- **D3** (agent, 2026-11-24, security review): a tool's own behaviour is proved once,
+  but the repository's wiring of a control an ADR relies on (which hosts, which limit,
+  which order) keeps its standing test, so the new rule retires no test of a guard.
+  Changes S1, S2.
 
 ## Out of scope
 

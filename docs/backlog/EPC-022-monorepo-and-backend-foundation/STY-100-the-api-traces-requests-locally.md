@@ -206,9 +206,10 @@ file checks join STY-090's Compose test.
   delivered after STY-101, which simplifies the middleware and route naming it builds
   on, over tracing first; spans take none of STY-101's log changes (diagnostic codes,
   messages when local) and keep D15's allow-list. Under STY-101 a request a mount
-  handled is `unmatched`, so its span is named by its method alone (D13), and S5's 413
-  is Starlette's, raised unread or while a route reads the body: still a 4xx, not a span
-  error.
+  handled is `unmatched`, so its span is named by its method alone (D13). S5's 413
+  is Starlette's and not always raised before routing (STY-101 D17): it arises while a
+  route reads the body, or after a route that reads none has run. It is still a 4xx and
+  not a span error, which S5's test shows for the exception that carries it.
 
 ## Out of scope
 

@@ -9,7 +9,8 @@
   `product-roadmaps` protected as `main` is; STY-095: a shared TypeScript base, the
   shared conventions file, one package per job; STY-096: the public site's text without
   i18next; STY-089: where shared config, data and code live; CHO-045 and CHO-046: the
-  ESLint base's focus handlers and one owner per React rule)
+  ESLint base's focus handlers and one owner per React rule; STY-092: workspace-wide
+  knip and `packages/api-types` CI routing)
 
 ## Context
 
@@ -216,6 +217,21 @@ CHO-045 D1, CHO-046 D1). The ESLint base still takes the stricter setting of eac
 - **react-hooks owns each React rule it and `@eslint-react` both run**, so a finding
   has one rule name and React's own exemptions; `eslint.base.ts` turns off
   `@eslint-react`'s copies (`ownedByReactHooks`).
+
+### STY-092 amendments
+
+From the owner's STY-092 grilling (2026-11-24, STY-092 D7, D8, D10, D12 and D14); the
+rest of _Workspace tooling_ and _CI_ stands.
+
+- **`knip` checks unused files, exports and dependencies across the whole pnpm
+  workspace** (`apps/api` ignored) in CI's `repository` job, exempting
+  `packages/api-types/src/generated/**` from unused-export checks so API stories can land
+  ahead of editor consumers.
+- **`packages/api-types/*` routes to `editor` and `api` only** in
+  `scripts/ci/classify-changes.sh` (`site=false` until the public site adopts the API).
+  CI's `repository` job runs `knip`, `@roadmaps/api-types` typecheck and lint, and
+  generated-schema drift; `api-verify` runs OpenAPI drift; `lefthook.yml` stays fast
+  without `knip` or drift checks.
 
 ## Consequences
 

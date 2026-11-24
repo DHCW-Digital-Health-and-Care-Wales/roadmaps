@@ -26,3 +26,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   each `def` route through `fastapi/telemetry/`, whose spans carry `url.query` once an
   SDK is configured, so the tracing story reads what that emits, against the log
   allow-list, before adding an instrumentation of its own.
+- **Row-level security does not cover `TRUNCATE` or `REFERENCES`**: PostgreSQL applies
+  neither to policies, so the first schema story's enforcement suite also proves the
+  application's role holds neither on any table.

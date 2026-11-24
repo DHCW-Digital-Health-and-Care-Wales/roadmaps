@@ -104,7 +104,7 @@ lives:_
   decided with the data protection assessment; Data Access audit logs on; request-log
   access restricted, since callback URLs carry OIDC codes.
 - **The roles and the migration step** (STY-091 D3, D11, D24, D26, D30): EPC-023
-  creates the migration and application logins (IAM principals if it chooses), never
+  creates the migration and application logins (IAM principals, as above), never
   with Cloud SQL's default `cloudsqlsuperuser` role, which `/ready` refuses, and runs
   STY-091's bootstrap SQL file once to make the roles, their memberships and the
   database's ownership. Run by Cloud SQL's non-superuser administrator, the file grants

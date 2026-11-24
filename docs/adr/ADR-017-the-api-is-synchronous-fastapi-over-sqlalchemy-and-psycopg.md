@@ -176,17 +176,16 @@ _Operation_ stands.
 ### STY-091 amendments
 
 From the owner's STY-091 grilling and its review questions (2026-11-24, STY-091 D3 to
-D14, D17 and D24 to D29); the rest of _Migrations_, _Tests_ and _Operation_ stands.
+D14, D17, D24 to D27 and D29); the rest of _Migrations_, _Tests_ and _Operation_ stands.
+STY-091 records the agent's decisions that build on them.
 
 - **A bootstrap outside Alembic creates ADR-015's roles.** One idempotent SQL file, with
   no credential, makes three no-login roles: the owner, which owns the database and so
-  `public`; the migration role, holding the owner with `SET` and without `INHERIT`; and
-  the application's role. Each login is a member of exactly one of the last two. The file
-  revokes `TEMPORARY` on the database and the owner's default `EXECUTE` on routines from
-  `PUBLIC`. Run by a non-superuser administrator, it grants that administrator `SET` on
-  the owner role, so the administrator's credential is the owner's. Locally and in CI a
-  runner creates two password logins first; where the API is hosted, EPC-023 creates the
-  logins and runs the same file.
+  `public`; the migration role, which switches to the owner; and the application's
+  role. Each login is a member of exactly one of the last two. The file revokes
+  `TEMPORARY` on the database and the owner's default `EXECUTE` on routines from
+  `PUBLIC`. Locally and in CI a runner creates two password logins first; where the API
+  is hosted, EPC-023 creates the logins and runs the same file.
 - **Migrations upgrade only,** numbered `0001_<slug>` in one line, in the package, each
   run as the owner role and reviewed by hand, with autogenerate only drafting. A check
   fails two heads, a gap or a repeat in the numbers, and another fails models that
@@ -198,11 +197,12 @@ D14, D17 and D24 to D29); the rest of _Migrations_, _Tests_ and _Operation_ stan
   form, or with no revision or several.
 - **`/ready` serves only a login that holds the application's role and nothing more:**
   no `SUPERUSER`, `BYPASSRLS`, `CREATEROLE`, `CREATEDB` or `REPLICATION`, membership of
-  no other role, no object owned, and no `CREATE` or `TEMPORARY` on the database or
-  `CREATE` on any schema.
+  no role outside a closed list STY-091 names, no object owned, and no `CREATE` or
+  `TEMPORARY` on the database or `CREATE` on any schema.
 - **The test workers** are pytest-xdist's, as many as the machine has cores and at most
-  four, each on its own clone of the template; emptying the tables between tests leaves
-  `alembic_version` alone.
+  four, each on its own clone of the template.
+- **The seeder follows the first schema story,** which creates `tenants`, rather than
+  the migrations alone; the rest of _Operation_'s seeder stands.
 
 ## Consequences
 

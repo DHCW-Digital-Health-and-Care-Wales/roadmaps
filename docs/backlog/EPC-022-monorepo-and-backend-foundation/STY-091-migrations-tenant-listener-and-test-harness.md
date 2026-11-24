@@ -40,22 +40,27 @@ database and so its `public` schema; the migration role, a member of the owner r
 (D3, D4, D26, D30)
 **And** each login is a member of exactly one of the migration and application roles:
 locally two password logins, where the API is hosted the logins EPC-023 creates; no
-login or role but the runner is a superuser or has `CREATEROLE`, `CREATEDB`,
-`REPLICATION` or `BYPASSRLS` (D26)
-**And** the shared SQL file holds no credential; it makes the three roles, sets each
-one's attributes on every run, grants the memberships and the database's ownership,
+role or login the file or the runner makes is a superuser or has `CREATEROLE`,
+`CREATEDB`, `REPLICATION` or `BYPASSRLS` (D26)
+**And** the shared SQL file holds no credential; it makes the three roles, sets on
+every run the attributes its runner may set, grants the memberships and the database's
+ownership,
 revokes `TEMPORARY` on the database from `PUBLIC`, and makes the owner role's new
 routines grant no `EXECUTE` to `PUBLIC` (D25, D30)
 **And** it stops, naming what it found, when the owner role has a member it did not
 grant, when `public` is owned by another role or `PUBLIC` can create in it, or when a
-role but the owner owns an object in `public` (D30)
+role but the owner owns an object in `public`, or when a role carries an attribute its
+runner cannot clear or is one its runner cannot administer; each row asserts the state
+after the run (D30)
 **And** it succeeds run by a superuser and by a non-superuser login with `CREATEROLE`
 and `CREATEDB` that owns the database, as Cloud SQL's administrator is; the test's table
-has a row for each, and ADR-017 states what the file grants its runner (D30)
+has a row for each, and this record and EPC-023 state what the file grants its runner
+(D30)
 **And** the local runner creates the two password logins with fixed local passwords
 before running the file, and refuses unless `ROADMAPS_ENV` is local or test, which the
-script sets, and the admin URL's host is a loopback address, naming the setting and
-never its value (D3, D30)
+script sets, the admin URL's host is a loopback address, and its admin login is a
+superuser, which no Cloud SQL login is, naming the setting and never its value (D3,
+D30)
 **And** a second run changes nothing and fails nothing, so an existing worktree's volume
 is updated in place, with no wipe
 
@@ -90,7 +95,8 @@ refuses to start with it set, in any environment, naming the setting (D31)
 **Given** the migrations in `apps/api/src/roadmaps_api/migrations/` (D9)
 **When** the API's tests run
 **Then** they fail when the revisions have more than one head, or when a revision's
-four-digit number repeats, skips one, or differs from its file's name
+four-digit number repeats, skips one, differs from its file's name, or the revision is
+longer than Alembic's version column holds
 (`0001_<slug>.py`); the check's table has a row for each (D7)
 
 ### S5: The models match the migrations
@@ -138,13 +144,17 @@ serve and an unsafe login apart, within `/ready`'s two seconds (D20)
 **Given** the API connected as some login
 **When** `/ready` is called
 **Then** it answers 503 `service.not_ready`, with its warning's code, unless the login
-has none of `SUPERUSER`, `BYPASSRLS`, `CREATEROLE`, `CREATEDB` and `REPLICATION`; is a
-member, directly or through another role and under any option, of no role but the
-application's; owns no object; and has neither `CREATE` nor `TEMPORARY` on the database
-nor `CREATE` on any schema (D12, D24)
-**And** a login of the application's role answers 200, and the test's table has a row for
-each refusal, membership of an extra role such as Cloud SQL's `cloudsqlsuperuser` among
-them, each on a throwaway login that leaves the shared ones unchanged (D30)
+is a member, directly or through another role and under any option, of no role but the
+application's, held without `ADMIN`, and Cloud SQL's `cloudsqliamuser` and
+`cloudsqliamserviceaccount`; and unless the login and every role it is a member of have
+none of `SUPERUSER`, `BYPASSRLS`, `CREATEROLE`, `CREATEDB` and `REPLICATION`, own no
+object, and have neither `CREATE` nor `TEMPORARY` on the database nor `CREATE` on any
+schema (D12, D24, D34)
+**And** a login of the application's role answers 200, as does one also in an inert role
+standing for Cloud SQL's; the test's table has a row for each refusal, among them
+membership of an extra role such as Cloud SQL's `cloudsqlsuperuser`, that inert role
+given an attribute, and the application's role owning an object, each on throwaway
+logins and roles that leave the shared ones unchanged (D30, D34)
 
 ### S9: Tests run in parallel, each worker on its own database, as the application
 
@@ -152,8 +162,10 @@ them, each on a throwaway login that leaves the shared ones unchanged (D30)
 **When** the suite runs
 **Then** the harness builds a template database once per run, through the code
 `pnpm api:migrate` runs, and pytest-xdist starts as many workers as the machine has
-cores, at most four, each on its own clone of the template, owned by the owner role and
-connecting as a login of the application's role (D14, D21, D33)
+cores, at most four, each on its own clone of the template, owned by the owner role,
+given the bootstrap file's database-scoped part from the file itself, since a clone
+takes no database-level privilege from its template, and connecting as a login of the
+application's role (D14, D21, D33)
 **And** between tests a superuser connection that exists only in the harness empties
 every table but `alembic_version` with `TRUNCATE … CASCADE`, so a worker's database
 keeps its revision, and each worker's database is dropped at the end (D23)
@@ -170,16 +182,18 @@ and the tools
 **Then** they state the roles and who runs the bootstrap where, upgrade-only numbered
 revisions, explicit grants, `alembic_version`'s exception, `/ready`'s revision and login
 checks and the harness's workers, as the two ADRs' _STY-091 amendments_ record them (D3
-to D14, D17, D23 to D33); the put-back rule stays in EPC-022 alone (D15)
+to D14, D17, D24 to D29); the put-back rule stays in EPC-022 alone (D15), and the
+agent's decisions (D23, D30 to D34) in this record
 
 ## Tests
 
-pytest against the slot's or CI's Compose PostgreSQL 18 holds S1, S2, S4 and S6 to S9:
+pytest against the slot's or CI's Compose PostgreSQL 18 holds S1, S2 and S4 to S9, and
+S3's refusal to start with the migration URL:
 S1 runs the bootstrap twice on a fresh database; S4, S7 and S8 are each one table; S6
 runs on an engine with a pool of one. The check in S4 is the repository's own, so its
 rows stand; S5's drift check keeps a standing failing case, since ADR-017's amendment
 relies on it. S1's runs as a non-superuser administrator need a login the harness makes
-for them. S3 is an observed run of `pnpm api:dev` on a database behind the code, and
+for them. The rest of S3 is an observed run of `pnpm api:dev` on a database behind the code, and
 S9's worker count an observed CI run.
 
 ## Decisions
@@ -197,6 +211,7 @@ S9's worker count an observed CI run.
   with no credential; locally and in CI a runner creates the two logins first, and
   hosted, EPC-023 creates them (IAM if it chooses) and runs the same file, over a
   local-only script or one command everywhere holding an admin login. Gives S1.
+  Refined by D25, D26 and D30.
 - **D4** (owner, round 2): tables live in `public`, which the owner role owns through
   owning the database, over a dedicated schema. Gives S1.
 - **D5** (owner, round 3): each revision grants the application's login exactly what it
@@ -255,7 +270,8 @@ S9's worker count an observed CI run.
 - **D24** (owner, 2026-11-24, review question): `/ready` serves only a login with none of
   the five role attributes, a member of no role but the application's, owning nothing
   and with no `CREATE` or `TEMPORARY`, over D12's four checks, which a login given Cloud
-  SQL's default `cloudsqlsuperuser` passes (security review). Changes S8.
+  SQL's default `cloudsqlsuperuser` passes (security review). Changes S8. Refined by
+  D34.
 - **D25** (owner, review question): the bootstrap revokes `TEMPORARY` on the database
   and the owner role's default `EXECUTE` on routines from `PUBLIC`, over accepting that
   a forgotten `REVOKE` leaves a definer function callable by every login (security
@@ -278,14 +294,15 @@ S9's worker count an observed CI run.
   know, so a database from another branch, a restore from elsewhere or a damaged table is
   not ready (security review). A rollback of two or more versions still reads as ready, a
   stated residual. Refines D11. Changes S7.
-- **D30** (agent, 2026-11-24, security review): the bootstrap file sets each role's
-  attributes on every run and stops on a member, owner or `public` grant it did not
-  make; the migration role holds the owner role with `SET` and without `INHERIT`, so a
-  revision that misses the switch creates nothing; a non-superuser administrator gets
-  `SET` on the owner role to make it the database's owner, so that administrator's
-  credential is the owner's (EPC-023); the local runner also refuses an admin URL that
-  is not on a loopback address. Over trusting what a name already carries and testing
-  as a superuser only. Changes S1, S2, S8.
+- **D30** (agent, 2026-11-24, security review): the bootstrap file sets on every run the
+  attributes its runner may set and stops on a member, owner, attribute or `public`
+  grant it did not make or cannot clear; the migration role holds the owner role with
+  `SET` and without `INHERIT`, so a revision that misses the switch creates nothing; a
+  non-superuser administrator gets `SET` on the owner role to make it the database's
+  owner, so that administrator's credential is the owner's (EPC-023); the local runner
+  also refuses an admin URL that is not on a loopback address or whose login is not a
+  superuser, so a Cloud SQL Auth Proxy on 127.0.0.1 is refused. Over trusting what a
+  name already carries and testing as a superuser only. Changes S1, S2, S8.
 - **D31** (agent, security review): no API process holds the migration URL: the server
   refuses to start with it set, in every environment, and `pnpm api:dev` does not pass
   it on, over relying on the login check alone. Changes S3.
@@ -296,7 +313,16 @@ S9's worker count an observed CI run.
   owner role, the probe's policy is the expression the real tables will use, `/ready`
   reads the code's latest revision once at start-up, and the runner and harness compose
   role names, passwords and database names with psycopg's `sql` module, since those
-  statements take no bound parameters. Changes S6, S7, S9.
+  statements take no bound parameters. Changes S6, S7, S9. After the review cap
+  (security re-check): each clone also gets the file's database-scoped part, S8 tests
+  every role the login holds and the application's role held without `ADMIN`, and S4
+  bounds a revision's length.
+- **D34** (agent, 2026-11-24, correctness re-check): D24's closed list names Cloud SQL's
+  `cloudsqliamuser` and `cloudsqliamserviceaccount`, each admitted only while it has
+  none of the five attributes and owns nothing, over the application's role alone.
+  Cloud SQL's documentation says these roles designate IAM logins but neither whether an
+  IAM login joins one nor what they hold, so a hosted IAM login is served either way.
+  Changes S8.
 
 ## Starting point
 
@@ -317,11 +343,13 @@ pytest-xdist 3.8.0:
 - CI's `ubuntu-latest` runner has four cores on this public repository.
 - From PostgreSQL's and Cloud SQL's documentation (security review), not run here:
   `PUBLIC` holds `TEMPORARY` and `CONNECT` on a new database and `EXECUTE` on a new
-  function; `ALTER DATABASE … OWNER TO` needs its runner to be able to `SET ROLE` the new
-  owner, and a non-superuser with `CREATEROLE` gets a role it creates with `ADMIN` only;
-  Cloud SQL's `postgres` administrator is such a login, a login created through Cloud
-  SQL's console or API joins `cloudsqlsuperuser`, and an IAM login is named after its
-  principal. Whether Cloud SQL presets `createrole_self_grant` is not known.
+  function; `ALTER DATABASE … OWNER TO` needs its runner to be able to `SET ROLE` the
+  new owner, and a non-superuser with `CREATEROLE` gets a role it creates with `ADMIN`
+  only; Cloud SQL's `postgres` administrator is such a login and no login is a
+  superuser, a built-in (password) login created through Cloud SQL joins
+  `cloudsqlsuperuser` while an IAM login gets no database role by default, and an IAM
+  login is named after its principal; a clone takes no database-level privilege from its
+  template. Whether Cloud SQL presets `createrole_self_grant` is not known.
 
 ## Out of scope
 

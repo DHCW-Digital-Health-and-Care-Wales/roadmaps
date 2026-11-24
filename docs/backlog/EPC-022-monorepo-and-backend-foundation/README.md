@@ -95,7 +95,8 @@ Owner answers of 2026-11-21 (monorepo grilling), drafted into ADR-016 and ADR-01
 10. **Workspace tooling, CI and agent guides**: ADR-016 _Workspace tooling_, _CI_,
     _Agent guides_.
 11. **The API stack**: ADR-017, including the public read (no key, open CORS, OGL v3.0,
-    current publications only) and the seeder, which starts right after the migrations.
+    current publications only) and the seeder, which starts right after the migrations
+    (moved after the first schema story by STY-091 D27).
 
 Owner answers of 2026-11-21 (identity and authorisation grilling, and the review of
 its drafts), from the
@@ -219,7 +220,8 @@ outside the envelope, Starlette's plain-text 400 for an unlisted `Host` and 413 
 oversize body, and the editor's API adapter maps them by status (STY-101 D2, D10). A story
 that adds an error code maps it in the editor's API adapter (ADR-017 _Errors_), with
 copy in English and Welsh when it needs a new `AppError` kind, and adds factories to
-the seeder for any table it creates. From STY-091, a story's migration stays compatible
+the seeder for any table it creates; STY-093 writes those of the first schema story,
+which comes before it (STY-091 D27). From STY-091, a story's migration stays compatible
 with the version before it, which serves while a deploy migrates (STY-091 D11), and
 grants the application's role exactly what its objects need, routines included, since
 `PUBLIC` gets no default grant (D5, D25); the first story

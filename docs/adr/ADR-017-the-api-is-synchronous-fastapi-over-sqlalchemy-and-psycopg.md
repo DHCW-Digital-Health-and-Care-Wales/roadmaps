@@ -4,10 +4,12 @@
   EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
   the owner's STY-090 grilling (_STY-090 amendments_), STY-091 grilling (_STY-091
-  amendments_) and STY-101 grilling (_STY-101 amendments_).
+  amendments_), STY-101 grilling (_STY-101 amendments_) and STY-092 grilling (_STY-092
+  amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
   STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
-  and the test workers; STY-101: two plain-text refusals, log messages)
+  and the test workers; STY-101: two plain-text refusals, log messages; STY-092:
+  camelCase JSON contract, committed OpenAPI and raw TS schemas, import boundary)
 
 ## Context
 
@@ -216,6 +218,43 @@ _Errors_ and _Operation_ stands.
 - **JSON logs write an exception's or a third party's message only on a developer's
   own machine**, as ADR-018's _STY-101 amendments_ bound it; elsewhere uvicorn's
   loggers write from warning up, since their information lines would hold no text.
+
+### STY-092 amendments
+
+From the owner's STY-092 grilling and review questions (2026-11-24, STY-092 D1 to D6, D9,
+D11, D13, D17 and D18); the rest of _Errors_ and _The contract with the editor_ stands.
+STY-092 records the agent's decisions that build on them.
+
+- **JSON on the wire is camelCase everywhere** (request bodies, response bodies, query
+  params and error `params`), through two Pydantic bases: `ApiRequestModel`
+  (`alias_generator=to_camel`, `serialize_by_alias=True`, `validate_by_alias=True`,
+  `validate_by_name=False`, which never binds `snake_case` keys on inbound JSON bodies or
+  `Annotated[Model, Query()]` query models: required fields answer 422 `missing` at their
+  camelCase alias and optional fields ignore `snake_case` until `extra="forbid"` lands
+  with CHO-047) and `ApiResponseModel` (`validate_by_name=True`, so Python builds
+  responses in `snake_case` while serialising `camelCase`). Every model reachable from a
+  request, nested models included, inherits `ApiRequestModel`; plain function query
+  parameters use `Annotated[Model, Query()]` or an explicit `alias`; `extra="forbid"` on
+  `ApiRequestModel` waits for CHO-047 and the first request-body or query-model story.
+- **OpenAPI exposes `ErrorCode` and `ErrorResponse`** (`{detail, code, params}`) in
+  `components.schemas` and strips FastAPI's built-in `HTTPValidationError` and
+  `ValidationError` (pointing generated 422 response refs to `ErrorResponse`), served
+  identically at local `/api/v1/openapi.json` and committed at `apps/api/openapi.json`
+  (exported offline without a database).
+- **`packages/api-types` (`@roadmaps/api-types`) commits raw TypeScript** under
+  `packages/api-types/src/generated/` with no build step: erasable union types
+  (`enums: false`) and `zod/mini` schemas (`compatibilityVersion: "mini"`) only, with no
+  generated fetch SDK. Generated TypeScript is ignored by Prettier and ESLint and
+  typechecked under `tsconfig.base.json`.
+- **The import boundary covers all of `apps/editor/src/` except `src/infrastructure/**`**,
+  forbidding `@roadmaps/api-types` in `app/`, `routes/`, `i18n/` and `lib/` as well as
+  `domain/`, `features/` and `components/`.
+- **Error responses fall back by HTTP status** when not a valid envelope or carrying an
+  unrecognised `ErrorCode` (`401` → `unauthenticated`, `403` → `forbidden`, `404` →
+  `not-found`, `429` → `rate-limited`, `5xx` → retryable `unknown`, plain-text `400`/`413`
+  → non-retryable `unknown`, other malformed or unknown `4xx` → `invalid-response`),
+  keeping edge refusals and rolling deploys usable without adding speculative
+  `AppErrorKind`s. STY-092 records the edge-case refinements built on this (D20).
 
 ## Consequences
 

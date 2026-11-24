@@ -24,8 +24,8 @@ shadcn CLI and `@playwright/cli`; revisions unrecorded). `implement-story`,
 
 ## Local adaptations
 
-- `grilling` asks each round through `AskUserQuestion`, falling back to
-  numbered chat questions.
+- `grilling` asks each round through the runtime's structured multiple-choice
+  question tool, falling back to numbered chat questions.
 - Domain modeling and architecture review use `docs/GLOSSARY.md` and the
   documentation conventions in `docs/AGENTS.md`.
 - The ADR helper describes this repository's three-digit ADRs (`ADR-001`) and their

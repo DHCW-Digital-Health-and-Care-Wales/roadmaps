@@ -5,8 +5,8 @@ End-to-end tests of the production build, with Google faked (ADR-006).
 - Import `test`, `expect`, `connect` and `roadmapCards` from `./fixtures/test`, never
   from `@playwright/test`, so every test gets the fakes and the hermetic guard. Import
   nothing from `apps/editor/src/`: tests drive the app as a user does, through roles and copy.
-- `gis` (`fixtures/fake-gis.ts`) plays Google Identity Services and `sheets`
-  (`fixtures/fake-sheets.ts`) the Sheets API, over the example spreadsheet in
+- `gis` (`apps/editor/tests/e2e/fixtures/fake-gis.ts`) plays Google Identity Services and `sheets`
+  (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`) the Sheets API, over the example spreadsheet in
   the workspace root's `fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`,
   then `values:<first tab>` and a `Families` or `Categories` tab's; a roadmap's items
   read all of those again, then add `values:<its tab>` (ADR-011), so a roadmap's page
@@ -16,13 +16,13 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   token reaching storage, cookies, the URL or the console fail the test at teardown.
   Add a new external dependency to the fakes, never to the guard.
 - Only an item with an ID can conflict: a co-lead test publishes once first
-  (`publishOnce` in `fixtures/dialogs.ts`) to give every item its ID, then calls
+  (`publishOnce` in `apps/editor/tests/e2e/fixtures/dialogs.ts`) to give every item its ID, then calls
   `sheets.coLead`.
 - No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
   fast-forward; time still runs in real time until moved, so stop a fast-forward short
   of a deadline by more than a loaded runner's steps take (seconds, not one), then move
   the rest. Move the clock to a session's end or its warning by `sessionMs()` and
-  `SESSION_WARNING_MS` (`fixtures/fake-gis.ts`), never a sum written in the spec. The
+  `SESSION_WARNING_MS` (`apps/editor/tests/e2e/fixtures/fake-gis.ts`), never a sum written in the spec. The
   warning opens two minutes before a session ends and, being modal, hides the page from
   role queries: a grant shorter than about 180 s opens it at once.
 - `page.evaluate` runs with a user gesture, so it cannot exercise the popup-gesture
@@ -39,8 +39,8 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   spec that reaches the control, or the whole suite when it is in the shell.
 
 - The header has no Connect or Disconnect button: `chooseFromAccountMenu` and
-  `disconnectFromHeader` (`fixtures/account-menu.ts`) drive its account menu. Answer the
-  reconnect dialog with `reconnectDialog` and `reconnectButton` (`fixtures/dialogs.ts`).
+  `disconnectFromHeader` (`apps/editor/tests/e2e/fixtures/account-menu.ts`) drive its account menu. Answer the
+  reconnect dialog with `reconnectDialog` and `reconnectButton` (`apps/editor/tests/e2e/fixtures/dialogs.ts`).
 - At 1280px the navigation stands beside the page and its links share names with the
   list's and the cards': scope a page's own to `main`. Playwright matches a role's name
   by substring, so name "More" `exact`.
@@ -97,7 +97,7 @@ tours.
 - Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
   version changes per build.
 - Compare a computed style with the token it comes from, `tokenColour(page, "--token")`
-  (`fixtures/look.ts`), never a copied colour.
+  (`apps/editor/tests/e2e/fixtures/look.ts`), never a copied colour.
 - The focus tours need every tab stop to match `focus-fill`, `focus-ring` or
   `focus-link`: a new kind of control uses one of them, or the check gains a utility.
 - The item dialog's tour (`focus-indicator.spec.ts`) opens each form field that opens

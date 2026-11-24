@@ -1,7 +1,6 @@
 ---
 name: playwright-cli
 description: Automate browser interactions, test web pages and work with Playwright tests.
-allowed-tools: Bash(playwright-cli:*) Bash(pnpm:*)
 ---
 
 # Browser Automation with playwright-cli
@@ -31,7 +30,7 @@ Write every `--filename` output inside the repository, such as under
 In a cloud container, where `open` reports its browser is not installed and
 Chromium sits at `/opt/pw-browsers/chromium`, open with
 `--config=.agents/skills/playwright-cli/cloud-browser.json`. Locally, Playwright's own
-Chromium (`~/.cache/ms-playwright`, installed by `pnpm --filter @roadmaps/editor exec playwright install
+Chromium (`~/.cache/ms-playwright`, installed by `apps/editor/node_modules/.bin/playwright install
 chromium`) is used and no config is needed.
 
 ## Quick start

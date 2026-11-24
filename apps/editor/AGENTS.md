@@ -53,7 +53,7 @@ Rules no lint catches:
   in `apps/editor/.env.production.local`, since builds prefer `.env.production`.
 - `pnpm editor:test:e2e` builds and serves on port 4173, reusing a server already there
   locally; install the browser once per Playwright version with
-  `pnpm --filter @roadmaps/editor exec playwright install --with-deps chromium`. A
+  `apps/editor/node_modules/.bin/playwright install --with-deps chromium`. A
   parallel worktree has its own dev and E2E ports (`pnpm worktree:info`).
 
 ## Conventions
@@ -69,8 +69,17 @@ apps share, and these, the editor's own:
   keeps all its cases in the repository contract (ADR-002), whatever a domain test also
   holds. What earns a Playwright spec is `apps/editor/tests/e2e/AGENTS.md` (_What earns
   an E2E test_).
-- Add shadcn components with the shadcn CLI, Base UI flavour; never Radix or a
-  hand-rolled competing primitive.
+- In jsdom tests, await `expectOpeningFocus`
+  (`apps/editor/src/features/roadmaps/testing/opening-focus.ts`) before pressing a key in
+  an opened dialog, menu or field (focus lands a frame later in Base UI popups).
+- Call `matchMediaQueries(DESKTOP_WIDTH)` (`apps/editor/src/test/media-query.ts`) in
+  jsdom page tests that need desktop layout, since jsdom matches no media query.
+- Drive the header's account menu and reconnect dialog in jsdom tests through
+  `apps/editor/src/features/auth/testing/account-menu.ts` and
+  `apps/editor/src/features/auth/testing/reconnect-dialog.ts` (the header has no
+  Disconnect button).
+- Add shadcn components with the local CLI (read `.agents/skills/shadcn/SKILL.md`), Base
+  UI flavour; never Radix or a hand-rolled competing primitive.
 - Route every user-facing string (text, aria-labels, notices, titles) through `t()`, in
   English and Welsh (ADR-008); invoke the `copywriter` skill before writing copy.
   Domain and infrastructure emit codes, never copy.
@@ -81,8 +90,11 @@ apps share, and these, the editor's own:
   attribute, which can't mark a part of itself, takes `localise()` or reads that sentence
   with `AS_PLAIN_WORDS`.
 - Style only with the semantic tokens of `apps/editor/src/styles/globals.css`
-  (ADR-010), and read `apps/editor/src/styles/AGENTS.md` before adding a token. Focus is
-  `focus-visible:focus-fill` (buttons, button-styled links, menu items), `focus-ring`
-  (cards, inputs) or `focus-link` (text links).
+  (ADR-010), and read `apps/editor/src/styles/AGENTS.md` before adding a token. Apply
+  focus utilities with a state variant (`focus-visible:` or `has-focus-visible:`): each
+  is the style alone — `focus-visible:focus-fill` (buttons, button-styled links, menu
+  items), `focus-visible:focus-ring` / `has-focus-visible:focus-ring` (cards, inputs) or
+  `focus-visible:focus-link` (text links). Carry no `aria-*:` background on a focusable
+  element itself, as it sorts after and hides `focus-fill`.
 - Call the auth client's `connect()` synchronously inside the click handler, with no
   `await` before it, or the browser blocks Google's popup (ADR-003).

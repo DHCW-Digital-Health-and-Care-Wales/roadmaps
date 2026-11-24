@@ -1,13 +1,13 @@
 # Running Playwright Tests
 
-To run Playwright tests, use `pnpm editor:test:e2e` (it builds, serves on the checkout's preview port and fakes Google; see `apps/editor/tests/e2e/AGENTS.md`), or `pnpm --filter @roadmaps/editor exec playwright test` for flags such as a single spec. To avoid opening the interactive html report, use `PLAYWRIGHT_HTML_OPEN=never` environment variable.
+To run Playwright tests, use `pnpm editor:test:e2e` (for the editor; see `apps/editor/tests/e2e/AGENTS.md`) or `pnpm site:test:e2e` (for the public site; see `apps/public-site/AGENTS.md`), passing extra flags directly (such as a single spec), or run `./node_modules/.bin/playwright test` inside the app directory. To avoid opening the interactive html report, use `PLAYWRIGHT_HTML_OPEN=never`.
 
 ```bash
-# Run all tests
-PLAYWRIGHT_HTML_OPEN=never pnpm --filter @roadmaps/editor exec playwright test
-
-# Run all tests through the package script
+# Run all editor E2E tests
 PLAYWRIGHT_HTML_OPEN=never pnpm editor:test:e2e
+
+# Run a single spec directly from the app's local binary
+(cd apps/editor && PLAYWRIGHT_HTML_OPEN=never ./node_modules/.bin/playwright test tests/e2e/auth.spec.ts)
 ```
 
 # Debugging Playwright Tests
@@ -20,7 +20,7 @@ Once instructions containing a session name are printed, use `playwright-cli` to
 
 ```bash
 # Run the test
-PLAYWRIGHT_HTML_OPEN=never pnpm --filter @roadmaps/editor exec playwright test --debug=cli
+(cd apps/editor && PLAYWRIGHT_HTML_OPEN=never ./node_modules/.bin/playwright test --debug=cli)
 # ...
 # ... debugging instructions for "tw-abcdef" session ...
 # ...

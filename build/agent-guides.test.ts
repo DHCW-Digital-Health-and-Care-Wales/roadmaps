@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
-import { basename, extname, join } from "node:path"
+import { basename, dirname, extname, join } from "node:path"
 
 import { describe, expect, it } from "vitest"
 
@@ -78,7 +78,91 @@ function citedRecordIds(path: string): string[] {
   return cited
 }
 
-const guides = selectGuides(listRepositoryFiles())
+/**
+ * Repo-root backticked paths in AGENTS.md files exist on disk. `markdown-links.test.ts`
+ * checks only Markdown links, which agent guides avoid in favour of plain code spans.
+ * Incident: in November 2026 a review found broken/relative `fixtures/…` paths in
+ * `apps/editor/tests/e2e/AGENTS.md` that looked like repo-root paths. Review by 2027-02-24.
+ */
+const REPO_ROOT_PREFIX =
+  /^(?:apps|docs|build|scripts|fixtures|\.agents|\.claude|\.github)\//
+const PLACEHOLDER = /[<>*…{}$]/
+const GITIGNORED_PATH =
+  /(?:^|\/)(?:\.env[^/]*\.local|\.data|node_modules|\.artifacts)(?:\/|$)/
+const SKIPPED_PROSE = new RegExp(
+  [
+    /^[ \t]*(?<fence>(?<mark>`|~)\k<mark>{2,})[^\n]*\n[\s\S]*?(?:^[ \t]*\k<fence>\k<mark>*[ \t]*$|(?![\s\S]))/,
+    /<!--[\s\S]*?-->/,
+  ]
+    .map((pattern) => pattern.source)
+    .join("|"),
+  "gm",
+)
+const INLINE_CODE =
+  /(?<!`)(?<ticks>`+)(?!`)(?<content>(?:(?!\n[ \t]*\n)[\s\S])*?)(?<!`)\k<ticks>(?!`)/g
+
+function repoRootPathsIn(markdown: string): string[] {
+  const prose = markdown.replace(SKIPPED_PROSE, "")
+  const paths = new Set<string>()
+  for (const match of prose.matchAll(INLINE_CODE)) {
+    const raw = match.groups?.content ?? ""
+    if (raw.includes("\n")) continue
+    const trimmed = raw.trim()
+    if (
+      trimmed.includes(" ") ||
+      !REPO_ROOT_PREFIX.test(trimmed) ||
+      PLACEHOLDER.test(trimmed) ||
+      GITIGNORED_PATH.test(trimmed)
+    ) {
+      continue
+    }
+    paths.add(trimmed)
+  }
+  return [...paths]
+}
+
+/**
+ * Every `AGENTS.md` has a sibling `CLAUDE.md` that only imports it (`@AGENTS.md`), and
+ * no orphan `CLAUDE.md` sits without an `AGENTS.md` (AGENTS.md, Working conventions).
+ * Guards against retiring or adding a nested guide without updating its shim.
+ * Review by 2027-02-24.
+ */
+function claudeShimMismatches(
+  paths: readonly string[],
+  readContent: (path: string) => string,
+): string[] {
+  const agents = new Set(paths.filter((path) => basename(path) === "AGENTS.md"))
+  const claudes = new Set(
+    paths.filter((path) => basename(path) === "CLAUDE.md"),
+  )
+  const sibling = (path: string, name: string) => {
+    const dir = dirname(path)
+    return dir === "." ? name : `${dir}/${name}`
+  }
+
+  const mismatches: string[] = []
+  for (const path of agents) {
+    const shim = sibling(path, "CLAUDE.md")
+    if (!claudes.has(shim)) {
+      mismatches.push(`missing ${shim} for ${path}`)
+    } else if (readContent(shim).trim() !== "@AGENTS.md") {
+      mismatches.push(`${shim} must contain only "@AGENTS.md"`)
+    }
+  }
+  for (const path of claudes) {
+    const guide = sibling(path, "AGENTS.md")
+    if (!agents.has(guide)) {
+      mismatches.push(`orphan ${path} without ${guide}`)
+    }
+  }
+  return mismatches
+}
+
+const repositoryFiles = listRepositoryFiles()
+const guides = selectGuides(repositoryFiles)
+const agentsGuides = repositoryFiles.filter(
+  (path) => basename(path) === "AGENTS.md",
+)
 
 describe("agent guides", () => {
   it(`keeps the root AGENTS.md within ${String(ROOT_GUIDE_WORD_BUDGET)} words`, () => {
@@ -150,4 +234,59 @@ describe("agent guides", () => {
       expect(shown).toEqual(expect.arrayContaining([...ids]))
     },
   )
+
+  it("detects missing, orphan or modified CLAUDE.md shims", () => {
+    const contents: Record<string, string> = {
+      "CLAUDE.md": "@AGENTS.md\n",
+      "apps/bad/CLAUDE.md": "extra rules\n",
+      "apps/orphan/CLAUDE.md": "@AGENTS.md\n",
+    }
+    const mismatches = claudeShimMismatches(
+      [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "apps/missing/AGENTS.md",
+        "apps/bad/AGENTS.md",
+        "apps/bad/CLAUDE.md",
+        "apps/orphan/CLAUDE.md",
+      ],
+      (path) => contents[path] ?? "",
+    )
+    expect(mismatches).toEqual([
+      "missing apps/missing/CLAUDE.md for apps/missing/AGENTS.md",
+      'apps/bad/CLAUDE.md must contain only "@AGENTS.md"',
+      "orphan apps/orphan/CLAUDE.md without apps/orphan/AGENTS.md",
+    ])
+  })
+
+  it("pairs every AGENTS.md with a sibling @AGENTS.md CLAUDE.md", () => {
+    expect(claudeShimMismatches(repositoryFiles, read)).toEqual([])
+  })
+
+  it("extracts only concrete repo-root paths from prose code spans", () => {
+    const sample = [
+      "Read `apps/editor/AGENTS.md` and `docs/GLOSSARY.md`.",
+      "Double backticks `` `apps/ignored/wrapped.ts` `` do not break `docs/AGENTS.md`.",
+      "Ignore `apps/editor/src/features/<name>/`, `apps/editor/src/**/*.ts`, `apps/editor/.env.local`, `apps/public-site/.data/`, `apps/editor/node_modules/pkg`, `.artifacts/out` and `pnpm editor:test src/styles`.",
+      "<!-- `apps/commented/out.ts` -->",
+      "```sh",
+      "cat `apps/nonexistent/file.ts`",
+      "```",
+    ].join("\n")
+    expect(repoRootPathsIn(sample)).toEqual([
+      "apps/editor/AGENTS.md",
+      "docs/GLOSSARY.md",
+      "docs/AGENTS.md",
+    ])
+  })
+
+  it.each(agentsGuides)("%s names only repo-root paths that exist", (path) => {
+    const missing = repoRootPathsIn(read(path)).filter(
+      (target) => !existsSync(join(ROOT, target)),
+    )
+    expect(
+      missing,
+      `${path} cites a path that does not exist on disk: update or remove it.`,
+    ).toEqual([])
+  })
 })

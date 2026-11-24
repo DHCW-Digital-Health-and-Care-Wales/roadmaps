@@ -19,7 +19,7 @@ allow-list, removes wildcard hosts and the naming of mounts nothing has, retires
 tests, and has CI use the Compose database. A wrong `Host` and an oversize body still
 get 400 and 413, now as Starlette's plain text, and the limit counts a body as a route
 reads it. Logs gain codes that tell failures apart, and a developer's local API writes
-exception messages; test, production and any hosted service never do. `/ready`'s
+exception messages; test, production and anything on Cloud Run never do. `/ready`'s
 deadline and the 100% coverage gate stay.
 
 ## Scope
@@ -83,23 +83,25 @@ Dependabot's entry no longer speaks of a digest to copy
 **Then** it carries the types of the exception and of each exception it was raised from,
 and for a database error its SQLSTATE and its constraint's name where the database gave
 them, beside the frames (D6, D12)
-**And** `/ready`'s warning carries them, so a failed connection, a connect timeout, a
-cancelled statement (`57014`) and the probe's own deadline differ in the log; a refused
-connection and a wrong password, which psycopg reports alike and without a SQLSTATE,
-differ only in a local log (S6, D21)
+**And** `/ready`'s warning carries them, so a failed connection and the probe's own
+deadline, the two that reach it while every wait is two seconds, differ in the log; a
+connect timeout's type and a cancelled statement's `57014` are shown by the formatter
+given each exception; a refused connection and a wrong password, which psycopg reports
+alike and without a SQLSTATE, differ only in a local log (S6, D21)
 **And** under test's and production's rules the line holds no message, detail or value:
 a unique violation on a planted value, in a table the test creates, logs `23505` and
 the constraint's name, and the planted value appears nowhere on either stream
 
 ### S6: A developer's local API writes messages; no other does
 
-**Given** `ROADMAPS_ENV=local` and no `K_SERVICE` in the environment
+**Given** `ROADMAPS_ENV=local` and none of Cloud Run's markers in the environment
+(`K_SERVICE`, `CLOUD_RUN_JOB`, `CLOUD_RUN_WORKER_POOL`)
 **When** an exception or a third party's line is logged
 **Then** the line also carries the exception's message, or the third party's formatted
-message, as JSON on stdout (D7, D19)
+message, as JSON on stdout (D7, D19, D22)
 **And** neither is written with `ROADMAPS_ENV` test, production, unset or invalid, with
-`K_SERVICE` set whatever `ROADMAPS_ENV` holds, or for a line written before the
-settings are read: the test's table has a row for each
+any of the three markers set whatever `ROADMAPS_ENV` holds, or for a line written before
+the settings are read: the test's table has a row for each
 **And** STY-090 S7's assertions that no message or planted value reaches either stream
 hold under those rules, with its real-server test and the tests that start the API as
 `pnpm api:dev` does run under production's (D20); the access line names a request by
@@ -129,10 +131,11 @@ template, the live OpenAPI route by its path, and no line holds a path a caller 
 gate runs
 **Then** ADR-020 says Starlette's middleware bounds what a route reads of a body, with
 D17's two cases, and with ADR-017 _Errors_ names the two plain-text refusals as the
-envelope's exceptions; ADR-018 _Records and retention_ states that only a local API off
-Cloud Run writes messages, that the allow-list takes codes and names, and that a
-database function the repository writes never sets a diagnostic field from a value; the
-API's guide states the same rules with the true facts (D2, D6 to D8, D12, D17, D19)
+envelope's exceptions; ADR-018 _Records and retention_ states that messages are written
+only with `ROADMAPS_ENV=local` and none of Cloud Run's three markers, that the
+allow-list takes codes and names, and that a database function the repository writes
+never sets a diagnostic field from a value; the API's guide states the same rules with
+the true facts (D2, D6 to D8, D12, D17, D19, D22)
 **And** `pnpm api:lint`, `pnpm api:typecheck` and `pnpm api:test` pass at 100% branch
 coverage of the package and the tools, and `/ready` keeps its thread and deadline (D14,
 D15)
@@ -173,13 +176,15 @@ job on the pull request.
   no caller's path reaches the log. Gives S8.
 - **D10** (agent, 2026-11-24): a 413 is Starlette's plain text however it arises, over
   mapping the one raised while a route reads the body to the envelope, so one status has
-  one body; the two codes no response carries leave the catalogue.
+  one body; the two codes no response carries leave the catalogue, and the editor's API
+  adapter maps the two refusals by their status.
 - **D11** (agent, 2026-11-24): uvicorn is quietened only where its messages are dropped,
   over everywhere, since D7 gives a local API's lines their text.
 - **D12** (agent, 2026-11-24): the chain follows an exception's cause, then its context,
-  as Python prints it; SQLSTATE and constraint name come from psycopg's diagnostics
-  only, never parsed from text. PostgreSQL lets a function set either, so a function
-  the repository writes never sets one from a value (security review).
+  as Python prints it, stopping at a repeat; SQLSTATE and constraint name come from
+  psycopg's diagnostics only, never parsed from text. PostgreSQL lets a function set
+  either, so a function the repository writes never sets one from a value (security
+  review).
 - **D13** (owner, round 2): STY-100's spans take none of D6 to D8 and keep their
   allow-list; STY-101 is delivered before STY-100, over tracing first or either order.
   Recorded in STY-100 D21.
@@ -210,7 +215,13 @@ job on the pull request.
 - **D21** (agent, 2026-11-24, review): psycopg raises every failed connection attempt
   as one error with no SQLSTATE, so S5 claims no difference between a refused connection
   and a wrong password outside a local log, over reading libpq's text, which names the
-  host and user.
+  host and user. Every wait `/ready` meets is two seconds, its own deadline too, so
+  only a failed connection and that deadline reach its warning; the other codes are
+  shown at the formatter, over shortening the waits, which D14 leaves alone.
+- **D22** (agent, 2026-11-24, security review): D19's bound reads all three of Cloud
+  Run's markers, over `K_SERVICE` alone, which the platform sets for a service and not
+  for a job or a worker pool, so "never on Cloud Run" holds for the package's commands
+  too. Changes S6.
 
 ## Starting point
 
@@ -259,4 +270,4 @@ psycopg 3.3.9 installed:
 - A deadline for every route's database wait (CHO-049).
 - The guide and template edits (CHO-048).
 - The editor's API adapter, which maps the two plain-text refusals by their status
-  (the epic's _The API's conventions_).
+  (D10).

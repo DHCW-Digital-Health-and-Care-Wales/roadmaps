@@ -159,16 +159,17 @@ STY-100 D5–D15:
     EPC-023's.
 
 Owner answers of 2026-11-24 (review of STY-090 and STY-101 grilling), recorded in
-STY-101 D2–D19:
+STY-101 D2–D22:
 
 22. **The skeleton leans on its framework**: Starlette's body limit and `Host`
     allow-list, whose two refusals are plain text, the envelope's only exceptions, the
     limit counting a body as a route reads it; no wildcard host anywhere; a mounted
     app's request logged `unmatched`; logs gain an exception's chain of types and a
-    database error's SQLSTATE and constraint name, and only a local API off Cloud Run
-    writes messages; CI's API job uses the Compose database; a tool the repository only
-    configures is proved by an observed run, not a standing test (CHO-048). `/ready`'s thread and 100% branch coverage stay; a deadline for every
-    route's database wait is CHO-049.
+    database error's SQLSTATE and constraint name, and only a local API, never one on
+    Cloud Run, writes messages; CI's API job uses the Compose database; a tool the
+    repository only configures is proved by an observed run, its wiring of a control
+    keeping a standing test (CHO-048). `/ready`'s thread and 100% branch coverage stay;
+    a deadline for every route's database wait is CHO-049.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to
 ADR-020._
@@ -200,7 +201,7 @@ audited weekly without a change to the audit, and uv takes a 7-day `exclude-newe
 Every API story follows ADR-017's layering, error envelope and test harness, with its
 routes under `/api/v1` (ADR-017 _STY-090 amendments_). From STY-101, two refusals are
 outside the envelope, Starlette's plain-text 400 for an unlisted `Host` and 413 for an
-oversize body, and the editor's API adapter maps them by status (STY-101 D2). A story
+oversize body, and the editor's API adapter maps them by status (STY-101 D2, D10). A story
 that adds an error code maps it in the editor's API adapter (ADR-017 _Errors_), with
 copy in English and Welsh when it needs a new `AppError` kind, and adds factories to
 the seeder for any table it creates.
@@ -231,8 +232,8 @@ the seeder for any table it creates.
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                        | —           |       |
 
 _STY-085 to STY-090, STY-095, CHO-044 and STY-096 to STY-098 are done. STY-100 and
-STY-101 are Proposed, STY-101 first; STY-091 to STY-093 are Placeholders until their acceptance criteria are
-written: ADR-017 is accepted. STY-094
+STY-101 are Proposed, STY-101 first; STY-091 to STY-093 are Placeholders until their
+acceptance criteria are written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
 settles what the public sees.
 Candidate scope, to split next: the first schema

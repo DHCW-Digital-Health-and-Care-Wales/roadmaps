@@ -1,9 +1,9 @@
 # Keeps the SHA-pinned actions in .github/workflows, the workspace's pnpm dependencies
 # and the API's uv dependencies and database image current: one grouped pull request a
-# month for each. Every entry waits out a cooldown, so it proposes a version only once that is a week old (STY-087 D10,
-# D12); pnpm's minimumReleaseAge (pnpm-workspace.yaml) holds the transitive versions it
-# resolves beneath one for as long (CHO-031 S4), as uv's exclude-newer does for the API's
-# (apps/api/pyproject.toml).
+# month for each. Every entry waits out a cooldown, so it proposes a version only once
+# that is a week old (STY-087 D10, D12); pnpm's minimumReleaseAge (pnpm-workspace.yaml)
+# holds the transitive versions it resolves beneath one for as long (CHO-031 S4), as
+# uv's exclude-newer does for the API's (apps/api/pyproject.toml).
 # The cooldown does not hold back Dependabot's security updates, a repository setting
 # that is on (CHO-031 S5), but pnpm's minimumReleaseAge does: a security update younger
 # than a week fails CI's install until its versions are excluded there.

@@ -123,6 +123,7 @@ def test_the_server_logs_no_query_string_or_exception_text_on_either_stream(
         ("unmatched", 404, not_found.headers["X-Request-ID"]),
         ("/test/boom", 500, failed.headers["X-Request-ID"]),
     }
+    assert any(line["method"] == "_OTHER" for line in access)
     [failure] = [line for line in lines if line.get("message") == "request.failed"]
     assert failure["exception_type"] == "builtins.ValueError"
     assert failure["request_id"] == failed.headers["X-Request-ID"]

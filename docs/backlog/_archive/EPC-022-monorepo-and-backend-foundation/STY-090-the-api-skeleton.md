@@ -384,7 +384,9 @@ Audited at `e4117b10`:
   document, so each case is a test row and a FastAPI bump that changes it fails
   there), else a Starlette route's (the live OpenAPI JSON's); prefixed by the templates
   of the mounts the request passed through; a mounted app with no routes is its
-  template and `{path:path}`; a 405 names the route that takes the path. A request
+  template and `{path:path}`; a FastAPI route's 405 names the route that takes the
+  path; a mount the app's own routes do not show (one on an included router) gives
+  `unmatched`, and only a request to the probe's own path goes unlogged. A request
   refused before routing (a bad `Host`, a body over the limit), an unknown path and a
   redirect to the path with or without its trailing slash are `unmatched`. A method
   HTTP does not define is logged as `_OTHER`, as OpenTelemetry names it, since HTTP
@@ -434,8 +436,8 @@ exc`), so a line from a logger outside `roadmaps_api` carries only its time, lev
   `roadmaps_api.logs.request_id_var`; STY-100 replaces the first with the trace ID.
   `PROBE_PATHS` is where STY-100 leaves successful probes untraced.
 - **Logs**: `ALLOWED_EXTRA_FIELDS` in `roadmaps_api.logs` is the allow-list a new field
-  joins; `roadmaps_api.access_log` names a request's route and method, as STY-100's spans
-  will (its D5).
+  joins; `roadmaps_api.access_log` names a request's route, as STY-100's spans will (its
+  D5), and its method.
 - **Tests**: `tests/support.py` (`make_settings`, `add_test_routes`, `database_url()`
   from `ROADMAPS_TEST_DATABASE_URL`); STY-091's harness replaces `database_url()` and
   grows CI's `api-verify` service container.
@@ -458,7 +460,7 @@ exc`), so a line from a logger outside `roadmaps_api` carries only its time, lev
 | S8       | `apps/api/tests/test_layering.py` (planted upward imports, planted `commit`/`rollback`/`begin`, the real tree passing both)                                                                                                                                                                                                                                                                                                                                      |
 | S9       | `lefthook.yml` (`ruff (api)`, `typecheck`); observed: this PR's first commit, with a file left unformatted, was formatted and restaged by the hook, and its push ran ty through `pnpm typecheck`                                                                                                                                                                                                                                                                 |
 | S10      | `scripts/ci/classify-changes.test.ts`; `build/ci-workflow.test.ts` (`needs every job…`); `build/api-compose.test.ts` (the digest); CI's _API: verify_ on this PR; CodeQL's Python analysis: to observe once merged                                                                                                                                                                                                                                               |
-| S11      | `apps/api/pyproject.toml` (`exclude-newer`, `required-version`, exact ruff and ty, the ignore list with reasons); `.github/dependabot.yml`'s uv entry                                                                                                                                                                                                                                                                                                            |
+| S11      | `apps/api/pyproject.toml` (`exclude-newer`, `required-version`, exact ruff and ty, the ignore list with reasons); `.github/dependabot.yml`'s uv entry, and its docker-compose entry, which refreshes `postgres:18`'s digest and never proposes another major version (ADR-015, ADR-017 fix PostgreSQL 18)                                                                                                                                                        |
 | S12      | `apps/editor/build/api-proxy.test.ts`; observed: `/api/v1/nothing` through the editor's dev port answered the API's 404 envelope, and `/api/v1/openapi.json` 200                                                                                                                                                                                                                                                                                                 |
 | S13      | `apps/api/AGENTS.md`, `apps/api/CLAUDE.md`, the root guide's routing row, the README's prerequisites                                                                                                                                                                                                                                                                                                                                                             |
 | S14      | `.agents/skills/implement-story/references/validation.md` (the gate by app)                                                                                                                                                                                                                                                                                                                                                                                      |

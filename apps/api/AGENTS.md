@@ -6,8 +6,9 @@ repository root.
 ## What this is
 
 A synchronous FastAPI service over PostgreSQL, through SQLAlchemy and psycopg (ADR-017).
-The editor reaches it on its own origin: its dev server proxies `/api` here (ADR-020). Contract routes live under `/api/v1`; the platform's probes, `/health`
-and `/ready`, at the root, unversioned (ADR-017's amendments).
+The editor reaches it on its own origin: its dev server proxies `/api` here (ADR-020).
+Contract routes live under `/api/v1`; the platform's probes, `/health` and `/ready`, at
+the root, unversioned (ADR-017's amendments).
 
 ## Layering (ADR-017)
 

@@ -35,16 +35,21 @@ def route_template(entry: Scope, routed: Scope) -> str:
 
     `entry` is the request's scope before routing, `routed` after it. A request refused
     before routing (a bad `Host`, a body over the limit), an unknown path and a redirect
-    to the path with or without its trailing slash are `unmatched`; a 405 names the
-    route that takes the path; a mounted app with no routes is its mount's template and
-    `{path:path}`.
+    to the path with or without its trailing slash are `unmatched`; a FastAPI route's
+    405 names the route that takes the path; a mounted app with no routes is its
+    mount's template and `{path:path}`. A request a mount handled where the app's own
+    routes show none (one inside an included router) is `unmatched` too, so no
+    fragment of its path's template stands for the whole.
     """
-    mounts: list[Mount] = []
-    if routed.get("root_path", "") != entry.get("root_path", ""):
-        mounts = _mounts(getattr(entry.get("app"), "routes", ()), entry)
+    app_routes = getattr(entry.get("app"), "routes", ())
+    mounted = routed.get("root_path", "") != entry.get("root_path", "")
+    mounts = _mounts(app_routes, entry) if mounted else []
+    if mounted and not mounts:
+        return UNMATCHED
     prefix = "".join(mount.path for mount in mounts)
-    innermost = mounts[-1].routes if mounts else getattr(entry.get("app"), "routes", ())
-    path = _fastapi_template(routed) or _starlette_template(innermost, routed)
+    path = _fastapi_template(routed) or _starlette_template(
+        mounts[-1].routes if mounts else app_routes, routed
+    )
     if path is not None:
         return prefix + path
     if mounts and not mounts[-1].routes:
@@ -66,8 +71,10 @@ def _fastapi_template(routed: Scope) -> str | None:
     """The template FastAPI matched, include prefixes and all."""
     fastapi = routed.get("fastapi")
     context = fastapi.get("effective_route_context") if isinstance(fastapi, dict) else None
-    path = getattr(context, "path", None) or getattr(routed.get("route"), "path", None)
-    return path if isinstance(path, str) and not isinstance(routed.get("route"), Mount) else None
+    # A mount's own path is only a prefix, never a route's template.
+    route = None if isinstance(routed.get("route"), Mount) else routed.get("route")
+    path = getattr(context, "path", None) or getattr(route, "path", None)
+    return path if isinstance(path, str) else None
 
 
 def _starlette_template(routes: Sequence[BaseRoute], routed: Scope) -> str | None:

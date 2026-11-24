@@ -3,7 +3,7 @@
 - **Status**: Proposed — a residual STY-090's security review found, left for the first
   route whose body can carry keys of the caller's choosing
 - **Type**: Chore
-- **Area**: Infrastructure
+- **Area**: API
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020 (validation errors leave out the

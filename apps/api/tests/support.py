@@ -84,8 +84,20 @@ def add_test_routes(app: FastAPI) -> FastAPI:
     def admin_health() -> dict[str, str]:
         return {"status": "ok"}
 
+    # A sub-app mounted on a router that is itself included, so the app's own routes
+    # show no mount for it.
+    hidden = FastAPI()
+
+    @hidden.get("/health")
+    def hidden_health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    mounting = APIRouter()
+    mounting.mount("/sub/{who}", hidden)
+
     router.include_router(nested)
     router.include_router(admin, prefix="/admin")
+    router.include_router(mounting, prefix="/inc")
     app.include_router(router)
 
     # A mounted app, under a template of its own, and a mounted app with no routes.

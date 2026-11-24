@@ -87,6 +87,11 @@ ROUTES = {
         200,
         "/test/admin/health",
     ),
+    "a mounted app inside an included router": (
+        lambda c: c.get(f"/test/inc/sub/{PLANTED}/health"),
+        200,
+        "unmatched",
+    ),
     "a route in a mounted app": (
         lambda c: c.get(f"/test/tenants/{PLANTED}/items/{PLANTED}"),
         200,

@@ -3,9 +3,8 @@
 `RequestContext` gives each request its ID, sets the headers on every response, writes
 the access line (named as `access_log` names it) and answers an unexpected error
 itself, so nothing reaches Starlette's or uvicorn's own error handling, which would log
-the exception's message. Inside it,
-`HostAllowList` refuses a `Host` the settings do not list, and `BodyLimit` refuses a
-body over the limit before it is read whole.
+the exception's message. Inside it, `HostAllowList` refuses a `Host` the settings do
+not list, and `BodyLimit` refuses a body over the limit before it is read whole.
 """
 
 import logging
@@ -80,7 +79,10 @@ class RequestContext:
                 await error_response(ErrorCode.INTERNAL_ERROR)(scope, receive, send_with_headers)
         finally:
             route = route_template(entry, scope)
-            if not (route in PROBE_PATHS and status in SUCCESS):
+            # A probe is the root's own path and route both, so no other route's
+            # template can silence a line.
+            probe = route in PROBE_PATHS and entry["path"] == route
+            if not (probe and status in SUCCESS):
                 logger.info(
                     "request",
                     extra={

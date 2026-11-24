@@ -17,9 +17,9 @@ const SKIPPED_DIRECTORIES = new Set(["node_modules", "dist"])
 const RECORDS_GUIDE_DIRECTORY = join(ROOT, "docs")
 
 /**
- * Bounded by any non-alphanumeric, since `\b` treats `_` as part of a word and so missed
- * an ID set in italics (`_STY-… amendments_`, an ADR section's name), which a reviewer
- * caught instead. Review by February 2027.
+ * Not preceded by a letter or digit, nor followed by a digit, since `\b` treats `_` as
+ * part of a word and so missed an ID set in italics (`_STY-… amendments_`, an ADR
+ * section's name), which a reviewer caught instead. Review by February 2027.
  */
 const RECORD_ID = /(?<![A-Za-z\d])(?:STY|DEF|CHO|EPC)-\d{3}(?!\d)/g
 
@@ -56,12 +56,11 @@ describe("agent guides", () => {
   it.each([
     ["STY-101", true],
     ["(ADR-020, _STY-101 amendments_)", true],
-    ["_DEF-031_", true],
+    ["_CHO-048_", true],
     ["XSTY-101", false],
     ["STY-1010", false],
   ])("reads %j as a record ID: %s", (text, isRecordId) => {
-    expect(RECORD_ID.test(text)).toBe(isRecordId)
-    RECORD_ID.lastIndex = 0
+    expect(text.match(RECORD_ID) !== null).toBe(isRecordId)
   })
 
   it.each(findGuides(ROOT))("%s cites no backlog record IDs", (path) => {

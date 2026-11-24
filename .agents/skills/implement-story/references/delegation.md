@@ -90,7 +90,10 @@ notifications, use this lifecycle at every nesting level:
 
 1. Start each worker with a complete Worker contract, sharing the current
    checkout for read-only reviews; request a separate checkout only when one is
-   authorized. A child receives its brief, not your history.
+   authorized. Until every reviewer sharing the checkout has reported, a
+   re-check or final fresh pass included, leave its files as found: it reads
+   them beside the pinned diff, so a fix, or a break made to red-check a test,
+   is what it reviews. A child receives its brief, not your history.
 2. Save each worker's task identifier, link, assigned lane, model and pinned
    head in the task handoff. Follow any instructions the tool returns.
 3. After independent work is exhausted, save pending tasks and end the turn;
@@ -99,10 +102,7 @@ notifications, use this lifecycle at every nesting level:
    Tell the user what is pending and its pinned head; give an expected
    duration only from observed runs.
 4. On notification, consume the result, match it to the saved task and
-   reviewed head, and update the handoff. While a reviewer sharing the
-   checkout still runs, a final pass included, leave the checkout's files as
-   found: it reads them beside the pinned diff, so a fix or a deliberate break
-   made meanwhile is what it reviews. Then act on findings. If another required
+   reviewed head, and update the handoff. Act on findings. If another required
    review is pending, yield again; continue once every required review has
    passed the required head.
 5. Treat failed, cancelled or interrupted workers, pending questions and

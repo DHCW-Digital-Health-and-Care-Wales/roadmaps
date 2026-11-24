@@ -44,3 +44,8 @@ the caller's key, with its `type` unchanged
 - **D1** (agent, 2026-11-24, STY-090's security review): recorded as a chore rather than
   fixed in STY-090, since no route reaches it yet and the fix wants the first such model
   to test against.
+- **D2** (owner, 2026-11-24, STY-092 D13 and D17): STY-092 defers `extra="forbid"` on
+  `ApiRequestModel` until CHO-047 and the first request-body story. Because
+  `ApiRequestModel` also backs `Annotated[Model, Query()]` query-parameter models, this
+  chore's fix and test rows also cut back caller-chosen query keys (`["query", "<key>"]`
+  → `["query"]`) when `extra="forbid"` is turned on for `ApiRequestModel`.

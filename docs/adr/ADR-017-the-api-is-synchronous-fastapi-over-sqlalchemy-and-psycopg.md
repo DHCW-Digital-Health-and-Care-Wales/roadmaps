@@ -221,29 +221,40 @@ _Errors_ and _Operation_ stands.
 
 ### STY-092 amendments
 
-From the owner's STY-092 grilling (2026-11-24, STY-092 D1 to D6, D9, D11 and D13); the
-rest of _Errors_ and _The contract with the editor_ stands.
+From the owner's STY-092 grilling and review questions (2026-11-24, STY-092 D1 to D6, D9,
+D11, D13, D17 and D18); the rest of _Errors_ and _The contract with the editor_ stands.
+STY-092 records the agent's decisions that build on them.
 
-- **JSON on the wire is camelCase everywhere** (request bodies, response bodies, query
-  params and error `params`), through one shared Pydantic `ApiModel` base
+- **JSON on the wire is strictly camelCase everywhere** (request bodies, response bodies,
+  query params and error `params`), through two Pydantic bases: `ApiRequestModel`
   (`alias_generator=to_camel`, `serialize_by_alias=True`, `validate_by_alias=True`,
-  `validate_by_name=True`); `extra="forbid"` waits for CHO-047 and the first request-body
-  story.
+  `validate_by_name=False`, rejecting `snake_case` on inbound JSON bodies and
+  `Annotated[Model, Query()]` query models) and `ApiResponseModel`
+  (`validate_by_name=True`, so Python builds responses in `snake_case` while serialising
+  `camelCase`). Plain function query parameters use `Annotated[Model, Query()]` or an
+  explicit `alias`; `extra="forbid"` on `ApiRequestModel` waits for CHO-047 and the first
+  request-body story.
 - **OpenAPI exposes `ErrorCode` and `ErrorResponse`** (`{detail, code, params}`) in
-  `components.schemas`, served identically at local `/api/v1/openapi.json` and committed
-  at `apps/api/openapi.json` (exported offline without a database).
+  `components.schemas` and strips FastAPI's built-in `HTTPValidationError` and
+  `ValidationError` (pointing generated 422 response refs to `ErrorResponse`), served
+  identically at local `/api/v1/openapi.json` and committed at `apps/api/openapi.json`
+  (exported offline without a database).
 - **`packages/api-types` (`@roadmaps/api-types`) commits raw TypeScript** under
   `packages/api-types/src/generated/` with no build step: erasable union types
   (`enums: false`) and `zod/mini` schemas (`compatibilityVersion: "mini"`) only, with no
-  generated fetch SDK. Generated files are ignored by Prettier and ESLint and typechecked
-  under `tsconfig.base.json`.
+  generated fetch SDK. Committed generated artifacts (`apps/api/openapi.json` and
+  `packages/api-types/src/generated/`) are ignored by Prettier (and generated TS by
+  ESLint), and the package is typechecked under `tsconfig.base.json`.
 - **The import boundary covers all of `apps/editor/src/` except `src/infrastructure/**`**,
-  forbidding `@roadmaps/api-types` in `app/`, `routes/`, `i18n/` and `lib/` as well as
+  forbidding `@roadmaps/api-types` (and relative paths into `packages/api-types`) in
+  `app/`, `routes/`, `i18n/`, `lib/`, `test/`, `styles/` and `src/` root files as well as
   `domain/`, `features/` and `components/`.
 - **Error responses fall back by HTTP status** when not a valid envelope or carrying an
-  unrecognised `ErrorCode` (`401`, `403`, `404`, `429`, `5xx`, plain-text `400`/`413` →
-  non-retryable `unknown`, other malformed/unknown `4xx` → `invalid-response`), keeping
-  edge refusals and rolling deploys usable without adding speculative `AppErrorKind`s.
+  unrecognised `ErrorCode` (`401` → `unauthenticated`, `403` → `forbidden`, `404` →
+  `not-found`, `429` → `rate-limited`, `5xx` → retryable `unknown`, non-envelope
+  `400`/`413` → non-retryable `unknown`, other malformed or unknown `4xx` or unexpected
+  non-2xx outside `4xx`/`5xx` → `invalid-response`), keeping edge refusals and rolling
+  deploys usable without adding speculative `AppErrorKind`s.
 
 ## Consequences
 

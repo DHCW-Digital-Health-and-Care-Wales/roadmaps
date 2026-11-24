@@ -121,7 +121,7 @@ coherent change. Slice a large story (a new repository method, several routes, a
 rewritten screen) so each such scenario's test goes red before the code that
 passes it. Any other behaviour (layout, copy, a review fix) may take its test
 after the code, once that test is shown red by breaking each condition the new
-behaviour adds, since a condition whose break leaves it green is untested or
+behaviour adds, since a condition whose break leaves the test green is untested or
 dead; record the red in Delivery's Scenario evidence. Red shown by breaking finished
 code proves a test discriminates, not that it came first: on a test-first
 change, report it as a departure, never as TDD evidence. Undo a break from a

@@ -84,8 +84,11 @@ secrets, tokens and keys unread, values and metadata alike.
 - **Secrets and personal data.** No secret, access token, session ID, cookie or email
   in source, config, browser storage, an application log, an error, a test fixture or
   the PR. A value in a URL, which request logs and history keep, only where an
-  accepted ADR allows it and says what bounds it. Personal data minimised and its
-  retention stated (ADR-018).
+  accepted ADR allows it and says what bounds it. An allow-list of log, span or error
+  fields bounds names, not values: trace each allowed field's value to its source, and
+  treat one the caller chooses (a path, a method, a header, a key it sent) as caller
+  text whatever the field is called. Personal data minimised and its retention stated
+  (ADR-018).
 - **Reconnaissance.** The repository is public: no change hands a reader targeting
   detail, such as how many or which accounts hold privileged access, internal
   hostnames, network addresses or account and project IDs beyond what a deployment

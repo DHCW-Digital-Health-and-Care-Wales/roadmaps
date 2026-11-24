@@ -85,10 +85,11 @@ secrets, tokens and keys unread, values and metadata alike.
   in source, config, browser storage, an application log, an error, a test fixture or
   the PR. A value in a URL, which request logs and history keep, only where an
   accepted ADR allows it and says what bounds it. An allow-list of log, span or error
-  fields bounds names, not values: trace each allowed field's value to its source, and
-  treat one the caller chooses (a path, a method, a header, a key it sent) as caller
-  text whatever the field is called. Personal data minimised and its retention stated
-  (ADR-018).
+  fields bounds names, not values: trace each allowed field's value to its source. One
+  the caller chooses (a path, a method, a header, a key it sent) is untrusted and can
+  carry a token or an email whatever the field is called, so it passes only as a value
+  the server derives from it (a route template, a known value or a placeholder).
+  Personal data minimised and its retention stated (ADR-018).
 - **Reconnaissance.** The repository is public: no change hands a reader targeting
   detail, such as how many or which accounts hold privileged access, internal
   hostnames, network addresses or account and project IDs beyond what a deployment

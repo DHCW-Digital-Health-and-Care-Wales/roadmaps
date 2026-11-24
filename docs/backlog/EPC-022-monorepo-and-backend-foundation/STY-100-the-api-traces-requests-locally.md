@@ -198,6 +198,10 @@ file checks join STY-090's Compose test.
   OpenTelemetry SDK's own failure lines follow STY-090 S7's allow-list (logger and
   exception type, no URL or message), tested against a closed port. Changes S1, S2,
   S7.
+- **D20** (agent, 2026-11-23, from STY-090 D35, the owner's answer narrowing S7): spans
+  name a request by its route's template (`http.route`), never by the
+  path a caller sent (`url.path`); a request matching no route is named by its method
+  alone (D13). Gives S4.
 
 ## Out of scope
 

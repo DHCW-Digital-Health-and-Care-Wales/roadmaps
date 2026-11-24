@@ -158,6 +158,52 @@ function claudeShimMismatches(
   return mismatches
 }
 
+/**
+ * Every `SKILL.md` with `disable-model-invocation: true` must match any sibling
+ * `agents/openai.y*ml` (`allow_implicit_invocation: false`) so Claude and Codex runtimes
+ * agree on discovery.
+ * Incident: in November 2026 adding `disable-model-invocation: true` to SKILL.md left
+ * sibling `agents/openai.yaml` files with `allow_implicit_invocation: true`.
+ * Review by 2027-02-24.
+ */
+function invocationPolicyMismatches(
+  paths: readonly string[],
+  readContent: (path: string) => string,
+): string[] {
+  const pathSet = new Set(paths)
+  const skillManifests = paths.filter((path) =>
+    /^\.agents\/skills\/[^/]+\/SKILL\.md$/.test(path),
+  )
+  const mismatches: string[] = []
+  for (const skillPath of skillManifests) {
+    const frontmatter = /^---\n([\s\S]*?)\n---/.exec(
+      readContent(skillPath),
+    )?.[1]
+    if (
+      !frontmatter ||
+      !/^disable-model-invocation:\s*true$/m.test(frontmatter)
+    ) {
+      continue
+    }
+    const dir = dirname(skillPath)
+    const openaiPath = [
+      `${dir}/agents/openai.yaml`,
+      `${dir}/agents/openai.yml`,
+    ].find((candidate) => pathSet.has(candidate))
+    if (!openaiPath) continue
+    if (
+      !/^\s*allow_implicit_invocation:\s*false(?:\s|$)/m.test(
+        readContent(openaiPath),
+      )
+    ) {
+      mismatches.push(
+        `${openaiPath} must set allow_implicit_invocation: false to match ${skillPath}`,
+      )
+    }
+  }
+  return mismatches
+}
+
 const repositoryFiles = listRepositoryFiles()
 const guides = selectGuides(repositoryFiles)
 const agentsGuides = repositoryFiles.filter(
@@ -288,5 +334,33 @@ describe("agent guides", () => {
       missing,
       `${path} cites a path that does not exist on disk: update or remove it.`,
     ).toEqual([])
+  })
+
+  it("detects SKILL.md disable-model-invocation mismatches with openai.yaml", () => {
+    const disabled = "---\nname: x\ndisable-model-invocation: true\n---\n"
+    const files: Record<string, string> = {
+      ".agents/skills/ok/SKILL.md": disabled,
+      ".agents/skills/ok/agents/openai.yaml":
+        "policy:\n  allow_implicit_invocation: false\n",
+      ".agents/skills/true/SKILL.md": disabled,
+      ".agents/skills/true/agents/openai.yaml":
+        "policy:\n  allow_implicit_invocation: true\n",
+      ".agents/skills/commented/SKILL.md": disabled,
+      ".agents/skills/commented/agents/openai.yml":
+        "# allow_implicit_invocation: false\n",
+      ".agents/skills/model-invoked/SKILL.md": "---\nname: y\n---\n",
+      ".agents/skills/model-invoked/agents/openai.yaml":
+        "policy:\n  allow_implicit_invocation: true\n",
+    }
+    expect(
+      invocationPolicyMismatches(Object.keys(files), (p) => files[p] ?? ""),
+    ).toEqual([
+      ".agents/skills/true/agents/openai.yaml must set allow_implicit_invocation: false to match .agents/skills/true/SKILL.md",
+      ".agents/skills/commented/agents/openai.yml must set allow_implicit_invocation: false to match .agents/skills/commented/SKILL.md",
+    ])
+  })
+
+  it("matches disable-model-invocation in SKILL.md with sibling openai.yaml policy", () => {
+    expect(invocationPolicyMismatches(repositoryFiles, read)).toEqual([])
   })
 })

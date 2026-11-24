@@ -53,10 +53,10 @@ one that failed; with them green, the head has passed the full gate. Classify
 any other failure that passes alone as `pr-watch.md` does (_Each event or
 observation_).
 
-`pnpm editor:test:e2e` builds and serves the app on port 4173 (in a parallel
-worktree, its `PREVIEW_PORT`: `pnpm worktree:info`) and reuses a server
-already listening there locally: stop a stale `pnpm editor:preview` first
-(`fuser -k <port>/tcp`).
+Stop any stale `pnpm editor:preview` or `pnpm site:preview` on the checkout's
+preview port (`fuser -k <port>/tcp`; see `apps/editor/AGENTS.md` and
+`apps/public-site/AGENTS.md`) before running Playwright E2E, since Playwright
+reuses a server already listening there locally.
 
 Give a suite you wait for in the foreground a command timeout longer than its
 run; under host load the Vitest run alone outlasts a runtime's default (2

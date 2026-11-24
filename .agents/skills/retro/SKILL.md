@@ -1,6 +1,7 @@
 ---
 name: retro
 description: Run a retrospective after a delivered PR is raised, merged or blocked, or on request, and implement improvements to future agent runs in one separate PR, which gets no retrospective of its own.
+disable-model-invocation: true
 ---
 
 # Session retrospective

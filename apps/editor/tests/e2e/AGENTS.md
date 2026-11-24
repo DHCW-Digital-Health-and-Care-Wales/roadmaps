@@ -1,64 +1,55 @@
 # apps/editor/tests/e2e — Playwright
 
-End-to-end tests of the production build, with Google faked (ADR-006).
+End-to-end tests of the production build, with Google faked (ADR-006). Paths are from the
+repository root.
 
-- Import `test`, `expect`, `connect` and `roadmapCards` from `./fixtures/test`, never
-  from `@playwright/test`, so every test gets the fakes and the hermetic guard. Import
-  nothing from `apps/editor/src/`: tests drive the app as a user does, through roles and copy.
-- `gis` (`apps/editor/tests/e2e/fixtures/fake-gis.ts`) plays Google Identity Services and `sheets`
-  (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`) the Sheets API, over the example spreadsheet in
-  the workspace root's `fixtures/sheets/`; their docblocks are the API. A list load reads `metadata`,
-  then `values:<first tab>` and a `Families` or `Categories` tab's; a roadmap's items
-  read all of those again, then add `values:<its tab>` (ADR-011), so a roadmap's page
-  is five reads on the example spreadsheet; a publish is one `batchUpdate`, recorded
-  in `sheets.writes`, never in `reads`.
+## Fakes and fixtures
+
+- Import `test`, `expect`, `connect` and `roadmapCards` from
+  `apps/editor/tests/e2e/fixtures/test.ts`, never from `@playwright/test`, so every test
+  gets the fakes and the hermetic guard. Import nothing from `apps/editor/src/`: tests
+  drive the app as a user does, through roles and copy.
+- `gis` (`apps/editor/tests/e2e/fixtures/fake-gis.ts`) fakes Google Identity Services and
+  `sheets` (`apps/editor/tests/e2e/fixtures/fake-sheets.ts`) the Sheets API over
+  `fixtures/sheets/`; their docblocks are the API (writes record in `sheets.writes`,
+  never `reads`).
 - Anything the real APIs would reject, any request to another origin, and any access
   token reaching storage, cookies, the URL or the console fail the test at teardown.
-  Add a new external dependency to the fakes, never to the guard.
-- Only an item with an ID can conflict: a co-lead test publishes once first
-  (`publishOnce` in `apps/editor/tests/e2e/fixtures/dialogs.ts`) to give every item its ID, then calls
-  `sheets.coLead`.
-- No sleeps. For back-off or expiry, `page.clock.install()` before `goto`, then
-  fast-forward; time still runs in real time until moved, so stop a fast-forward short
-  of a deadline by more than a loaded runner's steps take (seconds, not one), then move
-  the rest. Move the clock to a session's end or its warning by `sessionMs()` and
-  `SESSION_WARNING_MS` (`apps/editor/tests/e2e/fixtures/fake-gis.ts`), never a sum written in the spec. The
-  warning opens two minutes before a session ends and, being modal, hides the page from
-  role queries: a grant shorter than about 180 s opens it at once.
-- `page.evaluate` runs with a user gesture, so it cannot exercise the popup-gesture
-  check.
-- `sheets.reads`, `sheets.tokens` and `gis.tokenRequests` fill as requests arrive: await
-  a state only those requests produce, or `expect.poll`, before asserting on one. Cached
-  cards already on screen prove nothing.
-- Navigate with relative URLs (`./`, `./#/roadmaps/producta`) so a base path only
-  changes `baseURL`.
-- The leave warning is a `beforeunload` dialog: `page.close({ runBeforeUnload: true })`
-  raises it, and dismissing it in a `page.on("dialog")` handler keeps the page open.
-- Specs assert English copy from `apps/editor/src/i18n/locales/en.ts`. Before pushing a change to a
-  control's text or accessible name, grep `apps/editor/tests/e2e` for the old text and run every
-  spec that reaches the control, or the whole suite when it is in the shell.
+  Extend the fakes for a new external dependency; never loosen the guard.
+- Drive the header's account menu through `chooseFromAccountMenu` / `disconnectFromHeader`
+  (`apps/editor/tests/e2e/fixtures/account-menu.ts`) and the reconnect dialog through
+  `reconnectDialog` / `reconnectButton` (`apps/editor/tests/e2e/fixtures/dialogs.ts`);
+  the header has no Connect or Disconnect button.
 
-- The header has no Connect or Disconnect button: `chooseFromAccountMenu` and
-  `disconnectFromHeader` (`apps/editor/tests/e2e/fixtures/account-menu.ts`) drive its account menu. Answer the
-  reconnect dialog with `reconnectDialog` and `reconnectButton` (`apps/editor/tests/e2e/fixtures/dialogs.ts`).
-- At 1280px the navigation stands beside the page and its links share names with the
-  list's and the cards': scope a page's own to `main`. Playwright matches a role's name
-  by substring, so name "More" `exact`.
-- Run a layout check with `reducedMotion: "reduce"` too: no transition runs, so a class
-  a bar gains takes effect in its own frame. Measure its border box.
-- What a step causes lands later, on a loaded runner much later: a popup takes focus a
-  frame after it shows, and Base UI returns focus, focuses a notice or acts on a menu's
-  choice only as the popup's closing animation ends. A helper that opens a popup returns
-  once focus is in it (`openDialog`, `openAccountMenu`); one that closes, chooses or
-  confirms returns once the popup has gone, by when what its closing causes has landed
-  (`chooseFromMore`, `confirmPublish`, `escapeFrom`). A spec waits the same way before
-  its next step acts, and presses Escape in a popup that holds focus with `escapeFrom`.
-- Read boxes compared with each other in one `boxesOf` call, so they are of one moment.
-- Redden a race by holding what its step waits for, releasing it a while later, and
-  asserting once, the moment the helper returns: a closing animation paused by a style
-  rule (`holdPublishDialogClosing`), a request held with `page.route`, the clock paused
-  with `page.clock.pauseAt`. A delay that hopes a later step collides goes red only now
-  and then.
+## Timing, layout and selectors
+
+- No sleeps. For back-off or expiry, install `page.clock` before `goto` and fast-forward;
+  time still ticks in real time until moved, so stop seconds short of a deadline before
+  moving the rest. Move to session warning/end with `sessionMs()` and `SESSION_WARNING_MS`
+  (`apps/editor/tests/e2e/fixtures/fake-gis.ts`), never a hardcoded sum; a grant shorter
+  than ~180 s opens the modal warning immediately and hides the page from role queries.
+- `sheets.reads`, `sheets.tokens` and `gis.tokenRequests` fill as requests arrive: await
+  a state only those requests produce, or `expect.poll`, before asserting on one (cached
+  cards already on screen prove nothing).
+- Navigate with relative URLs (`./`, `./#/roadmaps/producta`) so a base path only
+  changes `baseURL`. Trigger the `beforeunload` leave warning with
+  `page.close({ runBeforeUnload: true })` and handle it in `page.on("dialog")`.
+- Specs assert English copy from `apps/editor/src/i18n/locales/en.ts`. Before changing a
+  control's text or accessible name, grep `apps/editor/tests/e2e/` for the old text and
+  run every spec that reaches it (or the whole suite for shell controls).
+- At 1280 px the navigation rail shares link names with cards: scope page queries to
+  `main`, and pass `exact: true` for `"More"` since Playwright matches role names by
+  substring.
+- Run layout checks with `reducedMotion: "reduce"` too, measure border boxes, and read
+  compared boxes in one `boxesOf` call (`apps/editor/tests/e2e/fixtures/layout.ts`).
+- Wait for popup focus/close transitions to settle before acting next: opening helpers
+  (`openDialog`, `openAccountMenu`) return once focus is inside; closing/confirming
+  helpers (`chooseFromMore`, `confirmPublish`, `escapeFrom`) return once the popup is
+  gone. Press Escape inside a focused popup with `escapeFrom`.
+- Redden a race deterministically by holding what a step waits for (`page.route`,
+  `page.clock.pauseAt`, or a paused closing animation like `holdPublishDialogClosing`),
+  releasing it, and asserting once when the helper returns — never with a hope-it-collides
+  delay.
 
 ## What earns an E2E test
 
@@ -80,28 +71,20 @@ End-to-end tests of the production build, with Google faked (ADR-006).
 The DHCW look is held without screenshots: aria snapshots, computed styles and focus
 tours.
 
-- Each key screen has an aria snapshot in `structure.spec.ts-snapshots/`, matched
-  exactly (`children: "deep-equal"`), so an element added or removed fails. After a
-  deliberate change run `pnpm editor:test:e2e structure.spec.ts --update-snapshots` and review
-  the YAML diff. That flag never writes a _new_ snapshot: use `--update-snapshots=all`,
-  check `git status` lists it, and restore the others it rewrote with
-  `git checkout -- <file>`. In each snapshot it writes, an update drops checks.
-  `apps/editor/build/aria-snapshot-literals.test.ts` fails the patterns and `text: ""` it writes in
-  place of a literal; text that is a control's only child is dropped
-  (`button "Publish changes": Publish` to `button "Publish changes"`), which fails the
-  next run. Put back the literal where the
-  fixtures fix the value and each control's text, then commit.
-- CI serves under `/roadmaps/`: after changing the structure snapshots, run them
-  once with
+- Each key screen has an exact aria snapshot (`children: "deep-equal"`) in
+  `apps/editor/tests/e2e/structure.spec.ts-snapshots/`. After a deliberate change, run
+  `pnpm editor:test:e2e structure.spec.ts --update-snapshots` (or `=all` to write a new
+  snapshot, restoring unrelated rewritten files with `git checkout -- <file>`) and review
+  the YAML diff. Playwright's update replaces fixed literals with loose patterns (caught
+  by `apps/editor/build/aria-snapshot-literals.test.ts`) and drops text that is a
+  control's only child (`button "Publish changes": Publish` → `button "Publish changes"`),
+  which breaks the next run — restore literals and control text before committing.
+- CI serves under `/roadmaps/`: after changing structure snapshots, run them once with
   `GITHUB_REPOSITORY=DHCW-Digital-Health-and-Care-Wales/roadmaps`.
-- Snapshot a `main`, header, menu, dialog, form or notice, never the footer, whose
-  version changes per build.
-- Compare a computed style with the token it comes from, `tokenColour(page, "--token")`
+- Snapshot `main`, header, menu, dialog, form or notice, never the footer (whose version
+  changes per build).
+- Compare computed styles with `tokenColour(page, "--token")`
   (`apps/editor/tests/e2e/fixtures/look.ts`), never a copied colour.
-- The focus tours need every tab stop to match `focus-fill`, `focus-ring` or
-  `focus-link`: a new kind of control uses one of them, or the check gains a utility.
-- The item dialog's tour (`focus-indicator.spec.ts`) opens each form field that opens
-  on request, so its controls are toured: open a new one there too.
-- A page tour names each stop by its `aria-label` or label, and fails if two share a
-  name; a text field out of the Tab order fails it too, unless it is the details
-  outline's (`NOT_A_STOP`). Give a new text field a label of its own.
+- Every tab stop in `apps/editor/tests/e2e/focus-indicator.spec.ts` must match
+  `focus-fill`, `focus-ring` or `focus-link` and carry a unique label; open any new
+  on-request form field in the item dialog tour there too.

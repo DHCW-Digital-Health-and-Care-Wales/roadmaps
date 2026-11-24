@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Read-only correctness review against requirements and runtime contracts. The Opus half of the correctness lane; Sol (Codex gpt-6.1-sol) runs the same brief independently.
+description: Read-only correctness review against requirements and runtime contracts. The Opus half of the correctness lane; see `.agents/skills/implement-story/references/delegation.md` for its independent peer reviewer.
 model: opus
 tools: Read, Grep, Glob, Bash
 ---

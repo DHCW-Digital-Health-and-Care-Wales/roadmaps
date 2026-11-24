@@ -1,7 +1,6 @@
 ---
 name: quality-review
 description: Review a diff, branch or PR for code quality, not correctness — layering, naming, readability, duplication, maintainability and conformance to this repository's AGENTS.md guides and ADRs. Use for a quality, clean-code or maintainability review, and before raising a PR. Bugs belong to code-review.
-user-invocable: true
 ---
 
 # Quality Review

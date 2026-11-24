@@ -1,6 +1,7 @@
 ---
 name: playwright-cli
 description: Automate browser interactions, test web pages and work with Playwright tests.
+disable-model-invocation: true
 ---
 
 # Browser Automation with playwright-cli

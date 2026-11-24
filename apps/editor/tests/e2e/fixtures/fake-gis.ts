@@ -190,6 +190,7 @@ export class FakeGis {
     if (request.scope !== SHEETS_SCOPE) {
       this.violations.push(`initTokenClient() with scope "${request.scope}"`)
     }
+    // Note: `page.evaluate` runs with a user gesture, so it cannot exercise this check.
     if (!userGesture) {
       this.violations.push("requestAccessToken() outside a user gesture")
       return { popupError: "popup_failed_to_open" }

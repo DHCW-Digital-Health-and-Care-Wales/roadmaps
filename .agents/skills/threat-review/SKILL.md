@@ -3,7 +3,6 @@ name: threat-review
 description: >-
   Security review of a diff, branch or PR, code or a design record, from the attacker's
   side. Use beside code-review and quality-review on a security-relevant PR.
-user-invocable: true
 ---
 
 # Threat review

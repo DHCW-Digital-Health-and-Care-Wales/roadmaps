@@ -35,8 +35,9 @@ open for the owner has none. Count fix pushes from observed pushes, never
 from commit count. Record zero only when collection established none
 occurred; otherwise write `unknown` with the reason and scope of missing
 evidence. Capture tokens/cost only when the runtime reports them (a
-completion notification's usage, a delegated task's status), with provider units and
-coverage; never estimate them. Name the gaps: sessions whose usage nothing
+completion notification's usage, a delegated task's status) or this run's own
+session logs expose them, with provider units and coverage; never estimate them
+and never search unrelated personal sessions. Name the gaps: sessions whose usage nothing
 reported, other providers' sessions, and sessions whose brief names no item.
 For wall-clock phases inside one Claude session,
 `.agents/skills/retro/scripts/session-timeline.mjs` reads its log.
@@ -65,9 +66,8 @@ Include the record in the orchestration retrospective PR when there is one.
 If that retro is a no-op, publish one report-only PR on an authorized separate
 branch cut from the default branch; it is evidence, not a manufactured process
 improvement. Both kinds are left open for the owner per orchestrate step 6. A
-report-only PR gets `pnpm format:check`, a check that each path and link it
-cites exists, and no automatic retrospective, review agents or babysitting of
-its own. Do not create one PR per item or event for metrics. If branch/access
+report-only PR gets `pnpm format:check` and `pnpm test:docs`, and no automatic
+retrospective, review agents or babysitting of its own. Do not create one PR per item or event for metrics. If branch/access
 constraints prevent publication, save the final record in the run folder, give
 its location and exact publication blocker, and mark it unpublished in the
 handoff; a no-op alone is not a reason to discard it.

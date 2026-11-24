@@ -17,46 +17,23 @@ folder does not outlive the run.
 
 ## Lifecycle
 
-The delivery child owns implement-story steps 1–4: it raises the reviewed PR
-and links it. The top-level orchestrator owns everything after: reporting the
-PR ready for review, PR monitoring and merge only when the user authorized
-them, and the retro.
-Give the delivery child explicit authority to spawn fresh reviewer
-grandchildren with the runtime's delegation tool, as described in
-`.agents/skills/implement-story/references/delegation.md` (another provider's
-model, such as Sol, needs a cross-provider delegation tool). It saves task IDs
-and pinned heads; where the runtime offers async delegation with completion
-notifications it ends its turn while reviews run and resumes on their
-completion, otherwise it waits in the foreground. A review yield keeps the assignment pending;
-the final handoff happens after the reviewed PR opens or a blocker is recorded,
-and the child's handoff record marks it as the hand-back.
+The delivery child owns `.agents/skills/implement-story/SKILL.md` steps 1–4
+(implement, verify, spawn fresh independent reviewer grandchildren per
+`.agents/skills/implement-story/references/delegation.md`, fix findings, open
+and link the PR, and mark its handoff record as handed back). The top-level
+orchestrator owns everything after (reporting the PR, any authorized PR
+monitoring/merge per `.agents/skills/implement-story/references/pr-watch.md`,
+and per-item + orchestration retros); children never watch PRs or launch
+successor sessions, and end their report with
+`PR <full URL>, head <SHA>, checks and reviews <state>` when a PR exists.
 
-Carry these environment facts into `brief-common.md`: complete briefs with
-no inherited conversation, shared read-only reviewer checkout, whether
-completion notifications reach the direct parent, and no parent polling or
-sleep loops.
-Require a current handoff containing open owner questions, reviewer
-IDs/heads, findings and verification, PR URL/head and remaining work. Where
-the runtime can link a PR to the session, children link every created or
-pushed PR right after the write; they never watch it, and end their
-report with `PR <full URL>, head <SHA>, checks and reviews <state>` when a
-PR exists.
-The top-level orchestrator honours the user's merge policy: by default it leaves
-the PR open for the owner; when babysitting or merging is authorized it
-follows `pr-watch.md`. It handles routine notifications directly and
-delegates only substantive investigation/fixes with the PR URL, expected
-head, actionable evidence, handoff path, checkout ownership, verification and
-stop condition. A fix worker checks for head drift, returns a compact result,
-and owns no PR watch; the top-level orchestrator reconciles new events and retains
-readiness decisions. Apply the same boundary to any retrospective
-implementation child. Record only usage the runtime or this run's own session
-logs expose (`run-summary.md`); never search unrelated personal sessions.
-
-After the item and its per-item retro reach their recorded outcome, the
-orchestrator reports and, if the runtime can start a new top-level session,
-hands the queue to one, then performs its own orchestration retro and ends.
-The successor reads the same run handoff and starts a fresh delivery child.
-Delivery and review children never launch that successor session themselves.
+Carry into `brief-common.md` the runtime's delegation facts (no inherited
+conversation, shared read-only reviewer checkout, async notifications vs
+foreground waits, no parent polling) and require a current handoff at
+`<run-folder>/progress/<ITEM>-handoff.md` (with open owner questions, reviewer
+IDs/heads, verification, PR URL/head and remaining work). Fix workers and
+retrospective children follow the same ownership boundary and usage rules
+(`run-summary.md`).
 
 ## Task
 
@@ -92,38 +69,27 @@ Carry forward what earlier items learned, for example:
 - whether `gh` GraphQL is refused, so REST `gh api` or the GitHub tools are
   needed;
 - how delegated work reports completion (notifications, or foreground
-  waits), per `delegation.md`;
+  waits), per `.agents/skills/implement-story/references/delegation.md`;
 - whether a delivery child's yield reaches its parent as a completion
   notification that looks like its hand-back;
 - for UI work, whether an economy or standard subagent can run the screenshot
-  check `screenshots.md` sets;
-- the PR policy: left open for the owner by default; babysat and merged per
-  `pr-watch.md` only when authorized;
-- that the merge method is squash, merged branches are deleted, and
-  `git fetch --prune` comes before reusing the branch name;
-- that `pnpm editor:test:e2e` builds and serves on port 4173, or a parallel
-  worktree's own `PREVIEW_PORT` (`pnpm worktree:info`), and reuses a server
-  already there locally, so a stale `pnpm editor:preview` must be stopped first;
-- that it creates the `delegation.md` handoff record when its branch is
-  cut, before the first heavy command, and keeps it current at
-  `<run-folder>/progress/<ITEM>-handoff.md`, in place of that file's
-  `/tmp/roadmaps-<record-id>-handoff.md`, so it can be resumed after a usage
-  limit or by a later orchestrator session.
+  check `.agents/skills/implement-story/references/screenshots.md` sets;
+- the run's PR policy (default open, or authorized babysit/merge/stacking per
+  `.agents/skills/implement-story/SKILL.md` and
+  `.agents/skills/implement-story/references/pr-watch.md`);
+- that it creates the `.agents/skills/implement-story/references/delegation.md`
+  handoff record when its branch is cut, before the first heavy command, and
+  keeps it current at `<run-folder>/progress/<ITEM>-handoff.md`, in place of
+  `/tmp/roadmaps-<record-id>-handoff.md`.
 
 ## Run policies
 
-- **Ownership**: the delivery agent stops once the reviewed PR is open and
-  linked; the top-level orchestrator owns what follows and delegates substantive
-  fixes.
-- **Merge**: the PR stays open for the owner unless the user authorized
-  merging; then the top-level orchestrator checks readiness and squash-merges per
-  `.agents/skills/implement-story/references/pr-watch.md`. Name the run's
-  merge or stacking policy here.
-- **Retro**: one retro per item, with the same independent review lanes and
-  the same PR policy (open by default).
+- **Ownership & PRs**: state the run's merge/stacking policy; delivery children
+  stop once the reviewed PR is open and linked, and per-item retros follow the
+  same review lanes and PR policy.
 - **Branch**: push only to `<designated branch>`, cut from the base the Task
-  names. After a merge, reset it per `pr-watch.md` "Merge". Finish on that
-  branch with the tree clean.
+  names, and finish with the tree clean (after a merge, reset per
+  `.agents/skills/implement-story/references/pr-watch.md`).
 - **New defects**: record each problem found outside the named items,
   pre-existing ones included, as a `Needs triage` record under
   `docs/backlog/defects/`, link it from the owning epic's `## Defects`

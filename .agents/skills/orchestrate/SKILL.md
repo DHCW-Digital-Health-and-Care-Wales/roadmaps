@@ -1,6 +1,7 @@
 ---
 name: orchestrate
 description: Orchestrate delivery of several backlog items (an epic, or chosen stories, defects and chores), one fresh delegated agent and reviewed PR per item, in sequence. Use for "orchestrate the delivery of …"; a single item uses implement-story.
+disable-model-invocation: true
 ---
 
 # Orchestrate delivery

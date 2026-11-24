@@ -25,7 +25,7 @@ Put nothing else in the root of `docs/`. A record's ID is a prefix, a dash and
 three digits: `EPC` epic, `STY` story, `DEF` defect, `CHO` chore (e.g.
 `STY-010`; ADRs match, as `ADR-001`). Each prefix is one series across the
 whole backlog, never per epic, so a story keeps its ID if it moves epic. Take
-the next free number across the live tree, `_archive/` and open PRs' files
+the next free number across the live tree, `docs/backlog/_archive/` and open PRs' files
 (`gh pr list --state open --limit 200 --json files --jq '.[].files[].path'`).
 
 ## Stories, chores, defects and epics
@@ -36,26 +36,24 @@ the next free number across the live tree, `_archive/` and open PRs' files
   or deleted. Keep the section order, so an agent can reach a section without
   reading the whole file.
 - A record in a terminal status (Done, Won't fix, Won't do, Superseded) moves to
-  `_archive/` in the same change that sets it, and its row in the epic or index
-  is marked, not deleted. An epic whose rows are all terminal moves too.
+  `docs/backlog/_archive/` in the same change that sets it, and its row in the epic or
+  index is marked, not deleted. An epic whose rows are all terminal moves too.
 - A record that departs from its claim says so in Delivery; an owner's change
   of mind is a Decisions entry. Never reword the Acceptance criteria.
-- After any record change (an owner's answer, a moved obligation, a new or
-  edited scenario), `grep` its IDs and terms across the epic, stories,
-  analyses and glossary, and fix every statement it makes false, including a
-  claim that a field or stored state exists without naming the record that
-  provides it. Search a term of several words across line breaks
-  (`rg -n -U -i 'group\s+assignment' docs`), since wrapped prose splits it.
-  Search the status words as well, with their inflections
-  (`rg -n -i 'undecided|no selection|still open|stay(s)? open|remain(s)? open|wait(s)? for|awaiting|unselected|not selected|not yet' docs`,
-  leaving `_archive/` alone; triage the hits), since a decision leaves
-  "waits for" and "undecided" claims in intros and gate paragraphs. An answer
-  that changes another record's contract goes into that record's Decisions,
-  not only the one it was raised in; one that makes a record need another's
-  behaviour also sets its Depends on, and the epic's table and Sequencing.
+- After any record change (an owner's answer, a moved obligation, a new or edited
+  scenario), grep its IDs and terms across `docs/` — using `rg -n -U -i` for multi-word
+  terms wrapped across line breaks (e.g. `rg -n -U -i 'group\s+assignment' docs`) — and
+  fix every statement it makes false, including any claim that a field or stored state
+  exists without naming the record that provides it.
+- In the same sweep, search live docs (ignoring `docs/backlog/_archive/`) for leftover
+  status claims (`rg -n -i 'undecided|no selection|still open|stay(s)? open|remain(s)? open|wait(s)? for|awaiting|unselected|not selected|not yet' docs`)
+  and triage every hit.
+- Record an answer that changes another record's contract in that record's Decisions too;
+  when it makes one record depend on another's behaviour, also update its `Depends on`
+  and the epic's table and Sequencing.
 - A defect found while delivering anything is recorded in its own file in
-  `backlog/defects/` with Status `Needs triage`, listed under Defects in
-  `backlog/README.md` (and in its epic's `## Defects`, if it belongs to one).
+  `docs/backlog/defects/` with Status `Needs triage`, listed under Defects in
+  `docs/backlog/README.md` (and in its epic's `## Defects`, if it belongs to one).
   Where the right outcome is a product choice rather than a fault against a
   written scenario, its Open questions say so. The owner triages it before
   anyone works on it.
@@ -72,15 +70,16 @@ the next free number across the live tree, `_archive/` and open PRs' files
   narrowest home (`docs/operations/authoring-agent-instructions.md`, _Where it
   goes_), handing one whose home is a guide file to its retrospective, and
   archives the file with the epic.
-- The bootstrap stories in `_archive/EPC-001-bootstrap/` predate the templates and keep
-  their legacy format.
+- The bootstrap stories in `docs/backlog/_archive/EPC-001-bootstrap/` predate the
+  templates and keep their legacy format.
 
 ## Analyses
 
 An analysis decides nothing. It ends with options, a recommendation and a
 _Decisions needed_ table; the decisions go to an ADR or a story, and the
 analysis gains an _Outcome_ section saying where. A delivery run summary under
-`analysis/delivery-runs/` follows that folder's `_template.md` instead.
+`docs/analysis/delivery-runs/` follows `docs/analysis/delivery-runs/_template.md`
+instead.
 
 ## ADRs
 

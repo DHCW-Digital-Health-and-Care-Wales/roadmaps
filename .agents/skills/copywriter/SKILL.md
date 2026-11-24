@@ -1,7 +1,6 @@
 ---
 name: copywriter
 description: The product's voice and copy rules, in English and Welsh, for the editor and the public site. Use whenever a task adds or edits a string in either app's `src/i18n/locales/en.ts` or `cy.ts`, reviews copy, or asks whether wording is on-voice.
-user-invocable: true
 ---
 
 # Copywriter

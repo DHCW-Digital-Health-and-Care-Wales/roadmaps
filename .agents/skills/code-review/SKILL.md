@@ -4,7 +4,6 @@ description: >-
   Review a diff, branch or PR for correctness: requirements coverage, regressions,
   async state, security, untrusted data and runtime contracts. Use for a code review
   and before raising a PR; maintainability belongs to quality-review.
-user-invocable: true
 ---
 
 # Code review

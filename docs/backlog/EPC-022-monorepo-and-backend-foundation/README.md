@@ -147,12 +147,13 @@ _STY-090 amendments_:
     branch coverage; the gate before a PR runs only the apps a change touches. Tracing
     follows as STY-100; the image and the production server are EPC-023's.
 
-Owner answers of 2026-11-23 (STY-100 grilling), recorded in STY-100 D5–D14:
+Owner answers of 2026-11-23 and 2026-11-24 (STY-100 grilling and review), recorded in
+STY-100 D5–D15:
 
 21. **Tracing**: traces only, sent to one shared local Jaeger that keeps them in
     memory; every request starts its own trace, ignoring a caller's `traceparent`;
-    database spans carry statement text with placeholders and never a value; nothing
-    is exported without an endpoint. Metrics, hosted export and sampling, and the load
+    spans keep only allow-listed attribute keys, and database spans carry statement
+    text with placeholders, never a value; nothing is exported without an endpoint. Metrics, hosted export and sampling, and the load
     balancer's trace header are EPC-023's.
 
 _The schema, identity and endpoint stories are written next, from ADR-015 and ADR-018 to

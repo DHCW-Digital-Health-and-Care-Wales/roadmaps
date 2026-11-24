@@ -17,16 +17,16 @@ The API traces each request with OpenTelemetry, as ADR-017 sets. A developer who
 to see them starts one Jaeger shared by every worktree and reads each request's spans,
 its database queries included, there. Every request starts its own trace, so the API
 alone chooses the trace ID, which is also the request ID in its log lines and
-`X-Request-ID`. Spans hold no query string, exception message or SQL value. Tests and
-CI export nothing. Metrics, and tracing where the API is hosted, are not in it
+`X-Request-ID`. Spans keep only allow-listed fields, so no query string, exception
+message, SQL value, client address or header. Tests and CI export nothing. Metrics, and tracing where the API is hosted, are not in it
 (EPC-023).
 
 ## Scope
 
 The API's tracing and its local viewer: instrumentation of incoming requests and
-database queries, the log lines' trace fields, and the shared Jaeger's scripts. Nothing
-changes in the editor, the public site, or STY-090's error envelope and response
-headers.
+database queries, the log lines' trace fields, and the shared Jaeger's scripts.
+`X-Request-ID` changes format (D12); nothing else changes in the editor, the public
+site, or STY-090's error envelope and response headers.
 
 ## Acceptance criteria
 
@@ -37,20 +37,25 @@ headers.
 S5) and opens Jaeger's UI on port 16686
 **Then** the request's trace is there under the service `roadmaps-api-<slot>`, with a
 server span named for the route template (`GET /api/v1/roadmaps/{id}`, once such a
-route exists) and a child span for each database query it runs (D2, D6, D13)
+route exists) and a child span for each database query it runs; until a route that
+queries exists, pytest shows the database span (D2, D6, D13)
 **And** a second worktree's API sends to the same Jaeger under its own slot's service
-name, and `pnpm api:jaeger:stop` stops it; worktree teardown leaves it running, since
-other worktrees share it (D10)
+name (`roadmaps-api` outside a worktree), and `pnpm api:jaeger:stop` stops it; worktree
+teardown leaves it running, since other worktrees share it, and an API still exporting
+when it stops logs the exporter's failures until restarted (D10, D18)
 
 ### S2: Without Jaeger, nothing is exported and nothing complains
 
-**Given** `pnpm api:dev` started while Jaeger's OTLP port does not answer, or the API
-started with no `OTEL_EXPORTER_OTLP_ENDPOINT`, production included
+**Given** the API started with no `OTEL_EXPORTER_OTLP_ENDPOINT`, in any environment,
+production included, or `pnpm api:dev` started with none set while Jaeger's OTLP port
+does not answer
 **When** requests are served
 **Then** no span is exported and no exporter error reaches the log, yet each request
 still has a trace ID for its log lines and `X-Request-ID` (D7, D11)
 **And** a developer who starts Jaeger after the API restarts `api:dev` to see traces,
-since `api:dev` checks for Jaeger once, when it starts (D7)
+since `api:dev` checks for Jaeger once, when it starts; an endpoint the developer sets
+is used whether or not Jaeger answers. A test of the launcher holds both branches of
+that check (D7, D11)
 
 ### S3: Every request starts its own trace
 
@@ -59,24 +64,34 @@ since `api:dev` checks for Jaeger once, when it starts (D7)
 **Then** its trace ID is one the API generated, not the caller's, and that ID is the
 request ID in every log line written while serving it and in `X-Request-ID`, as 32
 hexadecimal characters (D3, D5, D12)
-**And** no inbound trace context or baggage is read
+**And** no inbound trace context or baggage is read, whatever `OTEL_PROPAGATORS` holds,
+since the drop is in code; with `OTEL_SDK_DISABLED` set, the request ID is still a
+random 32-hexadecimal ID, never all zeros (D16)
 
-### S4: Spans hold no query string, exception message or SQL value
+### S4: Spans keep only allow-listed fields
 
-**Given** a request with a query string, a route that raises an exception holding a
-planted value, and a query bound to a planted parameter value
+**Given** a request with a query string and a captured header, a route that raises an
+exception holding a planted value, a query bound to a planted parameter value, a query
+that fails with a database error echoing that value, and a hand-written span attribute
+not on the list
 **When** their spans are recorded
-**Then** no span attribute or event holds the query string, the exception message or
-the parameter value; an exception is recorded by its type and stack only (D4)
-**And** a database span holds the statement text with its placeholders
-(`… WHERE id = %(id)s`) and the operation, never a bound value (D8)
+**Then** each span keeps only the allow-listed attribute keys, dropped where spans are
+made: the method, the route template, the status, the duration and the request ID on a
+server span; the operation and the statement text on a database span; an exception's
+type and stack frames, never its message (D4, D15)
+**And** no part of any recorded span (its name, attributes, events, links, status
+description or resource) holds the query string, the header, the exception message, a
+bound value, the client's address, the User-Agent or the database's host and user. The
+test searches each span serialised whole, and a database span's statement text keeps
+its placeholders (`… WHERE id = %(id)s`) (D8)
 
 ### S5: Probes and refusals are traced as STY-090 sets
 
 **Given** the API running with tracing on
 **When** `/health` or `/ready` succeeds, and when a request is refused with a 4xx
-**Then** a successful probe makes no span (STY-090 D20), while a 503 from `/ready` makes
-one
+**Then** a successful probe exports no span, its `SELECT 1` included, yet still has a
+32-hexadecimal trace ID for its `X-Request-ID`, the span being dropped once the outcome
+is known, while a 503 from `/ready` exports its spans (STY-090 D20, D17)
 **And** a 4xx refusal's server span records its status but is not marked an error, and
 a 500's span is (D13)
 
@@ -93,7 +108,8 @@ fields, and its request ID equals the trace ID (D3, D12)
 **Given** `pnpm api:test`, locally or in CI
 **When** the suite runs
 **Then** spans go only to an in-memory exporter the tests read, and no network
-exporter is configured (ADR-017)
+exporter is configured; STY-090's real-server log test starts the server without
+`api:dev`'s Jaeger check, so a running Jaeger receives nothing (ADR-017)
 **And** the suite's tests hold S2 to S6, with 100% branch coverage as STY-090 sets
 
 ### S8: Jaeger is local, pinned and forgetful
@@ -101,16 +117,18 @@ exporter is configured (ADR-017)
 **Given** the shared Jaeger's Compose file
 **When** it is read and started
 **Then** its image is Jaeger v2, pinned by digest, its published ports (16686 and 4318)
-bind 127.0.0.1 only, and it keeps traces in memory with no volume, so a restart clears
-them (D4, D9, D10)
-**And** a test over that file checks the binding and the digest, as STY-090's does for
-its database
+bind 127.0.0.1 only, and it keeps traces in memory, capped by a trace limit, with no
+volume, so a restart clears them (D4, D9, D10, D18)
+**And** a test over that file checks the binding, the digest, the memory store and
+that it mounts no volume, as STY-090's does for its database
 
 ## Tests
 
-pytest with an in-memory span exporter holds S2 to S6: planted values for S4, an
-inbound `traceparent` for S3, the probes and a 4xx for S5, captured log lines for S6.
-S1 is an observed run with Jaeger. S8's file checks join STY-090's Compose test.
+pytest with an in-memory span exporter holds S2 to S6: planted values and a failing
+query for S4, an inbound `traceparent` under both `OTEL_PROPAGATORS` settings and
+`OTEL_SDK_DISABLED` for S3, the probes and a 4xx for S5, captured log lines for S6. The
+launcher's Jaeger check has its own test (S2). S1 is an observed run with Jaeger. S8's
+file checks join STY-090's Compose test.
 
 ## Decisions
 
@@ -151,6 +169,19 @@ S1 is an observed run with Jaeger. S8's file checks join STY-090's Compose test.
   S1, S5.
 - **D14** (agent, confirmed in round 4): instrumentation of outgoing HTTP calls waits
   for the first story that makes one (sign-in with Google, ADR-018).
+
+- **D15** (owner, 2026-11-24, review question): spans keep a real allow-list of
+  attribute keys, enforced where spans are made, over three bans with the rest left to
+  EPC-023. A story that needs a new span attribute adds it to the list. Changes S4.
+- **D16** (agent, 2026-11-24, security review): the drop of inbound context does not
+  depend on `OTEL_PROPAGATORS`, and the request ID is never the all-zero ID when the SDK
+  is disabled. Changes S3.
+- **D17** (agent, 2026-11-24, review): a successful probe still gets a trace ID for its
+  request ID; its span and `SELECT 1` child are dropped once the outcome is known, not
+  excluded up front, so a 503 keeps its spans. Changes S5.
+- **D18** (agent, 2026-11-24, review): Jaeger's memory store is capped by a trace limit;
+  the service is `roadmaps-api` outside a worktree; an exporter that loses Jaeger after
+  start logs its failures until the API restarts. Changes S1, S8.
 
 ## Out of scope
 

@@ -37,8 +37,10 @@ def route_template(entry: Scope, routed: Scope) -> str:
     or without its trailing slash and a request a mounted app handled are `unmatched`; a
     FastAPI route's 405 names the route that takes the path.
     """
-    # A mount adds the path it matched to the root path.
-    if routed.get("root_path", "") != entry.get("root_path", ""):
+    # A mounted Starlette or FastAPI app puts itself in the scope, wherever it is mounted,
+    # the root included, whose mount adds nothing to the root path. Any other mounted app
+    # leaves no template for the lookups below.
+    if routed.get("app") is not entry.get("app"):
         return UNMATCHED
     app_routes = getattr(entry.get("app"), "routes", ())
     return _fastapi_template(routed) or _starlette_template(app_routes, routed) or UNMATCHED

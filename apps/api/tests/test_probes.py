@@ -15,8 +15,7 @@ from sqlalchemy.engine import make_url
 
 from roadmaps_api.database import MAX_OVERFLOW, POOL_SIZE
 from roadmaps_api.repositories.readiness import ReadinessRepository
-from tests.conftest import Lines
-from tests.support import DOWN_DATABASE_URL, database_url, make_settings, serving
+from tests.support import DOWN_DATABASE_URL, Lines, database_url, make_settings, serving
 
 # About two seconds, with room for a loaded machine.
 DEADLINE = 3.5

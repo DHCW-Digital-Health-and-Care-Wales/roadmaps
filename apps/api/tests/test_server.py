@@ -107,8 +107,8 @@ def serving_with_reload(
 
 @pytest.fixture
 def served(tmp_path: Path) -> Iterator[tuple[str, subprocess.Popen[bytes]]]:
-    with serving_with_reload(tmp_path, SERVER_ENVIRONMENT) as server:
-        yield server
+    with serving_with_reload(tmp_path, SERVER_ENVIRONMENT) as running:
+        yield running
 
 
 def test_the_server_logs_no_query_string_or_exception_text_on_either_stream(

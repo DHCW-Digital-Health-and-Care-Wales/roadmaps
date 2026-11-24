@@ -253,8 +253,8 @@ emptying, with a test (D15).
 | CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                        | —               |       |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                        | —               |       |
 
-_STY-085 to STY-090, STY-095, CHO-044 and STY-096 to STY-098 are done. STY-100,
-STY-101 and STY-091 are Proposed, STY-101 first; STY-092 and STY-093 are Placeholders
+_STY-085 to STY-090, STY-095, CHO-044, STY-096 to STY-098 and STY-101 are done.
+STY-100 and STY-091 are Proposed; STY-092 and STY-093 are Placeholders
 until their acceptance criteria are written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
 settles what the public sees.

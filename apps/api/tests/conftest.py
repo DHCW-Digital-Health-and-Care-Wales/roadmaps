@@ -1,17 +1,12 @@
-import json
 import logging
 import logging.config
-from collections.abc import Callable, Iterator
-from typing import Any
+from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
 
 from roadmaps_api.logs import log_config
-from roadmaps_api.settings import Settings
-from tests.support import PLANTED, make_settings, serving
-
-type ConfigureLogging = Callable[[Settings | None], None]
+from tests.support import ConfigureLogging, Lines, make_settings, serving
 
 
 @pytest.fixture
@@ -44,21 +39,6 @@ def configure_logging() -> Iterator[ConfigureLogging]:
 def json_logging(configure_logging: ConfigureLogging) -> None:
     """The configuration before the settings are read, which writes no message."""
     configure_logging(None)
-
-
-class Lines:
-    """The JSON lines written on stdout, none holding the planted value."""
-
-    def __init__(self, capsys: pytest.CaptureFixture[str]) -> None:
-        self._capsys = capsys
-
-    def read(self) -> list[dict[str, Any]]:
-        captured = self._capsys.readouterr()
-        assert captured.err == ""
-        assert PLANTED not in captured.out
-        parsed = [json.loads(line) for line in captured.out.splitlines()]
-        # The test client's own lines, one per request it sends.
-        return [line for line in parsed if line["logger"] != "httpx2"]
 
 
 @pytest.fixture

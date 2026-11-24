@@ -18,7 +18,16 @@ services:
       # PostgreSQL 18's image keeps its data under /var/lib/postgresql/18/docker.
       - db-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD", "pg_isready", "--username=roadmaps", "--dbname=roadmaps"]
+      # Over TCP: the image's first-run server listens on its socket alone, so a check
+      # there could pass before the server the API reaches has started.
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "--host=127.0.0.1",
+          "--username=roadmaps",
+          "--dbname=roadmaps",
+        ]
       interval: 1s
       timeout: 3s
       retries: 30

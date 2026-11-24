@@ -63,9 +63,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(api_v1.router)
     # Added innermost first: a request meets RequestContext, then the Host allow-list,
     # then the body limit. Both answer in Starlette's plain text, not the envelope
-    # (ADR-017 _Errors_). The limit counts a body as a route reads it: nothing past it is
-    # read, a declared oversize body is answered 413 once the route answers, and a
-    # streamed one a route never reads gets the route's own answer (ADR-020).
+    # (ADR-017 _Errors_). The limit counts a body as a route reads it: no route gets more
+    # than the limit, the read stopping at the message that crosses it; a declared
+    # oversize body is answered 413 once the route answers, and a streamed one a route
+    # never reads gets the route's own answer (ADR-020).
     app.add_middleware(RequestBodyLimitMiddleware, max_body_size=settings.max_body_bytes)
     # The `Host` header only, never `X-Forwarded-Host`; no redirect to a `www.` name.
     app.add_middleware(

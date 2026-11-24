@@ -31,7 +31,7 @@ the root, unversioned (ADR-017's amendments).
 - `RequestContext` (`apps/api/src/roadmaps_api/middleware.py`) sets ADR-020's headers
   on every response; Starlette's middleware, wired in `create_app`, holds the `Host`
   allow-list and the 1 MiB body limit, which counts a body only as a route reads it
-  (ADR-020's _STY-101 amendments_); send no CORS header.
+  (ADR-020's amendments); send no CORS header.
 
 ## Logs (ADR-018 _Records and retention_)
 

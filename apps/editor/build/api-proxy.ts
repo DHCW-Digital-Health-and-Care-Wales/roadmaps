@@ -10,8 +10,8 @@ import {
  * browser sees the editor and the API on one origin (ADR-020). `changeOrigin` sends the
  * API's own host, which its Host allow-list names.
  */
-export function apiProxy(worktreeEnvFile?: URL): Record<string, ProxyOptions> {
-  const port = resolveServicePort(API_PORT, worktreeEnvFile)
+export function apiProxy(): Record<string, ProxyOptions> {
+  const port = resolveServicePort(API_PORT)
   return {
     "/api": { target: `http://127.0.0.1:${String(port)}`, changeOrigin: true },
   }

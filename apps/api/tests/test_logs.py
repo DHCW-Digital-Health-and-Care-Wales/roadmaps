@@ -1,7 +1,7 @@
 """JSON lines on stdout, allow-listed fields only, tied to the response by its ID.
 
 An exception's line tells one failure from another by codes and names; only a
-developer's local API writes messages (STY-101 S5 to S7).
+developer's local API writes messages, and uvicorn's information lines with them.
 """
 
 import contextlib
@@ -14,17 +14,28 @@ from typing import Any
 
 import psycopg
 import pytest
+from fastapi.responses import PlainTextResponse
 from fastapi.testclient import TestClient
 from httpx2 import Response
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.types import ASGIApp
 
+from roadmaps_api.app import create_app
 from roadmaps_api.database import create_database_engine
 from roadmaps_api.logs import JsonFormatter, StdoutHandler, exception_chain
 from roadmaps_api.settings import Environment, Settings, SettingsError, load_settings
-from tests.conftest import ConfigureLogging, Lines
-from tests.support import DOWN_DATABASE_URL, PLANTED, database_url, make_settings, serving
+from tests.support import (
+    DOWN_DATABASE_URL,
+    PLANTED,
+    ConfigureLogging,
+    Lines,
+    database_url,
+    make_settings,
+    mounted_app,
+    serving,
+)
 
 
 def test_an_access_line_holds_the_allow_listed_fields_and_the_response_s_id(
@@ -73,26 +84,6 @@ ROUTES = {
         200,
         "/test/admin/health",
     ),
-    "a mounted app inside an included router": (
-        lambda c: c.get(f"/test/inc/sub/{PLANTED}/health"),
-        200,
-        "unmatched",
-    ),
-    "a route in a mounted app": (
-        lambda c: c.get(f"/test/tenants/{PLANTED}/items/{PLANTED}"),
-        200,
-        "unmatched",
-    ),
-    "a path a mounted app does not route": (
-        lambda c: c.get(f"/test/tenants/{PLANTED}/{PLANTED}"),
-        404,
-        "unmatched",
-    ),
-    "a mounted app with no routes": (
-        lambda c: c.get(f"/test/raw/{PLANTED}"),
-        200,
-        "unmatched",
-    ),
     "an unknown path": (lambda c: c.get(f"/{PLANTED}"), 404, "unmatched"),
     "a redirect to the path without its trailing slash": (
         lambda c: c.get(f"/test/items/{PLANTED}/", follow_redirects=False),
@@ -122,6 +113,33 @@ def test_the_access_line_names_the_route_by_its_template_never_the_path(
 
     [access] = [line for line in lines.read() if line.get("message") == "request"]
     assert (access["route"], access["status"]) == (route, status)
+
+
+def plain_app() -> ASGIApp:
+    return PlainTextResponse("raw")
+
+
+# Where an app is mounted, the app, and a path it answers. A mount at the root takes
+# what no route of the API does.
+MOUNTS = {
+    "a FastAPI app under a template": ("/tenants/{tenant}", mounted_app, f"/tenants/{PLANTED}"),
+    "a FastAPI app at the root": ("/", mounted_app, ""),
+    "an app with no routes under a path": ("/raw", plain_app, "/raw"),
+    "an app with no routes at the root": ("/", plain_app, ""),
+}
+
+
+@pytest.mark.parametrize(("path", "mounted", "prefix"), MOUNTS.values(), ids=MOUNTS)
+def test_a_request_a_mounted_app_handled_is_unmatched(
+    lines: Lines, path: str, mounted: Callable[[], ASGIApp], prefix: str
+) -> None:
+    app = create_app(make_settings())
+    app.mount(path, mounted())
+    with TestClient(app) as client:
+        assert client.get(f"{prefix}/items/{PLANTED}").status_code == 200
+
+    [access] = [line for line in lines.read() if line.get("message") == "request"]
+    assert access["route"] == "unmatched"
 
 
 def test_the_access_line_names_the_live_openapi_route(lines: Lines) -> None:

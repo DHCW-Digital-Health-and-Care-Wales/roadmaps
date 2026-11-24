@@ -1,7 +1,8 @@
 """The middleware as `create_app` wires it: Starlette's body limit and `Host` allow-list.
 
 The tests hold the repository's wiring (the hosts, no redirect, the limit, the order
-and what `RequestContext` adds), not Starlette's own behaviour beyond STY-101 S1's rows.
+and what `RequestContext` adds), not Starlette's own behaviour beyond the cases ADR-020
+names.
 """
 
 import asyncio
@@ -19,8 +20,7 @@ from starlette.types import Message, Receive, Scope, Send
 from roadmaps_api.middleware import PROBE_PATHS, REQUEST_ID_HEADER, RequestContext
 from roadmaps_api.routes import probes
 from roadmaps_api.settings import MAX_BODY_BYTES
-from tests.conftest import Lines
-from tests.support import PLANTED, TEST_HOST, make_settings, serving
+from tests.support import PLANTED, TEST_HOST, Lines, make_settings, serving
 
 
 def too_large_stream() -> Iterator[bytes]:

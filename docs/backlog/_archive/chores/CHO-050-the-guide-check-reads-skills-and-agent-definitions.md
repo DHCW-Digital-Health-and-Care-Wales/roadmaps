@@ -8,7 +8,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one test's file list, three lines reworded and an
   exemption for an example
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/298
 
 ## Summary
 

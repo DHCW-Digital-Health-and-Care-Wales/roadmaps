@@ -48,10 +48,12 @@ reviewers (`quality-review`) are the only gate on it, so apply it deliberately.
   shared lists, and steps in on roadmaps. Name roles and organisations plainly,
   make one-time invitation links unmistakable, and state blast radius before
   confirming destructive or tenant-wide changes.
-- **Viewer and read-only states**: reads roadmaps, unpublished drafts, history
-  and the member directory without editing (including a Product Lead on an
-  unassigned peer roadmap or read-only list). Distinguish published from draft
-  at a glance; never shame with "access denied".
+- **Viewer and read-only states**: reads current roadmaps, unpublished drafts,
+  history and the member directory without editing (including a Product Lead on
+  an unassigned peer roadmap or read-only list). Distinguish published from
+  draft at a glance, point neutrally to who can help (an assigned lead or
+  Admin), and never shame with "access denied" on screens they are meant to
+  read.
 - **Public reader**: reads published roadmaps on `apps/public-site/`. There,
   write directly in plain, outcome-first language; in the editor, let them shape
   field hints and examples.

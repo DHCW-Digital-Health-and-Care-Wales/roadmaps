@@ -22,10 +22,12 @@ Read these before drawing anything:
   that bind the story or the screens it changes
 - `docs/GLOSSARY.md`
 - who the reader is: the relevant personas in `docs/backlog/personas/`
-  (`product-lead.md`, `tenant-admin.md`, `viewer.md` for the editor;
-  `public-reader.md` for `apps/public-site/`). State in the inventory which of
-  each persona's assumptions each journey relies on. Keep sign-in or Google
-  connection plumbing out of the designs unless the journey is about it
+  (`product-lead.md`, `tenant-admin.md`, `viewer.md`, plus `public-reader.md`
+  where an editor design shapes published item cards, field hints or examples).
+  The public site is a separate app; draw only this editor. State in the
+  inventory which of each persona's assumptions each journey relies on. Keep
+  sign-in or Google connection plumbing out of the designs unless the journey is
+  about it
 - the existing screens each journey touches, in `apps/editor/src/features/` and
   `apps/editor/src/components/layout/`, for navigation, page layout and the components a
   design would reuse (`apps/editor/src/components/ui/`). See them as the app draws them

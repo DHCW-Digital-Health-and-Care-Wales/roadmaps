@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-008
 - **Suggested model**: Sonnet — a few sites, through STY-098's `ContentText` pattern
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/322
 
 ## Summary
 

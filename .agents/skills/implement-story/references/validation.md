@@ -22,7 +22,8 @@ file keeps its old path), so a root file that runs every app's CI jobs runs ever
 
 Whatever the change, the full gate also runs the rest of CI's Repository job on the
 workspace: `pnpm knip && pnpm api-types:typecheck && pnpm api-types:lint &&
-pnpm api-types:test && pnpm api-types:check`.
+pnpm api-types:test && pnpm api-types:check &&
+node --test '.agents/skills/*/scripts/*.test.mjs'`.
 
 The table below says what each kind of change additionally needs.
 

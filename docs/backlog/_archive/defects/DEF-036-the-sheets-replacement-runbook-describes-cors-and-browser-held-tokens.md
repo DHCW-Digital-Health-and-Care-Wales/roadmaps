@@ -8,7 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-018, ADR-020
 - **Suggested model**: Haiku — two steps of one runbook
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/320
 
 ## Summary
 

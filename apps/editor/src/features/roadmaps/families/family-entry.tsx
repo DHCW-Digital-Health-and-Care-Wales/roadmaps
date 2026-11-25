@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { textLinkClasses } from "@/components/layout/text-link-classes"
 import { Button } from "@/components/ui/button"
 import type { Family } from "@/domain/roadmap/family"
 import type { Roadmap } from "@/domain/roadmap/roadmap"
 
-import { ContentText } from "../components/content-text"
+import { ContentText, WrittenText } from "../components/content-text"
 import { NotPublishedBadge } from "../components/not-published-badge"
 import { RoadmapSwatch } from "../components/roadmap-swatch"
 
@@ -36,11 +36,20 @@ export function FamilyEntry({
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
-            <h3 className="text-heading-s wrap-break-word">{family.name.en}</h3>
+            <h3 className="text-heading-s wrap-break-word">
+              <WrittenText written="en" text={family.name.en} />
+            </h3>
             <p className="text-body-xs text-muted-foreground">
-              {family.name.cy === ""
-                ? t("roadmaps.families.noWelshName")
-                : t("roadmaps.families.welshName", { name: family.name.cy })}
+              {family.name.cy === "" ? (
+                t("roadmaps.families.noWelshName")
+              ) : (
+                <Trans
+                  i18nKey="roadmaps.families.welshName"
+                  components={{
+                    name: <WrittenText written="cy" text={family.name.cy} />,
+                  }}
+                />
+              )}
             </p>
             <p className="text-body-xs text-muted-foreground">
               {family.colour}

@@ -24,11 +24,13 @@ import { localise, type LocalisedText } from "@/domain/roadmap/localised-text"
 import { isRoadmapPlacement } from "@/domain/roadmap/roadmap-placement"
 import { formatCalendarDate, useLanguage } from "@/i18n"
 
-import { ContentText, ShownText } from "../components/content-text"
+import { ContentText, ShownText, WrittenText } from "../components/content-text"
 import { DetailList } from "../components/detail-list"
 import { FieldName } from "../components/field-name"
 import { useOrganisations } from "../hooks/use-organisations"
+import { showEnglishDetails } from "../localise-details"
 import { AS_PLAIN_WORDS } from "../plain-words"
+import { unmarked } from "../shown-content"
 import {
   describeOrganisations,
   type OpenConflict,
@@ -356,7 +358,8 @@ function FieldConflictItem({
     if (conflict.field === "lastUpdated") {
       return formatCalendarDate(value, t) ?? value
     }
-    return value
+    // A product lead is people's names, in no language.
+    return conflict.field === "productLead" ? value : english(value)
   }
   const target = conflictTarget(
     targetLead(item ? item.title : t("roadmaps.productDetails.title")),
@@ -412,9 +415,17 @@ function FieldConflictItem({
 }
 
 /**
+ * An English value as the review shows it, marked in Welsh; none stays `""`, which the
+ * review says in the interface's words.
+ */
+function english(value: string): ReactNode {
+  return value === "" ? "" : <WrittenText written="en" text={value} />
+}
+
+/**
  * An item's field's value as the review shows it: details as the nested list they will
  * read as, a placement by its heading, organisations as `describeOrganisations` names
- * them, with any codes the list doesn't know, and text as it is.
+ * them, with any codes the list doesn't know, and English text as written.
  */
 function useShownItemValue(): (
   field: EditableItemField,
@@ -428,20 +439,28 @@ function useShownItemValue(): (
     switch (field) {
       case "details":
         // None reads "No text", as any other field does.
-        return value === "" ? "" : <DetailList details={detailsOf(value)} />
+        return value === "" ? (
+          ""
+        ) : (
+          <DetailList
+            details={showEnglishDetails(detailsOf(value), language)}
+          />
+        )
       case "placement":
         return isRoadmapPlacement(value)
           ? t(`roadmaps.items.placements.${value}`)
           : t("roadmaps.items.unplaced.title")
       case "organisationIds":
-        return [
-          describeOrganisations(value, organisations, language),
-          ...unknownCodes,
-        ]
-          .filter((each) => each !== "")
-          .join(", ")
+        return english(
+          [
+            describeOrganisations(value, organisations, language),
+            ...unknownCodes,
+          ]
+            .filter((each) => each !== "")
+            .join(", "),
+        )
       default:
-        return value
+        return english(value)
     }
   }
 }
@@ -498,11 +517,21 @@ function RemovalConflictItem({
                   )}
                   {notes.welsh !== undefined && (
                     <dd className="whitespace-pre-line">
-                      {t("roadmaps.publish.notice.refused.removal.welsh", {
-                        text:
-                          notes.welsh ||
-                          t("roadmaps.publish.notice.refused.empty"),
-                      })}
+                      <Trans
+                        i18nKey="roadmaps.publish.notice.refused.removal.welsh"
+                        components={{
+                          welsh: notes.welsh ? (
+                            <WrittenText written="cy" text={notes.welsh} />
+                          ) : (
+                            // The interface's own "No text".
+                            <ShownText
+                              content={unmarked(
+                                t("roadmaps.publish.notice.refused.empty"),
+                              )}
+                            />
+                          ),
+                        }}
+                      />
                     </dd>
                   )}
                 </div>

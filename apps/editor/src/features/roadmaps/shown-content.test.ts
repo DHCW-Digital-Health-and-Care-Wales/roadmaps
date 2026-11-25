@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import type { ContentLanguage } from "@/domain/roadmap/localised-text"
 
-import { showContent } from "./shown-content"
+import { showContent, showWritten } from "./shown-content"
 
 describe("showContent", () => {
   it.each<
@@ -42,4 +42,21 @@ describe("showContent", () => {
       lang,
     })
   })
+})
+
+describe("showWritten", () => {
+  it.each<[ContentLanguage, ContentLanguage, ContentLanguage | undefined]>([
+    ["en", "cy", "en"],
+    ["en", "en", undefined],
+    ["cy", "en", "cy"],
+    ["cy", "cy", undefined],
+  ])(
+    "shows text written in %s in a %s interface with lang %s (DEF-033 S1)",
+    (written, language, lang) => {
+      expect(showWritten("Single Record", written, language)).toEqual({
+        text: "Single Record",
+        lang,
+      })
+    },
+  )
 })

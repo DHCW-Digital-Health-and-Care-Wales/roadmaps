@@ -7,9 +7,9 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
-import { useContent } from "../hooks/use-content"
+import { useContent, useWritten } from "../hooks/use-content"
 import { localiseDetails } from "../localise-details"
-import { type ShownContent, unmarked } from "../shown-content"
+import type { ShownContent } from "../shown-content"
 import { shortNamesOf } from "../sort-organisations"
 import { CutDetails, CutField } from "./cut-field"
 import { FieldName } from "./field-name"
@@ -47,6 +47,7 @@ export function ItemFields({
   const { t } = useTranslation()
   const language = useLanguage()
   const content = useContent()
+  const written = useWritten()
   const title = localise(item.title, language)
 
   const fields: { key: keyof typeof fieldLabels; value: ReactNode }[] = []
@@ -69,10 +70,13 @@ export function ItemFields({
     addText("expectedOutcome", [content(item.expectedOutcome)])
   }
   if (item.tags.length > 0) addText("tags", item.tags.map(content))
-  // Short names are English in both languages (ADR-014): no Welsh stands in.
+  // Short names are English in both languages (ADR-014).
   const named = shortNamesOf(organisations, item.organisationIds, language)
   if (named.length > 0) {
-    addText("organisations", named.map(unmarked))
+    addText(
+      "organisations",
+      named.map((name) => written(name, "en")),
+    )
   }
   if (item.details.length > 0) {
     fields.push({

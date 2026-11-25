@@ -783,7 +783,7 @@ export const cy = {
             yours: "Wedi'i thynnu",
             removeAnyway: "Tynnu beth bynnag",
             keepItem: "Cadw'r eitem",
-            welsh: "Yn Gymraeg: {{text}}",
+            welsh: "Yn Gymraeg: <welsh />",
             writtenAs: "Wedi'i ysgrifennu fel “{{horizon}}”",
           },
           removed:
@@ -850,7 +850,7 @@ export const cy = {
       refreshFailed:
         "Doedd dim modd adnewyddu'r teuluoedd, y categorïau a'r sefydliadau",
       heading: "Teuluoedd",
-      welshName: "Cymraeg: {{name}}",
+      welshName: "Cymraeg: <name />",
       noWelshName: "Dim enw Cymraeg",
       noRoadmaps: "Dim mapiau trywydd",
       published: "Wedi'i gyhoeddi",
@@ -901,10 +901,10 @@ export const cy = {
         useTheirs: "Defnyddio'u un nhw",
       },
       notice: {
-        added: "{{name}} wedi'i ychwanegu",
-        changed: "{{name}} wedi'i newid",
+        added: "<name /> wedi'i ychwanegu",
+        changed: "<name /> wedi'i newid",
         changedPublic:
-          "{{name}} wedi'i newid. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
+          "<name /> wedi'i newid. Bydd y wefan gyhoeddus yn ei ddangos ar ôl ei diweddariad nesaf dros nos.",
         gone: "Dydy'r teulu hwn ddim wedi'i restru mwyach, felly chafodd eich newid mo'i gadw.",
         failed: {
           add: "Doedd dim modd ychwanegu'r teulu",

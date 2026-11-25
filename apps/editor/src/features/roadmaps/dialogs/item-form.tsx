@@ -14,8 +14,9 @@ import type { RoadmapItem } from "@/domain/roadmap/roadmap-item"
 import { ROADMAP_PLACEMENTS } from "@/domain/roadmap/roadmap-placement"
 import { useLanguage } from "@/i18n"
 
+import { WrittenText } from "../components/content-text"
 import { DetailList } from "../components/detail-list"
-import { useContent } from "../hooks/use-content"
+import { useContent, useWritten } from "../hooks/use-content"
 import { EditForm, type EditFormField } from "../editing/edit-form"
 import { editFormFields } from "../editing/edit-form-fields"
 import type { TagInUse } from "../editing/item-tags"
@@ -87,6 +88,7 @@ export function ItemForm({
   const { t } = useTranslation()
   const language = useLanguage()
   const content = useContent()
+  const written = useWritten()
   const text = editFormFields(
     ITEM_TEXT_FIELDS,
     (field) => itemValue(item, field),
@@ -158,16 +160,23 @@ export function ItemForm({
       organisations,
       ({ shortName }) => shortName,
       language,
-    ).map(({ id, code, shortName }) => ({
-      value: id,
-      label: t("roadmaps.edit.organisationChoice", { shortName, code }),
-    })),
+    ).map(({ id, code, shortName }) => {
+      const { text: label, lang } = written(
+        t("roadmaps.edit.organisationChoice", { shortName, code }),
+        "en",
+      )
+      return { value: id, label, lang }
+    }),
     many: {
       ofValue: organisationIdsOf,
       toValue: organisationIdsValue,
       // Named as the card names them (STY-038 D2).
-      summary: (chosen) =>
-        shortNamesOf(organisations, chosen, language).join(", "),
+      summary: (chosen) => {
+        const names = shortNamesOf(organisations, chosen, language)
+        return names.length > 0 ? (
+          <WrittenText written="en" text={names.join(", ")} />
+        ) : null
+      },
       none: t("roadmaps.edit.organisations.none"),
       subject: t("roadmaps.edit.organisations.subject"),
     },

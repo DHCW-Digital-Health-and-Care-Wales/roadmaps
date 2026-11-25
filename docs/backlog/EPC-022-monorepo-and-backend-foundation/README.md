@@ -330,14 +330,16 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
 
 - [DEF-028](../_archive/defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md):
   a fresh clone got no Git hooks from `pnpm install` (Done).
-- [DEF-033](../defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md):
-  the editor leaves text it always shows in one language unmarked (Needs triage).
+- [DEF-033](../_archive/defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md):
+  the editor leaves text it always shows in one language unmarked (Done).
 - [DEF-036](../_archive/defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md):
   the Sheets replacement runbook still describes CORS and a browser-held token (Done).
 - [DEF-039](../_archive/defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md):
   Dependabot cannot raise updates of the API's locked dependencies (Done).
 - [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md): a
   small request can get a much larger 422, which lists every error (Needs triage).
+- [DEF-041](../defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md):
+  the editor's status messages quote English it cannot mark (Needs triage).
 
 ## Related
 

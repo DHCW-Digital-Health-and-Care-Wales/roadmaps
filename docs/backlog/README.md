@@ -134,7 +134,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-030](_archive/defects/DEF-030-a-keyboard-move-test-presses-before-the-menu-has-focused-its-first-choice.md)    | A keyboard move test presses before the menu has focused its first choice                        | Done         |
 | [DEF-031](_archive/defects/DEF-031-a-push-to-main-no-longer-deploys-the-editor.md)                                  | A push to main no longer deploys the editor                                                      | Done         |
 | [DEF-032](_archive/defects/DEF-032-a-quick-add-test-still-misses-the-field-coming-back-after-expanding-again.md)    | A quick add test still misses the field coming back, after expanding again                       | Done         |
-| [DEF-033](defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md)                       | The editor leaves text it always shows in one language unmarked                                  | Needs triage |
+| [DEF-033](_archive/defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md)              | The editor leaves text it always shows in one language unmarked                                  | Done         |
 | [DEF-034](_archive/defects/DEF-034-no-check-runs-the-skill-scripts-tests.md)                                        | No check runs the skill scripts' tests                                                           | Done         |
 | [DEF-035](defects/DEF-035-the-editors-layering-lint-misses-dynamic-imports.md)                                      | The editor's layering lint misses `import()` and `import("…")` types                             | Needs triage |
 | [DEF-036](_archive/defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md)        | The Sheets replacement runbook still describes CORS and a browser-held token                     | Done         |
@@ -142,6 +142,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-038](defects/DEF-038-a-publish-test-waits-for-the-outcome-notices-focus-and-does-not-get-it.md)                | A publish test waits for the outcome notice's focus and does not get it                          | Needs triage |
 | [DEF-039](_archive/defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md)                        | Dependabot cannot raise updates of the API's locked dependencies                                 | Done         |
 | [DEF-040](defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                                       | A small request can get a much larger 422, which lists every error (EPC-022)                     | Needs triage |
+| [DEF-041](defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md)                              | The editor's status messages quote English it cannot mark                                        | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

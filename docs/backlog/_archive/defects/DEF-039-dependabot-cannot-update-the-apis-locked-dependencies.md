@@ -1,6 +1,6 @@
 # DEF-039: Dependabot cannot raise updates of the API's locked dependencies
 
-- **Status**: Needs triage — found by STY-100 retro
+- **Status**: Done
 - **Severity**: Medium — updates that rewrite the API's lockfile get no pull request,
   so newer releases wait until a person notices
 - **Area**: CI/CD
@@ -8,6 +8,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-016 §Workspace tooling
 - **Suggested model**: Sonnet — a pin that CI and Dependabot both read
+- **Delivered**: 2026-11-25
 
 ## Summary
 
@@ -57,4 +58,16 @@ update of a locked dependency would fail the same way, as it runs the same lock 
 
 ## Decisions
 
-_None yet: awaiting triage._
+- **D1** (owner, 2026-11-25): widen `[tool.uv] required-version` in `apps/api/pyproject.toml` from `==0.13.4` to `>=0.13.4,<0.14`, matching `[build-system] requires`, so CI (`setup-uv`), local `uv 0.13.4`, and Dependabot's `uv 0.13.7` all satisfy it.
+
+## Delivery
+
+### Departures
+
+None. Review lanes skipped as a one-liner at the owner's request.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | Local reproduction in `/tmp` with `uvx --from 'uv==0.13.7' uv lock --upgrade-package fastapi==0.163.2`: failed on `==0.13.4` (`Required uv version ==0.13.4 does not match the running version 0.13.7`), succeeded on `>=0.13.4,<0.14` (`Updated fastapi v0.163.1 -> v0.163.2`); live Dependabot run on `main` to be observed after merge |

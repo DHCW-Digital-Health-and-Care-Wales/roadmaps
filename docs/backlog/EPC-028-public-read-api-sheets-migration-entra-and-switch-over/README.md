@@ -85,8 +85,9 @@ approval if NHS Wales requires one). Any material change to a signed-off phase's
 or controls returns that phase to `Pending` until the owner records it as reviewed or
 not material. The Phase 2 addendum and all Entra/linking PRs follow `STY-102` D7, D9 and
 D12's public-repo hygiene and private-first gap-reporting rules (never publish unfixed
-security gaps, severity ratings, internal thresholds, reviewer PII or ticket references
-in tracked files, commit messages, PR bodies, Review records or review threads).
+security gaps in an accepted design or merged/deployed code, product threat/risk
+severity ratings, internal thresholds, reviewer PII or ticket references in tracked
+files, commit messages, PR bodies, Review records or review threads).
 Production cut-over of real data additionally requires EPC-023's custom domain, load
 balancer, Cloud Armor rate limits, private Cloud SQL, IAM jobs and log export plus the
 independent penetration test (ADR-018).

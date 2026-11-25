@@ -336,7 +336,9 @@ switching the deployed editor stand.
     requires one).
   - **Reopen rule**: any material change to a signed-off phase's flows or controls
     returns that phase to `Pending` until the owner records it as reviewed or not
-    material. Accepted risk: rework if the review changes the flow.
+    material.
+
+  Accepted risk: rework if the review changes the flow.
 
 ## Consequences
 

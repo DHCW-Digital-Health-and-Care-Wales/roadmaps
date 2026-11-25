@@ -4,8 +4,11 @@
   identity and authorisation grilling (2026-11-21) and their answers to its review;
   the options chosen are marked ✅. It supersedes ADR-003 for the API data source;
   ADR-003 stands for the Sheets adapter until the deployed editor switches to the API.
-  Amended by the owner's STY-101 grilling (_STY-101 amendments_).
-- Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages)
+  Amended by the owner's STY-101 grilling (_STY-101 amendments_) and by the owner's
+  EPC-024 planning decision (_EPC-024 amendments_).
+- Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages;
+  amended in EPC-024, 2026-11-25: threat model review gates deployment and real data
+  rather than local/dev identity implementation)
 
 ## Context
 
@@ -301,12 +304,25 @@ rest of _Records and retention_ stands.
   Cloud Run and a line written before the settings are read write none
   (`Settings.writes_messages`, `apps/api/src/roadmaps_api/settings.py`).
 
+### EPC-024 amendments
+
+From the owner's EPC-024 planning answers (2026-11-25, Q2); the rest of _Assurance_
+stands.
+
+- **Threat model review gates deployment and real data, not local/dev coding**: the
+  threat model of sign-in, sessions, invitations and linking is still written first
+  (STY-102), but local and development identity implementation (EPC-024, EPC-025) may
+  proceed in parallel while DHCW's cyber security team reviews it. Cyber security
+  sign-off gates any hosted deployment and real data (EPC-023, EPC-028), accepting the
+  risk of rework if the review changes the flow.
+
 ## Consequences
 
-- **Accepted risks** (owner, 2026-11-21): no MFA evidence required on sign-in, for
+- **Accepted risks** (owner, 2026-11-21; 2026-11-25): no MFA evidence required on sign-in, for
   every role; up to 10 hours of access for a leaver whose session is open; no step-up on
   Google; on a shared desk, the last person's Google account one click away after
-  signing out.
+  signing out; rework risk if cyber security review of STY-102 changes local identity
+  implementation built in parallel.
 - **ADR-015 is amended** (its _ADR-018 and ADR-019 amendments_):
   - ADR-015 Option 11: an identity is `(issuer, subject)`; only the person attaches one; the
     person (never their last) or a platform operator removes one, never a tenant admin.
@@ -323,13 +339,13 @@ rest of _Records and retention_ stands.
 - **`docs/operations/replacing-google-sheets.md`** changes with the API adapter: no
   CORS and no `Authorization` header (ADR-020), and no `getAccessToken`.
 - **The `AuthClient` port, the session warning (STY-017) and the reconnect-from-action
-  flow (STY-057)** change shape for the API data source in the switch-over epic; the
-  Sheets adapter keeps ADR-003 until then.
-- **Follow-on work**: the threat model, then EPC-022's identity stories (schema,
-  sign-in with Google and the mock provider, sessions, invitations, the editor's
-  adapter); STY-094 (asking for access); a later Entra story with its spike (the email
-  claim, client authentication, the authentication context); EPC-023 for the provider
-  registrations and log export.
+  flow (STY-057)** change shape for the API data source in EPC-024; the
+  Sheets adapter keeps ADR-003 until the switch-over (EPC-028).
+- **Follow-on work**: the threat model (STY-102), EPC-024's tenancy, sign-in, session
+  and optional editor API-mode stories; EPC-025's invitations and member management
+  stories (including STY-094, asking for access); EPC-028's Entra story with its spike
+  (the email claim, client authentication, the authentication context) and switch-over;
+  EPC-023 for the provider registrations and log export.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

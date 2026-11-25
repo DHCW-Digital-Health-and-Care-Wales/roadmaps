@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-085 (hard)
 - **Binding ADRs**: ADR-016 §Layout and name, §Agent guides, ADR-007
 - **Suggested model**: Opus — one mechanical change with a wide blast radius

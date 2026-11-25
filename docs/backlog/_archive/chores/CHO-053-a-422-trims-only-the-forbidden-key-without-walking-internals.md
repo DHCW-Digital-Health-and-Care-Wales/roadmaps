@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Chore + Refactor
 - **Area**: API + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: CHO-047 (hard)
 - **Binding ADRs**: ADR-017 (_Errors_, _CHO-047 amendments_), ADR-020 (_CHO-053 amendments_)
 - **Suggested model**: Sonnet — narrow simplification of one handler, its tests and records

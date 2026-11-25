@@ -3,7 +3,7 @@
 - **Status**: Done — S1–S3 and S8 observed after the cut-over, 2026-11-23 (Delivery)
 - **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-087 (hard)
 - **Binding ADRs**: ADR-016 §The public site, ADR-007
 - **Suggested model**: Opus — a history merge and a cross-repository cut-over

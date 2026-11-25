@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Feature
 - **Area**: API + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-090 (hard), STY-101 (hard)
 - **Binding ADRs**: ADR-017 §Tenant and person, §Migrations, §Tests, §STY-091
   amendments; ADR-015 §Tenancy, §Roles, operation and data protection

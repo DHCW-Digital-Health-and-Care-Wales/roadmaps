@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor
 - **Area**: Features/UI + CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-088 (hard)
 - **Binding ADRs**: ADR-016 §Workspace tooling, §Agent guides, §STY-095 amendments
 - **Suggested model**: Opus — renames across the site, lint and compiler settings shared

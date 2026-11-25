@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor
 - **Area**: CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-095 (hard)
 - **Binding ADRs**: none
 - **Suggested model**: Sonnet — one small module moved and two callers repointed

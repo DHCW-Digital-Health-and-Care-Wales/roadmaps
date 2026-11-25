@@ -7,7 +7,9 @@ doc comments first, since they are the contract.
 
 The database behind the API is decided by ADR-015: scoped by tenant, keeping every
 version as change sets and snapshots, with a private scratch, a shared draft and
-publications. EPC-022 builds it and this adapter.
+publications. EPC-022 built the foundation; EPC-024 to EPC-028 build the API and this
+adapter incrementally (starting with sign-in and optional API mode in EPC-024, members
+and invitations in EPC-025, then roadmaps in EPC-026 and EPC-027).
 
 1. **Adapter.** Build on `apps/editor/src/infrastructure/roadmaps-api/`, which holds
    `toApiError`: a non-2xx answer as an `AppError`, by the envelope's code, mapped for

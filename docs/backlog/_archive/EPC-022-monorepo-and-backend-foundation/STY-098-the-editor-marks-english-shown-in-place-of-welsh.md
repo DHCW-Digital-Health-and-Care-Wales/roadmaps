@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Feature + Refactor
 - **Area**: Domain + Features/UI
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-097 (hard; the sequence is strict, STY-095 D4)
 - **Binding ADRs**: ADR-008
 - **Suggested model**: Opus — a rendering change at every place roadmap content shows

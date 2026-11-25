@@ -185,9 +185,10 @@ The analysis behind both is
   - _Tenancy_: beside the existing tenant procedure, the closed list of definer
     functions gains the platform procedures (issue an operator invitation, disable a
     person and revoke their sessions, remove an identity).
-- **Follow-on work**: EPC-022's schema story for people, memberships, roles and
-  assignments with the enforcement suite above; the editor's new editing model (a later
-  epic) builds the screens for members, assignments, the access review and the Viewer.
+- **Follow-on work**: EPC-024's schema and authorisation stories (`STY-103`, `STY-104`,
+  `STY-105`, `STY-106`) with the enforcement suite above; EPC-025's screens and endpoints
+  for members, invitations and the access review (`STY-110`–`STY-114`); and EPC-026/027
+  for roadmap assignments and Viewer roadmap screens.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

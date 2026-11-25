@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor
 - **Area**: Features/UI + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-096 (hard)
 - **Binding ADRs**: ADR-016 §Workspace tooling, §STY-095 amendments
 - **Suggested model**: Sonnet — catalogue entries, one font swap and a before/after

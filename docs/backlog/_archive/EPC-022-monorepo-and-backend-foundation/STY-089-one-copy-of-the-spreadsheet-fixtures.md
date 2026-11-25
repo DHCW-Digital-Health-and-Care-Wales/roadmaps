@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor
 - **Area**: Infrastructure + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-088 (hard), STY-098 (hard: the alignment sequence comes first, D1)
 - **Binding ADRs**: ADR-016 §The public site, §STY-089 amendments
 - **Suggested model**: Sonnet — moving fixtures and repointing tests and docs

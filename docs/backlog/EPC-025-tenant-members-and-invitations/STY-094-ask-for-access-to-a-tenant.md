@@ -4,8 +4,8 @@
   invitation story exists
 - **Type**: Feature
 - **Area**: API
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
-- **Depends on**: the invitation story (not yet written; hard)
+- **Epic**: [EPC-025-tenant-members-and-invitations](README.md)
+- **Depends on**: STY-110 (hard)
 - **Binding ADRs**: ADR-018 §Getting in, ADR-019 §What members and assigned leads may do
 - **Suggested model**: Opus — a write path from a signed-in identity with no membership,
   amending ADR-018
@@ -16,12 +16,12 @@ A valid NHS Wales user (or, before Entra, a DHCW Workspace user) who signs in wi
 invitation sees "You haven't been invited" and can ask for access to an organisation.
 The request waits for a tenant admin, who approves it, admitting them as an invitation
 would, or declines it. Today such a sign-in is refused and writes nothing (ADR-018).
-This story is the API side; the admin's pending join requests screen comes with the
-editor's members screens in the editing-model epic.
+This story is the API side; the admin's pending join requests screen follows it in the
+editor's members UI (`STY-113` in this epic).
 
 ## Why this is a placeholder
 
-The invitation flow it extends is not yet written. It also amends ADR-018: §Getting in
+The invitation flow it extends (STY-110) is not yet implemented. It also amends ADR-018: §Getting in
 (an uninvited sign-in "writes nothing but a log line") and §The sign-in transaction (the
 transaction table is "the only database write anonymous traffic can cause"), and
 ADR-020's rule that unauthenticated failures never reach the database. The owner raised
@@ -44,5 +44,5 @@ _Not acceptance criteria._
 
 ## Out of scope
 
-- The pending join requests screen: the editing-model epic, with the members screens
-  (ADR-019 _Consequences_).
+- The pending join requests screen: a follow-on editor story after this API story
+  settles, extending the members screen (`STY-113`).

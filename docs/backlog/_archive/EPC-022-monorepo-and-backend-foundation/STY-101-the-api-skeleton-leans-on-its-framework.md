@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor
 - **Area**: API + CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-090 (hard), CHO-048 (hard)
 - **Binding ADRs**: ADR-017 §Errors, §Operation, §Tooling; ADR-020 (the API's own
   responses); ADR-018's application-log allow-list

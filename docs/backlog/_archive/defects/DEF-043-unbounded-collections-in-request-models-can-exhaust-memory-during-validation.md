@@ -4,7 +4,7 @@
 - **Severity**: Low — no route takes a request model with a collection field yet; rises to
   High once one does, especially a collection beneath a dictionary
 - **Area**: API + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020 (_DEF-040 amendments_, _DEF-043 amendments_)
 - **Suggested model**: Sonnet — native Pydantic model convention once the owner settles

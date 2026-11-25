@@ -3,15 +3,15 @@
 - **Status**: Needs grilling — a placeholder holding the infrastructure-held protections
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
-- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-022's API
+- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-024–EPC-028's API
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
 
-EPC-022 builds the API and its database to run locally and in CI; provisioning the
-environments they run in, Google Cloud hosting and custom domains are left to a later
-epic (EPC-022 _Out of scope_). This is that epic, opened early as a placeholder so
-nothing found before then is lost. Several protections the identity and authorisation
+EPC-022 built the monorepo and API foundation, and EPC-024–EPC-028 build the API and its
+database to run locally and in CI; provisioning the environments they run in, Google Cloud
+hosting and custom domains are left to this epic. This epic was opened early as a
+placeholder so nothing found before then is lost. Several protections the identity and authorisation
 design relies on cannot be held by application code: the editor's own domain, per-address
 rate limits, private networking for the database, the provider registrations, CI's
 cloud identity, who ran a platform job, and alerting on security events. Product Leads see none of this beyond a new
@@ -193,20 +193,26 @@ None yet: written when the epic is planned.
 
 ## Sequencing
 
-After EPC-022's API runs locally and in CI, and before the deployed editor switches to
-the API (ADR-015 _Consequences_, ADR-016). The Entra registration request can start at
-once, since its approval has its own lead time.
+After [EPC-022](../_archive/EPC-022-monorepo-and-backend-foundation/README.md)'s foundation
+and alongside [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)–[EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md),
+before the deployed editor switches to the API in
+[EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)
+(ADR-015 _Consequences_, ADR-016). The Entra registration request and cyber security
+review of `STY-102` (ADR-018 _EPC-024 amendments_) can start at once, since approvals
+have their own lead time.
 
 ## Out of scope
 
 - The API's own protections (sessions, CSRF, route policies, the invitation cap,
   security events, the editor's document headers while it serves them): ADR-018,
-  ADR-019, ADR-020 and EPC-022's stories.
+  ADR-019, ADR-020 and EPC-024–EPC-028's stories.
 - SCIM provisioning from Entra: dropped, over-built for a handful of editors per
   tenant; the invitation is the gate and the access review (ADR-019) keeps memberships
   current. Reconsider if a
   tenant grows to hundreds of members.
-- Switching the deployed editor to the API: its own later epic, which this one enables.
+- Switching the deployed editor to the API:
+  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md),
+  which this epic enables.
 
 ## Defects
 
@@ -215,7 +221,12 @@ None.
 ## Related
 
 - [Identity and authorisation analysis](../../analysis/identity-and-authorisation.md)
-- [EPC-022](../EPC-022-monorepo-and-backend-foundation/README.md)
+- [EPC-022](../_archive/EPC-022-monorepo-and-backend-foundation/README.md),
+  [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md),
+  [EPC-025](../EPC-025-tenant-members-and-invitations/README.md),
+  [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md),
+  [EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md),
+  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)
 - [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
   [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md),
   [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md),

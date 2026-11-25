@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Feature
 - **Area**: API + Infrastructure + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-090 (hard), STY-101 (hard)
 - **Binding ADRs**: ADR-017 §Errors, §The contract with the editor, §STY-101 amendments,
   §STY-092 amendments; ADR-016 §Layout and name, §Workspace tooling, §STY-092 amendments;

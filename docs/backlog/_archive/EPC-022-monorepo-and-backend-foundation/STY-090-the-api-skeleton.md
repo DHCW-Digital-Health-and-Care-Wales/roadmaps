@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Feature
 - **Area**: API + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-086 (hard), STY-087 (hard: its hooks and gate, which the API joins)
 - **Binding ADRs**: ADR-017, including §STY-090 amendments; ADR-020's response rules
   (ADR-017 §ADR-020 amendments); ADR-018's application-log allow-list; ADR-016 §Workspace

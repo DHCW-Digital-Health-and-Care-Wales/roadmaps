@@ -33,6 +33,7 @@
     "api:dev": "pnpm --filter @roadmaps/api dev",
     "api:db:up": "pnpm --filter @roadmaps/api db:up",
     "api:db:down": "pnpm --filter @roadmaps/api db:down",
+    "api:migrate": "pnpm --filter @roadmaps/api migrate",
     "api:format": "pnpm --filter @roadmaps/api format",
     "api:typecheck": "pnpm --filter @roadmaps/api typecheck",
     "api:lint": "pnpm --filter @roadmaps/api lint",

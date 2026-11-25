@@ -9,7 +9,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Final
+from typing import Final, NoReturn
 
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -19,6 +19,10 @@ logger = logging.getLogger(__name__)
 ENV: Final = "ROADMAPS_ENV"
 DATABASE_URL: Final = "ROADMAPS_DATABASE_URL"
 ALLOWED_HOSTS: Final = "ROADMAPS_ALLOWED_HOSTS"
+# Only the migration tooling reads it (`migration_url`): an API process that holds it
+# refuses to start, in every environment, so no server holds the migration login
+# (STY-091 D31).
+MIGRATION_DATABASE_URL: Final = "ROADMAPS_MIGRATION_DATABASE_URL"
 
 # Set by Cloud Run in a service, a job and a worker pool: a local environment there still
 # writes no message to the log (ADR-018 _Records and retention_).
@@ -75,16 +79,18 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
             invalid.append(ENV)
 
     database_url = environ.get(DATABASE_URL, "").strip()
-    if not _is_database_url(database_url):
+    if not is_database_url(database_url):
         invalid.append(DATABASE_URL)
+
+    if MIGRATION_DATABASE_URL in environ:
+        invalid.append(MIGRATION_DATABASE_URL)
 
     hosts = tuple(host.strip().lower() for host in environ.get(ALLOWED_HOSTS, "").split(","))
     if not all(hosts) or any("*" in host for host in hosts):
         invalid.append(ALLOWED_HOSTS)
 
     if invalid:
-        logger.error("settings.invalid", extra={"invalid_settings": invalid})
-        raise SettingsError(invalid)
+        refuse(invalid)
     on_cloud_run = any(marker in environ for marker in CLOUD_RUN_MARKERS)
     return Settings(
         environment=environment,
@@ -94,7 +100,21 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
     )
 
 
-def _is_database_url(url: str) -> bool:
+def migration_url(environ: Mapping[str, str]) -> str:
+    """The migration login's URL, for `roadmaps_api.migrate` and Alembic's command line."""
+    url = environ.get(MIGRATION_DATABASE_URL, "").strip()
+    if not is_database_url(url):
+        refuse([MIGRATION_DATABASE_URL])
+    return url
+
+
+def refuse(invalid: list[str]) -> NoReturn:
+    """Logs each bad setting's name, never its value, and raises `SettingsError`."""
+    logger.error("settings.invalid", extra={"invalid_settings": invalid})
+    raise SettingsError(invalid)
+
+
+def is_database_url(url: str) -> bool:
     """A psycopg URL SQLAlchemy can parse, so the engine never fails on it with its text."""
     if not url.startswith(DATABASE_URL_SCHEME):
         return False

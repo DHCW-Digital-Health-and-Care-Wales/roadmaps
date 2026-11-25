@@ -15,6 +15,6 @@ def health() -> dict[str, str]:
 
 @router.get("/ready")
 def ready(readiness: Readiness) -> dict[str, str]:
-    """The database answers too."""
+    """The API may serve its database (`ReadinessService`)."""
     readiness.check()
     return {"status": "ok"}

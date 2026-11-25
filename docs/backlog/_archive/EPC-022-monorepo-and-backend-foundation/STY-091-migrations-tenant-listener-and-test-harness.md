@@ -1,15 +1,15 @@
 # STY-091: Migrations, the per-transaction tenant and the database test harness
 
-- **Status**: Proposed — acceptance criteria from the owner's STY-091 grilling
-  (2026-11-24); delivered after STY-101
+- **Status**: Done
 - **Type**: Feature
 - **Area**: API + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-090 (hard), STY-101 (hard)
 - **Binding ADRs**: ADR-017 §Tenant and person, §Migrations, §Tests, §STY-091
   amendments; ADR-015 §Tenancy, §Roles, operation and data protection
 - **Suggested model**: Opus — the roles, grants and harness ADR-015's enforcement suite
   stands on
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/301
 
 ## Summary
 
@@ -361,3 +361,104 @@ pytest-xdist 3.8.0:
 - The hosted logins, the bootstrap's hosted run and the migration step where the API is
   hosted (EPC-023).
 - A deadline for every route's database wait (CHO-049).
+
+## Delivery
+
+### Departures
+
+- **Tests followed the code** (agent): the harness, the roles and the listener were
+  built before their tests, so each test's red was shown by breaking the finished code
+  (Scenario evidence), not by a test that came first. The review fix to S8's login
+  lookup came test-first.
+- **S1: who grants the logins' memberships** (agent, from D3 and D26): the file grants
+  only roles' memberships, since it names no login; the local runner, and EPC-023
+  where the API is hosted, grants each login its one role after the file, and the
+  runner revokes the other role from each login. The file also stops when the owner role holds any role, the migration role any
+  role but the owner, `roadmaps_app` is a member of any role or a role is a member of both the migration
+  and application roles, beside the stops S1 lists; a non-superuser runner's own
+  memberships (the `ADMIN` PostgreSQL gives a role's creator, and `SET` on the owner)
+  are its, not foreign members. Its check of objects in `public` leaves out a relation's
+  row type and an array type, which follow their relation or element.
+- **S1: a loopback address** (agent): the local runner takes only an IP literal on the
+  loopback range (`127.0.0.0/8`, `::1`), so `localhost`, a name, is refused as a remote
+  host is; it refuses an admin URL with any query parameter (`host`, `hostaddr`,
+  `service`), and connects at the URL's address whatever `PGHOSTADDR` says.
+- **S4: two more rows** (agent): the check also fails numbers that start at `0000` and a
+  revision that does not follow the one numbered below it, which the one-head rule
+  alone misses (a line in the wrong order). It lives in `apps/api/tools/revisions.py`,
+  run by `apps/api/tests/test_revisions.py`.
+- **S7, S8: one database query, two verdicts** (agent): `/ready`'s thread reads the
+  login's safety, then, only for a safe login, `alembic_version`, since a login lacking
+  the grant would otherwise read as no connection. Any database error, a missing grant
+  among them, is `readiness.no_connection`; the warning's `exception_*` and `sqlstate`
+  fields tell them apart. The warning's cause is a new `cause` field
+  (`readiness.no_connection`, `readiness.revision_not_served`,
+  `readiness.login_unsafe`) beside the response's `code`; the ahead line is an
+  information line, `readiness.ahead`, with a `revision` field, written only once the
+  revision reads as `NNNN_<slug>` (ASCII digits only).
+- **S8: the login is found by its exact name** (agent, from review): `/ready` looks the
+  session's login and the application's role up in `pg_roles` by name, never through a
+  `::regrole` cast, which refuses a Cloud SQL IAM login's name (`name@project.iam`) and
+  folds case; D34's "a hosted IAM login is served either way" now holds as built.
+- **S9: where the harness and its tests live** (agent): the harness is
+  `apps/api/tests/harness.py`, its run hooks and fixtures (`database_url`,
+  `worker_database`, `worker_admin`) `apps/api/tests/conftest.py`, so the existing
+  readiness and log tests take `database_url` in place of `ROADMAPS_TEST_DATABASE_URL`,
+  which went; the new suites are in `apps/api/tests/integration/`. The emptying runs
+  after each test that takes `database_url`, the fixture through which a test reaches
+  the database as the application. The log test's unique violation moved to the probe
+  table, since the application's login can no longer create one. The tests that
+  bootstrap the shared roles take turns through a lock file the workers share
+  (`shared_roles` in `apps/api/tests/conftest.py`), since PostgreSQL refuses concurrent
+  updates to one role; pytest-xdist's `xdist_group` with `--dist=loadgroup` grouped
+  nothing under pytest 9.2 here. Every test runs without
+  `ROADMAPS_MIGRATION_DATABASE_URL`, which a developer may have exported to draft a
+  revision, and `pnpm api:test` unsets it.
+- **S2: drafting a revision** (agent, from D8 and D9): `[tool.alembic]` in
+  `apps/api/pyproject.toml` serves Alembic's own command line (the revision ID is the
+  file's name, `file_template = "%%(rev)s"`), whose migration environment then connects
+  to `ROADMAPS_MIGRATION_DATABASE_URL`; `roadmaps_api.migrate` hands the environment
+  its connection. A test runs `alembic check` from that configuration. Both read the
+  URL through `settings.migration_url`, so "only the migrate command reads it" (D22)
+  reads "only the migration tooling".
+- **S10: the ADRs** (agent): ADR-015's and ADR-017's _STY-091 amendments_ already state
+  what the build does, so neither changes; `apps/api/AGENTS.md` and
+  `apps/api/README.md` gain the roles, the migrations and the database tests' guide.
+  STY-100 gains D22, since `/ready` no longer runs the one `SELECT 1` its S5 and D17
+  name.
+
+### Contract for dependents
+
+- A service opens its session with `sessions(info=session_info(tenant_id=…,
+person_id=…))` (`apps/api/src/roadmaps_api/database.py`); the factory
+  `create_sessions` registers the listener. A tenant-owned table's policy is
+  `TENANT_POLICY`, for `USING` and `WITH CHECK`, under forced row-level security.
+- The first schema story writes revision `0002_<slug>` from
+  `apps/api/src/roadmaps_api/migrations/script.py.mako`, granting `roadmaps_app` what each
+  object needs; the models subclass `roadmaps_api.models.Base`, whose naming convention
+  the drift check compares (`apps/api/tests/integration/test_migrations.py`).
+- The first story whose migration inserts rows makes `harness.empty_tables` put them
+  back, with a test (D15).
+- EPC-023 runs `apps/api/src/roadmaps_api/bootstrap.sql` with
+  `psql --single-transaction --set ON_ERROR_STOP=1`, creating the two logins first and
+  granting each its one role after; a non-superuser administrator is granted
+  `roadmaps_owner` with `SET` and without `INHERIT`, so its credential is the owner's.
+  Each deploy runs `python -m roadmaps_api.migrate` with
+  `ROADMAPS_MIGRATION_DATABASE_URL`, never the server's environment.
+- `/ready`'s closed list of roles beside the application's is `CLOUD_SQL_IAM_ROLES`
+  (`apps/api/src/roadmaps_api/roles.py`).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/integration/test_bootstrap.py` (`test_the_file_makes_the_roles_and_a_second_run_changes_nothing` and `test_the_file_clears_an_attribute_its_runner_may_set`, a row per runner; `test_the_file_stops_naming_what_it_found_and_changes_nothing`, a row per stop; the runner's tests, its refusals a table); red without the `TEMPORARY` revoke                                                                                                                        |
+| S2       | `apps/api/tests/integration/test_migrations.py` (`test_the_command_brings_the_database_to_the_latest_revision_as_the_owner`, in a subprocess; `test_neither_login_creates_anything_without_switching_to_the_owner`; `test_each_revision_s_downgrade_raises_naming_the_rule`; `test_a_downgrade_writes_nothing`; `test_no_routine_in_public_is_executable_by_public`; `test_the_api_never_migrates_at_start_up`); red without the switch to the owner and without the default revoke |
+| S3       | `apps/api/tests/test_settings.py` (a row per environment for `ROADMAPS_MIGRATION_DATABASE_URL`), red without its check; observed run: the slot's `alembic_version` dropped, `pnpm api:dev` run from a shell holding `ROADMAPS_MIGRATION_DATABASE_URL` bootstrapped and migrated it to `0001_app_reads_alembic_version`, `/ready` answered 200, `pg_stat_activity` showed `roadmaps_app_login`, and neither server process's environment held the migration URL                      |
+| S4       | `apps/api/tests/test_revisions.py` (the package's revisions, and a row per break); red without the skip rule                                                                                                                                                                                                                                                                                                                                                                        |
+| S5       | `apps/api/tests/integration/test_migrations.py` (`test_the_models_match_the_migrations`, with its standing failing case; `test_alembic_s_command_line_drafts_from_the_pyproject_configuration`)                                                                                                                                                                                                                                                                                     |
+| S6       | `apps/api/tests/integration/test_tenancy.py`; red with `set_config(…, false)`, with the listener setting nothing, and with the probe's policy `true`                                                                                                                                                                                                                                                                                                                                |
+| S7       | `apps/api/tests/integration/test_readiness.py` (`test_ready_answers_by_the_database_s_revision`, a row per revision; `test_the_code_s_latest_revision_is_read_once_at_start_up`); `apps/api/tests/test_logs.py` (the warning's cause); red with the ahead or the row-count rule loosened                                                                                                                                                                                            |
+| S8       | `apps/api/tests/integration/test_readiness.py` (the two served logins; `test_ready_refuses_a_login_that_holds_more_than_the_application_s_role`, a row per refusal; the migration login; `test_ready_judges_the_login_it_connects_as_by_its_exact_name`, an IAM-named login and a mixed-case one); red without each of the `BYPASSRLS`, `ADMIN`, ownership, schema `CREATE` and `TEMPORARY` conditions, and the exact-name rows red before the fix                                  |
+| S9       | `apps/api/tests/conftest.py`, `apps/api/tests/harness.py`, `apps/api/tests/integration/AGENTS.md`; `pnpm api:test`: 4 workers, 236 tests, 100% branch coverage; the bootstrap file's tests 30 runs in a row at 4 workers with no failure after the shared-roles lock (4 failures in 25 before it); red when the emptying takes `alembic_version` too; CI's worker count: the PR's run of `API: verify`                                                                              |
+| S10      | ADR-015 and ADR-017 _STY-091 amendments_ (unchanged); `apps/api/AGENTS.md`, `apps/api/README.md`                                                                                                                                                                                                                                                                                                                                                                                    |

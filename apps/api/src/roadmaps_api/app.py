@@ -5,13 +5,13 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from sqlalchemy.orm import sessionmaker
 from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from roadmaps_api.database import create_database_engine
+from roadmaps_api.database import create_database_engine, create_sessions
 from roadmaps_api.errors import register_error_handlers
 from roadmaps_api.middleware import RequestContext
+from roadmaps_api.migrations import latest_revision
 from roadmaps_api.routes import api_v1, probes
 from roadmaps_api.settings import Settings, SettingsError, load_settings
 
@@ -38,6 +38,7 @@ def factory() -> FastAPI:
 
 
 def create_app(settings: Settings) -> FastAPI:
+    """The API; it never migrates its database, whose revision `/ready` reads."""
     engine = create_database_engine(settings.database_url)
 
     @asynccontextmanager
@@ -57,7 +58,9 @@ def create_app(settings: Settings) -> FastAPI:
         else None,
     )
     app.state.engine = engine
-    app.state.sessions = sessionmaker(engine)
+    app.state.sessions = create_sessions(engine)
+    # Read once, from the package's own migrations, for `/ready` to compare.
+    app.state.latest_revision = latest_revision()
     register_error_handlers(app)
     app.include_router(probes.router)
     app.include_router(api_v1.router)

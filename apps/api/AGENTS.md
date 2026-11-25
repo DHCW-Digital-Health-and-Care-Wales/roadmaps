@@ -21,6 +21,23 @@ the root, unversioned (ADR-017's amendments).
   `services/` and `repositories/` beside it), its service given to the route as a
   dependency.
 
+## The database (ADR-015, ADR-017)
+
+- The API connects as a login of `roadmaps_app`, the application's role; migrations
+  connect as a login of `roadmaps_migrator`, which switches to `roadmaps_owner`, the
+  owner of every object. `apps/api/src/roadmaps_api/bootstrap.sql` makes the three
+  roles; locally `apps/api/tools/bootstrap_database.py` runs it, and the hosting
+  infrastructure runs it where the API is hosted.
+- A schema change is a revision in `apps/api/src/roadmaps_api/migrations/versions/`,
+  numbered next in the line (`NNNN_<slug>.py`, its revision ID the file's name), drafted
+  by autogenerate and finished by hand (`[tool.alembic]` in `apps/api/pyproject.toml`).
+  It upgrades only, stays compatible with the version before it, which serves while a
+  deploy migrates, and grants `roadmaps_app` exactly what each object it creates needs,
+  routines included. Give each tenant-owned table forced row-level security with
+  `TENANT_POLICY` (`apps/api/src/roadmaps_api/database.py`); `alembic_version` is the
+  one table without it.
+- A test that reaches the database follows `apps/api/tests/integration/AGENTS.md`.
+
 ## Errors and responses
 
 - Refuse with `ApiError(ErrorCode.…)` (`apps/api/src/roadmaps_api/errors.py`). Add each
@@ -51,8 +68,9 @@ the root, unversioned (ADR-017's amendments).
 ## Commands and checks
 
 - The `api:` scripts need the environment `uv sync --locked` makes in `apps/api`
-  (`pnpm worktree:setup` runs it); `pnpm api:dev` and `pnpm api:test` start the slot's
-  database themselves, in Docker.
+  (`pnpm worktree:setup` runs it); `pnpm api:dev`, `pnpm api:migrate` and
+  `pnpm api:test` start and bootstrap the slot's database themselves, in Docker, and
+  `pnpm api:dev` migrates it first.
 - Run Python through uv from `apps/api` (`uv run --locked …`); add a dependency with
   `uv add`, which resolves only releases a week old.
 - A `# noqa` names its rule and why.

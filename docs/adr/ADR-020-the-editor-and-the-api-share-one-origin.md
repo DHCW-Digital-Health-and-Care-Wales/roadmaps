@@ -3,10 +3,11 @@
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   identity and authorisation grilling (2026-11-21); the options chosen are marked ✅.
   Amended by the owner's STY-101 grilling (_STY-101 amendments_), CHO-053 decision
-  (_CHO-053 amendments_) and DEF-040 triage and grilling (_DEF-040 amendments_).
+  (_CHO-053 amendments_), DEF-040 triage and grilling (_DEF-040 amendments_) and DEF-043
+  triage (_DEF-043 amendments_).
 - Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list;
   CHO-053: 422 `loc` trimming; DEF-040: 422 error cap, `loc` segment truncation and
-  recursive-union rule)
+  recursive-union rule; DEF-043: native Pydantic collection bounds)
 
 ## Context
 
@@ -121,6 +122,24 @@ amendments_ stands.
   `ApiRequestModel` (use discriminated unions, and add an explicit depth validator only if
   a recursive request model is ever introduced).
 
+### DEF-043 amendments
+
+From the owner's DEF-043 triage and review (2026-11-25, DEF-043 D1–D2); the rest of
+_The API's own responses_, _CHO-053 amendments_ and _DEF-040 amendments_ stands.
+
+- **Collections and dictionary keys in `ApiRequestModel` are bounded natively in
+  Pydantic**: every collection — nested collection type arguments included — uses a
+  concrete builtin (`list`, `dict`, `set`, `frozenset` or variadic `tuple`, not
+  `Sequence` or `Mapping`), sets `Field(max_length=…)` on every `list`, pairs `FailFast()`
+  with `Field(max_length=…)` on every `dict`, `set`, `frozenset` and variadic `tuple`, and
+  bounds every `dict` key with `Annotated[str, StringConstraints(max_length=…)]`
+  (`apps/api/AGENTS.md`). The API adds no custom pre-validation framework layer:
+  `Field(max_length=M)` on `list` stops upfront at one `too_long` error when `len > M` and
+  bounds items validated per list to `M` when `len <= M`; `FailFast()` with
+  `Field(max_length=M)` stops on the first failing entry or first unique excess entry; and
+  bounding `dict` keys alongside `FailFast()` stops an oversize key at one
+  `string_too_long` error before its value is validated.
+
 ## Consequences
 
 - **One deploy carries both apps** in each environment, until and after the load
@@ -138,10 +157,14 @@ amendments_ stands.
   truncating string `loc` segments past 128 characters bounds the 422 response for
   fixed-depth schemas (and for any future recursive model with a depth validator, as
   `apps/api/AGENTS.md` requires).
-- **Open follow-on ([DEF-043](../backlog/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md), `Needs triage`)**:
-  because `validation_error` slices `exc.errors()` after Pydantic finishes validating, the
-  cap bounds the 422 response rather than Pydantic's pre-handler validation memory on
-  unbounded collections; no route takes a request model with a collection field yet.
+- **Collection validation work is bounded natively ([DEF-043](../backlog/_archive/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md), `Done`)**:
+  `apps/api/AGENTS.md` requires concrete builtin collections (nested type arguments
+  included) with `Field(max_length=…)` on `list`, `FailFast()` alongside
+  `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple`, and
+  `Annotated[str, StringConstraints(max_length=…)]` on `dict` keys in `ApiRequestModel`,
+  bounding collection and dictionary-key amplification natively without a custom framework
+  layer (unknown-key validation at any depth and nested `list` items within their bounds
+  remain bounded by Starlette's 1 MiB body limit).
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

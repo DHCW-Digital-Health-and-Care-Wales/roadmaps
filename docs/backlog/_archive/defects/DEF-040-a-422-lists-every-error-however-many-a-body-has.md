@@ -107,7 +107,7 @@ None.
 - Because the cap slices `exc.errors()` after Pydantic validates the body, it bounds the
   422 response rather than Pydantic's validation memory on an unbounded collection; that
   residual risk is recorded as
-  [DEF-043](../../defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md)
+  [DEF-043](DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md)
   (`Needs triage`) for the owner before the first request model with a collection field
   (and noted in `EPC-022/delivery-notes.md`).
 - `apps/api/AGENTS.md` requires discriminated unions for recursive shapes in

@@ -306,15 +306,21 @@ rest of _Records and retention_ stands.
 
 ### EPC-024 amendments
 
-From the owner's EPC-024 planning answers (2026-11-25, Q2); the rest of _Assurance_
-stands.
+From the owner's EPC-024 planning answers (2026-11-25, Q2). This amends _Assurance_'s
+clause `"reviewed by DHCW's cyber security team before any identity code is built"`;
+writing the threat model first (`STY-102`) and the independent penetration test before
+switching the deployed editor stand.
 
-- **Threat model review gates deployment and real data, not local/dev coding**: the
-  threat model of sign-in, sessions, invitations and linking is still written first
-  (STY-102), but local and development identity implementation (EPC-024, EPC-025) may
-  proceed in parallel while DHCW's cyber security team reviews it. Cyber security
-  sign-off gates any hosted deployment and real data (EPC-023, EPC-028), accepting the
-  risk of rework if the review changes the flow.
+- **Threat model review gates any hosted deployment and real data, not local/dev
+  coding**: the threat model of sign-in, sessions, invitations and linking is still
+  written first (`STY-102`, a hard prerequisite of identity code stories `STY-104`,
+  `STY-106` and `STY-110`), while local and development identity implementation
+  (EPC-024, EPC-025) may proceed in parallel with DHCW's cyber security review. Recorded
+  cyber security sign-off on `STY-102` gates **any hosted deployment of the API in any
+  environment** and **any real provider client, secret or real data** — real staff
+  identities (names and emails returned by DHCW's Google Workspace or Entra) count as
+  real personal data regardless of environment (held in `EPC-023`, `EPC-028` and
+  `STY-102`). Accepted risk: rework if the review changes the flow.
 
 ## Consequences
 

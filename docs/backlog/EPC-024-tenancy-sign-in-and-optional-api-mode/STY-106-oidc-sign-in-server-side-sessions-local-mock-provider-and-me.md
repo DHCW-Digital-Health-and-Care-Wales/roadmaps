@@ -6,8 +6,9 @@
 - **Type**: Feature
 - **Area**: API + Infrastructure + CI/CD
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
-- **Depends on**: STY-103 (hard), STY-105 (hard), STY-102 (preferred order — threat
-  model drafted first; cyber review gates deployment, ADR-018 _EPC-024 amendments_)
+- **Depends on**: STY-102 (hard — threat model written first, ADR-018 _EPC-024
+  amendments_; cyber review runs in parallel and gates hosted deployment), STY-103
+  (hard), STY-105 (hard)
 - **Binding ADRs**: ADR-015 §Tenancy, §ADR-018 and ADR-019 amendments; ADR-017 §The
   contract with the editor, §Errors; ADR-018; ADR-019 §Enforcement; ADR-020
 - **Suggested model**: Opus — OIDC/PKCE/JWKS security implementation, session cookies,
@@ -32,8 +33,8 @@ mock OIDC service; `apps/api/src/roadmaps_api/identity/` (only module allowed by
 import-linter to import the OIDC library, with `python-jose` banned by ruff); auth
 routes, session service (only module writing sessions), retention purge CLI; OpenAPI and
 `packages/api-types` regeneration; `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`
-mappings; integration tests covering every refused JWT claim, key rollover, timeouts and
-`disable-person` session revocation (`STY-104`).
+mappings; integration tests covering every refused JWT claim, key rollover and
+idle/absolute session timeouts.
 
 ## Acceptance criteria
 
@@ -45,13 +46,15 @@ mappings; integration tests covering every refused JWT claim, key rollover, time
 and allow-listed return path), navigates to the returned authorisation URL, and completes
 the provider's callback `GET /api/v1/auth/callback/{provider}`
 **Then** the API sets a single-use 10-minute `__Host-` transaction cookie (`SameSite=Lax`,
-port-prefixed locally) on start, validates `state`, PKCE `S256`, `nonce`, issuer, `aud`,
-`exp`/`iat` (≤ 60 s skew), `RS256` signature against cached JWKS (with rate-limited
-refetch on unknown `kid`), Google `hd` allow-list and `email_verified=true`
+carrying the local port after the `__Host-` prefix in local mode) on start, validates
+`state`, PKCE `S256`, `nonce`, issuer, `aud`, `exp`/`iat` (≤ 60 s skew), `azp` where
+present, `RS256` signature against cached JWKS (with rate-limited refetch on unknown
+`kid`), Google `hd` allow-list and `email_verified=true`
 **And** creates an opaque 256-bit session (storing only its SHA-256 hash, 60-minute idle
 and 10-hour absolute expiry), refreshes the identity's display email/name and last
 sign-in time, sets the `__Host-` `HttpOnly` `Secure` `SameSite=Strict` `Path=/` session
-cookie (no expiry attribute), and redirects to the static editor callback route
+cookie (no expiry attribute, carrying the local port after the `__Host-` prefix in local
+mode), and redirects to the static editor callback route
 **And** a missing, expired, reused or cross-provider `state`, a refused claim, a disabled
 person, or a person holding an Entra identity signing in with Google is refused, writes
 no session, logs an allow-listed security event, and redirects to the editor error route
@@ -109,9 +112,10 @@ definer functions, leaving active and recent records untouched
 - **Q2**: How should the local mock OIDC provider in Compose be provided?
   - (a) A tiny, deterministic in-repo Python/FastAPI mock OIDC server container (or script
     in Compose) supporting multiple seeded personas (Admin, Product Lead, Viewer,
-    Uninvited) with real RSA signing keys and key-rollover test endpoints (recommended) —
-    zero third-party image supply-chain risk, full control over claims (`hd`,
-    `email_verified`, `nonce`, `sub`) for both local dev and Playwright E2E.
+    Uninvited) with ephemeral RSA signing keys generated at start-up (never committed to
+    git) and key-rollover test endpoints (recommended) — zero third-party image
+    supply-chain risk, full control over claims (`hd`, `email_verified`, `nonce`, `sub`)
+    for both local dev and Playwright E2E.
   - (b) A third-party mock OIDC container image (e.g. `dex` or `mock-oauth2-server`) —
     less code to maintain, adds an external container image and trickier claim/rollover
     scripting.
@@ -122,6 +126,10 @@ _Recorded during grilling._
 
 ## Out of scope
 
+- Testing mock-provider and non-HTTPS/loopback-issuer refusal against the built
+  production container image: handed over to
+  [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md) (_The API's image
+  and server_), where the Dockerfile and production image are built (ADR-018).
 - Invitation redemption (`purpose=redeem`, `STY-110` in EPC-025).
 - Microsoft Entra ID provider and identity linking (`purpose=link`, `EPC-028`).
 - Editor sign-in UI (`STY-107`, `STY-109`).

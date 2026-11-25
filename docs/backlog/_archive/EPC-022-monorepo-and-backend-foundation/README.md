@@ -343,9 +343,11 @@ API and public-site token sequencing now lives in EPC-024–EPC-029.
 - [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md):
   a small request can get a much larger 422, which lists every error (Done).
 - [DEF-041](../../defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md):
-  the editor's status messages quote English it cannot mark (Needs triage).
+  the editor's status messages quote English it cannot mark (moved to standalone when
+  EPC-022 archived; Needs triage).
 - [DEF-042](../../defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md): the
-  editor's fields hold English with no `lang` (Needs triage).
+  editor's fields hold English with no `lang` (moved to standalone when EPC-022 archived;
+  Needs triage).
 - [DEF-043](../defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md):
   unbounded collections in request models can exhaust memory during validation (Done).
 

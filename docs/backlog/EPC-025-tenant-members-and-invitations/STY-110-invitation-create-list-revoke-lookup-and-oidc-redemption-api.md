@@ -6,7 +6,9 @@
 - **Type**: Feature
 - **Area**: API + Infrastructure
 - **Epic**: [EPC-025-tenant-members-and-invitations](README.md)
-- **Depends on**: STY-104 (hard), STY-106 (hard)
+- **Depends on**: STY-093 (hard — seeder harness extended with invitation factories),
+  STY-102 (hard — threat model written first, ADR-018 _EPC-024 amendments_), STY-104
+  (hard), STY-106 (hard)
 - **Binding ADRs**: ADR-015 §People, access and permissions, §History, §ADR-018 and
   ADR-019 amendments; ADR-017 §Errors, §The contract with the editor; ADR-018 §Getting
   in, §Records and retention; ADR-019 §What members and assigned leads may do,
@@ -44,7 +46,11 @@ yet (`STY-112`, `STY-113`).
 list pending invitations, or revoke a pending invitation
 **Then** creating generates a 256-bit random token, stores only its SHA-256 hash with a
 7-day expiry, records an access change set (with idempotency), and returns the raw token
-(or full link) **once** in the creation response only (never in list responses or logs)
+(or full link) **once** in the initial creation response only (never in list responses,
+logs, or any database column — an idempotent retry with the same key, tenant, person and
+request hash writes nothing and returns the invitation metadata **without** the raw token,
+so an Admin whose initial response was lost revokes and re-issues; an integration test
+replays a create and scans database tables to prove the raw token is never stored)
 **And** revoking marks the invitation revoked as an access change set so it can never be
 redeemed
 **And** callers without `members:manage` receive 403; non-members receive 404 (proved by
@@ -74,9 +80,11 @@ authority/tenant/roles, consumes the token atomically, creates the person and id
 (or reuses the existing person if that `(issuer, subject)` already exists), creates the
 membership and role rows, records the access change set (and `platform_audit_log` if a
 person was created), and starts a fresh session
-**And** concurrent or repeated redemptions of the same token succeed at most once, and a
-mismatched email, wrong provider, disabled person, or invalidated invitation writes
-nothing and refuses with one uniform code
+**And** concurrent or repeated redemptions of the same token succeed at most once; an
+unavailable or invalidated invitation (redeemed, revoked, expired, inviter lost
+`members:manage`, tenant or role gone), wrong provider or disabled person writes nothing
+and refuses with one uniform code (`invitation.unavailable`), while a verified-email
+mismatch refuses per Q3 without leaking the invited email address
 
 ### S4: Retention purge CLI removes spent and expired invitations after 90 days
 
@@ -100,6 +108,17 @@ active invitations untouched
   - (a) Bounded `roleIds` list (`Field(min_length=1, max_length=10)`) (recommended) —
     aligns with ADR-018 ("the roles") and `STY-103` Q2's `membership_roles` join table.
   - (b) Single `roleId` for now — avoids a collection field until custom roles exist.
+- **Q3**: Should a verified-email mismatch during OIDC redemption return the same
+  `invitation.unavailable` code as every other refusal, or a separate
+  `invitation.email_mismatch` code (never naming the expected email) so `STY-112` can tell
+  a user who signed into the wrong account to retry with their invited address?
+  - (a) Separate `invitation.email_mismatch` code (never echoing the expected address)
+    (recommended) — the user already passed OIDC with a valid DHCW/NHS account and held
+    the 256-bit link, so telling them to sign in with the invited account avoids false
+    "link expired" confusion without leaking the target email.
+  - (b) Use the same `invitation.unavailable` code for email mismatch too — reveals zero
+    information about whether a link is still active, at the cost of a vaguer error for
+    multi-account users (`STY-112` S3 then shows one uniform message).
 
 ## Decisions
 

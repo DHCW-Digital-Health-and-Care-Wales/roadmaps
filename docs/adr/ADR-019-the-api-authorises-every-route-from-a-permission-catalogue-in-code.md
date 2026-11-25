@@ -168,7 +168,7 @@ The analysis behind both is
   today any connected lead manages families and categories; then it is read-only for
   them, and admins manage the lists.
 - **A Viewer is a new kind of user** the editor has not had: everything is read-only
-  for them, and the editor's switch-over epic designs that.
+  for them, and EPC-025 (`STY-113`) and EPC-027 design that.
 - **The editor's interface shows permissions as hints only**; the API decides.
 - **ADR-015 is amended** (its _ADR-018 and ADR-019 amendments_):
   - ADR-015 Option 22: the Product Lead role also holds `roadmaps:edit` and `roadmaps:publish`;

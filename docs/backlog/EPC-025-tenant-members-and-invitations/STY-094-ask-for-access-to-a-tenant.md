@@ -16,8 +16,8 @@ A valid NHS Wales user (or, before Entra, a DHCW Workspace user) who signs in wi
 invitation sees "You haven't been invited" and can ask for access to an organisation.
 The request waits for a tenant admin, who approves it, admitting them as an invitation
 would, or declines it. Today such a sign-in is refused and writes nothing (ADR-018).
-This story is the API side; the admin's pending join requests screen follows it in the
-editor's members UI (`STY-113` in this epic).
+This story is the API side; the admin's pending join requests screen is a follow-on
+editor story extending `STY-113`'s members screen.
 
 ## Why this is a placeholder
 

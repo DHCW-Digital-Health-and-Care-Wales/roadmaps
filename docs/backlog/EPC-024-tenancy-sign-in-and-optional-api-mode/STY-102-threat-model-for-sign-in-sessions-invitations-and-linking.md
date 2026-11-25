@@ -50,14 +50,16 @@ production)
 **Then** every threat names its control, the layer enforcing it (code, DB or EPC-023
 infrastructure), the story or check that proves it, and any residual risk
 
-### S3: Accepted risks and open cyber questions are explicit
+### S3: Accepted risks, open cyber questions and the sign-off gate are explicit
 
 **Given** the risks accepted in ADR-018 _Consequences_ and any new gaps found during
 modelling
 **When** the reviewer reaches the end of the document
-**Then** every accepted risk is listed with owner sign-off status, and every new finding
-that requires a code or infrastructure change is recorded as an actionable backlog item
-or open question
+**Then** every accepted risk is listed with owner sign-off status, every new finding that
+requires a code or infrastructure change is recorded as an actionable backlog item or open
+question, and the document includes an explicit **Cyber security sign-off** record
+(reviewer, date, findings, disposition, initially **Pending**) cited by `EPC-023` and
+`EPC-028` so a `Done` `STY-102` draft is never mistaken for completed cyber sign-off
 
 ## Open questions
 
@@ -68,6 +70,15 @@ or open question
     PRs and meetings.
   - (b) A DHCW-specific template or external format (please share template or required
     headings) — matches internal governance paperwork directly if one is mandated.
+- **Q2**: Once DHCW cyber security completes its review, should the sign-off outcome be
+  recorded in-place inside `docs/analysis/identity-threat-model.md` (with a follow-on PR
+  creating records for any findings) or tracked as a separate backlog chore blocking
+  `EPC-023`'s first deploy?
+  - (a) Record the outcome in `docs/analysis/identity-threat-model.md`'s Sign-off section
+    and cite it from `EPC-023`'s deploy precondition (recommended) — keeps the threat model
+    and its approval in one authoritative document.
+  - (b) Open a dedicated sign-off chore in `EPC-023` that closes only when cyber signs
+    off — makes the wait visible in `docs/backlog/README.md` as an open record.
 
 ## Decisions
 

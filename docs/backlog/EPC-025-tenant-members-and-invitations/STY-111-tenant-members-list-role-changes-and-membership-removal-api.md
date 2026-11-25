@@ -85,6 +85,13 @@ least one Admin survives and the second operation is refused with a dedicated er
     their role").
   - (b) Forbid self-removal completely — prevents accidental lock-out if a second Admin
     is inactive, requires another Admin to remove a departing Admin.
+- **Q3**: Does a **disabled** person (disabled via `STY-104`'s `disable-person` platform
+  job) count toward the last-admin guard?
+  - (a) Count only **enabled** Admins (recommended) — prevents the sole working Admin
+    from removing or demoting themselves when the only other Admin is disabled and cannot
+    sign in.
+  - (b) Count all Admin memberships regardless of disabled state — simpler query, allows
+    a tenant to lock itself out until a platform operator intervenes.
 
 ## Decisions
 

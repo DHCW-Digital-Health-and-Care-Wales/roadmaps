@@ -161,11 +161,11 @@ permission catalogue and the shipped roles belong to the authorisation ADR (ADR-
     rules (_History_).
   - It is deleted on Save or Discard, when its owner's assignment or membership ends,
     when its roadmap is retired, and on expiry after a period without activity, with a
-    warning first, both run by a scheduled API job (Option 29; the period is
-    EPC-022's).
+    warning first, both run by a scheduled API job (Option 29; 30 days, warned at 23,
+    implemented in EPC-026).
   - A second tab or device editing the same scratch is refused by the scratch's
     version, and refreshes.
-  - EPC-022's adapter maps today's publish onto the API as a scratch write, then "save
+  - EPC-027's adapter maps today's publish onto the API as a scratch write, then "save
     and publish", so the scratch is exercised from the first delivery.
 - **Saving promotes the scratch to the roadmap's shared draft** as one change set
   (Option 3). Each roadmap has one draft, which its assigned leads edit together; the
@@ -313,7 +313,7 @@ application's own role, and prove:
 - a restore across a snapshot schema version works and flags retired entries;
 - the import quarantines the rows the constraints refuse.
 
-EPC-022 names the suite.
+EPC-024 (`STY-103`) and EPC-026 name the suite.
 
 ### ADR-018 and ADR-019 amendments
 
@@ -369,8 +369,9 @@ bullets differ from the text above, they hold; the rest stands.
   handle every snapshot schema version for as long as snapshots are kept.
 - The editor's editing model changes before switch-over: pending edits in the browser
   (ADR-012) become a server scratch, a shared draft and publications, with permissions
-  and assignments, in a later epic. `RoadmapRepository` gains calls for them then; until
-  then, EPC-022's adapter maps today's calls onto the API through the scratch.
+  and assignments, in EPC-027. `RoadmapRepository` gains calls for them then; until
+  then, EPC-024's stub repository fails unimplemented roadmap calls cleanly and EPC-027
+  wires roadmaps through the scratch.
 - Sheets-era rules leave as the API takes over: ADR-009, ADR-011, ADR-013 and ADR-014
   describe the spreadsheet, and ADR-012's pending edits, conflict detection and
   lost-answer settlement move to the API and database. Each is superseded, in whole or
@@ -386,8 +387,9 @@ bullets differ from the text above, they hold; the rest stands.
 - Follow-on records: the API stack ADR (ADR-017); an identity ADR for Microsoft and
   Google sign-in (successor to ADR-003; ADR-018); an authorisation ADR (ADR-019) holding the permission
   catalogue, the shipped roles (Option 22) and who assigns leads (Options 16, 17);
-  EPC-022 delivers the first schema and sets the scratch's expiry (Option 24).
-  Infrastructure as code is a later epic.
+  EPC-022 set the scratch's expiry (Option 24) and database harness; EPC-024 (`STY-103`)
+  delivers the first schema and EPC-026 delivers the roadmap schema and expiry job.
+  Infrastructure as code is EPC-023.
 - The glossary gains the terms this introduces (tenant, assignment, scratch, draft,
   change set, snapshot, publication, retired), and
   `docs/operations/replacing-google-sheets.md` points here.

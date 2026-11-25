@@ -22,9 +22,9 @@ requests (`STY-094`) follow at the end of the epic.
 ## Owner decisions waiting
 
 - [STY-110](STY-110-invitation-create-list-revoke-lookup-and-oidc-redemption-api.md#open-questions) —
-  invitation API paths, re-inviting an already-pending email and single vs bounded `roleIds` list
+  re-inviting an already-pending email, single vs bounded `roleIds` list and email-mismatch refusal code
 - [STY-111](STY-111-tenant-members-list-role-changes-and-membership-removal-api.md#open-questions) —
-  member list filtering/shape, self-removal confirmation and last-admin refusal code
+  member list projection, self-removal and whether a disabled Admin counts toward the last-admin guard
 - [STY-112](STY-112-editor-invitation-acceptance-and-redemption-flow.md#open-questions) —
   invitation fragment URL path and behaviour when another user is already signed in
 - [STY-113](STY-113-editor-members-and-invitations-management.md#open-questions) —
@@ -83,7 +83,7 @@ Owner answers of 2026-11-25 (EPC-024 / EPC-025 decomposition):
 
 | ID      | Story                                                                                                                                      | Area                                                                   | Depends on                         | State |
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------- | ----- |
-| STY-110 | [Invitation create, list, revoke, lookup and OIDC redemption API](STY-110-invitation-create-list-revoke-lookup-and-oidc-redemption-api.md) | API + Infrastructure                                                   | STY-104, STY-106                   |       |
+| STY-110 | [Invitation create, list, revoke, lookup and OIDC redemption API](STY-110-invitation-create-list-revoke-lookup-and-oidc-redemption-api.md) | API + Infrastructure                                                   | STY-093, STY-102, STY-104, STY-106 |       |
 | STY-111 | [Tenant members list, role changes and membership removal API](STY-111-tenant-members-list-role-changes-and-membership-removal-api.md)     | API + Infrastructure                                                   | STY-105, STY-106                   |       |
 | STY-112 | [Editor invitation acceptance and redemption flow](STY-112-editor-invitation-acceptance-and-redemption-flow.md)                            | Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E | STY-108, STY-109, STY-110          |       |
 | STY-113 | [Editor members and invitations management](STY-113-editor-members-and-invitations-management.md)                                          | Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E | STY-108, STY-109, STY-110, STY-111 |       |
@@ -94,8 +94,8 @@ Owner answers of 2026-11-25 (EPC-024 / EPC-025 decomposition):
 
 ```mermaid
 flowchart LR
-  EPC24["EPC-024 (STY-104, STY-106)"] --> STY110["STY-110 Invitations API"]
-  EPC24 --> STY111["STY-111 Members API"]
+  EPC24A["EPC-024 (STY-093, STY-102, STY-104, STY-106)"] --> STY110["STY-110 Invitations API"]
+  EPC24B["EPC-024 (STY-105, STY-106)"] --> STY111["STY-111 Members API"]
   STY108["STY-108 UX + STY-109 Sign-in UI"] --> STY112["STY-112 Editor invitation accept"]
   STY110 --> STY112
   STY108 --> STY113["STY-113 Editor members & invitations UI"]
@@ -106,8 +106,8 @@ flowchart LR
   STY110 --> STY094["STY-094 Ask for access (API)"]
 ```
 
-- Once `STY-106` (and `STY-104`) land in EPC-024, `STY-110` and `STY-111` can run in
-  parallel.
+- Once `STY-106` lands in EPC-024, `STY-111` unblocks immediately; once `STY-093`,
+  `STY-102`, `STY-104` and `STY-106` have landed, `STY-110` unblocks as well.
 - Once `STY-108` + `STY-109` + `STY-110` (+ `STY-111`) land, `STY-112` and `STY-113`
   complete the full vertical slice for Tenant Admins inviting and managing Product Leads.
 - `STY-114` and `STY-094` follow after the core lifecycle (or can wait while `EPC-026`

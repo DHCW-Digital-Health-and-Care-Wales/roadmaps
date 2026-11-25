@@ -76,9 +76,17 @@ its first result without writing; the same key with another payload is refused
 
 **Given** `bootstrap.sql` run locally and in CI (and tested as superuser and Cloud SQL
 non-superuser administrator, matching STY-091 S1)
-**When** ADR-018's definer role and ADR-019's platform role are inspected
-**Then** neither owns schema objects or holds `SUPERUSER`, `BYPASSRLS`, `CREATEROLE`,
-`CREATEDB` or `REPLICATION`, and each holds only the minimal grants its procedures need
+**When** ADR-018's dedicated definer role(s) and ADR-019's platform caller role are
+inspected
+**Then** none owns any database, schema, table, sequence or unrelated object, nor holds
+`LOGIN`, `SUPERUSER`, `BYPASSRLS`, `CREATEROLE`, `CREATEDB` or `REPLICATION`
+**And** ADR-018's dedicated no-login definer role owns **only** its reviewed
+`SECURITY DEFINER` routines (never `roadmaps_owner`, which holds DDL rights), holds only
+the minimal table grants and RLS policies those routines need, and `bootstrap.sql`'s
+routine-ownership check and integration tests assert that exact ownership
+**And** ADR-019's platform caller role (separate from `roadmaps_app` and purge jobs) owns
+no objects at all and holds only `EXECUTE` on the platform definer procedures, which are
+themselves owned by a dedicated no-login definer role rather than `roadmaps_owner`
 
 ## Open questions
 
@@ -103,6 +111,15 @@ non-superuser administrator, matching STY-091 S1)
     public-site addresses, matches short-name address style.
   - (b) UUID-only in editor URLs with an optional separate public slug later — avoids
     slug renames affecting editor links, less readable URLs.
+- **Q4**: Should ADR-018's auth/session definer routines and ADR-019's platform definer
+  procedures each have their own dedicated no-login owner role (e.g. `roadmaps_auth_definer`
+  and `roadmaps_platform_definer`) so a flaw in an anonymous-facing auth routine cannot
+  reach platform-only grants?
+  - (a) Separate dedicated no-login owner roles for auth/session routines vs platform
+    procedures (recommended) — keeps anonymous-reachable definer privileges strictly
+    isolated from tenant-creation and person-disabling privileges.
+  - (b) One shared no-login definer role owning both sets of routines — one fewer role to
+    bootstrap, wider blast radius if an anonymous-facing routine has a bug.
 
 ## Decisions
 

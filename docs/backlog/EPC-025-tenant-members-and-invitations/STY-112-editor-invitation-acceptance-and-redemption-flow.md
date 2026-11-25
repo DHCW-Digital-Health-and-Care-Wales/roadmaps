@@ -50,12 +50,13 @@ and lands them inside that tenant with their name and tenant in the account menu
 
 ### S3: Unavailable invitations and mismatched emails show clear English and Welsh guidance
 
-**Given** an expired, revoked, already-used or malformed token, or a callback returning
-the email-mismatch refusal
+**Given** an expired, revoked, already-used or malformed token, or a callback refusal
+(including an email-mismatch refusal if `STY-110` Q3 adopts a separate code)
 **When** the user lands on the invitation or error screen
-**Then** they see plain English/Welsh copy explaining the invitation cannot be used (or
-that they must sign in with the invited email address) and to ask their organisation's
-Admin for a new link, with no raw error codes or token values shown
+**Then** they see plain English/Welsh copy explaining the invitation cannot be used (or,
+if `STY-110` Q3 separates email mismatch, that they must sign in with the invited email
+address) and to ask their organisation's Admin for a new link, with no raw error codes,
+expected email address or token values shown
 
 ## Open questions
 

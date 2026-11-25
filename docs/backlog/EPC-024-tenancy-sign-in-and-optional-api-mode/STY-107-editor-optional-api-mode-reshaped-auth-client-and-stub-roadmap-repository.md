@@ -18,9 +18,9 @@ Lets the editor run optionally against the backend API (`VITE_DATA_SOURCE=api`) 
 keeping Google Sheets as the default deployed mode (`VITE_DATA_SOURCE=sheets` or unset).
 Reshapes `AuthClient` so no access token leaves the port (keeping GIS token plumbing
 private to the Sheets adapters inside `composeApp`), adds an `ApiAuthClient` backed by
-`/api/v1/me` and `/api/v1/auth/*` plus a same-origin API HTTP client (attaching
-`X-Roadmaps-Person-Id` on state-changing calls and routing errors through `toApiError`),
-and wires a stub `ApiRoadmapRepository` whose unimplemented roadmap and list calls reject
+`/api/v1/me` and `/api/v1/auth/*` plus a same-origin API HTTP client (attaching the
+signed-in person assertion header settled in `STY-105` on state-changing calls and routing
+errors through `toApiError`), and wires a stub `ApiRoadmapRepository` whose unimplemented roadmap and list calls reject
 with a dedicated "not yet available" error kind in English and Welsh so existing screens
 fail cleanly until `EPC-026` and `EPC-027` implement them.
 
@@ -65,8 +65,9 @@ idle and absolute expiry timestamps) cleanly without leaking API wire types out 
 **Then** responses are parsed with `@roadmaps/api-types` `zod/mini` schemas (malformed
 successes become `invalid-response`), non-2xx responses go through `toApiError` (with
 401 reporting unauthenticated), fetch failures become retryable `network`, aborted
-requests rethrow abort, and every state-changing call sends `Content-Type: application/json`
-and the signed-in person header (`X-Roadmaps-Person-Id`, ADR-018)
+requests rethrow abort, and every authenticated state-changing call sends
+`Content-Type: application/json` and the signed-in person assertion header settled in
+`STY-105` Q2 (ADR-018)
 
 ### S4: Stub `ApiRoadmapRepository` fails unimplemented calls cleanly in English and Welsh
 

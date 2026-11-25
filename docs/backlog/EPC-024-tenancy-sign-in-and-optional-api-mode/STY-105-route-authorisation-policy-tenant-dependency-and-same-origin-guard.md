@@ -67,8 +67,9 @@ gets 401 (`auth.unauthenticated`)
 **Given** any non-`GET`/`HEAD`/`OPTIONS` route (and every `GET` except the future OIDC
 callback is tested to make no write)
 **When** called without `Sec-Fetch-Site: same-origin` (or matching `Origin` when Fetch
-Metadata is absent), with a non-`application/json` body when a body is sent, or with an
-asserted-person header that disagrees with the authenticated session's person
+Metadata is absent), with a non-`application/json` body when a body is sent, or (on an
+authenticated route) with a missing or disagreeing asserted-person header compared to the
+authenticated session's person
 **Then** the API refuses with a documented `ErrorCode` in ADR-017's envelope, mapped in
 `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`
 

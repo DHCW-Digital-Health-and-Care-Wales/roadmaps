@@ -3,7 +3,9 @@
 - **Status**: Needs grilling — a placeholder holding the infrastructure-held protections
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
-- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-024–EPC-028's API
+- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-024–EPC-027's API
+  (and recorded DHCW cyber security sign-off on `STY-102` before any hosted API
+  deployment or real provider client)
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
@@ -147,7 +149,10 @@ lives:_
   uvicorn answers a request it cannot parse (a bad header line, two `Host` headers, a
   `Content-Length` that is no number) with its own fixed `400` text, before the API's
   middleware, so without STY-090 S5's headers or a request ID: the edge refuses such
-  requests, or the production server is configured to.
+  requests, or the production server is configured to. The production image build also
+  runs ADR-018's test proving the image refuses any non-HTTPS or loopback issuer and the
+  local mock provider whenever `K_SERVICE`, `CLOUD_RUN_JOB` or `CLOUD_RUN_WORKER_POOL`
+  is set (handed over from `STY-106`).
 
 ### Operations
 
@@ -185,7 +190,12 @@ lives:_
 
 ## Shared assumptions and contracts
 
-None yet.
+- **Precondition for any hosted deployment (ADR-018 _EPC-024 amendments_)**: no hosted
+  deployment of the API in any environment (non-production included), and no real
+  provider OAuth client or secret (since real staff sign-ins store real personal data),
+  may be provisioned or receive traffic until DHCW cyber security sign-off on
+  [STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
+  is recorded (reviewer, date, findings and disposition).
 
 ## Stories
 

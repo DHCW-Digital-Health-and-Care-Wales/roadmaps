@@ -15,8 +15,9 @@ publications only) and switches `apps/public-site` to read from it; has the API 
 editor's built static files with strict document headers (ADR-020); builds the one-off
 spreadsheet quarantine import tool (ADR-015); delivers the Microsoft Entra ID spike,
 sign-in, guarded identity linking and Google sign-in retirement (ADR-018); and executes
-the cut-over after DHCW cyber sign-off (ADR-018 _EPC-024 amendments_) and the independent
-penetration test, removing the Sheets and GIS adapters and superseding the Sheets-era ADRs.
+the cut-over after DHCW cyber sign-off (which gates any hosted deployment and real data,
+ADR-018 _EPC-024 amendments_) and the independent penetration test, removing the Sheets
+and GIS adapters and superseding the Sheets-era ADRs.
 
 ## Owner decisions waiting
 
@@ -68,10 +69,14 @@ _Candidate scope, to be grilled and split into stories when this epic is planned
 
 ## Shared assumptions and contracts
 
-Production deployment of real data requires
-[EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md) (custom domain, load
-balancer, Cloud Armor rate limits, private Cloud SQL, IAM jobs and log export) plus
-DHCW cyber sign-off on `STY-102` and the independent penetration test (ADR-018).
+Any hosted deployment of the API and any real provider client or real data wait for
+recorded DHCW cyber security sign-off on
+[STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
+(ADR-018 _EPC-024 amendments_, held by
+[EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md)). Production
+cut-over of real data additionally requires EPC-023's custom domain, load balancer,
+Cloud Armor rate limits, private Cloud SQL, IAM jobs and log export plus the independent
+penetration test (ADR-018).
 
 ## Stories
 

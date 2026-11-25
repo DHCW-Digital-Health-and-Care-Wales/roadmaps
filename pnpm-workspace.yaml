@@ -51,6 +51,11 @@ overrides:
   # @lhci/cli's proxy-agent, takes basic-ftp 5; get-uri 8.0.2 takes the fix. Lighthouse
   # never fetches an ftp: address. Drop when @lhci/cli's tree takes get-uri 8.0.2 or later.
   "get-uri>basic-ftp": ^6.2.4
+  # js-yaml below 4.3.2 has denials of service through crafted YAML
+  # (GHSA-52cp-r559-cp3m, GHSA-5p4m-2wfm-xmqj, GHSA-2883-xcg3-v3hh). The parser under
+  # @hey-api/openapi-ts pins 4.2.0, and reads only the committed apps/api/openapi.json.
+  # Drop when @hey-api/openapi-ts's tree takes js-yaml 4.3.2 or later.
+  "@hey-api/json-schema-ref-parser>js-yaml": ^4.3.2
 
 # A version published less than a week ago is neither resolved nor installed from the
 # lockfile, CI's frozen install included, as Dependabot's cooldown holds back its

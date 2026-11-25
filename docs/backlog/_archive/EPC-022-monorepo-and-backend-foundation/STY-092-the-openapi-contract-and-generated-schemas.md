@@ -364,7 +364,9 @@ Audited at `977a632d`:
   the steps D14 names. `@hey-api/openapi-ts` is pinned exactly, since a release can
   change what it writes and so fail the drift check. It writes `.ts` import
   extensions and reads no `tsconfig.json`, so a copy generated anywhere is the same.
-  `src/index.ts` re-exports the generated types' index and `zod.gen.ts`.
+  `src/index.ts` re-exports the generated types' index and `zod.gen.ts`. Its parser
+  pins a `js-yaml` with known denials of service, which `pnpm-workspace.yaml`'s
+  overrides raise to 4.3.2.
 
 ### Contract for dependents
 

@@ -32,7 +32,10 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   application's role holds neither on any table.
 - **Before a route takes a request model, read `ApiRequestModel`'s docstring**
   (`apps/api/src/roadmaps_api/wire.py`): which keys FastAPI gives a query, header,
-  cookie or body model decides what its `extra="forbid"` refuses (CHO-047 D4).
+  cookie or body model decides what its `extra="forbid"` refuses (CHO-047 D4). Before
+  any request model takes a dictionary field, triage
+  [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md) first
+  (ADR-020 _CHO-053 amendments_).
 - **A local API's log lines hold messages**: `ROADMAPS_ENV=local` writes an exception's
   and a third party's message (ADR-018 _STY-101 amendments_), so an API test that
   asserts no planted value reaches the log runs under test's or production's rules

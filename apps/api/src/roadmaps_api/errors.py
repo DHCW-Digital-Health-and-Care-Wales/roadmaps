@@ -1,9 +1,11 @@
 """Every refusal is `{detail, code, params}`, with a stable code (ADR-017 _Errors_).
 
 Routes and services raise an `ApiError`; FastAPI's own 404, 405 and 422 are wrapped in
-the same envelope here. A refusal never carries the submitted input, a traceback or an
-exception's text. The two exceptions are Starlette's middleware's plain-text refusals, a
-400 for a `Host` not allowed and a 413 for a body over the limit (`create_app`).
+the same envelope here. A refusal never carries a submitted value, an exception's text or
+a traceback; on a 422, `extra_forbidden` trims the trailing unknown key from `loc`, while
+other `loc` segments (such as a dictionary key) pass through (ADR-020 _CHO-053
+amendments_). The two exceptions are Starlette's middleware's plain-text refusals, a 400
+for a `Host` not allowed and a 413 for a body over the limit (`create_app`).
 """
 
 from collections.abc import Mapping, Sequence
@@ -102,8 +104,7 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     def validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
-        # Where and how each error failed, never the input or the message, which can
-        # quote it, nor an unknown key on `extra_forbidden` (ADR-020 _CHO-053 amendments_).
+        # Keeps only `loc` and `type`, omitting `input`, `msg`, `ctx` and `url`.
         errors = [
             {"loc": _error_location(error["loc"], error["type"]), "type": error["type"]}
             for error in exc.errors()

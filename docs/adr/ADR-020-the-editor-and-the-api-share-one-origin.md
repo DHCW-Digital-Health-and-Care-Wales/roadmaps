@@ -85,19 +85,25 @@ _The API's own responses_ stands.
 From the owner's CHO-053 decision (2026-11-25, CHO-053 D1); the rest of _The API's own
 responses_ stands.
 
-- **A 422 omits `input`, `msg`, `ctx` and `url`, and trims the trailing unknown key on
-  `extra_forbidden`**, keeping Pydantic's `loc` and `type` elsewhere
-  (`apps/api/src/roadmaps_api/errors.py`, held by `apps/api/tests/test_errors.py`).
-  Keeping `{loc, type}` gives developers and AI agents field-level diagnostics when a
-  request fails validation, while `ApiRequestModel` still forbids extra keys (ADR-017
-  _CHO-047 amendments_).
+- **"Without the submitted input" on a 422 means no `input`, `msg`, `ctx`, `url` or
+  forbidden key**: `validation_error` (`apps/api/src/roadmaps_api/errors.py`, held by
+  `apps/api/tests/test_errors.py`) keeps `{loc, type}`, trims the trailing unknown key on
+  `extra_forbidden`, and passes other `loc` segments through — so a dictionary key or a
+  segment a validator puts in its own `loc` may be caller-chosen. Keeping `{loc, type}`
+  gives developers and AI agents field-level diagnostics when a request fails validation,
+  while `ApiRequestModel` still forbids extra keys (ADR-017 _CHO-047 amendments_).
 - **The API does not walk FastAPI's or Pydantic's internal schemas at runtime to filter
-  `loc`**: every API response is `application/json` under `nosniff`,
-  `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `same-origin`
-  and `no-store`, so a caller-chosen key in `loc` (for example on a dictionary field)
-  carries no script-execution or cross-user risk and does not justify coupling to private
-  framework internals (`fastapi._compat`, `_get_param_model`, Pydantic `core_schema`) or
-  truncating nested locations on shapes a custom walker omits.
+  `loc`**: a 422 is `application/json` and carries the headers of _The API's own
+  responses_, so reflecting a caller's own key in `loc` carries no script-execution or
+  cross-user risk and does not justify coupling to private framework internals
+  (`fastapi._compat`, `_get_param_model`, Pydantic `core_schema`) or truncating nested
+  locations on shapes a custom walker omits.
+- **Availability residual accepted until DEF-040**: letting caller-chosen dictionary keys
+  through in `loc` means a caller also chooses each location's length on a dictionary
+  field, which multiplies with the unbounded error list on a dictionary of collections or
+  models. No route takes a request model or dictionary field yet; triaging
+  [DEF-040](../backlog/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
+  is a precondition of the first request model with a dictionary field.
 
 ## Consequences
 

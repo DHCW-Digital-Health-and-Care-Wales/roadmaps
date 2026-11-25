@@ -1,6 +1,8 @@
-"""Every refusal is the envelope, with a stable code, and never echoes the input.
+"""Every refusal is the envelope, with a stable code, and never echoes submitted values.
 
-The two exceptions, the `Host` allow-list's 400 and the body limit's 413, are
+A 422 trims the trailing unknown key on `extra_forbidden` and passes Pydantic's other
+`loc` segments (such as a dictionary key) through (ADR-020 _CHO-053 amendments_). The two
+exceptions to the envelope, the `Host` allow-list's 400 and the body limit's 413, are
 Starlette's plain text (`test_middleware.py`).
 """
 
@@ -152,6 +154,7 @@ class Dog(ApiRequestModel):
 class Shapes(ApiRequestModel):
     leaf: Leaf | None = None
     leaves: list[Leaf] = Field([])
+    counts: dict[str, int] = Field({})
     pet: Annotated[Cat | Dog, Field(discriminator="kind")] | None = None
     wrapped: WrappedLeaf | int = 0
 
@@ -210,12 +213,6 @@ LOCATIONS: dict[str, tuple[str, str, object, Errors]] = {
         (["body", "pet", "cat", "lives"], "int_parsing"),
         (["body", "pet", "cat"], "extra_forbidden"),
     ),
-    "a union choice wrapped by a validator": shapes_row(
-        {"wrapped": {"itemCount": PLANTED, PLANTED: 1}},
-        (["body", "wrapped", "function-after[keep(), WrappedLeaf]", "itemCount"], "int_parsing"),
-        (["body", "wrapped", "function-after[keep(), WrappedLeaf]"], "extra_forbidden"),
-        (["body", "wrapped", "int"], "int_type"),
-    ),
     "an unknown query key of a query model": (
         "GET",
         f"/test/search?pageSize={PLANTED}&{PLANTED}=1",
@@ -245,5 +242,37 @@ def test_a_422_trims_forbidden_keys_and_keeps_locations(
     assert response.status_code == 422
     assert response.json()["params"] == {
         "errors": [{"loc": loc, "type": error_type} for loc, error_type in errors]
+    }
+    assert PLANTED not in response.text
+
+
+def test_a_422_keeps_nested_fields_under_a_wrapped_union_choice(
+    locations_client: TestClient,
+) -> None:
+    response = locations_client.post(
+        "/test/shapes", json={"wrapped": {"itemCount": PLANTED, PLANTED: 1}}
+    )
+
+    assert response.status_code == 422
+    field_error, extra_error, int_error = response.json()["params"]["errors"]
+    # Treat Pydantic's generated union-choice label as opaque: the nested field survives
+    # beneath it and the unknown key after it is trimmed.
+    assert field_error["type"] == "int_parsing"
+    assert field_error["loc"][:2] == ["body", "wrapped"]
+    assert len(field_error["loc"]) == 4
+    assert field_error["loc"][3] == "itemCount"
+    assert extra_error == {"loc": field_error["loc"][:3], "type": "extra_forbidden"}
+    assert int_error == {"loc": ["body", "wrapped", "int"], "type": "int_type"}
+    assert PLANTED not in response.text
+
+
+def test_a_422_passes_through_a_dictionary_key_without_its_value(
+    locations_client: TestClient,
+) -> None:
+    response = locations_client.post("/test/shapes", json={"counts": {"callerKey": PLANTED}})
+
+    assert response.status_code == 422
+    assert response.json()["params"] == {
+        "errors": [{"loc": ["body", "counts", "callerKey"], "type": "int_parsing"}]
     }
     assert PLANTED not in response.text

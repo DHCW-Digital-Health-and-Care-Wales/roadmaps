@@ -11,31 +11,26 @@
 
 ## Summary
 
-CHO-047 added a 225-line runtime walker (`apps/api/src/roadmaps_api/error_locations.py`)
-coupled to private FastAPI and Pydantic internals (`fastapi._compat.ModelField`,
-`fastapi.dependencies.utils._get_param_model`, `parameter._type_adapter.core_schema`,
-`scope["fastapi"]["effective_route_context"]` and Pydantic's `CoreSchema` dictionary
-layout) to strip caller-chosen keys anywhere in a 422's `loc`. Every API response is
-`application/json` under `nosniff`, `default-src 'none'`, `same-origin` and `no-store`,
-so reflecting a caller's own key in a 422 carries no script-execution or cross-user
-disclosure risk; meanwhile the walker adds upgrade fragility, truncates nested locations
-on shapes it omits (spawning CHO-051) and roughly doubled 422 handler cost on large
-bodies. Done: `validation_error` keeps Pydantic's `{loc, type}` (still omitting `input`,
-`msg`, `ctx` and `url`) and trims only the trailing unknown key on `extra_forbidden`,
+CHO-047 added a 225-line runtime schema walker coupled to private FastAPI and Pydantic
+internals to strip caller-chosen keys anywhere in a 422's `loc`. A 422 is JSON carrying
+ADR-020's response headers, so reflecting a caller's own dictionary key poses no
+script-execution or cross-user risk; meanwhile the walker adds upgrade fragility and
+truncates nested locations on shapes it omits (CHO-051). Done: `validation_error` keeps
+Pydantic's `{loc, type}` and trims only the trailing key on `extra_forbidden`,
 `error_locations.py` and `fastapi_scope.py` are deleted, `ApiRequestModel` keeps
-`extra="forbid"`, ADR-020 records the clarified rule, and CHO-051 is closed as `Won't do`.
+`extra="forbid"`, ADR-020 records the clarified rule, and CHO-051 is closed `Won't do`.
 
 ## Measurement
 
-At commit `b1d1f517` (`origin/main`):
+At commit `117f7b67` (`origin/main`):
 
-| Area                                           | Measurement                                                                                         | Verdict                                                                                    |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `apps/api/src/roadmaps_api/error_locations.py` | 225 lines reading 4 private/undocumented FastAPI interfaces and walking Pydantic `CoreSchema` dicts | Replace with trailing-key slice on `extra_forbidden`                                       |
-| `apps/api/src/roadmaps_api/fastapi_scope.py`   | 15 lines extracted solely to share `effective_route_context` with `error_locations.py`              | Inline back into `access_log.py`                                                           |
-| `apps/api/tests/test_errors.py`                | 445 lines of schema-walker matrix and memoization tests for synthetic shapes                        | Replace with focused table-driven rows for `extra_forbidden` trimming and preserved `loc`s |
-| `docs/backlog/chores/CHO-051-*.md`             | Open chore solely to work around `_choices` truncating wrapped union choices                        | Close as `Won't do`                                                                        |
-| `apps/api/src/roadmaps_api/wire.py`            | `ApiRequestModel` sets `extra="forbid"` (1 line, native Pydantic)                                   | Keep                                                                                       |
+| Area                                           | Measurement                                                                                                                                                                             | Verdict                                                                                                          |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `apps/api/src/roadmaps_api/error_locations.py` | 225 lines reading private FastAPI interfaces (`_compat.ModelField`, `_get_param_model`, `_type_adapter.core_schema`, `effective_route_context`) and walking Pydantic `CoreSchema` dicts | Replace with trailing-key slice on `extra_forbidden`                                                             |
+| `apps/api/src/roadmaps_api/fastapi_scope.py`   | 15 lines extracted solely to share `effective_route_context` with `error_locations.py`                                                                                                  | Inline back into `access_log.py`                                                                                 |
+| `apps/api/tests/test_errors.py`                | 560 lines total, 422 lines from line 139 for 422 locations and walker memoization                                                                                                       | Replace with focused tests for `extra_forbidden` trimming, wrapped union choices and dictionary-key pass-through |
+| `docs/backlog/chores/CHO-051-*.md`             | Open chore solely to work around `_choices` truncating wrapped union choices                                                                                                            | Close as `Won't do`                                                                                              |
+| `apps/api/src/roadmaps_api/wire.py`            | `ApiRequestModel` sets `extra="forbid"` (1 line, native Pydantic)                                                                                                                       | Keep                                                                                                             |
 
 ## Acceptance criteria
 
@@ -68,8 +63,9 @@ At commit `b1d1f517` (`origin/main`):
 ## Out of scope
 
 - Triaging [DEF-040](../../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
-  (capping the number of errors listed in a 422): stays `Needs triage` for the owner, with
-  its stale reference to CHO-047's schema walk corrected.
+  (capping the number of errors listed and each `loc`'s length in a 422): stays
+  `Needs triage` for the owner, updated to reflect both unbounded error count and
+  caller-chosen dictionary keys.
 - Splitting `ApiRequestModel` into separate body and query/header bases.
 
 ## Delivery
@@ -87,12 +83,15 @@ None.
 - `ApiRequestModel` still sets `extra="forbid"` (ADR-017 _CHO-047 amendments_), so its
   docstring in `apps/api/src/roadmaps_api/wire.py` still governs how routes declare query,
   header, cookie and body models.
+- Before any request model takes a dictionary field, triage
+  [DEF-040](../../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
+  (recorded in `EPC-022/delivery-notes.md` and ADR-020 _CHO-053 amendments_).
 - `apps/api/openapi.json` and `packages/api-types` are unchanged.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `apps/api/tests/test_errors.py` (`test_a_422_trims_forbidden_keys_and_keeps_locations`: unknown keys on top-level, nested, list, union and query models; invalid values on list, union, wrapped union choice, path, query and header parameters; `test_a_refusal_is_the_envelope_without_the_input`); `apps/api/tests/test_wire.py` (`test_a_request_model_refuses_what_it_does_not_declare`). Test-first: the wrapped-union-choice row failed red against `error_locations.py` (`['body', 'wrapped']` instead of keeping the nested `itemCount` location) before the change |
-| S2       | Deleted `apps/api/src/roadmaps_api/error_locations.py` and `apps/api/src/roadmaps_api/fastapi_scope.py`; simplified `apps/api/src/roadmaps_api/errors.py` and restored direct scope read in `apps/api/src/roadmaps_api/access_log.py`; verified by `pnpm api:lint`, `pnpm api:typecheck`, `pnpm api:openapi:check` and `pnpm api:test` (100% branch coverage)                                                                                                                                                                                                                |
-| S3       | Updated `docs/adr/ADR-020-the-editor-and-the-api-share-one-origin.md` (`_CHO-053 amendments_`), archived `CHO-051` as `Won't do`, updated `DEF-040`, `EPC-022/README.md`, `EPC-022/delivery-notes.md` and `docs/backlog/README.md`; verified by `pnpm format:check`, `pnpm test:docs` and live-docs `rg` sweep                                                                                                                                                                                                                                                               |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/test_errors.py` (`test_a_422_trims_forbidden_keys_and_keeps_locations`, `test_a_422_keeps_nested_fields_under_a_wrapped_union_choice`, `test_a_422_passes_through_a_dictionary_key_without_its_value`, `test_a_refusal_is_the_envelope_without_the_input`); `apps/api/tests/test_wire.py` (`test_a_request_model_refuses_what_it_does_not_declare`). Test-first: the wrapped-union-choice case failed red against `error_locations.py` (`['body', 'wrapped']` instead of keeping the nested `itemCount` location) before the change |
+| S2       | Deleted `apps/api/src/roadmaps_api/error_locations.py` and `apps/api/src/roadmaps_api/fastapi_scope.py`; `apps/api/src/roadmaps_api/errors.py` trims `loc[:-1]` on `extra_forbidden` with no private FastAPI or Pydantic schema imports; `apps/api/src/roadmaps_api/access_log.py` reads `effective_route_context` directly (held by `apps/api/tests/test_logs.py`); `apps/api/src/roadmaps_api/wire.py` keeps `extra="forbid"`                                                                                                                     |
+| S3       | `docs/adr/ADR-020-the-editor-and-the-api-share-one-origin.md` (`_CHO-053 amendments_`), archived `CHO-051` (`Won't do`), updated `DEF-040`, `EPC-022/README.md`, `EPC-022/delivery-notes.md`, `CHO-047`'s relative link to `CHO-051`, and `docs/backlog/README.md`; live-docs `rg` sweep found no stale schema-walker claims                                                                                                                                                                                                                        |

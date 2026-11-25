@@ -87,7 +87,6 @@ the root, unversioned (ADR-017's amendments).
   `pnpm api:dev` migrates it first.
 - Run Python through uv from `apps/api` (`uv run --locked …`); add a dependency with
   `uv add`, which resolves only releases a week old.
-- A `# noqa` names its rule and why.
 - The seams of the root guide's test rule, lowest first: a pure helper, a repository or
   service, FastAPI's `TestClient` (`apps/api/tests/support.py`), then the real uvicorn
   server (`apps/api/tests/test_server.py`) only for server-level behaviour such as its

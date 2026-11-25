@@ -6,9 +6,11 @@ and HTTP accepts any token as a method.
 
 The route is read from what routing leaves in the request's scope. FastAPI keeps the
 template of the route it chose, with every prefix its routers were included under, in
-its record of that route (`fastapi_scope`); the app's own Starlette routes are matched
-against the path the request arrived with. A request a mounted app handled is
-`unmatched`, whatever its routes, until a story mounts one.
+`scope["fastapi"]["effective_route_context"]` (FastAPI 0.163; not a documented
+interface, so `apps/api/tests/test_logs.py` pins each case and a FastAPI bump that
+changes it fails there); the app's own Starlette routes are matched against the path the
+request arrived with. A request a mounted app handled is `unmatched`, whatever its
+routes, until a story mounts one.
 """
 
 from collections.abc import Sequence
@@ -17,8 +19,6 @@ from typing import Final
 
 from starlette.routing import BaseRoute, Match, Route
 from starlette.types import Scope
-
-from roadmaps_api.fastapi_scope import effective_route_context
 
 UNMATCHED: Final = "unmatched"
 # A method HTTP does not define, as OpenTelemetry names one.
@@ -50,7 +50,9 @@ def _fastapi_template(routed: Scope) -> str | None:
 
     Never the scope's `route`, which a mounted app's router sets to a route of its own.
     """
-    path = getattr(effective_route_context(routed), "path", None)
+    fastapi = routed.get("fastapi")
+    context = fastapi.get("effective_route_context") if isinstance(fastapi, dict) else None
+    path = getattr(context, "path", None)
     return path if isinstance(path, str) else None
 
 

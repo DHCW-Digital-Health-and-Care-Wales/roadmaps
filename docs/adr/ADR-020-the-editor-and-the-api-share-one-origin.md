@@ -2,8 +2,10 @@
 
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   identity and authorisation grilling (2026-11-21); the options chosen are marked ✅.
-  Amended by the owner's STY-101 grilling (_STY-101 amendments_).
-- Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list)
+  Amended by the owner's STY-101 grilling (_STY-101 amendments_) and CHO-053 decision
+  (_CHO-053 amendments_).
+- Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list;
+  CHO-053: 422 `loc` trimming)
 
 ## Context
 
@@ -78,6 +80,25 @@ _The API's own responses_ stands.
 - **The allow-list names no wildcard, in any environment**, and never redirects a bare
   name to its `www.` host.
 
+### CHO-053 amendments
+
+From the owner's CHO-053 decision (2026-11-25, CHO-053 D1); the rest of _The API's own
+responses_ stands.
+
+- **"Without the submitted input" on a 422 means no `input`, `msg`, `ctx`, `url` or
+  forbidden key**: `validation_error` (`apps/api/src/roadmaps_api/errors.py`, held by
+  `apps/api/tests/test_errors.py`) keeps `{loc, type}`, trims the trailing unknown key on
+  `extra_forbidden`, and passes other `loc` segments through — so a dictionary key or a
+  segment a validator puts in its own `loc` may be caller-chosen. Keeping `{loc, type}`
+  gives developers and AI agents field-level diagnostics when a request fails validation,
+  while `ApiRequestModel` still forbids extra keys (ADR-017 _CHO-047 amendments_).
+- **The API does not walk FastAPI's or Pydantic's internal schemas at runtime to filter
+  `loc`**: a 422 is `application/json` and carries the headers of _The API's own
+  responses_, so reflecting a caller's own key in `loc` carries no script-execution or
+  cross-user risk and does not justify coupling to private framework internals
+  (`fastapi._compat`, `_get_param_model`, Pydantic `core_schema`) or truncating nested
+  locations on shapes a custom walker omits.
+
 ## Consequences
 
 - **One deploy carries both apps** in each environment, until and after the load
@@ -90,6 +111,10 @@ _The API's own responses_ stands.
 - **ADR-016's custom domain** stays a precondition of switching the deployed editor to
   the API; the deployed Sheets editor stays on GitHub Pages until then.
 - **EPC-023** provisions the service, the load balancer, the domain and the edge limits.
+- **Open follow-on ([DEF-040](../backlog/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md), `Needs triage`)**:
+  without a schema walk, a dictionary field passes its caller-chosen key through in a
+  422's `loc`, which compounds with the unbounded error list on a dictionary of
+  collections or models; no route takes a request model or dictionary field yet.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

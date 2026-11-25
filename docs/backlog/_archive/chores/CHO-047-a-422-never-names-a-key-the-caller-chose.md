@@ -88,7 +88,7 @@ the caller's key, with its `type` unchanged
   FastAPI's handling of models asks of a route.
 - A `loc` follows models, lists, sets, tuples, unions and validators around them, but
   not under a union's choice that an after, wrap or `Annotated` validator wraps, whose
-  label is Pydantic's own ([CHO-051](../../chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)). Any
+  label is Pydantic's own ([CHO-051](CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)). Any
   other shape ends it at the field that has it: a dictionary, by design, and also a
   dataclass, `TypedDict`, `NamedTuple` or `Sequence` field, which a story that needs
   their depth adds, with a row in `apps/api/tests/test_errors.py`. A parameter that is

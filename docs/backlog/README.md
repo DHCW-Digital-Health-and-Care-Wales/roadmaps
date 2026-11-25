@@ -91,8 +91,9 @@ moves to `_archive/`, where its row here still points.
 | [CHO-048](_archive/chores/CHO-048-criteria-and-reviews-weigh-code-about-code.md)                                 | The story template and two review skills weigh code about code (from STY-101's grilling)                                            | Done           |
 | [CHO-049](chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                           | Every route's wait on the database has a deadline (EPC-022, from STY-101's grilling)                                                | Placeholder    |
 | [CHO-050](_archive/chores/CHO-050-the-guide-check-reads-skills-and-agent-definitions.md)                         | The guide check reads skills and agent definitions (from STY-101's retrospective)                                                   | Done           |
-| [CHO-051](chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)                                 | A 422 keeps the fields under a wrapped union choice (EPC-022, from CHO-047)                                                         | Proposed       |
+| [CHO-051](_archive/chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)                        | A 422 keeps the fields under a wrapped union choice (EPC-022, from CHO-047)                                                         | Won't do       |
 | [CHO-052](chores/CHO-052-upgrade-typescript-to-7-and-remove-dependabot-ignore.md)                                | Upgrade TypeScript to 7 and remove the Dependabot major-version ignore                                                              | Proposed       |
+| [CHO-053](_archive/chores/CHO-053-a-422-trims-only-the-forbidden-key-without-walking-internals.md)               | A 422 trims only the forbidden key without walking FastAPI or Pydantic internals (EPC-022)                                          | Done           |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

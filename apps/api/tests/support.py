@@ -16,8 +16,10 @@ import pytest
 from fastapi import APIRouter, FastAPI, Query, Request
 from fastapi.testclient import TestClient
 from opentelemetry import trace
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import SpanKind, Status, StatusCode
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -50,6 +52,12 @@ class Lines:
         parsed = [json.loads(line) for line in captured.out.splitlines()]
         # The test client's own lines, one per request it sends.
         return [line for line in parsed if line["logger"] != "httpx2"]
+
+
+def server_span(spans: InMemorySpanExporter) -> ReadableSpan:
+    """The one request span the exporter holds."""
+    [span] = [span for span in spans.get_finished_spans() if span.kind is SpanKind.SERVER]
+    return span
 
 
 def free_port() -> int:

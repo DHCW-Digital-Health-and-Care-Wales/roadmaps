@@ -101,6 +101,10 @@ def no_migration_login(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(MIGRATION_DATABASE_URL, raising=False)
 
 
+# The exporter's HTTP session follows them: a test's stand-in receiver is on 127.0.0.1.
+PROXY_VARIABLES = frozenset({"http_proxy", "https_proxy", "all_proxy"})
+
+
 @pytest.fixture(autouse=True)
 def no_trace_export(monkeypatch: pytest.MonkeyPatch) -> None:
     """No test exports a span, whatever OpenTelemetry variables the developer's shell set.
@@ -109,7 +113,7 @@ def no_trace_export(monkeypatch: pytest.MonkeyPatch) -> None:
     processes inherit this environment (ADR-017 _Operation_).
     """
     for name in os.environ:
-        if name.startswith(("OTEL_", "FASTAPI_OTEL_")):
+        if name.startswith(("OTEL_", "FASTAPI_OTEL_")) or name.lower() in PROXY_VARIABLES:
             monkeypatch.delenv(name)
 
 

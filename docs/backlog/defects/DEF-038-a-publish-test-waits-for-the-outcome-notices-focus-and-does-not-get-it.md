@@ -1,8 +1,8 @@
 # DEF-038: A publish test waits for the outcome notice's focus and does not get it
 
 - **Status**: Needs triage — found by STY-092 delivery
-- **Severity**: Low — an E2E test fails now and then under load and passes when run
-  again; no failure seen in use
+- **Severity**: Low — an E2E test fails now and then, under load or not, and passes when
+  run again; no failure seen in use
 - **Area**: E2E (and Features/UI, if the cause is in the page)
 - **Epic**: standalone
 - **Depends on**: none
@@ -13,8 +13,8 @@
 ## Summary
 
 The test helper that confirms a publish returns once the "Changes published" notice has
-focus. Now and then, on a busy machine, it waits its full 5 seconds with the notice on
-the page and focus not on it. The page looks right. Whether a Product Lead is ever left
+focus. Now and then, on a busy machine or a nearly idle one, it waits its full 5 seconds
+with the notice on the page and focus not on it. The page looks right. Whether a Product Lead is ever left
 without focus on the notice is not known.
 
 ## Reproduce

@@ -10,7 +10,7 @@ from opentelemetry.trace import SpanKind, StatusCode
 from sqlalchemy.engine import make_url
 
 from tests.harness import holding
-from tests.support import PLANTED, make_settings, serving
+from tests.support import PLANTED, make_settings, server_span, serving
 
 
 def test_a_database_span_keeps_its_statement_with_placeholders_and_no_value(
@@ -22,7 +22,7 @@ def test_a_database_span_keeps_its_statement_with_placeholders_and_no_value(
     assert response.status_code == 500
     url = make_url(database_url)
     finished = spans.get_finished_spans()
-    [server] = [span for span in finished if span.kind is SpanKind.SERVER]
+    server = server_span(spans)
     queries = [span for span in finished if span.kind is SpanKind.CLIENT]
     assert [span.attributes for span in queries] == [
         {"db.operation.name": "SELECT", "db.query.text": "SELECT %(value)s"},
@@ -65,7 +65,7 @@ def test_a_failing_ready_exports_its_spans_its_queries_included(
 
     assert response.status_code == 503
     finished = spans.get_finished_spans()
-    [server] = [span for span in finished if span.kind is SpanKind.SERVER]
+    server = server_span(spans)
     queries = [span for span in finished if span.kind is SpanKind.CLIENT]
     assert server.status.status_code is StatusCode.ERROR
     assert len(queries) == 4

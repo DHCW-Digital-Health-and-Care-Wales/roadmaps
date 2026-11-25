@@ -203,5 +203,25 @@ def test_a_probe_that_fails_after_its_response_started_exports_its_span(
     assert span.status.status_code is StatusCode.ERROR
 
 
+def test_a_probe_cancelled_after_its_response_started_exports_its_span(
+    spans: InMemorySpanExporter,
+) -> None:
+    async def app(scope: Scope, _receive: Receive, send: Send) -> None:
+        scope["fastapi"] = {"effective_route_context": SimpleNamespace(path="/health")}
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        raise asyncio.CancelledError
+
+    async def send(_message: Message) -> None:
+        pass
+
+    tracer = create_tracer_provider(make_settings(), spans).get_tracer("test")
+    probe = {**SCOPE, "method": "GET", "path": "/health"}
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(RequestContext(app, tracer)(probe, messages(), send))
+
+    [span] = spans.get_finished_spans()
+    assert span.name == "GET /health"
+
+
 def test_the_probes_without_an_access_line_are_the_probe_routes() -> None:
     assert {getattr(route, "path", None) for route in probes.router.routes} == PROBE_PATHS

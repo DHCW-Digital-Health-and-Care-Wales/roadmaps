@@ -67,10 +67,13 @@ EXCEPTION_EVENT: Final = "exception"
 RECORDED_EVENT: Final = "roadmaps.exception"
 EXCEPTION_TYPE: Final = "exception.type"
 EXCEPTION_STACKTRACE: Final = "exception.stacktrace"
-RECORDED_ATTRIBUTES: Final = frozenset({EXCEPTION_TYPE, EXCEPTION_STACKTRACE})
-SDK_EXCEPTION_ATTRIBUTES: Final = frozenset({EXCEPTION_TYPE})
+# The events a span keeps, by name, and the attributes each keeps.
+EVENT_ATTRIBUTES: Final = {
+    RECORDED_EVENT: frozenset({EXCEPTION_TYPE, EXCEPTION_STACKTRACE}),
+    EXCEPTION_EVENT: frozenset({EXCEPTION_TYPE}),
+}
 
-ENVIRONMENT: Final = "deployment.environment.name"
+ENVIRONMENT_ATTRIBUTE: Final = "deployment.environment.name"
 
 # The first status a server span is marked an error from.
 HTTP_SERVER_ERROR: Final = 500
@@ -80,16 +83,17 @@ PROBE_SUCCEEDED: Final = "roadmaps.probe_succeeded"
 # How many dropped traces `ProbeDrop` remembers, to drop a span that ends after its trace's.
 DROPPED_TRACES_REMEMBERED: Final = 1024
 
-# The SDK's default counts, set here so its limit variables are not read, and no limit
-# on a value's length, so no request ID or route is cut short.
-LIMIT: Final = 128
+# The SDK's default counts, set here so its limit variables limit no span (the SDK still
+# parses `OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT` as it is imported, and fails on one that is not
+# a number), and no limit on a value's length, so no request ID or route is cut short.
+COUNT_LIMIT: Final = 128
 SPAN_LIMITS: Final = SpanLimits(
-    max_attributes=LIMIT,
-    max_events=LIMIT,
-    max_links=LIMIT,
-    max_span_attributes=LIMIT,
-    max_event_attributes=LIMIT,
-    max_link_attributes=LIMIT,
+    max_attributes=COUNT_LIMIT,
+    max_events=COUNT_LIMIT,
+    max_links=COUNT_LIMIT,
+    max_span_attributes=COUNT_LIMIT,
+    max_event_attributes=COUNT_LIMIT,
+    max_link_attributes=COUNT_LIMIT,
     max_attribute_length=SpanLimits.UNSET,
     max_span_attribute_length=SpanLimits.UNSET,
 )
@@ -104,7 +108,10 @@ class CodeTracerProvider(TracerProvider):
 
     The SDK's own provider hands out tracers that make no spans, so all-zero trace IDs,
     while `OTEL_SDK_DISABLED` is true, and reads its sampler, resource and span limits from
-    the environment when it is not given them; this one is given each.
+    the environment when it is not given them; this one is given each. The SDK takes no
+    argument for the first, so its private `_disabled` (SDK 1.45.2) is overwritten; an SDK
+    that renames it fails `test_every_request_starts_its_own_trace_whose_id_is_its_request_id`
+    with `OTEL_SDK_DISABLED` set.
     """
 
     def __init__(self, resource: Resource) -> None:
@@ -126,7 +133,10 @@ def create_tracer_provider(
     settings hold; without either, nothing is exported, yet every span still has its IDs.
     """
     resource = Resource(
-        {SERVICE_NAME_ATTRIBUTE: settings.service_name, ENVIRONMENT: settings.environment.value}
+        {
+            SERVICE_NAME_ATTRIBUTE: settings.service_name,
+            ENVIRONMENT_ATTRIBUTE: settings.environment.value,
+        }
     )
     provider = CodeTracerProvider(resource)
     processor: SpanProcessor | None = None
@@ -299,9 +309,8 @@ class ProbeDrop(SpanProcessor):
 class AllowList(SpanProcessor):
     """Passes on each span with only its allow-listed fields (STY-100 S4, D15).
 
-    Its attributes by `SPAN_ATTRIBUTES`; its events only as exceptions, `RECORDED_EVENT`
-    with `RECORDED_ATTRIBUTES` and any other exception with its type alone; no link, no
-    status description, and the API's own resource.
+    Its attributes by `SPAN_ATTRIBUTES`; its events by `EVENT_ATTRIBUTES`, each exported as
+    an exception; no link, no status description, and the API's own resource.
     """
 
     def __init__(self, then: SpanProcessor, resource: Resource) -> None:
@@ -324,7 +333,7 @@ class AllowList(SpanProcessor):
                 events=[
                     Event(EXCEPTION_EVENT, _allowed(recorded.attributes, keys), recorded.timestamp)
                     for recorded in span.events
-                    if (keys := _EVENT_KEYS.get(recorded.name)) is not None
+                    if (keys := EVENT_ATTRIBUTES.get(recorded.name)) is not None
                 ],
                 links=(),
                 kind=span.kind,
@@ -342,13 +351,6 @@ class AllowList(SpanProcessor):
     @override
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return self._then.force_flush(timeout_millis)
-
-
-# The attributes each event that is kept keeps, by its name.
-_EVENT_KEYS: Final = {
-    RECORDED_EVENT: RECORDED_ATTRIBUTES,
-    EXCEPTION_EVENT: SDK_EXCEPTION_ATTRIBUTES,
-}
 
 
 def _allowed(attributes: Mapping[str, Any] | None, keys: frozenset[str]) -> dict[str, Any]:

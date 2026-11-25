@@ -26,7 +26,15 @@ from sqlalchemy import create_engine, text
 
 from roadmaps_api import tracing
 from roadmaps_api.settings import MAX_BODY_BYTES, Settings, load_settings
-from tests.support import PLANTED, TEST_HOST, Lines, free_port, make_settings, serving
+from tests.support import (
+    PLANTED,
+    TEST_HOST,
+    Lines,
+    free_port,
+    make_settings,
+    server_span,
+    serving,
+)
 
 HEX_32 = re.compile(r"[0-9a-f]{32}")
 CALLER_TRACE = "0af7651916cd43dd8448eb211c80319c"
@@ -35,11 +43,6 @@ INBOUND_CONTEXT = {
     "tracestate": f"vendor={PLANTED}",
     "baggage": f"user={PLANTED}",
 }
-
-
-def server_span(spans: InMemorySpanExporter) -> ReadableSpan:
-    [span] = [span for span in spans.get_finished_spans() if span.kind is SpanKind.SERVER]
-    return span
 
 
 def trace_id(span: ReadableSpan) -> str:
@@ -215,7 +218,7 @@ def test_a_span_keeps_only_allow_listed_fields(spans: InMemorySpanExporter) -> N
         ]
 
 
-SPAN_LIMITS = {
+LIMIT_VARIABLES = {
     "no span attributes": {"OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "0"},
     "no attributes": {"OTEL_ATTRIBUTE_COUNT_LIMIT": "0"},
     "values of five characters": {"OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT": "5"},
@@ -224,7 +227,7 @@ SPAN_LIMITS = {
 }
 
 
-@pytest.mark.parametrize("environment", SPAN_LIMITS.values(), ids=SPAN_LIMITS)
+@pytest.mark.parametrize("environment", LIMIT_VARIABLES.values(), ids=LIMIT_VARIABLES)
 def test_the_sdk_s_span_limit_variables_change_nothing(
     monkeypatch: pytest.MonkeyPatch, spans: InMemorySpanExporter, environment: dict[str, str]
 ) -> None:
@@ -232,6 +235,7 @@ def test_the_sdk_s_span_limit_variables_change_nothing(
         monkeypatch.setenv(name, value)
 
     with serving(make_settings(), spans) as client:
+        # Dropped still: `server_span` finds the one server span, the 500's.
         client.get("/health")
         response = client.get("/test/boom")
 

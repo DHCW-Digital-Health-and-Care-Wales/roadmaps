@@ -1,8 +1,8 @@
 # DEF-038: A publish test waits for the outcome notice's focus and does not get it
 
 - **Status**: Needs triage — found by STY-092 delivery
-- **Severity**: Low — an E2E test fails now and then under load and passes when run
-  again; no failure seen in use
+- **Severity**: Low — an E2E test fails now and then, under load or not, and passes when
+  run again; no failure seen in use
 - **Area**: E2E (and Features/UI, if the cause is in the page)
 - **Epic**: standalone
 - **Depends on**: none
@@ -13,8 +13,8 @@
 ## Summary
 
 The test helper that confirms a publish returns once the "Changes published" notice has
-focus. Now and then, on a busy machine, it waits its full 5 seconds with the notice on
-the page and focus not on it. The page looks right. Whether a Product Lead is ever left
+focus. Now and then, on a busy machine or a nearly idle one, it waits its full 5 seconds
+with the notice on the page and focus not on it. The page looks right. Whether a Product Lead is ever left
 without focus on the notice is not known.
 
 ## Reproduce
@@ -33,6 +33,10 @@ the last line of `confirmPublish` in `apps/editor/tests/e2e/fixtures/dialogs.ts`
    local run of `removing-an-item.spec.ts` at load average 11, and CI run 45087674954
    on PR #250's head, the reconnect spec again, which passed on its retry. That record
    there is numbered DEF-031, a number `main` has since given another defect.
+3. STY-100's full gate, on its branch's tree before its first commit (base `b42a16c8`;
+   no editor file changed), 8 cores at load average about 0.7: 449 of 450 passed,
+   failing the same reconnect test at the same line. The spec alone then passed 3 of 3
+   (`--repeat-each=3`). So it fails without load too.
 
 **Expected**: the notice has focus soon after the publish dialog hides.
 **Actual**: now and then it has none within 5 seconds.

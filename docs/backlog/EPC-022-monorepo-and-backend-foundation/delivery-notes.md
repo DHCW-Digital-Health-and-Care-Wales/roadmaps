@@ -22,10 +22,11 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
   included (its `latest.js` can grow unasked), so a story that bumps or adds a package
   in the site's script (react, react-dom or lucide-react) runs `pnpm site:lighthouse`
   before choosing its version.
-- **FastAPI already brings `opentelemetry-api`**: FastAPI 0.163 depends on it and runs
-  each `def` route through `fastapi/telemetry/`, whose spans carry `url.query` once an
-  SDK is configured, so the tracing story reads what that emits, against the log
-  allow-list, before adding an instrumentation of its own.
+- **A thread keeps the request's trace only if it is given it**: a service that starts a
+  thread runs it in `contextvars.copy_context()`, as `ReadinessService.check` does, or
+  its queries leave the request's trace and its log lines lose the request ID. FastAPI's
+  own telemetry stays off in `create_app` (its spans carry the query string), so a
+  FastAPI bump re-reads `fastapi/telemetry/` for a new way it could turn on.
 - **Row-level security does not cover `TRUNCATE` or `REFERENCES`**: PostgreSQL applies
   neither to policies, so the first schema story's enforcement suite also proves the
   application's role holds neither on any table.

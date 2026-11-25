@@ -23,8 +23,8 @@ import httpx2
 import pytest
 
 from roadmaps_api import app, server
-from roadmaps_api.settings import load_settings
-from tests.support import DOWN_DATABASE_URL, PLANTED
+from roadmaps_api.settings import Settings, load_settings
+from tests.support import DOWN_DATABASE_URL, PLANTED, free_port
 
 API_DIR = Path(__file__).parent.parent
 SERVER_ENVIRONMENT = {
@@ -32,11 +32,6 @@ SERVER_ENVIRONMENT = {
     "ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL,
     "ROADMAPS_ALLOWED_HOSTS": "127.0.0.1,localhost",
 }
-
-
-def free_port() -> int:
-    with socket.create_server(("127.0.0.1", 0)) as probe:
-        return probe.getsockname()[1]
 
 
 @dataclass
@@ -252,3 +247,69 @@ def test_the_factory_sends_python_s_warnings_to_the_log_without_their_text(
     [line] = [json.loads(text) for text in captured.out.splitlines()]
     assert line["logger"] == "py.warnings"
     assert PLANTED not in captured.out + captured.err
+
+
+@contextmanager
+def jaeger_port(*, answering: bool) -> Generator[tuple[str, int]]:
+    """A port where a stand-in for Jaeger's OTLP port listens, or where nothing does."""
+    with socket.create_server(("127.0.0.1", 0)) as listener:
+        address = listener.getsockname()
+        if answering:
+            yield address
+            return
+    yield address
+
+
+@dataclass(frozen=True)
+class Launch:
+    answering: bool
+    # The endpoint the developer set, and the one the API then exports to.
+    set_endpoint: str | None
+    endpoint: str | None
+    logged: list[str]
+
+
+LAUNCHES = {
+    "Jaeger answering": Launch(
+        answering=True,
+        set_endpoint=None,
+        endpoint="http://127.0.0.1:{port}",
+        logged=["tracing.to_jaeger"],
+    ),
+    "Jaeger not answering": Launch(
+        answering=False, set_endpoint=None, endpoint=None, logged=["tracing.off"]
+    ),
+    "an endpoint already set, Jaeger not answering": Launch(
+        answering=False,
+        set_endpoint="http://collector.example:4318",
+        endpoint="http://collector.example:4318",
+        logged=[],
+    ),
+}
+
+
+@pytest.mark.parametrize("case", LAUNCHES.values(), ids=LAUNCHES)
+@pytest.mark.usefixtures("json_logging")
+def test_the_launcher_checks_once_whether_jaeger_answers_unless_an_endpoint_is_set(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], case: Launch
+) -> None:
+    started: list[dict[str, object]] = []
+    monkeypatch.setattr(server, "serve", lambda **options: started.append(options))
+    for name, value in SERVER_ENVIRONMENT.items():
+        monkeypatch.setenv(name, value)
+    # Empty is unset to OpenTelemetry; set either way, so the test puts back what main sets.
+    monkeypatch.setenv("OTEL_EXPORTER_OTLP_ENDPOINT", case.set_endpoint or "")
+
+    with jaeger_port(answering=case.answering) as (host, port):
+        monkeypatch.setattr(server, "JAEGER_OTLP_ADDRESS", (host, port))
+        server.main(["--port", "8123", "--local-traces"])
+
+    [options] = started
+    settings = options["settings"]
+    assert isinstance(settings, Settings)
+    expected = case.endpoint.format(port=port) if case.endpoint else None
+    assert settings.otlp_endpoint == expected
+    # The reload worker reads its settings from the environment it inherits.
+    assert os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] == (expected or "")
+    lines = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert [line["message"] for line in lines] == case.logged

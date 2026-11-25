@@ -17,6 +17,37 @@ def test_an_unset_environment_gets_production_rules() -> None:
     assert not settings.serves_live_openapi
     assert settings.allowed_hosts == ("api.example",)
     assert settings.database_url == URL
+    assert settings.otlp_endpoint is None
+    assert settings.service_name == "roadmaps-api"
+
+
+TRACING = {
+    "an OTLP endpoint": (
+        {"OTEL_EXPORTER_OTLP_ENDPOINT": " http://127.0.0.1:4318/ "},
+        "http://127.0.0.1:4318",
+        "roadmaps-api",
+    ),
+    "an empty OTLP endpoint, which OpenTelemetry reads as unset": (
+        {"OTEL_EXPORTER_OTLP_ENDPOINT": ""},
+        None,
+        "roadmaps-api",
+    ),
+    "a worktree's service name": (
+        {"ROADMAPS_SERVICE_NAME": "roadmaps-api-42"},
+        None,
+        "roadmaps-api-42",
+    ),
+}
+
+
+@pytest.mark.parametrize(("changes", "endpoint", "service"), TRACING.values(), ids=TRACING)
+def test_tracing_exports_to_the_otlp_endpoint_under_the_service_s_name(
+    changes: dict[str, str], endpoint: str | None, service: str
+) -> None:
+    settings = load_settings({**VALID, **changes})
+
+    assert settings.otlp_endpoint == endpoint
+    assert settings.service_name == service
 
 
 def test_a_local_environment_serves_the_live_openapi() -> None:
@@ -71,6 +102,27 @@ BAD = {
         {"ROADMAPS_MIGRATION_DATABASE_URL": ""},
         ["ROADMAPS_MIGRATION_DATABASE_URL"],
     ),
+    "an OTLP endpoint that is not an HTTP URL": (
+        {"OTEL_EXPORTER_OTLP_ENDPOINT": "SECRET-PASSWORD"},
+        ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    ),
+    "an OTLP endpoint of a slash alone": (
+        {"OTEL_EXPORTER_OTLP_ENDPOINT": "/"},
+        ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    ),
+    "an OTLP endpoint with no host": (
+        {"OTEL_EXPORTER_OTLP_ENDPOINT": "http:///SECRET-PASSWORD"},
+        ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    ),
+    "an OTLP endpoint whose port is not a number": (
+        {"OTEL_EXPORTER_OTLP_ENDPOINT": "http://collector:SECRET-PASSWORD"},
+        ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    ),
+    "a service name with a character outside a-z, 0-9 and -": (
+        {"ROADMAPS_SERVICE_NAME": "roadmaps api*"},
+        ["ROADMAPS_SERVICE_NAME"],
+    ),
+    "an empty service name": ({"ROADMAPS_SERVICE_NAME": ""}, ["ROADMAPS_SERVICE_NAME"]),
     "several bad settings": (
         {"ROADMAPS_ENV": "prod", "ROADMAPS_DATABASE_URL": None, "ROADMAPS_ALLOWED_HOSTS": None},
         ["ROADMAPS_ENV", "ROADMAPS_DATABASE_URL", "ROADMAPS_ALLOWED_HOSTS"],
@@ -108,5 +160,9 @@ def test_settings_come_from_the_environment_never_a_dotenv_file(
     assert load_settings().environment is Environment.PRODUCTION
 
 
-def test_the_settings_repr_leaves_out_the_database_url() -> None:
-    assert "SECRET-PASSWORD" not in repr(load_settings(VALID))
+def test_the_settings_repr_leaves_out_the_database_url_and_the_otlp_endpoint() -> None:
+    settings = load_settings(
+        {**VALID, "OTEL_EXPORTER_OTLP_ENDPOINT": "https://u:SECRET-PASSWORD@collector.example"}
+    )
+
+    assert "SECRET-PASSWORD" not in repr(settings)

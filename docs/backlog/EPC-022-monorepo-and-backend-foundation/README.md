@@ -3,10 +3,12 @@
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
   STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
   the API skeleton (STY-090) and, from the owner's review of it, STY-101 and STY-091 are
-  done, and so is STY-092; STY-100 (owner, 2026-11-23) is Proposed; the remaining API
-  placeholders' acceptance criteria come next
-- **Progress**: 14 of 20 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
-  STY-098, STY-101); next selectable: STY-100
+  done, and so are STY-092 and STY-100; the remaining API placeholders' acceptance
+  criteria come next
+- **Progress**: 15 of 20 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
+  STY-098, STY-100, STY-101); next selectable: none — CHO-047 waits for the first
+  route whose body carries keys of the caller's choosing, and STY-093 for its acceptance
+  criteria
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -271,13 +273,13 @@ emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestM
 | STY-097 | [One version per shared dependency, one font](../_archive/EPC-022-monorepo-and-backend-foundation/STY-097-one-version-per-shared-dependency-and-one-font.md)              | Features/UI + CI/CD          | STY-096          | ✅    |
 | STY-098 | [The editor marks English in place of Welsh](../_archive/EPC-022-monorepo-and-backend-foundation/STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)             | Domain + Features/UI         | STY-097          | ✅    |
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                  | STY-098          |       |
-| STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                                                 | API                          | STY-101          |       |
+| STY-100 | [The API traces its requests](../_archive/EPC-022-monorepo-and-backend-foundation/STY-100-the-api-traces-requests-locally.md)                                             | API                          | STY-101          | ✅    |
 | STY-101 | [The skeleton leans on its framework](../_archive/EPC-022-monorepo-and-backend-foundation/STY-101-the-api-skeleton-leans-on-its-framework.md)                             | API + CI/CD + Docs           | CHO-048          | ✅    |
 | CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                          | —                |       |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                          | —                |       |
 
-_STY-085 to STY-092, STY-095, CHO-044, STY-096 to STY-098 and STY-101 are done.
-STY-100 is Proposed; STY-093 is a Placeholder
+_STY-085 to STY-092, STY-095, CHO-044, STY-096 to STY-098, STY-100 and STY-101 are
+done. STY-093 is a Placeholder
 until its acceptance criteria are written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
 settles what the public sees.

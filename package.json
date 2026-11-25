@@ -34,6 +34,8 @@
     "api:db:up": "pnpm --filter @roadmaps/api db:up",
     "api:db:down": "pnpm --filter @roadmaps/api db:down",
     "api:migrate": "pnpm --filter @roadmaps/api migrate",
+    "api:jaeger": "pnpm --filter @roadmaps/api jaeger",
+    "api:jaeger:stop": "pnpm --filter @roadmaps/api jaeger:stop",
     "api:format": "pnpm --filter @roadmaps/api format",
     "api:typecheck": "pnpm --filter @roadmaps/api typecheck",
     "api:lint": "pnpm --filter @roadmaps/api lint",

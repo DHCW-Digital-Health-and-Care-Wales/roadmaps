@@ -5,7 +5,9 @@ route of their own, and the body limit a route that reads no body. The server te
 `create_test_app` under uvicorn.
 """
 
+import contextlib
 import json
+import socket
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from typing import Annotated, Any, Final
@@ -13,6 +15,13 @@ from typing import Annotated, Any, Final
 import pytest
 from fastapi import APIRouter, FastAPI, Query, Request
 from fastapi.testclient import TestClient
+from opentelemetry import trace
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExporter
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import SpanKind, Status, StatusCode
+from sqlalchemy import text
+from sqlalchemy.orm import Session, sessionmaker
 
 # Imported only to raise one, as FastAPI's routing would for a status it never uses.
 from starlette.exceptions import HTTPException  # noqa: TID251
@@ -43,6 +52,18 @@ class Lines:
         parsed = [json.loads(line) for line in captured.out.splitlines()]
         # The test client's own lines, one per request it sends.
         return [line for line in parsed if line["logger"] != "httpx2"]
+
+
+def server_span(spans: InMemorySpanExporter) -> ReadableSpan:
+    """The one request span the exporter holds."""
+    [span] = [span for span in spans.get_finished_spans() if span.kind is SpanKind.SERVER]
+    return span
+
+
+def free_port() -> int:
+    """A port nothing listens on now."""
+    with socket.create_server(("127.0.0.1", 0)) as probe:
+        return probe.getsockname()[1]
 
 
 def make_settings(
@@ -103,8 +124,40 @@ def add_test_routes(app: FastAPI) -> FastAPI:
 
     router.include_router(nested)
     router.include_router(admin, prefix="/admin")
+    add_tracing_routes(router)
     app.include_router(router)
     return app
+
+
+def add_tracing_routes(router: APIRouter) -> None:
+    """Routes that plant values where a span might take them up."""
+
+    @router.get("/annotated")
+    def annotated() -> dict[str, str]:
+        """Writes a span attribute, an event and a status description no list allows."""
+        span = trace.get_current_span()
+        span.set_attribute("user.email", PLANTED)
+        span.add_event(PLANTED, {"value": PLANTED})
+        span.set_status(Status(StatusCode.ERROR, PLANTED))
+        return {"status": "ok"}
+
+    @router.get("/recorded")
+    def recorded(request: Request) -> dict[str, str]:
+        """Has the SDK record exceptions holding the planted value, as its own calls do."""
+        tracer: trace.Tracer = request.app.state.tracer
+        with contextlib.suppress(ValueError), tracer.start_as_current_span("child"):
+            raise ValueError(PLANTED)
+        trace.get_current_span().record_exception(ValueError(PLANTED))
+        return {"status": "ok"}
+
+    @router.get("/query")
+    def query(request: Request) -> dict[str, str]:
+        """Binds the planted value to a query, then to one that fails echoing it."""
+        sessions: sessionmaker[Session] = request.app.state.sessions
+        with sessions() as session:
+            session.execute(text("SELECT :value"), {"value": PLANTED})
+            session.execute(text("SELECT CAST(:value AS integer)"), {"value": PLANTED})
+        return {"status": "ok"}
 
 
 def mounted_app() -> FastAPI:
@@ -119,9 +172,9 @@ def mounted_app() -> FastAPI:
 
 
 @contextmanager
-def serving(settings: Settings) -> Generator[TestClient]:
-    """A client of the test app, with its lifespan run."""
-    with TestClient(add_test_routes(create_app(settings))) as client:
+def serving(settings: Settings, span_exporter: SpanExporter | None = None) -> Generator[TestClient]:
+    """A client of the test app, with its lifespan run, its spans sent to the exporter."""
+    with TestClient(add_test_routes(create_app(settings, span_exporter=span_exporter))) as client:
         yield client
 
 

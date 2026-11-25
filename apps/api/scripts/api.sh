@@ -7,12 +7,16 @@
 #   db-down  stop and remove it, keeping its data volume
 #   migrate  db-up, then the migrations, as the migration login
 #   dev      migrate, then the API with reload on the slot's API_PORT, as the
-#            application's login
+#            application's login, its traces sent to the shared Jaeger if it answers
+#            as the API starts, under the service roadmaps-api-<slot>
 #   test     db-up, then pytest under coverage against it, locally and in CI
+#   jaeger, jaeger-stop
+#            start or stop the Jaeger every worktree shares (jaeger/compose.yaml),
+#            on fixed ports
 #
 # Ports and the Compose project come from the .env.worktree that
-# scripts/worktree/worktree.sh writes; outside a worktree the API takes 8000 and its
-# database 15432.
+# scripts/worktree/worktree.sh writes; outside a worktree the API takes 8000, its
+# database 15432 and its service name roadmaps-api.
 set -euo pipefail
 
 API_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -27,15 +31,18 @@ if [ -f "$ENV_FILE" ]; then
   API_PORT="$(worktree_value API_PORT)"
   DB_PORT="$(worktree_value DB_PORT)"
   DB_PROJECT="$(worktree_value API_DB_PROJECT)"
-  if [ -z "$API_PORT" ] || [ -z "$DB_PORT" ] || [ -z "$DB_PROJECT" ]; then
-    echo "api: .env.worktree has no API_PORT, DB_PORT or API_DB_PROJECT — rerun pnpm worktree:setup" >&2
+  SLOT="$(worktree_value WORKTREE_SLOT)"
+  if [ -z "$API_PORT" ] || [ -z "$DB_PORT" ] || [ -z "$DB_PROJECT" ] || [ -z "$SLOT" ]; then
+    echo "api: .env.worktree has no API_PORT, DB_PORT, API_DB_PROJECT or WORKTREE_SLOT — rerun pnpm worktree:setup" >&2
     exit 1
   fi
+  SERVICE_NAME="roadmaps-api-$SLOT"
 else
   # The editor's dev proxy falls back to the same 8000 (scripts/worktree/dev-ports.ts).
   API_PORT=8000
   DB_PORT=15432
   DB_PROJECT=roadmaps-api
+  SERVICE_NAME=roadmaps-api
 fi
 
 # Compose's superuser, taken only by the bootstrap and the test harness, and the two
@@ -55,6 +62,11 @@ db_up() {
   compose up --detach --wait --quiet-pull db
   ROADMAPS_ENV=local ROADMAPS_ADMIN_DATABASE_URL="$ADMIN_DATABASE_URL" \
     uv run --locked python -m tools.bootstrap_database
+}
+
+# One Compose project on the host, whichever worktree runs it.
+jaeger() {
+  docker compose --project-name roadmaps-jaeger --file "$API_DIR/jaeger/compose.yaml" "$@"
 }
 
 migrate() {
@@ -77,8 +89,15 @@ case "${1:-}" in
     export ROADMAPS_ENV=local
     export ROADMAPS_DATABASE_URL="$APP_DATABASE_URL"
     export ROADMAPS_ALLOWED_HOSTS="127.0.0.1,localhost"
-    exec uv run --locked python -m roadmaps_api.server --port "$API_PORT" --reload
+    export ROADMAPS_SERVICE_NAME="$SERVICE_NAME"
+    # --local-traces: the shared Jaeger, if it answers now and no endpoint is set.
+    exec uv run --locked python -m roadmaps_api.server --port "$API_PORT" --reload --local-traces
     ;;
+  jaeger)
+    jaeger up --detach --wait --quiet-pull
+    echo "==> Jaeger on http://127.0.0.1:16686; a pnpm api:dev started before it sends traces once restarted" >&2
+    ;;
+  jaeger-stop) jaeger down ;;
   test)
     shift
     db_up
@@ -93,7 +112,7 @@ case "${1:-}" in
     uv run --locked coverage report
     ;;
   *)
-    echo "usage: $0 {db-up|db-down|migrate|dev|test [pytest args]}" >&2
+    echo "usage: $0 {db-up|db-down|migrate|dev|test [pytest args]|jaeger|jaeger-stop}" >&2
     exit 2
     ;;
 esac

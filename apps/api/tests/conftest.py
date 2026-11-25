@@ -8,6 +8,7 @@ from typing import Any
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from roadmaps_api.logs import log_config
 from roadmaps_api.settings import MIGRATION_DATABASE_URL
@@ -100,10 +101,32 @@ def no_migration_login(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(MIGRATION_DATABASE_URL, raising=False)
 
 
+# The exporter's HTTP session follows them: a test's stand-in receiver is on 127.0.0.1.
+PROXY_VARIABLES = frozenset({"http_proxy", "https_proxy", "all_proxy"})
+
+
+@pytest.fixture(autouse=True)
+def no_trace_export(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No test exports a span, whatever OpenTelemetry variables the developer's shell set.
+
+    Spans go only to the in-memory exporter a test reads (`spans`), and the server tests'
+    processes inherit this environment (ADR-017 _Operation_).
+    """
+    for name in os.environ:
+        if name.startswith(("OTEL_", "FASTAPI_OTEL_")) or name.lower() in PROXY_VARIABLES:
+            monkeypatch.delenv(name)
+
+
 @pytest.fixture
-def client() -> Iterator[TestClient]:
+def spans() -> InMemorySpanExporter:
+    """The spans the test's app ends, as they would be exported."""
+    return InMemorySpanExporter()
+
+
+@pytest.fixture
+def client(spans: InMemorySpanExporter) -> Iterator[TestClient]:
     """The API with its database down; the readiness tests bring their own."""
-    with serving(make_settings()) as client:
+    with serving(make_settings(), spans) as client:
         yield client
 
 

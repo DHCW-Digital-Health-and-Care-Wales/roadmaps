@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from opentelemetry.sdk.trace.export import SpanExporter
 from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -15,6 +16,7 @@ from roadmaps_api.migrations import latest_revision
 from roadmaps_api.openapi import document_refusals
 from roadmaps_api.routes import api_v1, probes
 from roadmaps_api.settings import Settings, SettingsError, load_settings
+from roadmaps_api.tracing import INSTRUMENTATION, create_tracer_provider, trace_queries
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +40,22 @@ def factory() -> FastAPI:
         raise SystemExit(1) from None
 
 
-def create_app(settings: Settings) -> FastAPI:
-    """The API; it never migrates its database, whose revision `/ready` reads."""
+def create_app(settings: Settings, *, span_exporter: SpanExporter | None = None) -> FastAPI:
+    """The API; it never migrates its database, whose revision `/ready` reads.
+
+    Its spans go to `span_exporter`, a test's, else to the settings' OTLP endpoint, if any.
+    """
+    tracer_provider = create_tracer_provider(settings, span_exporter)
+    tracer = tracer_provider.get_tracer(INSTRUMENTATION)
     engine = create_database_engine(settings.database_url)
+    trace_queries(engine, tracer)
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncGenerator[None]:
         yield
         engine.dispose()
+        # Exports the spans still held.
+        tracer_provider.shutdown()
 
     app = FastAPI(
         title="DHCW Roadmaps API",
@@ -57,7 +67,12 @@ def create_app(settings: Settings) -> FastAPI:
         openapi_url=f"{api_v1.router.prefix}/openapi.json"
         if settings.serves_live_openapi
         else None,
+        # Off, whatever the environment holds: FastAPI's own spans carry the query string
+        # and the path as sent, and it would export by OpenTelemetry's variables; the
+        # API's spans are its own (`tracing`).
+        telemetry={"tracing": False, "metrics": False, "logs": False, "auto_configure": False},
     )
+    app.state.tracer = tracer
     app.state.engine = engine
     app.state.sessions = create_sessions(engine)
     # Read once, from the package's own migrations, for `/ready` to compare.
@@ -77,5 +92,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(
         TrustedHostMiddleware, allowed_hosts=settings.allowed_hosts, www_redirect=False
     )
-    app.add_middleware(RequestContext)
+    app.add_middleware(RequestContext, tracer=tracer)
     return app

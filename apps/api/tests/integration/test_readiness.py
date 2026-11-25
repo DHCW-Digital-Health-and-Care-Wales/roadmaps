@@ -17,6 +17,7 @@ from roadmaps_api import app as app_module
 from roadmaps_api.migrations import latest_revision
 from roadmaps_api.services import readiness
 from tests import harness
+from tests.harness import holding, without_the_version_table
 from tests.support import Lines, make_settings, serving
 from tools.bootstrap_database import MIGRATION_LOGIN
 
@@ -25,37 +26,12 @@ LATEST = latest_revision()
 ABOVE = f"{LATEST.number + 1:04d}_next"
 BELOW = f"{LATEST.number - 1:04d}_older"
 ANOTHER_SLUG = f"{LATEST.number:04d}_another_slug"
-MOVED = "alembic_version_moved"
 NOT_READY = {"detail": "The service is not ready.", "code": "service.not_ready", "params": {}}
 NOT_SERVED = [{"message": "readiness.failed", "cause": "readiness.revision_not_served"}]
 
 
 def warnings_of(lines: Lines) -> list[dict[str, Any]]:
     return [line for line in lines.read() if line.get("message") != "request"]
-
-
-@pytest.fixture
-def versions(worker_admin: psycopg.Connection) -> Iterator[psycopg.Connection]:
-    """The worker's `alembic_version`, its name and its row put back after the test."""
-    yield worker_admin
-    with worker_admin.transaction():
-        if worker_admin.execute("SELECT to_regclass(%s)", (MOVED,)).fetchone() != (None,):
-            worker_admin.execute(f"ALTER TABLE {MOVED} RENAME TO alembic_version".encode())
-        worker_admin.execute("DELETE FROM alembic_version")
-        worker_admin.execute("INSERT INTO alembic_version VALUES (%s)", (LATEST.name,))
-
-
-def holding(*revisions: str) -> Callable[[psycopg.Connection], None]:
-    def change(connection: psycopg.Connection) -> None:
-        connection.execute("DELETE FROM alembic_version")
-        for revision in revisions:
-            connection.execute("INSERT INTO alembic_version VALUES (%s)", (revision,))
-
-    return change
-
-
-def without_the_table(connection: psycopg.Connection) -> None:
-    connection.execute(f"ALTER TABLE alembic_version RENAME TO {MOVED}".encode())
 
 
 @dataclass(frozen=True)
@@ -78,7 +54,7 @@ REVISIONS = {
     "a number in another script's digits": Case(holding("٩٩٩٩_next"), 503, NOT_SERVED),
     "no row": Case(holding(), 503, NOT_SERVED),
     "more than one row": Case(holding(LATEST.name, ABOVE), 503, NOT_SERVED),
-    "no alembic_version table": Case(without_the_table, 503, NOT_SERVED),
+    "no alembic_version table": Case(without_the_version_table, 503, NOT_SERVED),
 }
 
 

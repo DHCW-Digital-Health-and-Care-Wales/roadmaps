@@ -9,7 +9,7 @@
   amendments; ADR-015 §Tenancy, §Roles, operation and data protection
 - **Suggested model**: Opus — the roles, grants and harness ADR-015's enforcement suite
   stands on
-- **Delivered**: _the PR, filled once it is open_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/301
 
 ## Summary
 

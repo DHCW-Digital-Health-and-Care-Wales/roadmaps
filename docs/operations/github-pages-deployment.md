@@ -11,7 +11,7 @@ fork or a custom domain, then how the public site is published from `product-roa
 dispatch:
 
 ```
-repository ────────────────────┐   every run: format:check · the root's typecheck, lint, tests · skill script tests · actionlint · zizmor
+repository ────────────────────┐   every run: format:check · the root's typecheck, lint, tests · skill script tests · knip · API types · actionlint · zizmor
 dependency-review ─────────────┤   not on a push to main: a dependency added at a known vulnerable version
           ┌──► editor-verify ──┤   typecheck · lint · test · build
           ├──► editor-e2e ─────┤   Playwright, in Playwright's pinned image

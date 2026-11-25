@@ -44,7 +44,7 @@ workflow step runs.
 
 ## Acceptance criteria
 
-### S1: CI runs every skill script's tests
+### S1: CI runs every skill script's tests ✅
 
 **Given** a skill script test under `.agents/skills/*/scripts/` that fails
 **When** CI runs on a pull request that changes it

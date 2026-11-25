@@ -86,9 +86,10 @@ jobs:
       - run: pnpm repo:typecheck
       - run: pnpm repo:lint
       - run: pnpm repo:test
-      # The node --test suites of the skills' scripts. The UX prototypes' open
-      # Chromium: the runner's Chrome, as the Lighthouse job uses, so no browser is
-      # installed. The pattern is quoted, so node expands it: a new suite runs unlisted.
+      # The node --test suites of the skills' scripts: every *.test.mjs directly in a
+      # skill's scripts/, so a new one there runs unlisted; node expands the quoted
+      # pattern. The UX prototype suites launch Chromium: the runner's Chrome, as the
+      # Lighthouse job uses, so no browser is installed.
       - name: Test the skills' scripts
         run: node --test '.agents/skills/*/scripts/*.test.mjs'
         env:

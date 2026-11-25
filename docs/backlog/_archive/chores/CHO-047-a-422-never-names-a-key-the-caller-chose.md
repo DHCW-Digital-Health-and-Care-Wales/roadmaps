@@ -8,7 +8,7 @@
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020 (validation errors leave out the
   submitted input)
 - **Suggested model**: Sonnet — a narrow change to one handler, with its test rows
-- **Delivered**: _(added once the PR exists)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/308
 
 ## Summary
 

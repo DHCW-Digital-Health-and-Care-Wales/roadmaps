@@ -9,7 +9,7 @@ catalog:
   "@eslint/js": ^10.0.1
   "@fontsource-variable/roboto": ^5.3.0
   # Exact: each app's E2E job runs in the Playwright image of this version (ci.yml).
-  "@playwright/test": 1.64.1
+  "@playwright/test": 1.65.1
   "@tailwindcss/vite": ^4.3.5
   "@testing-library/react": ^16.3.3
   # The workspace's Node major (.nvmrc, the root engines), so the types describe the

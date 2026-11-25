@@ -18,8 +18,9 @@ _Avoid_: Product owner, admin, editor
 
 **Public reader**:
 Anyone who reads a roadmap on the public site: first health boards and Welsh Government
-stakeholders, then DHCW staff, then patients and the public. They never use this tool,
-but every roadmap item is written for them.
+stakeholders, then DHCW staff, then patients and the public
+(`docs/backlog/personas/public-reader.md`). They never use the editor, but every roadmap
+item is written for them.
 _Avoid_: Customer, end user
 
 **Public site**:
@@ -320,12 +321,12 @@ _Avoid_: Admin (a tenant's role), superuser
 
 **Admin** _(planned)_:
 A tenant's role that holds every permission but `roadmaps:edit`, and edits every
-roadmap (ADR-019).
+roadmap (ADR-019; `docs/backlog/personas/tenant-admin.md`).
 _Avoid_: Owner, superuser, operator (someone who runs the platform, not a tenant)
 
 **Viewer** _(planned)_:
 A tenant's role that reads every current roadmap, draft and history and changes nothing
-(ADR-019).
+(ADR-019; `docs/backlog/personas/viewer.md`).
 _Avoid_: Reader, guest
 
 **Assignment** _(planned)_:

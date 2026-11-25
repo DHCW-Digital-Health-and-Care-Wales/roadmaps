@@ -9,9 +9,10 @@ An internal tool for Digital Health and Care Wales (DHCW), used only by DHCW sta
 **Product Leads** manage the **public roadmaps** of the products they lead, in the
 Now / Next / Later format: each **roadmap item** has a title, a description, expected
 outcomes, tags and other details, and fits on one card no bigger than a phone screen.
-Design for the Product Lead editing their roadmap
-(`docs/backlog/personas/product-lead.md`); the connection to the data source is
-plumbing that stays out of their way. The interface is in English and Welsh (ADR-008).
+Design for the editor's personas in `docs/backlog/personas/` (`product-lead.md`,
+`tenant-admin.md`, `viewer.md`, plus `public-reader.md` for item card hints and
+examples); the connection to the data source is plumbing that stays out of their
+way. The interface is in English and Welsh (ADR-008).
 
 It is a static, frontend-only React SPA on GitHub Pages. It connects a Google account
 (Google Identity Services, token model), reads and writes one Google Spreadsheet, and

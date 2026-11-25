@@ -506,7 +506,11 @@ export const en = {
         organisationIds: "Organisations",
         details: "Details",
       } satisfies Record<EditableItemField, string>,
-      /** One checkbox of the form's organisations: "Cardiff and Vale (CAVUHB)" (STY-034). */
+      /**
+       * One checkbox of the form's organisations: "Cardiff and Vale (CAVUHB)" (STY-034).
+       * The whole label is marked English, both being English in both languages
+       * (ADR-014), so neither catalogue adds a word to the placeholders and punctuation.
+       */
       organisationChoice: "{{shortName}} ({{code}})",
       /**
        * Codes the item names that the organisation list doesn't hold, comma separated

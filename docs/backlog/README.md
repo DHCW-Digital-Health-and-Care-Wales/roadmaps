@@ -143,6 +143,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-039](_archive/defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md)                        | Dependabot cannot raise updates of the API's locked dependencies                                 | Done         |
 | [DEF-040](defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                                       | A small request can get a much larger 422, which lists every error (EPC-022)                     | Needs triage |
 | [DEF-041](defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md)                              | The editor's status messages quote English it cannot mark                                        | Needs triage |
+| [DEF-042](defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md)                                          | The editor's fields hold English with no lang                                                    | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

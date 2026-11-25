@@ -51,21 +51,20 @@ as a control's hidden words, which stay unmarked (STY-098 D2 and its Delivery).
 
 `roadmaps.items.unplaced.unknownHorizon` (`components/horizon-flag.tsx`) and
 `roadmaps.publish.notice.refused.removal.writtenAs`
-(`editing/conflict-review-dialog.tsx`) quote text of no known language: the second
-open question.
+(`editing/conflict-review-dialog.tsx`) quote text of no known language: the open
+question.
+
+## Acceptance criteria
+
+### S1: English quoted in a status message is marked alone
+
+**Given** the editor in Welsh and an item with the tag "Patients"
+**When** a Product Lead removes the tag and the status line says so
+**Then** only "Patients" in the message carries `lang="en"`
 
 ## Open questions
 
-1. **Should the fields that hold English say so?** In Welsh, the item and roadmap
-   forms' text fields, the details outline, the tag fields and the family's name field
-   hold English with no `lang`, so a screen reader may read what is in them with Welsh
-   pronunciation. A `lang` on a field also reaches a name or description given to it as
-   an attribute, which is Welsh.
-   - (a) Leave them: nothing changes (recommended until a Product Lead reports it).
-   - (b) Mark each field whose name comes from a label element, and leave those named
-     by an attribute.
-   - (c) Mark every one, naming each from a label element first.
-2. **Should a horizon quoted as written be marked English?** A card and a conflict
+1. **Should a horizon quoted as written be marked English?** A card and a conflict
    quote a horizon the editor doesn't recognise, as someone typed it into the
    spreadsheet, which may be in either language.
    - (a) Leave it unmarked (recommended): its language isn't known.

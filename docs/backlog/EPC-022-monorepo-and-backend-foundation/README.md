@@ -340,6 +340,8 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
   small request can get a much larger 422, which lists every error (Needs triage).
 - [DEF-041](../defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md):
   the editor's status messages quote English it cannot mark (Needs triage).
+- [DEF-042](../defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md): the
+  editor's fields hold English with no `lang` (Needs triage).
 
 ## Related
 

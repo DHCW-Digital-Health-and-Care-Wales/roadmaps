@@ -82,8 +82,10 @@ language differs from the interface's.
   family button's hidden words ("Change Single Record"), as STY-098's Delivery keeps
   words that only complete a button's name (agent).
 - Status messages that quote typed English are strings that can't mark a part of
-  themselves. They, the fields that hold English and a horizon quoted as written are
-  DEF-041 (agent).
+  themselves: they and a horizon quoted as written are DEF-041. The fields that hold
+  English are DEF-042 (agent).
+- A tag offered in the open Tags field is marked on its visible text only: the
+  button's name is an attribute, which stays unmarked (STY-098 D2) (agent).
 
 ### Contract for dependents
 

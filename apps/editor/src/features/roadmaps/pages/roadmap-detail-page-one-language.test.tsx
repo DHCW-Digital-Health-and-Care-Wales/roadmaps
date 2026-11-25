@@ -72,8 +72,8 @@ afterEach(() => {
   localStorage.clear()
 })
 
-describe("In Welsh, an item's text in English alone (DEF-033 S1)", () => {
-  it("marks its organisations' short names on its card", async () => {
+describe("An item's text in English alone (DEF-033 S1)", () => {
+  it("marks its organisations' short names on its card in Welsh", async () => {
     await renderPage("cy", [booking, other])
 
     const card = main()
@@ -83,7 +83,7 @@ describe("In Welsh, an item's text in English alone (DEF-033 S1)", () => {
     expect(marked(card)).toContain("en: All Wales")
   })
 
-  it("marks the tags, organisations and details its form shows, shut and open", async () => {
+  it("marks in Welsh the tags and organisations its form shows, shut and open, and its shut details", async () => {
     const { user } = await renderPage("cy", [booking, other])
     const form = await openEditItemDialog(user, "Archebu ar-lein", "cy")
     const dialog = screen.getByRole("dialog")

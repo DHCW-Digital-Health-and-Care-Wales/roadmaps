@@ -1,4 +1,4 @@
-# DEF-040: A small request can get a much larger 422, since it lists every error
+# DEF-040: A small request can get a much larger 422, which lists every error
 
 - **Status**: Needs triage — found by CHO-047's delivery
 - **Severity**: Low — no route takes a body or a query model yet; once one does, a
@@ -33,13 +33,13 @@ body model forbids extra keys:
 Verified: `validation_error` (`apps/api/src/roadmaps_api/errors.py`) lists all of
 `exc.errors()`. Search: `rg -n 'RequestValidationError' apps/api/src` finds that one
 handler. CHO-047 shortens a `loc` that names a caller's key (step 1 is then 3.8 MB; step
-2 is unchanged, since only each error's last segment is the caller's) and adds work per
-error that follows the `loc`: about 0.5 s against 0.4 s for step 1, 1.0 s against 0.2 s
-for 50,000 bad list entries, and 5 s against 0.3 s for step 2, measured on a development
+2 barely changes, since only each error's last segment is the caller's) and adds some
+work to follow each one: about 0.5 s against 0.4 s for step 1, 0.6 s against 0.2 s for
+50,000 bad list entries, and 0.5 s against 0.3 s for step 2, measured on a development
 machine.
 
 ## Open questions
 
 1. Should a 422 list at most some number of errors, which changes what a refusal tells
-   the editor? A limit also bounds the work CHO-047's walk does. Recommended: yes, a
-   small fixed number, with the first request-body story.
+   the editor? Recommended: yes, a small fixed number, with the first request-body
+   story.

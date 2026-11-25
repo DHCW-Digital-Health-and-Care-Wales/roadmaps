@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 # unreadable body, so its handler is registered here. Routes raise `ApiError`.
 from starlette.exceptions import HTTPException  # noqa: TID251
 
-from roadmaps_api.error_locations import declared_location
+from roadmaps_api.error_locations import DeclaredLocations
 from roadmaps_api.wire import ApiResponseModel
 
 
@@ -100,11 +100,9 @@ def register_error_handlers(app: FastAPI) -> None:
     def validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
         # Where and how each error failed, never the input or the message, which can
         # quote it, nor a key the caller chose.
+        locations = DeclaredLocations(request.scope)
         errors = [
-            {
-                "loc": declared_location(request.scope, error["loc"], error["type"]),
-                "type": error["type"],
-            }
+            {"loc": locations.cut(error["loc"], error["type"]), "type": error["type"]}
             for error in exc.errors()
         ]
         return error_response(ErrorCode.INVALID, {"errors": errors})

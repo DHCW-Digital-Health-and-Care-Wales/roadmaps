@@ -332,8 +332,8 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
 - [DEF-036](../defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md):
   the Sheets replacement runbook still describes CORS and a browser-held token (Needs
   triage).
-- [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md): a 422
-  lists every error with its whole `loc`, however many a body has (Needs triage).
+- [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md): a
+  small request can get a much larger 422, which lists every error (Needs triage).
 
 ## Related
 

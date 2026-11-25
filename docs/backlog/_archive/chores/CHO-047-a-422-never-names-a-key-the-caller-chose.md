@@ -51,15 +51,11 @@ the caller's key, with its `type` unchanged
   query keys (`["query", "<key>"]` → `["query"]`) when `extra="forbid"` is turned on for
   `ApiRequestModel` (cutting back the trailing segment on `extra_forbidden` covers body
   and query models alike).
-- **D3** (agent, 2026-11-25, this delivery): delivered ahead of the first route that
-  takes the caller's keys, since the owner's run of EPC-022 queued every unblocked item,
-  with routes only tests mount holding S1. `extra="forbid"` stays off
-  `ApiRequestModel`: ADR-017's _STY-092 amendments_ say it waits for this chore **and**
-  the first request-body or query-model story, which does not exist yet. That story
-  turns it on (EPC-022 _The API's conventions_); D2's rows hold its refusals now, on
-  test models that forbid extra keys. Open owner question: should this chore have
-  turned it on? ADR-017's same amendment also says optional fields ignore `snake_case`
-  "until `extra="forbid"` lands with CHO-047", which only the owner's word amends.
+- **D3** (agent, 2026-11-25, delivery): `extra="forbid"` stays off `ApiRequestModel`,
+  over turning it on here: ADR-017's _STY-092 amendments_ have it wait for this chore
+  **and** the first request-body or query-model story (though they also say it "lands
+  with CHO-047"). That story turns it on (EPC-022 _The API's conventions_). Delivered
+  ahead of any such route, as the owner's EPC-022 run queued it.
 
 ## Delivery
 
@@ -70,7 +66,8 @@ the caller's key, with its `type` unchanged
   in the middle of a `loc`, as `[…, <key>, <field>]`) and whatever `loc` a validator
   raises. `apps/api/src/roadmaps_api/error_locations.py` follows each `loc` through the
   refusing route's own Pydantic core schemas and cuts it before the first segment they
-  do not declare.
+  do not declare, working out each step once for all of a request's errors, whose
+  number and depth the caller chooses.
 - **A union's label is kept only where the schema names it** (agent): a discriminated
   union's tag, a `Tag` and a choice's model class stay, so the fields under them
   survive; Pydantic's other labels, type names such as `int` or `dict[str,int]`, are
@@ -83,14 +80,16 @@ the caller's key, with its `type` unchanged
 - A `loc` follows models, lists, sets, tuples, unions and validators around them. Any
   other shape ends it at the field that has it: a dictionary, by design, and also a
   dataclass, `TypedDict`, `NamedTuple` or `Sequence` field, which a story that needs
-  their depth adds, with a row in `apps/api/tests/test_errors.py`.
-- A segment spelled as a name the schema declares, in that name's own place, stays,
-  even where a validator put it there.
-- The walk reads FastAPI's record of the chosen route and each parameter's core schema,
-  neither a documented interface; `apps/api/tests/test_errors.py` pins both.
+  their depth adds, with a row in `apps/api/tests/test_errors.py`. A parameter that is
+  no model and is read by `AliasChoices` ends it at its source.
+- What is spelled as the schema declares it, in its own place, stays, even where a
+  validator put it there: a declared name, and a list's or a set's index, which any
+  integer from zero up may be.
+- The walk reads FastAPI's record of the chosen route, its private rule for a parameter
+  model and each parameter's core schema; `apps/api/tests/test_errors.py` pins them.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1, D2   | `apps/api/tests/test_errors.py` (`test_a_422_names_only_what_the_schema_declares`, a row per shape, bodies and query models). Red before the change: 26 rows echoed the key or a type label. The rows for a validator's text under a tuple and under bare `Json`, and for a 200-deep body, were each red against an earlier draft, which answered 500. Rows added after their code were shown red by breaking each condition of the walk, one at a time |
+| Scenario | Held by                                                                                                                                                                                                                             |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, D2   | `apps/api/tests/test_errors.py` (`test_a_422_names_only_what_the_schema_declares`, a row per shape, bodies and query models; `test_the_walk_takes_each_shared_step_once_however_many_errors_share_it`, the work a caller can force) |

@@ -9,6 +9,7 @@
 - **Binding ADRs**: none
 - **Suggested model**: Opus — the cause is not known; the first step is to make it fail
   on demand
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/323
 
 ## Summary
 

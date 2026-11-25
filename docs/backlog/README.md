@@ -92,6 +92,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-049](chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                           | Every route's wait on the database has a deadline (EPC-022, from STY-101's grilling)                                                | Placeholder    |
 | [CHO-050](_archive/chores/CHO-050-the-guide-check-reads-skills-and-agent-definitions.md)                         | The guide check reads skills and agent definitions (from STY-101's retrospective)                                                   | Done           |
 | [CHO-051](chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)                                 | A 422 keeps the fields under a wrapped union choice (EPC-022, from CHO-047)                                                         | Proposed       |
+| [CHO-052](chores/CHO-052-upgrade-typescript-to-7-and-remove-dependabot-ignore.md)                                | Upgrade TypeScript to 7 and remove the Dependabot major-version ignore                                                              | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

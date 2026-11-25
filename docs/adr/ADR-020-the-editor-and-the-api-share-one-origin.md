@@ -2,10 +2,11 @@
 
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   identity and authorisation grilling (2026-11-21); the options chosen are marked ✅.
-  Amended by the owner's STY-101 grilling (_STY-101 amendments_) and CHO-053 decision
-  (_CHO-053 amendments_).
+  Amended by the owner's STY-101 grilling (_STY-101 amendments_), CHO-053 decision
+  (_CHO-053 amendments_) and DEF-040 triage and grilling (_DEF-040 amendments_).
 - Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list;
-  CHO-053: 422 `loc` trimming)
+  CHO-053: 422 `loc` trimming; DEF-040: 422 error cap, `loc` segment truncation and
+  recursive-union rule)
 
 ## Context
 
@@ -99,6 +100,27 @@ responses_ stands.
   (`fastapi._compat`, `_get_param_model`, Pydantic `core_schema`) or truncating nested
   locations on shapes a custom walker omits.
 
+### DEF-040 amendments
+
+From the owner's DEF-040 triage and grilling (2026-11-25, DEF-040 D1–D3); this narrows
+_CHO-053 amendments_'s pass-through for string `loc` segments longer than 128 characters
+and caps the listed error count; the rest of _The API's own responses_ and _CHO-053
+amendments_ stands.
+
+- **A 422 caps `params.errors` at 25 entries**: `validation_error`
+  (`apps/api/src/roadmaps_api/errors.py`, held by `apps/api/tests/test_errors.py`) slices
+  `exc.errors()` in plain Python without walking schemas or reading private framework
+  internals, and includes `"truncated": true` in `params` only when
+  `len(exc.errors()) > 25` (leaving 1–25 error 422s as `{"errors": [...]}`).
+- **String `loc` segments are capped at 128 characters**: after trimming the trailing
+  unknown key on `extra_forbidden` (_CHO-053 amendments_), any remaining string `loc`
+  segment longer than 128 characters is truncated to its first 127 characters plus `"…"`,
+  bounding caller-chosen dictionary keys in 422 responses.
+- **Recursive unions stay native to Pydantic**: the API adds no custom pre-parse JSON
+  depth walker; `apps/api/AGENTS.md` forbids undiscriminated recursive unions in
+  `ApiRequestModel` (use discriminated unions, and add an explicit depth validator only if
+  a recursive request model is ever introduced).
+
 ## Consequences
 
 - **One deploy carries both apps** in each environment, until and after the load
@@ -111,10 +133,15 @@ responses_ stands.
 - **ADR-016's custom domain** stays a precondition of switching the deployed editor to
   the API; the deployed Sheets editor stays on GitHub Pages until then.
 - **EPC-023** provisions the service, the load balancer, the domain and the edge limits.
-- **Open follow-on ([DEF-040](../backlog/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md), `Needs triage`)**:
-  without a schema walk, a dictionary field passes its caller-chosen key through in a
-  422's `loc`, which compounds with the unbounded error list on a dictionary of
-  collections or models; no route takes a request model or dictionary field yet.
+- **422 responses are bounded ([DEF-040](../backlog/_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md), `Done`)**:
+  capping `params.errors` at 25 entries (with `"truncated": true` only when more) and
+  truncating string `loc` segments past 128 characters bounds the 422 response for
+  fixed-depth schemas (and for any future recursive model with a depth validator, as
+  `apps/api/AGENTS.md` requires).
+- **Open follow-on ([DEF-043](../backlog/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md), `Needs triage`)**:
+  because `validation_error` slices `exc.errors()` after Pydantic finishes validating, the
+  cap bounds the 422 response rather than Pydantic's pre-handler validation memory on
+  unbounded collections; no route takes a request model with a collection field yet.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

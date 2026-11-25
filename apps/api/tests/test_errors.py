@@ -1,9 +1,11 @@
 """Every refusal is the envelope, with a stable code, and never echoes submitted values.
 
-A 422 trims the trailing unknown key on `extra_forbidden` and passes Pydantic's other
-`loc` segments (such as a dictionary key) through (ADR-020 _CHO-053 amendments_). The two
-exceptions to the envelope, the `Host` allow-list's 400 and the body limit's 413, are
-Starlette's plain text (`test_middleware.py`).
+A 422 trims the trailing unknown key on `extra_forbidden`, caps `params.errors` at 25
+entries (setting `truncated: true` only when more exist), and truncates string `loc`
+segments longer than 128 characters to 127 characters plus `"…"` (ADR-020 _CHO-053
+amendments_, _DEF-040 amendments_). The two exceptions to the envelope, the `Host`
+allow-list's 400 and the body limit's 413, are Starlette's plain text
+(`test_middleware.py`).
 """
 
 import re
@@ -153,6 +155,7 @@ class Shapes(ApiRequestModel):
     leaf: Leaf | None = None
     leaves: list[Leaf] = Field([])
     counts: dict[str, int] = Field({})
+    buckets: dict[str, list[Leaf]] = Field({})
     pet: Annotated[Cat | Dog, Field(discriminator="kind")] | None = None
     wrapped: WrappedLeaf | int = 0
 
@@ -264,4 +267,104 @@ def test_a_422_keeps_nested_fields_under_a_wrapped_union_choice(
     assert field_error["loc"][3] == "itemCount"
     assert extra_error == {"loc": field_error["loc"][:3], "type": "extra_forbidden"}
     assert int_error == {"loc": ["body", "wrapped", "int"], "type": "int_type"}
+    assert PLANTED not in response.text
+
+
+ERROR_CAPS: dict[str, tuple[int, int, bool]] = {
+    "at the cap (25 errors)": (25, 25, False),
+    "one past the cap (26 errors)": (26, 25, True),
+}
+
+
+@pytest.mark.parametrize(
+    ("submitted_count", "expected_count", "truncated"), ERROR_CAPS.values(), ids=ERROR_CAPS
+)
+def test_a_422_caps_listed_errors_and_marks_truncation_only_past_the_cap(
+    locations_client: TestClient,
+    submitted_count: int,
+    expected_count: int,
+    *,
+    truncated: bool,
+) -> None:
+    response = locations_client.post(
+        "/test/shapes", json={"leaves": [{"itemCount": PLANTED} for _ in range(submitted_count)]}
+    )
+
+    assert response.status_code == 422
+    params = response.json()["params"]
+    assert all(CAMEL_CASE.fullmatch(key) for key in keys(params))
+    assert len(params["errors"]) == expected_count
+    assert params["errors"][0] == {"loc": ["body", "leaves", 0, "itemCount"], "type": "int_parsing"}
+    assert params["errors"][-1] == {
+        "loc": ["body", "leaves", expected_count - 1, "itemCount"],
+        "type": "int_parsing",
+    }
+    if truncated:
+        assert params["truncated"] is True
+        assert set(params) == {"errors", "truncated"}
+    else:
+        assert set(params) == {"errors"}
+    assert PLANTED not in response.text
+
+
+SEGMENT_BOUNDS: dict[str, tuple[object, list[str | int], str]] = {
+    "a string segment at the 128-character limit": (
+        {"counts": {"a" * 128: PLANTED}},
+        ["body", "counts", "a" * 128],
+        "int_parsing",
+    ),
+    "a string segment one character past the limit": (
+        {"counts": {"a" * 128 + "z": PLANTED}},
+        ["body", "counts", "a" * 127 + "…"],
+        "int_parsing",
+    ),
+    "a long dictionary key before an extra_forbidden key and list index": (
+        {"buckets": {"k" * 200: [{PLANTED: 1}]}},
+        ["body", "buckets", "k" * 127 + "…", 0],
+        "extra_forbidden",
+    ),
+    "a long trailing extra_forbidden key is omitted rather than truncated": (
+        {f"{PLANTED}{'x' * 200}": 1},
+        ["body"],
+        "extra_forbidden",
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("sent", "expected_loc", "expected_type"), SEGMENT_BOUNDS.values(), ids=SEGMENT_BOUNDS
+)
+def test_a_422_truncates_long_string_loc_segments(
+    locations_client: TestClient,
+    sent: object,
+    expected_loc: list[str | int],
+    expected_type: str,
+) -> None:
+    response = locations_client.post("/test/shapes", json=sent)
+
+    assert response.status_code == 422
+    assert response.json()["params"] == {"errors": [{"loc": expected_loc, "type": expected_type}]}
+    assert PLANTED not in response.text
+
+
+def test_a_422_bounds_the_response_for_a_long_dictionary_key_with_many_errors(
+    locations_client: TestClient,
+) -> None:
+    long_key = "k" * 500
+    response = locations_client.post(
+        "/test/shapes",
+        json={"buckets": {long_key: [{"itemCount": PLANTED} for _ in range(40)]}},
+    )
+
+    assert response.status_code == 422
+    params = response.json()["params"]
+    assert set(params) == {"errors", "truncated"}
+    assert params["truncated"] is True
+    assert len(params["errors"]) == 25
+    assert all(
+        error
+        == {"loc": ["body", "buckets", "k" * 127 + "…", index, "itemCount"], "type": "int_parsing"}
+        for index, error in enumerate(params["errors"])
+    )
+    assert long_key not in response.text
     assert PLANTED not in response.text

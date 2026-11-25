@@ -2,10 +2,12 @@
 
 Routes and services raise an `ApiError`; FastAPI's own 404, 405 and 422 are wrapped in
 the same envelope here. A refusal never carries a submitted value, an exception's text or
-a traceback; on a 422, `extra_forbidden` trims the trailing unknown key from `loc`, while
-other `loc` segments (such as a dictionary key) pass through (ADR-020 _CHO-053
-amendments_). The two exceptions are Starlette's middleware's plain-text refusals, a 400
-for a `Host` not allowed and a 413 for a body over the limit (`create_app`).
+a traceback; on a 422, `extra_forbidden` trims the trailing unknown key from `loc`,
+remaining string `loc` segments longer than 128 characters are truncated to 127 characters
+plus `"…"`, and `params.errors` is capped at 25 entries with `"truncated": true` only when
+more exist (ADR-020 _CHO-053 amendments_, _DEF-040 amendments_). The two exceptions are
+Starlette's middleware's plain-text refusals, a 400 for a `Host` not allowed and a 413 for
+a body over the limit (`create_app`).
 """
 
 from collections.abc import Mapping, Sequence
@@ -92,9 +94,21 @@ def error_response(
     )
 
 
+# Bounds on a 422's `params` (ADR-020 _DEF-040 amendments_).
+_MAX_VALIDATION_ERRORS: Final[int] = 25
+_MAX_LOC_SEGMENT_LENGTH: Final[int] = 128
+
+
+def _truncate_segment(segment: str | int) -> str | int:
+    if isinstance(segment, str) and len(segment) > _MAX_LOC_SEGMENT_LENGTH:
+        return f"{segment[: _MAX_LOC_SEGMENT_LENGTH - 1]}…"
+    return segment
+
+
 def _error_location(loc: Sequence[str | int], error_type: str) -> list[str | int]:
     # An `extra_forbidden` error ends with the unknown key the caller sent (ADR-020).
-    return list(loc[:-1] if error_type == "extra_forbidden" else loc)
+    segments = loc[:-1] if error_type == "extra_forbidden" else loc
+    return [_truncate_segment(segment) for segment in segments]
 
 
 def register_error_handlers(app: FastAPI) -> None:
@@ -105,11 +119,15 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     def validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
         # Only `loc` and `type`: never `input` or `msg`, which can quote submitted values.
+        raw_errors = exc.errors()
         errors = [
             {"loc": _error_location(error["loc"], error["type"]), "type": error["type"]}
-            for error in exc.errors()
+            for error in raw_errors[:_MAX_VALIDATION_ERRORS]
         ]
-        return error_response(ErrorCode.INVALID, {"errors": errors})
+        params: dict[str, Any] = {"errors": errors}
+        if len(raw_errors) > _MAX_VALIDATION_ERRORS:
+            params["truncated"] = True
+        return error_response(ErrorCode.INVALID, params)
 
     @app.exception_handler(HTTPException)
     def fastapi_refusal(_request: Request, exc: HTTPException) -> JSONResponse:

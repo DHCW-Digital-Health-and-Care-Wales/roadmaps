@@ -94,7 +94,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-051](_archive/chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)                        | A 422 keeps the fields under a wrapped union choice (EPC-022, from CHO-047)                                                         | Won't do       |
 | [CHO-052](chores/CHO-052-upgrade-typescript-to-7-and-remove-dependabot-ignore.md)                                | Upgrade TypeScript to 7 and remove the Dependabot major-version ignore                                                              | Proposed       |
 | [CHO-053](_archive/chores/CHO-053-a-422-trims-only-the-forbidden-key-without-walking-internals.md)               | A 422 trims only the forbidden key without walking FastAPI or Pydantic internals (EPC-022)                                          | Done           |
-| [CHO-054](chores/CHO-054-align-api-guide-422-rule-with-adr-020.md)                                               | Align `apps/api/AGENTS.md`'s refusal rule with ADR-020's 422 `loc` rule (after CHO-053)                                             | Proposed       |
+| [CHO-054](chores/CHO-054-align-api-guide-422-rule-with-adr-020.md)                                               | Align `apps/api/AGENTS.md`'s refusal rule with ADR-020's 422 `loc` rule (after CHO-053 and DEF-040)                                 | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 
@@ -141,9 +141,10 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-037](defects/DEF-037-the-editors-layering-lint-skips-files-that-are-not-typescript.md)                         | The editor's layering lint skips files under `src/` that are not `.ts` or `.tsx`                 | Needs triage |
 | [DEF-038](defects/DEF-038-a-publish-test-waits-for-the-outcome-notices-focus-and-does-not-get-it.md)                | A publish test waits for the outcome notice's focus and does not get it                          | Needs triage |
 | [DEF-039](_archive/defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md)                        | Dependabot cannot raise updates of the API's locked dependencies                                 | Done         |
-| [DEF-040](defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                                       | A small request can get a much larger 422, which lists every error (EPC-022)                     | Needs triage |
+| [DEF-040](_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                              | A small request can get a much larger 422, which lists every error (EPC-022)                     | Done         |
 | [DEF-041](defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md)                              | The editor's status messages quote English it cannot mark                                        | Needs triage |
 | [DEF-042](defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md)                                          | The editor's fields hold English with no lang                                                    | Needs triage |
+| [DEF-043](defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md)          | Unbounded collections in request models can exhaust memory during validation (EPC-022)           | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

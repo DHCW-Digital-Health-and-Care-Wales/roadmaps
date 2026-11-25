@@ -67,8 +67,11 @@ alone; worktree teardown leaves it running for the other worktrees.
 
 Spans are exported only to `OTEL_EXPORTER_OTLP_ENDPOINT`, the base URL of an OTLP/HTTP
 receiver, which `pnpm api:dev` sets to Jaeger's, or uses as you set it; without it,
-in any environment, nothing is exported. No other OpenTelemetry variable changes what
-the API traces or exports, and the tests export only to an in-memory exporter.
+in any environment, nothing is exported. No other OpenTelemetry variable changes which
+requests are traced, their IDs, what a span holds or whether spans are exported; once an
+endpoint is set, the SDK's exporter and batch processor still read their own transport
+and batching variables (`OTEL_EXPORTER_OTLP_HEADERS`, `OTEL_EXPORTER_OTLP_TIMEOUT`,
+`OTEL_BSP_*` and the like). The tests export only to an in-memory exporter.
 
 ## The contract
 
@@ -110,8 +113,9 @@ Settings come from environment variables only, which `pnpm api:dev` sets for the
 `ROADMAPS_DATABASE_URL` (`postgresql+psycopg://…`), `ROADMAPS_ALLOWED_HOSTS` (the
 `Host` names served, comma-separated, never a wildcard), `ROADMAPS_SERVICE_NAME` (its
 traces' service, `roadmaps-api` by default) and OpenTelemetry's
-`OTEL_EXPORTER_OTLP_ENDPOINT` (see _Traces_). A missing or bad one stops
-start-up, naming it, as does `ROADMAPS_MIGRATION_DATABASE_URL`, which only the migration
+`OTEL_EXPORTER_OTLP_ENDPOINT` (see _Traces_), the last two optional. A required one
+missing, or any one invalid, stops start-up, naming it, as does
+`ROADMAPS_MIGRATION_DATABASE_URL`, which only the migration
 tooling reads: `python -m roadmaps_api.migrate`, and Alembic's command line when
 drafting. Every log line is JSON on stdout; only a local API's lines carry
 an exception's or another library's message.

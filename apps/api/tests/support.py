@@ -5,7 +5,9 @@ route of their own, and the body limit a route that reads no body. The server te
 `create_test_app` under uvicorn.
 """
 
+import contextlib
 import json
+import socket
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from typing import Annotated, Any, Final
@@ -48,6 +50,12 @@ class Lines:
         parsed = [json.loads(line) for line in captured.out.splitlines()]
         # The test client's own lines, one per request it sends.
         return [line for line in parsed if line["logger"] != "httpx2"]
+
+
+def free_port() -> int:
+    """A port nothing listens on now."""
+    with socket.create_server(("127.0.0.1", 0)) as probe:
+        return probe.getsockname()[1]
 
 
 def make_settings(
@@ -123,6 +131,15 @@ def add_tracing_routes(router: APIRouter) -> None:
         span.set_attribute("user.email", PLANTED)
         span.add_event(PLANTED, {"value": PLANTED})
         span.set_status(Status(StatusCode.ERROR, PLANTED))
+        return {"status": "ok"}
+
+    @router.get("/recorded")
+    def recorded(request: Request) -> dict[str, str]:
+        """Has the SDK record exceptions holding the planted value, as its own calls do."""
+        tracer: trace.Tracer = request.app.state.tracer
+        with contextlib.suppress(ValueError), tracer.start_as_current_span("child"):
+            raise ValueError(PLANTED)
+        trace.get_current_span().record_exception(ValueError(PLANTED))
         return {"status": "ok"}
 
     @router.get("/query")

@@ -116,7 +116,7 @@ class JsonFormatter(logging.Formatter):
             line["message"] = record.msg
         elif not own and self.messages:
             line["message"] = _text(record.getMessage)
-        # The current span is a request's, or a database span within it (`tracing`).
+        # The current span is the request's, or a span made current within it (`tracing`).
         span = trace.get_current_span().get_span_context()
         if span.is_valid:
             line["request_id"] = line["trace_id"] = format_trace_id(span.trace_id)

@@ -106,6 +106,10 @@ BAD = {
         {"OTEL_EXPORTER_OTLP_ENDPOINT": "SECRET-PASSWORD"},
         ["OTEL_EXPORTER_OTLP_ENDPOINT"],
     ),
+    "an OTLP endpoint of a slash alone": (
+        {"OTEL_EXPORTER_OTLP_ENDPOINT": "/"},
+        ["OTEL_EXPORTER_OTLP_ENDPOINT"],
+    ),
     "an OTLP endpoint with no host": (
         {"OTEL_EXPORTER_OTLP_ENDPOINT": "http:///SECRET-PASSWORD"},
         ["OTEL_EXPORTER_OTLP_ENDPOINT"],

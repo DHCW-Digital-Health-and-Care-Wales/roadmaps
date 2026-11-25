@@ -9,6 +9,7 @@ import asyncio
 import json
 import logging
 from collections.abc import Callable, Iterator
+from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -179,6 +180,27 @@ def test_an_error_after_the_response_started_is_logged_and_sends_nothing_more(
     [span] = spans.get_finished_spans()
     assert span.status.status_code is StatusCode.ERROR
     assert [event.name for event in span.events] == ["exception"]
+
+
+def test_a_probe_that_fails_after_its_response_started_exports_its_span(
+    spans: InMemorySpanExporter,
+) -> None:
+    async def app(scope: Scope, _receive: Receive, send: Send) -> None:
+        # As FastAPI leaves the route it chose (`access_log`).
+        scope["fastapi"] = {"effective_route_context": SimpleNamespace(path="/health")}
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        raise ValueError
+
+    async def send(_message: Message) -> None:
+        pass
+
+    tracer = create_tracer_provider(make_settings(), spans).get_tracer("test")
+    probe = {**SCOPE, "method": "GET", "path": "/health"}
+    asyncio.run(RequestContext(app, tracer)(probe, messages(), send))
+
+    [span] = spans.get_finished_spans()
+    assert span.name == "GET /health"
+    assert span.status.status_code is StatusCode.ERROR
 
 
 def test_the_probes_without_an_access_line_are_the_probe_routes() -> None:

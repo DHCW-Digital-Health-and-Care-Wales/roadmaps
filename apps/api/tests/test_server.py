@@ -24,7 +24,7 @@ import pytest
 
 from roadmaps_api import app, server
 from roadmaps_api.settings import Settings, load_settings
-from tests.support import DOWN_DATABASE_URL, PLANTED
+from tests.support import DOWN_DATABASE_URL, PLANTED, free_port
 
 API_DIR = Path(__file__).parent.parent
 SERVER_ENVIRONMENT = {
@@ -32,11 +32,6 @@ SERVER_ENVIRONMENT = {
     "ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL,
     "ROADMAPS_ALLOWED_HOSTS": "127.0.0.1,localhost",
 }
-
-
-def free_port() -> int:
-    with socket.create_server(("127.0.0.1", 0)) as probe:
-        return probe.getsockname()[1]
 
 
 @dataclass

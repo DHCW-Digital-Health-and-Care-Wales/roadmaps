@@ -55,6 +55,7 @@ class RequestContext:
         span, request_id = start_server_span(self.tracer, method)
         started = time.perf_counter()
         status = 0
+        failed = False
 
         async def send_with_headers(message: Message) -> None:
             nonlocal status
@@ -75,6 +76,7 @@ class RequestContext:
                 await self.app(scope, receive, send_with_headers)
             except Exception as exc:
                 # The one place an unexpected error ends: its type and frames are logged.
+                failed = True
                 logger.exception("request.failed")
                 record_exception(span, exc)
                 if status == 0:
@@ -84,9 +86,13 @@ class RequestContext:
             finally:
                 route = route_template(entry, scope)
                 # A probe is the root's own path and route both, so no other route's
-                # template can silence a line or drop a span.
+                # template can silence a line or drop a span; one that failed after its
+                # response started did not succeed.
                 probe_succeeded = (
-                    route in PROBE_PATHS and entry["path"] == route and status in SUCCESS
+                    route in PROBE_PATHS
+                    and entry["path"] == route
+                    and status in SUCCESS
+                    and not failed
                 )
                 if not probe_succeeded:
                     logger.info(

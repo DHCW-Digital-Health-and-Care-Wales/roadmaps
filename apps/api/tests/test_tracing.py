@@ -5,6 +5,8 @@ are dropped once its outcome is known; tests export only to the in-memory export
 read. The database's spans are in `tests/integration/test_tracing.py`.
 """
 
+import dataclasses
+import logging
 import re
 import threading
 from collections.abc import Callable, Generator, Iterator
@@ -23,8 +25,8 @@ from opentelemetry.trace import SpanKind, StatusCode, format_span_id, format_tra
 from sqlalchemy import create_engine, text
 
 from roadmaps_api import tracing
-from roadmaps_api.settings import Environment, Settings, load_settings
-from tests.support import PLANTED, TEST_HOST, Lines, make_settings, serving
+from roadmaps_api.settings import MAX_BODY_BYTES, Settings, load_settings
+from tests.support import PLANTED, TEST_HOST, Lines, free_port, make_settings, serving
 
 HEX_32 = re.compile(r"[0-9a-f]{32}")
 CALLER_TRACE = "0af7651916cd43dd8448eb211c80319c"
@@ -91,8 +93,6 @@ def test_a_log_line_carries_the_trace_and_span_of_the_request_it_was_written_in(
 
 
 def test_a_line_written_outside_a_request_carries_no_trace(lines: Lines) -> None:
-    import logging  # noqa: PLC0415 - this test's own logger
-
     logging.getLogger("roadmaps_api.test").info("outside")
 
     [line] = lines.read()
@@ -124,7 +124,7 @@ SERVED = {
         get("/test/items/1", {"Host": "elsewhere.example"}), 400, "GET", None, error=False
     ),
     "a body over the limit": Served(
-        lambda client: client.post("/test/echo", content=b"x" * (1024 * 1024 + 1)),
+        lambda client: client.post("/test/echo", content=b"x" * (MAX_BODY_BYTES + 1)),
         413,
         "POST /test/echo",
         "/test/echo",
@@ -172,17 +172,22 @@ SPAN_KEYS = {
 }
 
 
-def test_a_span_keeps_only_allow_listed_fields(
-    client: TestClient, spans: InMemorySpanExporter
-) -> None:
+# The database down, at an address and as a login a span must not name.
+PLANTED_DOWN_URL = f"postgresql+psycopg://{PLANTED}:{PLANTED}@127.0.0.1:1/roadmaps"
+
+
+def test_a_span_keeps_only_allow_listed_fields(spans: InMemorySpanExporter) -> None:
     planted_headers = {"X-Planted": PLANTED, "User-Agent": PLANTED, "Cookie": f"c={PLANTED}"}
-    client.get(f"/test/items/1?token={PLANTED}", headers=planted_headers)
-    client.get(f"/nowhere/{PLANTED}?token={PLANTED}", headers=planted_headers)
-    client.get("/test/boom")
-    client.get("/test/annotated")
+    with serving(make_settings(PLANTED_DOWN_URL), spans) as client:
+        client.get(f"/test/items/1?token={PLANTED}", headers=planted_headers)
+        client.get(f"/nowhere/{PLANTED}?token={PLANTED}", headers=planted_headers)
+        client.get("/test/boom")
+        client.get("/test/annotated")
+        client.get("/test/recorded")
+        assert client.get("/ready").status_code == 503
 
     finished = spans.get_finished_spans()
-    assert len(finished) == 4
+    assert len(finished) == 7
     for span in finished:
         assert span.attributes is not None
         assert set(span.attributes) <= SPAN_KEYS
@@ -193,7 +198,7 @@ def test_a_span_keeps_only_allow_listed_fields(
             "deployment.environment.name": "test",
         }
         whole = span.to_json()
-        for absent in (PLANTED, "testclient", TEST_HOST):
+        for absent in (PLANTED, "testclient", TEST_HOST, "127.0.0.1"):
             assert absent not in whole
     [boom] = [span for span in finished if span.name == "GET /test/boom"]
     [exception] = boom.events
@@ -201,6 +206,40 @@ def test_a_span_keeps_only_allow_listed_fields(
     assert set(exception.attributes) == {"exception.type", "exception.stacktrace"}
     assert exception.attributes["exception.type"] == "builtins.ValueError"
     assert " in boom" in str(exception.attributes["exception.stacktrace"])
+    # Exceptions the SDK recorded itself keep their type alone: its stack trace holds the
+    # message.
+    for name in ("child", "GET /test/recorded"):
+        [recorded] = [span for span in finished if span.name == name]
+        assert [event.attributes for event in recorded.events] == [
+            {"exception.type": "ValueError"}  # as the SDK names a built-in type
+        ]
+
+
+SPAN_LIMITS = {
+    "no span attributes": {"OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "0"},
+    "no attributes": {"OTEL_ATTRIBUTE_COUNT_LIMIT": "0"},
+    "values of five characters": {"OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT": "5"},
+    "span values of five characters": {"OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT": "5"},
+    "no events": {"OTEL_SPAN_EVENT_COUNT_LIMIT": "0"},
+}
+
+
+@pytest.mark.parametrize("environment", SPAN_LIMITS.values(), ids=SPAN_LIMITS)
+def test_the_sdk_s_span_limit_variables_change_nothing(
+    monkeypatch: pytest.MonkeyPatch, spans: InMemorySpanExporter, environment: dict[str, str]
+) -> None:
+    for name, value in environment.items():
+        monkeypatch.setenv(name, value)
+
+    with serving(make_settings(), spans) as client:
+        client.get("/health")
+        response = client.get("/test/boom")
+
+    span = server_span(spans)
+    assert span.attributes is not None
+    assert span.attributes["roadmaps.request_id"] == response.headers["X-Request-ID"]
+    assert span.attributes["http.route"] == "/test/boom"
+    assert [event.name for event in span.events] == ["exception"]
 
 
 def test_a_successful_probe_exports_no_span_yet_has_a_trace_id(
@@ -313,12 +352,7 @@ def collector() -> Generator[tuple[str, list[str]]]:
 
 
 def with_endpoint(endpoint: str | None) -> Settings:
-    return Settings(
-        environment=Environment.TEST,
-        database_url=make_settings().database_url,
-        allowed_hosts=(TEST_HOST,),
-        otlp_endpoint=endpoint,
-    )
+    return dataclasses.replace(make_settings(), otlp_endpoint=endpoint)
 
 
 def test_an_api_with_an_endpoint_exports_its_spans_there() -> None:
@@ -362,16 +396,14 @@ def test_a_test_s_exporter_is_the_only_one_whatever_the_environment_holds(
 def test_the_exporter_s_failures_are_logged_without_their_url_or_message(
     monkeypatch: pytest.MonkeyPatch, lines: Lines
 ) -> None:
-    with collector() as (endpoint, _posted):
-        closed = endpoint  # closed once the collector has stopped
+    port = str(free_port())
     monkeypatch.setenv("OTEL_EXPORTER_OTLP_TIMEOUT", "1")
 
-    with serving(with_endpoint(closed)) as client:
+    with serving(with_endpoint(f"http://127.0.0.1:{port}")) as client:
         client.get(f"/test/items/1?token={PLANTED}")
 
     exporter = [line for line in lines.read() if line["logger"].startswith("opentelemetry")]
     assert exporter
-    port = closed.rsplit(":", 1)[1]
     for line in exporter:
         assert set(line) == {"time", "level", "logger"}
         assert port not in str(line)

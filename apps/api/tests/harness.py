@@ -10,7 +10,7 @@ Between tests a superuser connection, which exists only here, empties every tabl
 
 import os
 import uuid
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from typing import Final
 
@@ -34,6 +34,8 @@ from tools.bootstrap_database import (
 # it out.
 PROBE_TABLE: Final = "harness_probe"
 VERSION_TABLE: Final = "alembic_version"
+# Where a test that needs `/ready` to find no version table moves it (`versions`).
+MOVED_VERSION_TABLE: Final = "alembic_version_moved"
 # A test that leaves a connection holding a lock fails the emptying, not the run.
 LOCK_TIMEOUT: Final = "5s"
 
@@ -145,3 +147,18 @@ def open_admin(database: str) -> psycopg.Connection:
     connection = psycopg.connect(libpq_url(admin_url(database)), autocommit=True)
     connection.execute(sql.SQL("SET lock_timeout = {}").format(sql.Literal(LOCK_TIMEOUT)))
     return connection
+
+
+def holding(*revisions: str) -> Callable[[psycopg.Connection], None]:
+    """Changes `alembic_version` to hold these rows, for the `versions` fixture to put back."""
+
+    def change(connection: psycopg.Connection) -> None:
+        connection.execute("DELETE FROM alembic_version")
+        for revision in revisions:
+            connection.execute("INSERT INTO alembic_version VALUES (%s)", (revision,))
+
+    return change
+
+
+def without_the_version_table(connection: psycopg.Connection) -> None:
+    connection.execute(f"ALTER TABLE alembic_version RENAME TO {MOVED_VERSION_TABLE}".encode())

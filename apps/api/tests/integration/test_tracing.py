@@ -9,9 +9,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from opentelemetry.trace import SpanKind, StatusCode
 from sqlalchemy.engine import make_url
 
+from tests.harness import holding
 from tests.support import PLANTED, make_settings, serving
-
-DATABASE_KEYS = {"db.operation.name", "db.query.text"}
 
 
 def test_a_database_span_keeps_its_statement_with_placeholders_and_no_value(
@@ -57,15 +56,12 @@ def test_a_successful_ready_exports_none_of_its_spans(
 
 
 def test_a_failing_ready_exports_its_spans_its_queries_included(
-    database_url: str, spans: InMemorySpanExporter, worker_admin: psycopg.Connection
+    database_url: str, spans: InMemorySpanExporter, versions: psycopg.Connection
 ) -> None:
-    [(revision,)] = worker_admin.execute("SELECT version_num FROM alembic_version").fetchall()
-    worker_admin.execute("UPDATE alembic_version SET version_num = '0000_older'")
-    try:
-        with serving(make_settings(database_url), spans) as client:
-            response = client.get("/ready")
-    finally:
-        worker_admin.execute("UPDATE alembic_version SET version_num = %s", (revision,))
+    holding("0000_older")(versions)
+
+    with serving(make_settings(database_url), spans) as client:
+        response = client.get("/ready")
 
     assert response.status_code == 503
     finished = spans.get_finished_spans()

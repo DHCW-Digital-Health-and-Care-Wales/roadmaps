@@ -1,17 +1,21 @@
 """The API's traces: one per request, holding only allow-listed fields (ADR-017, STY-100).
 
-Everything is set in code, never from OpenTelemetry's environment variables: the tracer
-provider, which always records, so each request has a trace ID for its request ID, even
-with `OTEL_SDK_DISABLED` set; its sampler, IDs and resource; and the export pipeline,
-which is none without an exporter. No inbound trace context is ever read, so every
-request starts its own trace (`RequestContext`). Nothing is global: FastAPI's own
-telemetry stays off (`create_app`), and code that adds to a trace writes to the current
-span or takes the app's tracer (`app.state.tracer`).
+What is traced, and what a span holds, is set in code, never by OpenTelemetry's
+environment variables: the tracer provider, which always records, so each request has a
+trace ID for its request ID, even with `OTEL_SDK_DISABLED` set; its sampler, IDs,
+resource and span limits; and whether spans are exported at all, which only the settings'
+OTLP endpoint turns on. Once it is set, the SDK's exporter and batch processor still read
+their own transport and batching variables (`OTEL_EXPORTER_OTLP_HEADERS`,
+`OTEL_EXPORTER_OTLP_TIMEOUT`, `OTEL_BSP_*` and the like). No inbound trace context is
+ever read, so every request starts its own trace (`RequestContext`). Nothing is global:
+FastAPI's own telemetry stays off (`create_app`), and code that adds to a trace writes to
+the current span or takes the app's tracer (`app.state.tracer`).
 
 Before export, `ProbeDrop` drops a successful probe's spans once its outcome is known,
-then `AllowList` keeps only the allow-listed fields of each span; a span needing a new
-attribute records it as a decision of its own, within ADR-018's rule that only IDs are
-logged (STY-100 D15).
+then `AllowList` keeps only the allow-listed fields of each span: an exception's frames
+only as `record_exception` wrote them, since the SDK's own stack trace ends with the
+message. A span needing a new attribute records it as a decision of its own, within
+ADR-018's rule that only IDs are logged (STY-100 D15).
 """
 
 import re
@@ -22,14 +26,23 @@ from typing import Any, Final, override
 
 from opentelemetry.context import Context
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import SERVICE_NAME as SERVICE_NAME_ATTRIBUTE
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import Event, ReadableSpan, SpanProcessor, TracerProvider, sampling
+from opentelemetry.sdk.trace import (
+    Event,
+    ReadableSpan,
+    SpanLimits,
+    SpanProcessor,
+    TracerProvider,
+    sampling,
+)
 from opentelemetry.sdk.trace import Span as RecordingSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor, SpanExporter
 from opentelemetry.trace import Span, SpanKind, Status, StatusCode, Tracer, format_trace_id
 from sqlalchemy import Engine, event
 from sqlalchemy.engine import Connection, ExceptionContext
 
+from roadmaps_api.access_log import OTHER_METHOD
 from roadmaps_api.logs import exception_type, stack_frames
 from roadmaps_api.settings import Settings
 
@@ -47,13 +60,16 @@ SPAN_ATTRIBUTES: Final = frozenset(
     {HTTP_METHOD, HTTP_ROUTE, HTTP_STATUS, REQUEST_ID, DB_OPERATION, DB_QUERY_TEXT}
 )
 
-# An exception is recorded as its type and where it was raised, never its message.
+# An exception is recorded as its type and where it was raised, never its message:
+# `record_exception` names its event `RECORDED_EVENT`, exported as `EXCEPTION_EVENT` with
+# both attributes; any other exception event, the SDK's, keeps its type alone.
 EXCEPTION_EVENT: Final = "exception"
+RECORDED_EVENT: Final = "roadmaps.exception"
 EXCEPTION_TYPE: Final = "exception.type"
 EXCEPTION_STACKTRACE: Final = "exception.stacktrace"
-EVENT_ATTRIBUTES: Final = frozenset({EXCEPTION_TYPE, EXCEPTION_STACKTRACE})
+RECORDED_ATTRIBUTES: Final = frozenset({EXCEPTION_TYPE, EXCEPTION_STACKTRACE})
+SDK_EXCEPTION_ATTRIBUTES: Final = frozenset({EXCEPTION_TYPE})
 
-SERVICE_NAME: Final = "service.name"
 ENVIRONMENT: Final = "deployment.environment.name"
 
 # The first status a server span is marked an error from.
@@ -64,6 +80,20 @@ PROBE_SUCCEEDED: Final = "roadmaps.probe_succeeded"
 # How many dropped traces `ProbeDrop` remembers, to drop a span that ends after its trace's.
 DROPPED_TRACES_REMEMBERED: Final = 1024
 
+# The SDK's default counts, set here so its limit variables are not read, and no limit
+# on a value's length, so no request ID or route is cut short.
+LIMIT: Final = 128
+SPAN_LIMITS: Final = SpanLimits(
+    max_attributes=LIMIT,
+    max_events=LIMIT,
+    max_links=LIMIT,
+    max_span_attributes=LIMIT,
+    max_event_attributes=LIMIT,
+    max_link_attributes=LIMIT,
+    max_attribute_length=SpanLimits.UNSET,
+    max_span_attribute_length=SpanLimits.UNSET,
+)
+
 # The statement's first keyword: its operation.
 _OPERATION = re.compile(r"\s*([A-Za-z]+)")
 _SPANS_KEY: Final = "roadmaps_api.spans"
@@ -73,11 +103,17 @@ class CodeTracerProvider(TracerProvider):
     """A provider configured in code alone, whose tracers always record.
 
     The SDK's own provider hands out tracers that make no spans, so all-zero trace IDs,
-    while `OTEL_SDK_DISABLED` is true; this one reads only what it is given.
+    while `OTEL_SDK_DISABLED` is true, and reads its sampler, resource and span limits from
+    the environment when it is not given them; this one is given each.
     """
 
     def __init__(self, resource: Resource) -> None:
-        super().__init__(sampler=sampling.ALWAYS_ON, resource=resource, shutdown_on_exit=False)
+        super().__init__(
+            sampler=sampling.ALWAYS_ON,
+            resource=resource,
+            shutdown_on_exit=False,
+            span_limits=SPAN_LIMITS,
+        )
         self._disabled = False
 
 
@@ -90,7 +126,7 @@ def create_tracer_provider(
     settings hold; without either, nothing is exported, yet every span still has its IDs.
     """
     resource = Resource(
-        {SERVICE_NAME: settings.service_name, ENVIRONMENT: settings.environment.value}
+        {SERVICE_NAME_ATTRIBUTE: settings.service_name, ENVIRONMENT: settings.environment.value}
     )
     provider = CodeTracerProvider(resource)
     processor: SpanProcessor | None = None
@@ -108,7 +144,7 @@ def create_tracer_provider(
 def record_exception(span: Span, exc: BaseException) -> None:
     """Marks the span an error, recording the exception's type and frames, not its text."""
     span.add_event(
-        EXCEPTION_EVENT,
+        RECORDED_EVENT,
         {
             EXCEPTION_TYPE: exception_type(exc),
             EXCEPTION_STACKTRACE: "\n".join(stack_frames(exc)),
@@ -153,7 +189,7 @@ def end_server_span(
 
 def server_span_name(method: str, route: str | None) -> str:
     """`GET /api/v1/roadmaps/{id}`, or the method alone; `HTTP` for a method not defined."""
-    name = "HTTP" if method == "_OTHER" else method
+    name = "HTTP" if method == OTHER_METHOD else method
     return name if route is None else f"{name} {route}"
 
 
@@ -263,8 +299,9 @@ class ProbeDrop(SpanProcessor):
 class AllowList(SpanProcessor):
     """Passes on each span with only its allow-listed fields (STY-100 S4, D15).
 
-    Its attributes by `SPAN_ATTRIBUTES`; its events only as recorded exceptions, with
-    `EVENT_ATTRIBUTES`; no link, no status description, and the API's own resource.
+    Its attributes by `SPAN_ATTRIBUTES`; its events only as exceptions, `RECORDED_EVENT`
+    with `RECORDED_ATTRIBUTES` and any other exception with its type alone; no link, no
+    status description, and the API's own resource.
     """
 
     def __init__(self, then: SpanProcessor, resource: Resource) -> None:
@@ -285,13 +322,9 @@ class AllowList(SpanProcessor):
                 resource=self._resource,
                 attributes=_allowed(span.attributes, SPAN_ATTRIBUTES),
                 events=[
-                    Event(
-                        EXCEPTION_EVENT,
-                        _allowed(recorded.attributes, EVENT_ATTRIBUTES),
-                        recorded.timestamp,
-                    )
+                    Event(EXCEPTION_EVENT, _allowed(recorded.attributes, keys), recorded.timestamp)
                     for recorded in span.events
-                    if recorded.name == EXCEPTION_EVENT
+                    if (keys := _EVENT_KEYS.get(recorded.name)) is not None
                 ],
                 links=(),
                 kind=span.kind,
@@ -309,6 +342,13 @@ class AllowList(SpanProcessor):
     @override
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return self._then.force_flush(timeout_millis)
+
+
+# The attributes each event that is kept keeps, by its name.
+_EVENT_KEYS: Final = {
+    RECORDED_EVENT: RECORDED_ATTRIBUTES,
+    EXCEPTION_EVENT: SDK_EXCEPTION_ATTRIBUTES,
+}
 
 
 def _allowed(attributes: Mapping[str, Any] | None, keys: frozenset[str]) -> dict[str, Any]:

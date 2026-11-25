@@ -3,7 +3,8 @@
 No `.env` file is read, so no file in a checkout can switch an environment to local
 (ADR-017 _Operation_). An unset `ROADMAPS_ENV` gets production's rules. Beside the
 `ROADMAPS_*` variables, OpenTelemetry's own `OTEL_EXPORTER_OTLP_ENDPOINT` names where
-traces go: unset, they go nowhere, in every environment (STY-100 D11).
+traces go: unset, they go nowhere, in every environment (STY-100 D11). It is the one
+OpenTelemetry variable that decides whether spans are exported (`tracing`).
 """
 
 import logging
@@ -27,8 +28,7 @@ ALLOWED_HOSTS: Final = "ROADMAPS_ALLOWED_HOSTS"
 # refuses to start, in every environment, so no server holds the migration login
 # (STY-091 D31).
 MIGRATION_DATABASE_URL: Final = "ROADMAPS_MIGRATION_DATABASE_URL"
-# The base URL of an OTLP/HTTP receiver, Jaeger's locally (`pnpm api:dev`); no other
-# OpenTelemetry variable is read (`tracing`).
+# The base URL of an OTLP/HTTP receiver, Jaeger's locally (`pnpm api:dev`).
 OTLP_ENDPOINT: Final = "OTEL_EXPORTER_OTLP_ENDPOINT"
 # The service its traces are filed under: `roadmaps-api-<slot>` in a worktree.
 SERVICE_NAME: Final = "ROADMAPS_SERVICE_NAME"
@@ -104,8 +104,8 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
     if not all(hosts) or any("*" in host for host in hosts):
         invalid.append(ALLOWED_HOSTS)
 
-    # Empty is unset, as OpenTelemetry reads it.
-    otlp_endpoint = environ.get(OTLP_ENDPOINT, "").strip().removesuffix("/") or None
+    # Empty is unset, as OpenTelemetry reads it; checked before its trailing slash goes.
+    otlp_endpoint = environ.get(OTLP_ENDPOINT, "").strip() or None
     if otlp_endpoint is not None and not is_http_url(otlp_endpoint):
         invalid.append(OTLP_ENDPOINT)
 
@@ -121,7 +121,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         database_url=database_url,
         allowed_hosts=hosts,
         writes_messages=environment is Environment.LOCAL and not on_cloud_run,
-        otlp_endpoint=otlp_endpoint,
+        otlp_endpoint=otlp_endpoint.removesuffix("/") if otlp_endpoint else None,
         service_name=service_name,
     )
 

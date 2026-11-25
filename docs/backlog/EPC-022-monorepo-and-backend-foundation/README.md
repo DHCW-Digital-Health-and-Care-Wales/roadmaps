@@ -6,8 +6,9 @@
   done, and so are STY-092 and STY-100; the remaining API placeholders' acceptance
   criteria come next
 - **Progress**: 15 of 20 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
-  STY-098, STY-100, STY-101); next selectable: none until STY-093's acceptance criteria
-  are written
+  STY-098, STY-100, STY-101); next selectable: none — CHO-047 waits for the first
+  route whose body carries keys of the caller's choosing, and STY-093 for its acceptance
+  criteria
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary

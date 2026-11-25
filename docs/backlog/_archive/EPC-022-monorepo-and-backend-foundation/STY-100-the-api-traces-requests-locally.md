@@ -9,6 +9,7 @@
   allow-list
 - **Suggested model**: Opus — a span filter, a tail drop and a code-level propagator
   that later stories copy
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/306
 
 ## Summary
 

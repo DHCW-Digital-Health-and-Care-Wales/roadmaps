@@ -104,7 +104,7 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     def validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
-        # Keeps only `loc` and `type`, omitting `input`, `msg`, `ctx` and `url`.
+        # Only `loc` and `type`: never `input` or `msg`, which can quote submitted values.
         errors = [
             {"loc": _error_location(error["loc"], error["type"]), "type": error["type"]}
             for error in exc.errors()

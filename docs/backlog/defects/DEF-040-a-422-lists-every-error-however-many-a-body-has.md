@@ -1,9 +1,9 @@
 # DEF-040: A small request can get a much larger 422, which lists every error
 
 - **Status**: Needs triage — found by CHO-047's delivery; updated by CHO-053
-- **Severity**: Low today (no route takes a request model or dictionary field yet); High
-  once a route takes a dictionary of collections or models, where one request within the
-  body limit can trigger quadratic response-size amplification and exhaust process memory
+- **Severity**: Low — no route takes a request model or dictionary field yet; rises to
+  High once a route takes a dictionary of collections or models, where one request within
+  the body limit can trigger quadratic response-size amplification
 - **Area**: API
 - **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none
@@ -12,24 +12,28 @@
 
 ## Summary
 
-A refused request is answered with one entry for each thing wrong with it, and nothing
-limits how many entries are listed or how long each entry's `loc` is. Within the body
-limit, a caller can trigger a response far larger than the request: several times larger
-for many invalid entries, hundreds of times for a model holding itself through a union,
-and quadratically larger (exhausting memory on one request) for a dictionary of
-collections or models whose caller-chosen key repeats in every error beneath it. Nothing
-calls such a route today.
+A refused request is answered with every validation error and no bound on either entry
+count or `loc` length. Within the body limit, a caller can get a response several times
+larger for many bad entries, hundreds of times larger for a self-referential union, or
+quadratically larger (risking memory exhaustion on one request) for a dictionary of
+collections or models whose caller-chosen key repeats in every error beneath it. No route
+takes such a model today.
 
 ## Reproduce
 
-At commit `117f7b67` (and `56f318d6`) on the default branch, with a route that only a test
-mounts, whose body model forbids extra keys or holds a dictionary of collections:
-
-1. Send, within the body limit, a body with many invalid entries (or a dictionary entry
-   whose key is long and whose value contains many invalid items).
-
-**Expected**: an answer of bounded size
-**Actual**: an answer orders of magnitude larger than the request
+1. **Unbounded error count** (at `56f318d6`, `117f7b67` and after CHO-053): on a
+   test-mounted route whose body model forbids extra keys or holds itself through a
+   union, send a body within the limit containing many invalid entries.
+   - **Expected**: an answer of bounded size
+   - **Actual**: an answer several times the request's size, and hundreds of times for a
+     self-referential union
+2. **Caller-chosen `loc` key amplification** (at `56f318d6` and returning with CHO-053;
+   did not reproduce at `117f7b67`, where CHO-047's walker cut `loc` at the dictionary
+   field): on a test-mounted route with a dictionary of collections or models, send one
+   entry with a long key and many invalid items beneath it.
+   - **Expected**: an answer of bounded size
+   - **Actual**: an answer growing quadratically with key length × error count (hundreds
+     to thousands of times the request's size within the body limit)
 
 ## Cause
 

@@ -98,12 +98,6 @@ responses_ stands.
   cross-user risk and does not justify coupling to private framework internals
   (`fastapi._compat`, `_get_param_model`, Pydantic `core_schema`) or truncating nested
   locations on shapes a custom walker omits.
-- **Availability residual accepted until DEF-040**: letting caller-chosen dictionary keys
-  through in `loc` means a caller also chooses each location's length on a dictionary
-  field, which multiplies with the unbounded error list on a dictionary of collections or
-  models. No route takes a request model or dictionary field yet; triaging
-  [DEF-040](../backlog/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
-  is a precondition of the first request model with a dictionary field.
 
 ## Consequences
 
@@ -117,6 +111,10 @@ responses_ stands.
 - **ADR-016's custom domain** stays a precondition of switching the deployed editor to
   the API; the deployed Sheets editor stays on GitHub Pages until then.
 - **EPC-023** provisions the service, the load balancer, the domain and the edge limits.
+- **Open follow-on ([DEF-040](../backlog/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md), `Needs triage`)**:
+  without a schema walk, a dictionary field passes its caller-chosen key through in a
+  422's `loc`, which compounds with the unbounded error list on a dictionary of
+  collections or models; no route takes a request model or dictionary field yet.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

@@ -124,9 +124,7 @@ def test_a_405_names_the_methods_the_path_allows(client: TestClient) -> None:
     assert client.post("/health").headers["Allow"] == "GET"
 
 
-# A 422 trims the trailing unknown key on `extra_forbidden` and keeps Pydantic's `loc`
-# and `type` elsewhere, never echoing submitted values or messages (ADR-020 _CHO-053
-# amendments_).
+# 422 location cases.
 
 
 class Leaf(ApiRequestModel):
@@ -208,6 +206,9 @@ LOCATIONS: dict[str, tuple[str, str, object, Errors]] = {
     "a field of a model in a list": shapes_row(
         {"leaves": [{"itemCount": PLANTED}]}, (["body", "leaves", 0, "itemCount"], "int_parsing")
     ),
+    "a dictionary key without its value": shapes_row(
+        {"counts": {"callerKey": PLANTED}}, (["body", "counts", "callerKey"], "int_parsing")
+    ),
     "an unknown key and field error of a discriminated union's choice": shapes_row(
         {"pet": {"kind": "cat", "lives": PLANTED, PLANTED: 1}},
         (["body", "pet", "cat", "lives"], "int_parsing"),
@@ -263,16 +264,4 @@ def test_a_422_keeps_nested_fields_under_a_wrapped_union_choice(
     assert field_error["loc"][3] == "itemCount"
     assert extra_error == {"loc": field_error["loc"][:3], "type": "extra_forbidden"}
     assert int_error == {"loc": ["body", "wrapped", "int"], "type": "int_type"}
-    assert PLANTED not in response.text
-
-
-def test_a_422_passes_through_a_dictionary_key_without_its_value(
-    locations_client: TestClient,
-) -> None:
-    response = locations_client.post("/test/shapes", json={"counts": {"callerKey": PLANTED}})
-
-    assert response.status_code == 422
-    assert response.json()["params"] == {
-        "errors": [{"loc": ["body", "counts", "callerKey"], "type": "int_parsing"}]
-    }
     assert PLANTED not in response.text

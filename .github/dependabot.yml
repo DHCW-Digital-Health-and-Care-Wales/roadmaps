@@ -34,6 +34,11 @@ updates:
         # ask for, and a release of the API types' generator, pinned exactly, can change
         # what it writes, so its bump also needs `pnpm api-types:generate`.
         exclude-patterns: ["@playwright/test", "@hey-api/openapi-ts"]
+    # typescript-eslint 8.x does not support TypeScript 7 yet (PR #290).
+    # Remove this ignore once a typescript-eslint release supports TS 7 (CHO-052).
+    ignore:
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
 
   # The API's uv project; ruff and ty are pinned exactly there, so their bumps come here
   # too, each a deliberate change with its fixes (ADR-017 Tooling).

@@ -3,12 +3,11 @@
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
   STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
   the API skeleton (STY-090) and, from the owner's review of it, STY-101 and STY-091 are
-  done, and so are STY-092 and STY-100; the remaining API placeholders' acceptance
-  criteria come next
-- **Progress**: 15 of 20 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
-  STY-098, STY-100, STY-101); next selectable: none — CHO-047 waits for the first
-  route whose body carries keys of the caller's choosing, and STY-093 for its acceptance
-  criteria
+  done, and so are STY-092, STY-100 and CHO-047; the remaining API placeholders'
+  acceptance criteria come next
+- **Progress**: 16 of 20 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
+  STY-098, STY-100, STY-101, CHO-047); next selectable: none — STY-093, STY-094,
+  STY-099 and CHO-049 wait for their acceptance criteria
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -195,8 +194,9 @@ ADR-017:
 
 24. **The OpenAPI contract and generated schemas**: camelCase across the whole API JSON
     contract via `ApiRequestModel` (`validate_by_name=False`, never binding `snake_case`
-    on inbound bodies, query models or nested request models; `extra="forbid"` deferred to
-    CHO-047) and `ApiResponseModel` (`validate_by_name=True`); `ErrorCode` and
+    on inbound bodies, query models or nested request models; `extra="forbid"` deferred
+    to CHO-047, and still off once it is done: its D3) and `ApiResponseModel`
+    (`validate_by_name=True`); `ErrorCode` and
     `ErrorResponse` injected into `components.schemas` (served from local
     `/api/v1/openapi.json` too), with FastAPI's built-in
     `HTTPValidationError`/`ValidationError` stripped; `apps/api/openapi.json` and raw
@@ -251,7 +251,10 @@ whose migration inserts rows also makes the test harness put them back after eac
 emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestModel`
 (including nested request models, never binding `snake_case`) or `ApiResponseModel`
 (camelCase wire format) and a story that changes routes or `ErrorCode` regenerates
-`apps/api/openapi.json` and `packages/api-types` (`pnpm api:contract`).
+`apps/api/openapi.json` and `packages/api-types` (`pnpm api:contract`). The first story
+with a request body or a query model also turns `extra="forbid"` on for
+`ApiRequestModel` (ADR-017 _STY-092 amendments_; CHO-047 D3), whose refusals CHO-047
+already keeps free of the caller's keys.
 
 ## Stories
 
@@ -275,11 +278,11 @@ emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestM
 | STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                  | STY-098          |       |
 | STY-100 | [The API traces its requests](../_archive/EPC-022-monorepo-and-backend-foundation/STY-100-the-api-traces-requests-locally.md)                                             | API                          | STY-101          | ✅    |
 | STY-101 | [The skeleton leans on its framework](../_archive/EPC-022-monorepo-and-backend-foundation/STY-101-the-api-skeleton-leans-on-its-framework.md)                             | API + CI/CD + Docs           | CHO-048          | ✅    |
-| CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                          | —                |       |
+| CHO-047 | [A 422 never names a key the caller chose](../_archive/chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                        | API                          | —                | ✅    |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                          | —                |       |
 
-_STY-085 to STY-092, STY-095, CHO-044, STY-096 to STY-098, STY-100 and STY-101 are
-done. STY-093 is a Placeholder
+_STY-085 to STY-092, STY-095, CHO-044, STY-096 to STY-098, STY-100, STY-101 and CHO-047
+are done. STY-093 is a Placeholder
 until its acceptance criteria are written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
 settles what the public sees.
@@ -329,6 +332,8 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
 - [DEF-036](../defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md):
   the Sheets replacement runbook still describes CORS and a browser-held token (Needs
   triage).
+- [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md): a 422
+  lists every error with its whole `loc`, however many a body has (Needs triage).
 
 ## Related
 

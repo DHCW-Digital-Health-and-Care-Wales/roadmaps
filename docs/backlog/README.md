@@ -87,7 +87,7 @@ moves to `_archive/`, where its row here still points.
 | [CHO-044](_archive/chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                       | One dev-ports resolver serves both apps (EPC-022's alignment sequence, after STY-095)                                               | Done           |
 | [CHO-045](_archive/chores/CHO-045-the-lint-disables-sty-095-added-are-fixed-at-their-cause.md)                   | The lint disables STY-095 added are fixed at their cause                                                                            | Done           |
 | [CHO-046](_archive/chores/CHO-046-one-plugin-owns-each-react-rule.md)                                            | One plugin owns each React rule that react-hooks and `@eslint-react` both run                                                       | Done           |
-| [CHO-047](chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                            | A 422 never names a key the caller chose (EPC-022, from STY-090's security review)                                                  | Proposed       |
+| [CHO-047](_archive/chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                   | A 422 never names a key the caller chose (EPC-022, from STY-090's security review)                                                  | Done           |
 | [CHO-048](_archive/chores/CHO-048-criteria-and-reviews-weigh-code-about-code.md)                                 | The story template and two review skills weigh code about code (from STY-101's grilling)                                            | Done           |
 | [CHO-049](chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                           | Every route's wait on the database has a deadline (EPC-022, from STY-101's grilling)                                                | Placeholder    |
 | [CHO-050](_archive/chores/CHO-050-the-guide-check-reads-skills-and-agent-definitions.md)                         | The guide check reads skills and agent definitions (from STY-101's retrospective)                                                   | Done           |
@@ -135,6 +135,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-036](defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md)                 | The Sheets replacement runbook still describes CORS and a browser-held token                     | Needs triage |
 | [DEF-037](defects/DEF-037-the-editors-layering-lint-skips-files-that-are-not-typescript.md)                         | The editor's layering lint skips files under `src/` that are not `.ts` or `.tsx`                 | Needs triage |
 | [DEF-038](defects/DEF-038-a-publish-test-waits-for-the-outcome-notices-focus-and-does-not-get-it.md)                | A publish test waits for the outcome notice's focus and does not get it                          | Needs triage |
+| [DEF-040](defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                                       | A small request can get a much larger 422, which lists every error (EPC-022)                     | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

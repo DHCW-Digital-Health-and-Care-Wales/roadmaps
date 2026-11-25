@@ -6,12 +6,29 @@ Starlette's plain text (`test_middleware.py`).
 
 import re
 from collections.abc import Callable, Iterator
+from typing import Annotated, Any, Literal
 
 import pytest
+from fastapi import APIRouter, Body, Depends, FastAPI, Header, Query
+from fastapi.exceptions import RequestValidationError
 from fastapi.testclient import TestClient
 from httpx2 import Response
+from pydantic import (
+    AliasChoices,
+    AliasPath,
+    ConfigDict,
+    Field,
+    Json,
+    Tag,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
+from pydantic_core import InitErrorDetails, PydanticCustomError
 
-from tests.support import PLANTED
+from roadmaps_api.app import create_app
+from roadmaps_api.wire import ApiRequestModel
+from tests.support import PLANTED, make_settings
 
 CAMEL_CASE = re.compile(r"[a-z][a-zA-Z0-9]*")
 
@@ -115,3 +132,346 @@ def test_a_valid_request_passes_through(client: TestClient) -> None:
 
 def test_a_405_names_the_methods_the_path_allows(client: TestClient) -> None:
     assert client.post("/health").headers["Allow"] == "GET"
+
+
+# A 422's `loc` keeps only what the route's schema declares, since the caller chooses the
+# keys they send (ADR-020). Each row sends the planted value as such a key.
+
+
+class Strict(ApiRequestModel):
+    """As a request's models will be once `ApiRequestModel` forbids extra keys."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class Leaf(Strict):
+    item_count: int = 0
+
+
+class Cat(Strict):
+    kind: Literal["cat"]
+    lives: int = 0
+
+
+class Dog(Strict):
+    kind: Literal["dog"]
+    barks: int = 0
+
+
+class Branch(Strict):
+    """A model that holds itself, which Pydantic's schema names by reference."""
+
+    branches: list[Branch] = Field([])
+
+
+def refuse_at(*loc: str | int) -> ValidationError:
+    """A validator's own error, at a `loc` of its choosing."""
+    error = PydanticCustomError("own_error", "refused")
+    return ValidationError.from_exception_data(
+        "own", [InitErrorDetails(type=error, loc=loc, input=None)]
+    )
+
+
+class Shapes(Strict):
+    leaf: Leaf | None = None
+    leaves: list[Leaf] = Field([])
+    leaf_set: set[int] = Field(set())
+    pair: tuple[int, Leaf] | None = None
+    run: tuple[Leaf, ...] = ()
+    counts: dict[str, int] = Field({})
+    named_leaves: dict[str, Leaf] = Field({})
+    short_keys: dict[Annotated[str, Field(max_length=1)], int] = Field({})
+    anything: dict[str, Any] | int = 0
+    pet: Annotated[Cat | Dog, Field(discriminator="kind")] | None = None
+    either: Cat | Dog | None = None
+    tagged: Annotated[Leaf, Tag("tagged-leaf")] | int = 0
+    branch: Branch | None = None
+    encoded: Json[dict[str, int]] | None = None
+    renamed: int = Field(0, validation_alias=AliasChoices("first", "spare", AliasPath("second", 0)))
+    own_field: str = ""
+    own_model: str = ""
+    own_pair: tuple[str | int, int] | None = None
+    own_json: Json = None
+    own_counts: dict[str, int] | None = None
+    own_pet: Annotated[Cat | Dog, Field(discriminator="kind")] | None = None
+
+    @field_validator("own_field")
+    @classmethod
+    def refuse_the_field(cls, value: str) -> str:
+        raise refuse_at(value, "deeper")
+
+    @field_validator("own_pair")
+    @classmethod
+    def refuse_the_pair(cls, value: tuple[str | int, int]) -> tuple[str | int, int]:
+        raise refuse_at(*value)
+
+    @field_validator("own_counts")
+    @classmethod
+    def refuse_the_counts(cls, value: dict[str, int]) -> dict[str, int]:
+        raise refuse_at(*value.values())
+
+    @field_validator("own_pet", mode="before")
+    @classmethod
+    def refuse_the_pet(cls, value: str) -> None:
+        raise refuse_at(value)
+
+    @field_validator("own_json")
+    @classmethod
+    def refuse_the_json(cls, value: str) -> str:
+        raise refuse_at(value)
+
+    @model_validator(mode="after")
+    def refuse_the_model(self) -> Shapes:
+        if self.own_model:
+            raise refuse_at(self.own_model)
+        return self
+
+
+class Search(Strict):
+    page_size: int = 20
+
+
+class Filter(Strict):
+    only_mine: bool = False
+
+
+def filtered(chosen: Annotated[Filter, Query()]) -> None: ...
+
+
+def locations_app() -> FastAPI:
+    app = create_app(make_settings())
+
+    @app.post("/test/shapes")
+    def shapes(body: Shapes) -> None: ...
+
+    @app.post("/test/leaf-list")
+    def leaf_list(body: list[Leaf]) -> None: ...
+
+    @app.post("/test/dictionary")
+    def dictionary(body: dict[str, int]) -> None: ...
+
+    @app.post("/test/two-bodies")
+    def two_bodies(leaf: Leaf, counts: dict[str, int]) -> None: ...
+
+    @app.post("/test/embedded")
+    def embedded(counts: Annotated[dict[str, int], Body(embed=True)]) -> None: ...
+
+    @app.get("/test/search")
+    def search(query: Annotated[Search, Query()]) -> None: ...
+
+    @app.get("/test/parameters/{itemId}")
+    def parameters(
+        itemId: int,  # noqa: N803 the wire's name, as a path template spells it
+        ids: Annotated[list[int], Query(alias="itemIds")] = [],  # noqa: B006 FastAPI copies it
+        x_page: Annotated[int, Header()] = 1,
+    ) -> None: ...
+
+    @app.get("/test/raised")
+    def raised(loc: str) -> None:
+        """A route's own validation error, at a `loc` of the caller's."""
+        raise RequestValidationError([{"loc": (loc, PLANTED), "type": "own_error"}])
+
+    # A dependency given where the router is included, whose parameters only FastAPI's
+    # record of the route it chose holds.
+    router = APIRouter()
+
+    @router.post("/shapes")
+    def included(body: Leaf) -> None: ...
+
+    app.include_router(router, prefix="/test/included", dependencies=[Depends(filtered)])
+    return app
+
+
+@pytest.fixture(scope="module")
+def locations_client() -> Iterator[TestClient]:
+    with TestClient(locations_app()) as client:
+        yield client
+
+
+type Errors = list[tuple[list[str | int], str]]
+
+
+def body(sent: object, *errors: tuple[list[str | int], str]) -> tuple[str, str, object, Errors]:
+    return "POST", "/test/shapes", sent, list(errors)
+
+
+K = PLANTED
+
+
+def nested_branches(depth: int) -> dict[str, object]:
+    """A branch holding a branch, `depth` deep, the deepest with the planted key."""
+    branch: dict[str, object] = {K: 1}
+    for _ in range(depth):
+        branch = {"branches": [branch]}
+    return {"branch": branch}
+
+
+LOCATIONS: dict[str, tuple[str, str, object, Errors]] = {
+    "an unknown key": body({K: 1}, (["body"], "extra_forbidden")),
+    "an unknown key of a nested model": body(
+        {"leaf": {K: 1}}, (["body", "leaf"], "extra_forbidden")
+    ),
+    "an unknown key of a model in a list": body(
+        {"leaves": [{}, {K: 1}]}, (["body", "leaves", 1], "extra_forbidden")
+    ),
+    "a field of a model in a list": body(
+        {"leaves": [{"itemCount": K}]}, (["body", "leaves", 0, "itemCount"], "int_parsing")
+    ),
+    "an index of a set": body({"leafSet": [K]}, (["body", "leafSet", 0], "int_parsing")),
+    "a place in a fixed tuple": body(
+        {"pair": [1, {"itemCount": K, K: 1}]},
+        (["body", "pair", 1, "itemCount"], "int_parsing"),
+        (["body", "pair", 1], "extra_forbidden"),
+    ),
+    "a place in a tuple of any length": body(
+        {"run": [{}, {"itemCount": K}]}, (["body", "run", 1, "itemCount"], "int_parsing")
+    ),
+    "a dictionary entry whose value fails": body(
+        {"counts": {K: "x"}}, (["body", "counts"], "int_parsing")
+    ),
+    "a model in a dictionary": body(
+        {"namedLeaves": {K: {"itemCount": "x"}}}, (["body", "namedLeaves"], "int_parsing")
+    ),
+    "a dictionary key that fails": body(
+        {"shortKeys": {K: 1}}, (["body", "shortKeys"], "string_too_long")
+    ),
+    "a dictionary key spelled as a declared field": body(
+        {"namedLeaves": {"leaf": {K: 1}}}, (["body", "namedLeaves"], "extra_forbidden")
+    ),
+    "a union of a dictionary and a number": body(
+        {"anything": [K]},
+        (["body", "anything"], "dict_type"),
+        (["body", "anything"], "int_type"),
+    ),
+    "an unknown key of a discriminated union's choice": body(
+        {"pet": {"kind": "cat", "lives": "x", K: 1}},
+        (["body", "pet", "cat", "lives"], "int_parsing"),
+        (["body", "pet", "cat"], "extra_forbidden"),
+    ),
+    "an unknown discriminator": body({"pet": {"kind": K}}, (["body", "pet"], "union_tag_invalid")),
+    "an unknown key of a union of models": body(
+        {"either": {"kind": "cat", "lives": "x", K: 1}},
+        (["body", "either", "Cat", "lives"], "int_parsing"),
+        (["body", "either", "Cat"], "extra_forbidden"),
+        (["body", "either", "Dog", "kind"], "literal_error"),
+        (["body", "either", "Dog"], "extra_forbidden"),
+        (["body", "either", "Dog"], "extra_forbidden"),
+    ),
+    "a union choice the schema tags": body(
+        {"tagged": {"itemCount": K}},
+        (["body", "tagged", "tagged-leaf", "itemCount"], "int_parsing"),
+        (["body", "tagged"], "int_type"),
+    ),
+    "an unknown key deep in a model that holds itself": body(
+        {"branch": {"branches": [{"branches": [{K: 1}]}]}},
+        (["body", "branch", "branches", 0, "branches", 0], "extra_forbidden"),
+    ),
+    "a body nested as deep as Pydantic follows": body(
+        nested_branches(200),
+        (["body", "branch", *["branches", 0] * 200], "extra_forbidden"),
+    ),
+    "a key inside a field of encoded JSON": body(
+        {"encoded": f'{{"{K}": "x"}}'}, (["body", "encoded"], "int_parsing")
+    ),
+    "a field read at a path": body({"second": [K]}, (["body", "second", 0], "int_parsing")),
+    "an alias left over once another bound": body(
+        {"first": 1, "spare": K}, (["body"], "extra_forbidden")
+    ),
+    "a field's snake_case name": body({"item_count": K}, (["body"], "extra_forbidden")),
+    "a validator's own loc under a field": body(
+        {"ownField": K}, (["body", "ownField"], "own_error")
+    ),
+    "a validator's own loc on a model": body({"ownModel": K}, (["body"], "own_error")),
+    "a validator's own key under a tuple": body(
+        {"ownPair": [K, 0]}, (["body", "ownPair"], "own_error")
+    ),
+    "a validator's own index past a tuple's end": body(
+        {"ownPair": [9, 0]}, (["body", "ownPair", 9], "own_error")
+    ),
+    "a validator's own index under a dictionary": body(
+        {"ownCounts": {K: 7}}, (["body", "ownCounts"], "own_error")
+    ),
+    "a validator's own text under a discriminated union": body(
+        {"ownPet": K}, (["body", "ownPet"], "own_error")
+    ),
+    "a validator's own text under encoded JSON of any shape": body(
+        {"ownJson": f'"{K}"'}, (["body", "ownJson"], "own_error")
+    ),
+    "a list as the body": (
+        "POST",
+        "/test/leaf-list",
+        [{"itemCount": K, K: 1}],
+        [(["body", 0, "itemCount"], "int_parsing"), (["body", 0], "extra_forbidden")],
+    ),
+    "a dictionary as the body": (
+        "POST",
+        "/test/dictionary",
+        {K: "x"},
+        [(["body"], "int_parsing")],
+    ),
+    "two body parameters": (
+        "POST",
+        "/test/two-bodies",
+        {"leaf": {K: 1}, "counts": {K: "x"}},
+        [(["body", "leaf"], "extra_forbidden"), (["body", "counts"], "int_parsing")],
+    ),
+    "an embedded body parameter": (
+        "POST",
+        "/test/embedded",
+        {"counts": {K: "x"}},
+        [(["body", "counts"], "int_parsing")],
+    ),
+    "an unknown query key of a query model": (
+        "GET",
+        f"/test/search?pageSize=x&{K}=1",
+        None,
+        [(["query", "pageSize"], "int_parsing"), (["query"], "extra_forbidden")],
+    ),
+    "a path, a query and a header parameter": (
+        "GET",
+        "/test/parameters/x?itemIds=1&itemIds=x",
+        None,
+        [
+            (["path", "itemId"], "int_parsing"),
+            (["query", "itemIds", 1], "int_parsing"),
+            (["header", "x-page"], "int_parsing"),
+        ],
+    ),
+    "a dependency given where a router is included": (
+        "POST",
+        f"/test/included/shapes?onlyMine=x&{K}=1",
+        {K: 1},
+        [
+            (["query", "onlyMine"], "bool_parsing"),
+            (["query"], "extra_forbidden"),
+            (["body"], "extra_forbidden"),
+        ],
+    ),
+    "a route's own error under a source": (
+        "GET",
+        "/test/raised?loc=body",
+        None,
+        [(["body"], "own_error")],
+    ),
+    "a route's own error under no source": (
+        "GET",
+        f"/test/raised?loc={K}",
+        None,
+        [([], "own_error")],
+    ),
+}
+
+
+@pytest.mark.parametrize(("method", "url", "sent", "errors"), LOCATIONS.values(), ids=LOCATIONS)
+def test_a_422_names_only_what_the_schema_declares(
+    locations_client: TestClient, method: str, url: str, sent: object, errors: Errors
+) -> None:
+    headers = {"x-page": "x"} if url.startswith("/test/parameters") else {}
+
+    response = locations_client.request(method, url, json=sent, headers=headers)
+
+    assert response.status_code == 422
+    assert response.json()["params"] == {
+        "errors": [{"loc": loc, "type": error_type} for loc, error_type in errors]
+    }
+    assert PLANTED not in response.text

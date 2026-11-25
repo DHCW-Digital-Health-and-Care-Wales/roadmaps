@@ -33,9 +33,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **A 422's `loc` follows only the shapes `error_locations.py` knows** (CHO-047, whose
   _Contract for dependents_ lists them): any other ends the `loc` at its field, and a
   FastAPI or Pydantic bump that changes what the walk reads fails `test_errors.py`.
-- **A header model that forbids extra keys refuses every request**: FastAPI gives a
-  header model every header the request has, so the story that turns `extra="forbid"`
-  on for `ApiRequestModel` keeps a header model off it.
 - **A local API's log lines hold messages**: `ROADMAPS_ENV=local` writes an exception's
   and a third party's message (ADR-018 _STY-101 amendments_), so an API test that
   asserts no planted value reaches the log runs under test's or production's rules

@@ -3,6 +3,8 @@
 A request's models, nested ones included, inherit `ApiRequestModel`, and a route's plain
 query parameter takes `Annotated[Model, Query()]` or an explicit `alias`. A response's
 inherit `ApiResponseModel`. `ApiError.params` keeps camelCase keys by hand.
+`apps/api/AGENTS.md` (_The contract_) says where FastAPI hands a model more than the
+caller's keys for it, or less.
 """
 
 from pydantic import BaseModel, ConfigDict
@@ -10,10 +12,10 @@ from pydantic.alias_generators import to_camel
 
 
 class ApiRequestModel(BaseModel):
-    """Binds camelCase names alone, never a field's snake_case name.
+    """Binds camelCase names alone, and refuses any key it does not declare.
 
-    A snake_case key is ignored like any unknown one: a required field is then missing,
-    and an optional one keeps its default.
+    A field's snake_case name is such a key: sending it answers `extra_forbidden`, and
+    `missing` beside it for a required field.
     """
 
     model_config = ConfigDict(
@@ -21,6 +23,7 @@ class ApiRequestModel(BaseModel):
         serialize_by_alias=True,
         validate_by_alias=True,
         validate_by_name=False,
+        extra="forbid",
     )
 
 

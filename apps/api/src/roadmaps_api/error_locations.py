@@ -54,7 +54,7 @@ class DeclaredLocations:
     def __init__(self, scope: Scope) -> None:
         # The scope's `route` lacks what was given where its router was included.
         self._route: Any = effective_route_context(scope) or scope["route"]
-        self._starts: dict[int, _Reached] = {}
+        self._reached: dict[tuple[int, ...], _Reached] = {}
         self._definitions: dict[str, CoreSchema] = {}
 
     def cut(self, loc: Sequence[Segment], error_type: str) -> list[Segment]:
@@ -100,17 +100,25 @@ class DeclaredLocations:
         One segment at a time, never by recursion: a model that holds itself lets a
         caller nest a `loc` deeper than Python recurses.
         """
-        reached = self._starts.get(id(schema))
-        if reached is None:
-            reached = self._starts[id(schema)] = _Reached([schema])
+        reached = self._standing_at([schema])
         for count, segment in enumerate(segments):
             following = reached.after.get(segment)
             if following is None:
-                following = reached.after[segment] = _Reached(self._follow(reached, segment))
+                following = self._standing_at(self._follow(reached, segment))
+                reached.after[segment] = following
             if not following.schemas:
                 return count
             reached = following
         return len(segments)
+
+    def _standing_at(self, schemas: list[CoreSchema | None]) -> _Reached:
+        """The one `_Reached` for these schemas, however a walk came to them.
+
+        A list's indices all lead to its one item schema, so what lies under that is
+        worked out once for all of them. Each `_Reached` keeps its schemas, so none of
+        their ids is given to another while it is here.
+        """
+        return self._reached.setdefault(tuple(map(id, schemas)), _Reached(schemas))
 
     def _follow(self, reached: _Reached, segment: Segment) -> list[CoreSchema | None]:
         """What `segment` leads to, from every schema the walk may be at."""

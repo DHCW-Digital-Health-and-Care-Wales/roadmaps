@@ -21,22 +21,21 @@ a body whose model holds itself, hundreds of times. Nothing calls such a route t
 At commit `56f318d6` on the default branch, with a route that only a test mounts, whose
 body model forbids extra keys:
 
-1. Send a body of 90,000 unknown keys (889 KB).
-2. Nest a model that holds itself 200 deep and give the deepest 5,000 unknown keys
-   (47 KB).
+1. Send, within the body limit, a body with many invalid entries.
 
 **Expected**: an answer of bounded size
-**Actual**: step 1 is answered with 4.5 MB, and step 2 with 13 MB
+**Actual**: an answer several times the request's size, and far more than that for a
+model that holds itself
 
 ## Cause
 
 Verified: `validation_error` (`apps/api/src/roadmaps_api/errors.py`) lists all of
 `exc.errors()`. Search: `rg -n 'RequestValidationError' apps/api/src` finds that one
-handler. CHO-047 shortens a `loc` that names a caller's key (step 1 is then 3.8 MB; step
-2 barely changes, since only each error's last segment is the caller's) and adds some
-work to follow each one: about 0.5 s against 0.4 s for step 1, 0.6 s against 0.2 s for
-50,000 bad list entries, and 0.5 s against 0.3 s for step 2, measured on a development
-machine.
+handler. For a model that holds itself through a union of models, Pydantic's own list
+of errors also doubles with each level of nesting, so the body limit alone does not
+bound it. CHO-047 shortens a `loc` that names a caller's key, which makes some answers
+smaller, and adds work to follow each: measured on a development machine, up to about
+twice the earlier handler's time for bodies near the limit.
 
 ## Open questions
 

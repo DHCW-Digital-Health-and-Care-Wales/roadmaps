@@ -194,8 +194,8 @@ ADR-017:
 
 24. **The OpenAPI contract and generated schemas**: camelCase across the whole API JSON
     contract via `ApiRequestModel` (`validate_by_name=False`, never binding `snake_case`
-    on inbound bodies, query models or nested request models; `extra="forbid"` deferred
-    to CHO-047, and still off once it is done: its D3) and `ApiResponseModel`
+    on inbound bodies, query models or nested request models; `extra="forbid"` deferred to
+    CHO-047, which turned it on: its D4) and `ApiResponseModel`
     (`validate_by_name=True`); `ErrorCode` and
     `ErrorResponse` injected into `components.schemas` (served from local
     `/api/v1/openapi.json` too), with FastAPI's built-in
@@ -251,10 +251,9 @@ whose migration inserts rows also makes the test harness put them back after eac
 emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestModel`
 (including nested request models, never binding `snake_case`) or `ApiResponseModel`
 (camelCase wire format) and a story that changes routes or `ErrorCode` regenerates
-`apps/api/openapi.json` and `packages/api-types` (`pnpm api:contract`). The first story
-with a request body or a query model also turns `extra="forbid"` on for
-`ApiRequestModel` (ADR-017 _STY-092 amendments_; CHO-047 D3), whose refusals CHO-047
-already keeps free of the caller's keys.
+`apps/api/openapi.json` and `packages/api-types` (`pnpm api:contract`). From CHO-047,
+`ApiRequestModel` forbids extra keys (ADR-017 _CHO-047 amendments_), and a 422's `loc`
+keeps only what the schema declares.
 
 ## Stories
 

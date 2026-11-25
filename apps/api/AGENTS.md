@@ -45,6 +45,12 @@ the root, unversioned (ADR-017's amendments).
   (`apps/api/src/roadmaps_api/wire.py`). A plain query parameter takes
   `Annotated[Model, Query()]` or an explicit `alias`, and `ApiError.params` keys are
   camelCase.
+- `ApiRequestModel` refuses a key it does not declare, and FastAPI decides which keys a
+  model is given. A route with a query model takes no other query parameter, those given
+  where its router is included among them, or valid requests are refused. A header or
+  cookie model is given every header or cookie, so it sets `extra="ignore"`. FastAPI's
+  own model around several body parameters, or an embedded one, ignores unknown
+  top-level keys, so a route takes its body as one model, not embedded.
 - `apps/api/openapi.json` and `packages/api-types/src/generated/` are generated and
   committed, never edited by hand. After a change to a route, a wire model or
   `ErrorCode`, run `pnpm api:contract`, which needs no database, and commit what it

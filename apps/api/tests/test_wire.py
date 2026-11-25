@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from roadmaps_api.app import create_app
 from roadmaps_api.wire import ApiRequestModel, ApiResponseModel
-from tests.support import make_settings
+from tests.support import PLANTED, make_settings
 
 
 class Child(ApiRequestModel):
@@ -69,35 +69,17 @@ BOUND: dict[str, tuple[str, str, Any, dict[str, object]]] = {
         {"searchTerm": "a", "pageSize": 5},
         {"searchTerm": "a", "pageSize": 5},
     ),
-    "a snake_case optional field of a body, ignored": (
-        "POST",
-        "/test/search",
-        {"searchTerm": "a", "page_size": 5},
-        {"searchTerm": "a", "pageSize": 20},
-    ),
     "a camelCase query": (
         "GET",
         "/test/search?searchTerm=a&pageSize=5",
         None,
         {"searchTerm": "a", "pageSize": 5},
     ),
-    "a snake_case optional field of a query, ignored": (
-        "GET",
-        "/test/search?searchTerm=a&page_size=5",
-        None,
-        {"searchTerm": "a", "pageSize": 20},
-    ),
     "a camelCase nested model": (
         "POST",
         "/test/nested",
         {"childNode": {"itemName": "a", "itemCount": 1}},
         {"itemName": "a", "itemCount": 1},
-    ),
-    "a snake_case optional field of a nested model, ignored": (
-        "POST",
-        "/test/nested",
-        {"childNode": {"item_name": "a", "itemCount": 1}},
-        {"itemName": "unnamed", "itemCount": 1},
     ),
 }
 
@@ -112,44 +94,89 @@ def test_a_request_binds_camel_case_names_alone(
     assert response.json() == answer
 
 
-# Each request, and where its required field is missing, by its camelCase alias.
-MISSING: dict[str, tuple[str, str, Any, list[object]]] = {
+type Refusals = list[tuple[list[object], str]]
+
+# Each request, and where it is refused: a required field missing at its camelCase alias,
+# and a key its model does not declare, at the model that forbids it.
+REFUSED: dict[str, tuple[str, str, Any, Refusals]] = {
     "a snake_case required field of a body": (
         "POST",
         "/test/search",
         {"search_term": "a"},
-        ["body", "searchTerm"],
+        [(["body", "searchTerm"], "missing"), (["body"], "extra_forbidden")],
     ),
     "a snake_case required field of a query": (
         "GET",
         "/test/search?search_term=a",
         None,
-        ["query", "searchTerm"],
+        [(["query", "searchTerm"], "missing"), (["query"], "extra_forbidden")],
     ),
     "a snake_case nested model": (
         "POST",
         "/test/nested",
         {"child_node": {"itemCount": 1}},
-        ["body", "childNode"],
+        [(["body", "childNode"], "missing"), (["body"], "extra_forbidden")],
     ),
     "a snake_case required field of a nested model": (
         "POST",
         "/test/nested",
         {"childNode": {"item_count": 1}},
-        ["body", "childNode", "itemCount"],
+        [
+            (["body", "childNode", "itemCount"], "missing"),
+            (["body", "childNode"], "extra_forbidden"),
+        ],
+    ),
+    "a snake_case optional field of a body": (
+        "POST",
+        "/test/search",
+        {"searchTerm": "a", "page_size": 5},
+        [(["body"], "extra_forbidden")],
+    ),
+    "a snake_case optional field of a query": (
+        "GET",
+        "/test/search?searchTerm=a&page_size=5",
+        None,
+        [(["query"], "extra_forbidden")],
+    ),
+    "a snake_case optional field of a nested model": (
+        "POST",
+        "/test/nested",
+        {"childNode": {"item_name": "a", "itemCount": 1}},
+        [(["body", "childNode"], "extra_forbidden")],
+    ),
+    "an unknown key of a body": (
+        "POST",
+        "/test/search",
+        {"searchTerm": "a", PLANTED: 1},
+        [(["body"], "extra_forbidden")],
+    ),
+    "an unknown key of a query model": (
+        "GET",
+        f"/test/search?searchTerm=a&{PLANTED}=1",
+        None,
+        [(["query"], "extra_forbidden")],
+    ),
+    "an unknown key of a nested model": (
+        "POST",
+        "/test/nested",
+        {"childNode": {"itemCount": 1, PLANTED: 1}},
+        [(["body", "childNode"], "extra_forbidden")],
     ),
 }
 
 
-@pytest.mark.parametrize(("method", "url", "body", "loc"), MISSING.values(), ids=MISSING)
-def test_a_snake_case_required_field_is_missing_at_its_camel_case_name(
-    wire_client: TestClient, method: str, url: str, body: object, loc: list[object]
+@pytest.mark.parametrize(("method", "url", "body", "errors"), REFUSED.values(), ids=REFUSED)
+def test_a_request_model_refuses_what_it_does_not_declare(
+    wire_client: TestClient, method: str, url: str, body: object, errors: Refusals
 ) -> None:
     response = wire_client.request(method, url, json=body)
 
     assert response.status_code == 422
     assert response.json()["code"] == "request.invalid"
-    assert response.json()["params"] == {"errors": [{"loc": loc, "type": "missing"}]}
+    assert response.json()["params"] == {
+        "errors": [{"loc": loc, "type": error_type} for loc, error_type in errors]
+    }
+    assert PLANTED not in response.text
 
 
 BUILT: dict[str, Callable[[], Found]] = {

@@ -17,7 +17,6 @@ from httpx2 import Response
 from pydantic import (
     AliasChoices,
     AliasPath,
-    ConfigDict,
     Field,
     Json,
     Tag,
@@ -141,27 +140,21 @@ def test_a_405_names_the_methods_the_path_allows(client: TestClient) -> None:
 # keys they send (ADR-020). Each row sends the planted value as such a key.
 
 
-class Strict(ApiRequestModel):
-    """As a request's models will be once `ApiRequestModel` forbids extra keys."""
-
-    model_config = ConfigDict(extra="forbid")
-
-
-class Leaf(Strict):
+class Leaf(ApiRequestModel):
     item_count: int = 0
 
 
-class Cat(Strict):
+class Cat(ApiRequestModel):
     kind: Literal["cat"]
     lives: int = 0
 
 
-class Dog(Strict):
+class Dog(ApiRequestModel):
     kind: Literal["dog"]
     barks: int = 0
 
 
-class Branch(Strict):
+class Branch(ApiRequestModel):
     """A model that holds itself, which Pydantic's schema names by reference."""
 
     branches: list[Branch] = Field([])
@@ -175,7 +168,7 @@ def refuse_at(*loc: str | int) -> ValidationError:
     )
 
 
-class Shapes(Strict):
+class Shapes(ApiRequestModel):
     leaf: Leaf | None = None
     leaves: list[Leaf] = Field([])
     leaf_set: set[int] = Field(set())
@@ -236,11 +229,11 @@ class Shapes(Strict):
         return self
 
 
-class Search(Strict):
+class Search(ApiRequestModel):
     page_size: int = 20
 
 
-class ParsedMapping(Strict):
+class ParsedMapping(ApiRequestModel):
     """A parameter model with a dictionary named as the route names the model."""
 
     query: dict[str, int] = Field({})
@@ -252,14 +245,14 @@ class ParsedMapping(Strict):
         return json.loads(value)
 
 
-class Filter(Strict):
+class Filter(ApiRequestModel):
     only_mine: bool = False
 
 
 def filtered(chosen: Annotated[Filter, Query()]) -> None: ...
 
 
-def add_raising_routes(app: FastAPI) -> None:
+def add_raising_and_included_routes(app: FastAPI) -> None:
     """A route's own refusal, and a dependency given where a router is included."""
 
     @app.get("/test/raised")
@@ -309,7 +302,7 @@ def locations_app() -> FastAPI:
         x_page: Annotated[int, Header()] = 1,
     ) -> None: ...
 
-    add_raising_routes(app)
+    add_raising_and_included_routes(app)
     return app
 
 
@@ -526,8 +519,21 @@ def test_a_422_names_only_what_the_schema_declares(
     assert PLANTED not in response.text
 
 
+# A body of `entries` errors that share all but one segment of their `loc`: a
+# dictionary's, which differ in their key, and a list's, which differ in their index.
+SHARING_BODIES: dict[str, Callable[[int], dict[str, object]]] = {
+    "entries of a dictionary": lambda entries: {
+        "counts": {f"{PLANTED}{entry}": "x" for entry in range(entries)}
+    },
+    "models in a list": lambda entries: {"leaves": [{"itemCount": "x"}] * entries},
+}
+
+
+@pytest.mark.parametrize("sharing", SHARING_BODIES.values(), ids=SHARING_BODIES)
 def test_the_walk_takes_each_shared_step_once_however_many_errors_share_it(
-    locations_client: TestClient, monkeypatch: pytest.MonkeyPatch
+    locations_client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    sharing: Callable[[int], dict[str, object]],
 ) -> None:
     """A caller chooses how many errors a body has, and how deep: see DEF-040."""
     taken: list[object] = []
@@ -543,10 +549,9 @@ def test_the_walk_takes_each_shared_step_once_however_many_errors_share_it(
 
     def steps_for(entries: int) -> int:
         taken.clear()
-        sent = {"counts": {f"{PLANTED}{entry}": "x" for entry in range(entries)}}
-        response = locations_client.post("/test/shapes", json=sent)
+        response = locations_client.post("/test/shapes", json=sharing(entries))
         assert len(response.json()["params"]["errors"]) == entries
-        # Each error's own last segment, the dictionary's key, is a step of its own.
+        # Each error's own segment, its key or its index, is a step of its own.
         return len(taken) - entries
 
     assert steps_for(50) == steps_for(1)

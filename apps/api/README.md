@@ -84,10 +84,10 @@ text, a 400 for a `Host` not served and a 413 for an oversize body. `pnpm api:op
 builds it from fixed production settings, whatever the environment holds.
 [`packages/api-types`](../../packages/api-types/) is generated from it, and CI fails when
 either drifts. JSON on the wire is camelCase: request models inherit `ApiRequestModel`,
-which never binds a field's snake_case name, nested models included, and response models
-`ApiResponseModel`, which Python builds in snake_case
-([`src/roadmaps_api/wire.py`](src/roadmaps_api/wire.py)). After changing a route, a model
-or an error code, run `pnpm api:contract` and commit what it writes.
+which never binds a field's snake_case name and refuses any key it does not declare,
+nested models included, and response models `ApiResponseModel`, which Python builds in
+snake_case ([`src/roadmaps_api/wire.py`](src/roadmaps_api/wire.py)). After changing a
+route, a model or an error code, run `pnpm api:contract` and commit what it writes.
 
 ## The database
 

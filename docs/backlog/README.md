@@ -134,6 +134,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-035](defects/DEF-035-the-editors-layering-lint-misses-dynamic-imports.md)                                      | The editor's layering lint misses `import()` and `import("…")` types                             | Needs triage |
 | [DEF-036](defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md)                 | The Sheets replacement runbook still describes CORS and a browser-held token                     | Needs triage |
 | [DEF-037](defects/DEF-037-the-editors-layering-lint-skips-files-that-are-not-typescript.md)                         | The editor's layering lint skips files under `src/` that are not `.ts` or `.tsx`                 | Needs triage |
+| [DEF-038](defects/DEF-038-a-publish-test-waits-for-the-outcome-notices-focus-and-does-not-get-it.md)                | A publish test waits for the outcome notice's focus and does not get it                          | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

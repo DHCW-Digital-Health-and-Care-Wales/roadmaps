@@ -144,7 +144,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-040](_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                              | A small request can get a much larger 422, which lists every error (EPC-022)                     | Done         |
 | [DEF-041](defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md)                              | The editor's status messages quote English it cannot mark                                        | Needs triage |
 | [DEF-042](defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md)                                          | The editor's fields hold English with no lang                                                    | Needs triage |
-| [DEF-043](defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md)          | Unbounded collections in request models can exhaust memory during validation (EPC-022)           | Needs triage |
+| [DEF-043](_archive/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md) | Unbounded collections in request models can exhaust memory during validation (EPC-022)           | Done         |
 
 A defect found during delivery is recorded in `defects/` with
 Status `Needs triage` and listed here until the owner triages it.

@@ -48,6 +48,9 @@ the root, unversioned (ADR-017's amendments).
 - For recursive shapes in `ApiRequestModel`, use discriminated unions (never
   undiscriminated recursive unions), and add an explicit depth validator if a recursive
   request model is ever introduced (ADR-020).
+- Bound every collection field in `ApiRequestModel`: set `Field(max_length=…)` on `list`
+  fields, and pair `FailFast()` with `Field(max_length=…)` on `dict`, `set`, `frozenset`
+  and variadic `tuple` fields (ADR-020).
 - `apps/api/openapi.json` and `packages/api-types/src/generated/` are generated and
   committed, never edited by hand. After a change to a route, a wire model or
   `ErrorCode`, run `pnpm api:contract`, which needs no database, and commit what it

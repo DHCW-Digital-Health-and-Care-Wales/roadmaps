@@ -258,7 +258,9 @@ DEF-040, a 422 omits `input`, `msg`, `ctx` and `url`, trims the trailing unknown
 127 characters plus `"…"`, and caps `params.errors` at 25 entries with
 `"truncated": true` only when more exist, without walking framework internals, while
 `ApiRequestModel` uses discriminated unions rather than undiscriminated recursive unions
-(ADR-020 _CHO-053 amendments_, _DEF-040 amendments_).
+and bounds every collection field natively (`Field(max_length=…)` on `list`; `FailFast()`
+with `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple`) (ADR-020
+_CHO-053 amendments_, _DEF-040 amendments_, _DEF-043 amendments_).
 
 ## Stories
 
@@ -345,9 +347,8 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
   the editor's status messages quote English it cannot mark (Needs triage).
 - [DEF-042](../defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md): the
   editor's fields hold English with no `lang` (Needs triage).
-- [DEF-043](../defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md):
-  unbounded collections in request models can exhaust memory during validation (Needs
-  triage).
+- [DEF-043](../_archive/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md):
+  unbounded collections in request models can exhaust memory during validation (Done).
 
 ## Related
 

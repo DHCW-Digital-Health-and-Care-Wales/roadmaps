@@ -3,10 +3,11 @@
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   identity and authorisation grilling (2026-11-21); the options chosen are marked ✅.
   Amended by the owner's STY-101 grilling (_STY-101 amendments_), CHO-053 decision
-  (_CHO-053 amendments_) and DEF-040 triage and grilling (_DEF-040 amendments_).
+  (_CHO-053 amendments_), DEF-040 triage and grilling (_DEF-040 amendments_) and DEF-043
+  triage (_DEF-043 amendments_).
 - Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list;
   CHO-053: 422 `loc` trimming; DEF-040: 422 error cap, `loc` segment truncation and
-  recursive-union rule)
+  recursive-union rule; DEF-043: native Pydantic collection bounds)
 
 ## Context
 
@@ -121,6 +122,18 @@ amendments_ stands.
   `ApiRequestModel` (use discriminated unions, and add an explicit depth validator only if
   a recursive request model is ever introduced).
 
+### DEF-043 amendments
+
+From the owner's DEF-043 triage (2026-11-25, DEF-043 D1); the rest of _The API's own
+responses_, _CHO-053 amendments_ and _DEF-040 amendments_ stands.
+
+- **Collection fields in `ApiRequestModel` are bounded natively in Pydantic**: every
+  `list` field sets `Field(max_length=…)`, and every `dict`, `set`, `frozenset` and
+  variadic `tuple` field pairs `FailFast()` with `Field(max_length=…)`, especially for
+  collections nested beneath a dictionary (`apps/api/AGENTS.md`). The API adds no custom
+  pre-validation framework layer; Pydantic stops validating excess or failing entries
+  before `validation_error` slices `exc.errors()`.
+
 ## Consequences
 
 - **One deploy carries both apps** in each environment, until and after the load
@@ -138,10 +151,11 @@ amendments_ stands.
   truncating string `loc` segments past 128 characters bounds the 422 response for
   fixed-depth schemas (and for any future recursive model with a depth validator, as
   `apps/api/AGENTS.md` requires).
-- **Open follow-on ([DEF-043](../backlog/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md), `Needs triage`)**:
-  because `validation_error` slices `exc.errors()` after Pydantic finishes validating, the
-  cap bounds the 422 response rather than Pydantic's pre-handler validation memory on
-  unbounded collections; no route takes a request model with a collection field yet.
+- **Collection validation work is bounded natively ([DEF-043](../backlog/_archive/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md), `Done`)**:
+  `apps/api/AGENTS.md` requires `Field(max_length=…)` on `list` fields and `FailFast()`
+  alongside `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple`
+  fields in `ApiRequestModel`, bounding Pydantic's pre-handler validation work without a
+  custom framework layer.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

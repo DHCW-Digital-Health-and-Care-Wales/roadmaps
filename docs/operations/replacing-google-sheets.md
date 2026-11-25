@@ -111,17 +111,14 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
    `expired` on a 401. Then `connect()` posts the sign-in start for the chosen provider and
    navigates to the authorisation address it returns, and the signed-in state comes from a
    "who am I" call. The API keeps the session in an `HttpOnly` cookie, so do not pass a
-   token to `ApiRoadmapRepository`. ADR-018 also requires a state-changing request to name
-   the person the editor believes is signed in, and a held form to be discarded when a
-   different person signs in (_Sessions_ and _The editor_). The session warning (STY-017)
-   and the reconnect flow (STY-057) change shape with the port. Swap the adapter in the same place.
+   token to `ApiRoadmapRepository`. ADR-018 also requires a state-changing request to name the person the editor believes is signed in. A tab that regains focus re-checks "who am I", and on a different person discards the held form unsent and treats itself as signed out, dropping that session's cached data (_Sessions_ and _The editor_). The session warning (STY-017) and the reconnect flow (STY-057) change shape with the port. Build the sign-in code only after ADR-018's threat model is reviewed by DHCW's cyber security team. Swap the adapter in the same place.
 5. **Copy.** Some strings name the spreadsheet or Google Sheets, because that is what
    users must act on today. Search `apps/editor/src/i18n/locales/en.ts` for "spreadsheet" and
    "Google Sheets", and reword them in `en.ts` and `cy.ts`; no component changes.
 6. **E2E.** Add a fake for the API to `apps/editor/tests/e2e/fixtures/` (the hermetic guard fails on
    any unfaked origin) and retire the Sheets fake when it is no longer used.
 7. **Deploy.** The API serves the editor's built files on the same origin as its
-   endpoints (one Cloud Run service per environment, ADR-020), so the API sends no CORS
+   endpoints (one Cloud Run service per environment, ADR-020), so the editor's endpoints send no CORS
    headers and the editor sends no `Authorization` header: the session cookie carries the
    sign-in (ADR-018). Real data waits for the custom domain and its load balancer, the
    edge rate limits and the independent penetration test (ADR-016, ADR-018, ADR-020).

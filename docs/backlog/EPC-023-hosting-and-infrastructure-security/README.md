@@ -25,6 +25,10 @@ candidate scope below is a list of findings, not a plan.
 - The editor's domain, and who owns its DNS
 - Who in NHS Wales approves the Entra app registration, and the lead time
 - Where security alerts go: DHCW's security monitoring, and who answers them
+- How a hosted non-production environment authenticates (e.g. for the penetration test):
+  real staff identities in a named pre-production environment holding production's
+  controls (load balancer, Cloud Armor, cyber sign-off), or testing on production before
+  cut-over — the local mock provider is never admitted on Cloud Run (ADR-018)
 
 ## Findings
 
@@ -195,7 +199,8 @@ lives:_
   provider OAuth client or secret (since real staff sign-ins store real personal data),
   may be provisioned or receive traffic until DHCW cyber security sign-off on
   [STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
-  is recorded (reviewer, date, findings and disposition).
+  is recorded by the owner (never an agent), citing DHCW cyber security's own reference
+  (ticket or signed document), reviewer, date, findings and disposition.
 
 ## Stories
 

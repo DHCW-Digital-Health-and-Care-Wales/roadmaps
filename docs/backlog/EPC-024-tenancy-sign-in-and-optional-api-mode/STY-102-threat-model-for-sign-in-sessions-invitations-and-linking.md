@@ -58,8 +58,10 @@ modelling
 **Then** every accepted risk is listed with owner sign-off status, every new finding that
 requires a code or infrastructure change is recorded as an actionable backlog item or open
 question, and the document includes an explicit **Cyber security sign-off** record
-(reviewer, date, findings, disposition, initially **Pending**) cited by `EPC-023` and
-`EPC-028` so a `Done` `STY-102` draft is never mistaken for completed cyber sign-off
+(entered only by the owner — never an agent — citing DHCW cyber security's own reference
+such as a ticket or signed document, reviewer, date, findings and disposition, initially
+**Pending**) cited by `EPC-023` and `EPC-028` so a `Done` `STY-102` draft is never
+mistaken for completed cyber sign-off
 
 ## Open questions
 

@@ -98,11 +98,13 @@ fields without echoing submitted values
   (which EPC-023 exports to a retention-locked bucket for two years), conflicting with
   ADR-018's rule that logs never carry tokens. How should hosted `create-tenant` and
   `invite-admin` jobs hand the one-time Admin invitation link to the starting operator?
-  - (a) Write the one-time link to a short-lived secret/sink outside stdout and stderr
-    that only the starting operator principal can read (and expire/destroy after use),
-    with a standing test proving no raw token reaches stdout or stderr outside local mode
-    (recommended) — keeps raw Admin invitation tokens out of Cloud Logging and two-year
-    log exports.
+  - (a) Deliver the one-time link outside stdout and stderr — either via a short-lived
+    secret readable only by the job's named operator principals (EPC-023 IAM) and
+    destroyed after first read, or encrypted to a recipient public key supplied by the
+    starting operator so only ciphertext is emitted — with a standing test proving no raw
+    token reaches stdout or stderr outside local mode (recommended) — keeps raw Admin
+    invitation tokens out of Cloud Logging and two-year log exports without pretending a
+    Cloud Run job can identify its caller (`EPC-023`).
   - (b) Print to stdout in hosted jobs too and explicitly record it as an accepted
     residual risk in ADR-019 (as ADR-018 does for OIDC callback codes), bounded by
     verified-email match, single use, 7-day expiry and EPC-023's restricted log access —

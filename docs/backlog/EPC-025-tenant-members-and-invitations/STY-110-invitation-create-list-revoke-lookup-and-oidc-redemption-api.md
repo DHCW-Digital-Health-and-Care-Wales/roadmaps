@@ -83,8 +83,9 @@ person was created), and starts a fresh session
 **And** concurrent or repeated redemptions of the same token succeed at most once; an
 unavailable or invalidated invitation (redeemed, revoked, expired, inviter lost
 `members:manage`, tenant or role gone), wrong provider or disabled person writes nothing
-and refuses with one uniform code (`invitation.unavailable`), while a verified-email
-mismatch refuses per Q3 without leaking the invited email address
+and refuses with one uniform code (`invitation.unavailable`), and a verified-email
+mismatch likewise writes nothing, leaves the invitation redeemable, never leaks the
+expected email address, and refuses with the code chosen in Q3
 
 ### S4: Retention purge CLI removes spent and expired invitations after 90 days
 
@@ -122,7 +123,12 @@ active invitations untouched
 
 ## Decisions
 
-_Recorded during grilling._
+- **D1** (agent, 2026-11-25, from Fable 5.2 security review — to confirm when grilling
+  `STY-110`): an idempotent retry of invitation creation returns the invitation metadata
+  without the raw token (narrowing ADR-015's "returns its first result" for this write
+  and recording an ADR-015 amendment if confirmed), rather than storing raw tokens or
+  cached response bodies in PostgreSQL, which would break ADR-018's hash-only storage
+  invariant.
 
 ## Out of scope
 

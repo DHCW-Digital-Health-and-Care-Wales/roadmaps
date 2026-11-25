@@ -1,9 +1,8 @@
 # Audience tone
 
-One voice, several settings. The pillars never change; the emphasis does. The
-primary reader is the Product Lead (`docs/backlog/personas/product-lead.md`);
-read the persona, and the assumptions it lists, before writing for a new
-screen.
+One voice, several settings. The pillars never change; the emphasis does. Read the
+matching persona in `docs/backlog/personas/` (`product-lead.md`, `tenant-admin.md`,
+`viewer.md`, `public-reader.md`) before writing for a new screen.
 
 ## Product Lead, editing
 
@@ -51,14 +50,40 @@ whole picture.
   compliance vocabulary; say exactly what is and is not touched.
 - One call to action. The button says what it does: "Connect Google".
 
+## Tenant Admin
+
+Administers one organisation's members, invitations, roles and shared lists, and steps in
+on roadmaps (`docs/backlog/personas/tenant-admin.md`).
+
+- Name the role and organisation plainly ("Admin", "Product Lead", "Viewer", "DHCW");
+  never "tenant ID", "OIDC", "subject", "hash" or "RBAC".
+- Make one-time invitation links unmistakable: copy and send now, seven-day expiry, and
+  that only the invited email address can use it.
+- State exact scope and blast radius before confirming destructive or tenant-wide changes
+  (removing a member keeps history and leaves other organisations untouched; retiring a
+  list entry or redacting content names how many roadmaps or items it affects).
+
+## Viewer and read-only states
+
+Reads current roadmaps, unpublished drafts, history and the member directory without
+editing (`docs/backlog/personas/viewer.md`), or a Product Lead viewing an unassigned peer
+roadmap or read-only list.
+
+- Distinguish published content from an unpublished draft at a glance.
+- Keep read-only screens calm: never shame with "access denied" on screens the person is
+  meant to read, and point neutrally to who can help (an assigned lead or Admin).
+
 ## Public reader
 
-Reads the public site, a separate app, and never this tool, so no interface
-string is addressed to them. Health boards and Welsh Government stakeholders
-come first, then DHCW staff, then patients and the public. They shape the hints, examples and limits that guide what a
-Product Lead writes: plain English and Welsh, outcomes before outputs, no
-internal jargon or unexplained acronyms, and nothing that only works on a card
-wider than a phone.
+Reads published roadmaps on `apps/public-site/` (`docs/backlog/personas/public-reader.md`):
+health boards and Welsh Government stakeholders first, then DHCW staff, then patients and
+the public.
+
+- On `apps/public-site/`, address them directly in plain English and Welsh, outcomes
+  before outputs, keeping Now / Next / Later distinct from committed dates and flagging
+  English-only roadmap content honestly when viewed in Welsh.
+- In the editor, let them shape field hints, examples and limits: no internal jargon or
+  unexplained acronyms, and nothing that only works on a card wider than a phone.
 
 ## Welsh-language readers
 

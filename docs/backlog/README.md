@@ -9,9 +9,18 @@ moves to `_archive/`, where its row here still points.
 ## Personas
 
 - [Product Lead](personas/product-lead.md): manages the public Now / Next / Later roadmaps
-  of the products they lead; the primary user. Owner answers recorded 2026-11-10; format ownership answered 2026-11-11.
-- [Tenant Admin](personas/tenant-admin.md): administers one NHS Wales organisation's members, invitations, roles and shared lists, and steps in on any roadmap (`Admin` role, ADR-019). Draft (2026-11-25).
-- [Viewer](personas/viewer.md): read-only internal member who views current roadmaps, drafts, history and the member directory (`Viewer` role, ADR-019). Draft (2026-11-25).
+  of the products they lead; the editor's primary user. Accepted (2026-11-10; updated for
+  multi-tenant API mode 2026-11-25).
+- [Tenant Admin](personas/tenant-admin.md): dual-hatted senior Product Lead or
+  delivery/service manager who administers one NHS Wales organisation's members,
+  invitations, roles and shared lists, and steps in on any roadmap (`Admin` role,
+  ADR-019). Accepted (2026-11-25).
+- [Viewer](personas/viewer.md): read-only internal member who reviews unpublished drafts,
+  cross-product plans, version history and the member directory (`Viewer` role, ADR-019).
+  Accepted (2026-11-25).
+- [Public Reader](personas/public-reader.md): anyone reading published roadmaps on
+  `apps/public-site/` — health boards and Welsh Government stakeholders first, then DHCW
+  staff, then patients and the public. Accepted (2026-11-25).
 
 ## Epics
 

@@ -306,7 +306,8 @@ rest of _Records and retention_ stands.
 
 ### EPC-024 amendments
 
-From the owner's EPC-024 planning answers (2026-11-25, Q2). This amends _Assurance_'s
+From the owner's EPC-024 planning answers (2026-11-25, Q2; real-identities and hosted
+deployment gate confirmed by owner on PR #327, 2026-11-25). This amends _Assurance_'s
 clause `"reviewed by DHCW's cyber security team before any identity code is built"`;
 writing the threat model first (`STY-102`) and the independent penetration test before
 switching the deployed editor stand.

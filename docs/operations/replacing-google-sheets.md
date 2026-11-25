@@ -99,16 +99,20 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
    (`noStartingPoint`), which an API that needs no template fakes as whatever makes it
    answer so; `failing()` fails every
    request. The Google adapter's test is the worked example.
-3. **Config.** Add e.g. `VITE_ROADMAPS_API_URL` to the Zod schema in
-   `apps/editor/src/app/config.ts`, `apps/editor/.env.example` and `apps/editor/.env.production`.
+3. **Config.** The API shares the editor's origin in every environment (ADR-020), so the
+   adapter calls relative `/api` paths and needs no API address setting: add none to the
+   Zod schema in `apps/editor/src/app/config.ts`, `apps/editor/.env.example` or
+   `apps/editor/.env.production`.
 4. **Swap it in** `composeApp` (`apps/editor/src/app/composition.ts`): construct
    `ApiRoadmapRepository` instead of `GoogleSheetsRoadmapRepository`, and write a new
-   `AuthClient` adapter for the API's own sign-in (the port is in `apps/editor/src/domain/auth/`;
-   ADR-018): `connect()` posts the sign-in start for the chosen provider and navigates to
-   the authorisation address it returns, the signed-in state comes from a "who am I" call,
-   and a 401 moves the state to `expired`. The API keeps the session in an `HttpOnly`
-   cookie, so no access token reaches the browser or the repository: do not pass
-   `getAccessToken` to `ApiRoadmapRepository`. Swap the adapter in the same place.
+   `AuthClient` adapter for the API's own sign-in. Reshape the port first, in
+   `apps/editor/src/domain/auth/auth-client.ts`: drop `getAccessToken`, since no access
+   token leaves it (ADR-018), and keep `reportUnauthenticated`, which moves the state to
+   `expired` on a 401. Then `connect()` posts the sign-in start for the chosen provider and
+   navigates to the authorisation address it returns, and the signed-in state comes from a
+   "who am I" call. The API keeps the session in an `HttpOnly` cookie, so do not pass a
+   token to `ApiRoadmapRepository`. The session warning (STY-017) and the reconnect flow
+   (STY-057) change shape with the port. Swap the adapter in the same place.
 5. **Copy.** Some strings name the spreadsheet or Google Sheets, because that is what
    users must act on today. Search `apps/editor/src/i18n/locales/en.ts` for "spreadsheet" and
    "Google Sheets", and reword them in `en.ts` and `cy.ts`; no component changes.

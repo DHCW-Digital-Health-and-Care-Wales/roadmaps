@@ -83,7 +83,7 @@ export function PublishedStateDialog({
 }: PublishedStateDialogProps) {
   const { t } = useTranslation()
   const { available, pending } = state
-  const outcome = useFocusNoticeOnClose(notice)
+  const outcome = useFocusNoticeOnClose(state.open, notice)
   const confirm = useSessionAction(() => {
     outcome.confirmed()
     state.confirm()

@@ -1,6 +1,6 @@
 # DEF-038: A publish test waits for the outcome notice's focus and does not get it
 
-- **Status**: Needs triage — found by STY-092 delivery
+- **Status**: Done
 - **Severity**: Low — an E2E test fails now and then, under load or not, and passes when
   run again; no failure seen in use
 - **Area**: E2E (and Features/UI, if the cause is in the page)
@@ -65,4 +65,38 @@ demand without the fix
 
 ## Decisions
 
-_None yet: awaiting triage._
+- **D1** (owner, 2026-11-25, triage of DEF-038): Proposed (fix).
+
+## Delivery
+
+Verified cause (a real UI bug affecting Product Leads too, not only E2E):
+`useFocusNoticeOnClose` (`apps/editor/src/features/roadmaps/editing/use-focus-notice-on-close.ts`)
+reset `confirmedRef.current = false` inside Base UI's `onOpenChangeComplete(true)`,
+which runs only after the dialog's 100 ms `animate-in` CSS animation finishes
+(`DialogPopup` -> `useOpenChangeComplete` -> `useAnimationsFinished`). If a Product
+Lead or test confirmed a publish before that opening animation ended, `confirmed()` set
+`confirmedRef.current = true` while the async write started; `onOpenChangeComplete(true)`
+then fired mid-publish (while `open` was still `true`) and cleared `confirmedRef.current`
+back to `false`. When the write completed and the dialog closed, `finalFocus` no longer
+suppressed focus return (falling through to `document.body` because `<PendingBar>` had
+already unmounted) and `onOpenChangeComplete(false)` never called `notice()?.focus()`.
+
+Fix: `useFocusNoticeOnClose(open, notice)` now takes the dialog's `open` state and
+resets `confirmedRef.current = false` synchronously in `useLayoutEffect` when `open`
+becomes `true`, ignoring `onOpenChangeComplete(true)`. Both callers (`PublishDialog`
+and `PublishedStateDialog`) pass their `open` state. All other `onOpenChangeComplete`
+handlers in `apps/editor/src` were checked and either ignore `open === true` or reset
+on `open` / `onOpenChange` instead.
+
+### Departures
+
+None. S1 names a busy machine as the trigger; per `apps/editor/tests/e2e/AGENTS.md`,
+the Playwright regression reproduces the race deterministically by pausing the dialog's
+opening animation until the publish write is held in flight, releasing it so
+`onOpenChangeComplete(true)` fires mid-publish, then releasing the write.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/editor/src/features/roadmaps/editing/use-focus-notice-on-close.test.ts` (4 unit tests; RED before fix on late `onOpenChangeComplete(true)`) and `apps/editor/tests/e2e/roadmap-controls.spec.ts` (`focuses the publish outcome notice even when confirmed before the dialog finishes opening (DEF-038 S1)`; RED before fix with `Expected: focused, Received: inactive` across 14 polls, 3/3 GREEN after fix) |

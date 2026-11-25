@@ -138,6 +138,58 @@ test("shows a publish's outcome at the foot, where it was published from, focus 
   expect((await boxOf(later)).y).toBe(before.y)
 })
 
+test("focuses the publish outcome notice even when confirmed before the dialog finishes opening (DEF-038 S1)", async ({
+  page,
+  sheets,
+}) => {
+  await page.setViewportSize(DESKTOP)
+  await openLongRoadmap(page, sheets)
+  await editTitle(page, "Planned work 3")
+  const main = page.getByRole("main")
+
+  // Hold the dialog's opening animation until the write is in flight, then let it finish
+  // while the dialog is still open: Base UI fires `onOpenChangeComplete(true)` mid-publish,
+  // which must not clear the confirmed state before the dialog closes.
+  const holdStyle = await page.addStyleTag({
+    content:
+      '[data-slot="alert-dialog-content"][data-open] { animation-play-state: paused !important; }',
+  })
+
+  await main.getByRole("button", { name: "Publish changes" }).click()
+  const dialog = page.getByRole("alertdialog")
+  const confirm = dialog.getByRole("button", { name: "Publish changes" })
+  await expect(confirm).toBeVisible()
+
+  const releaseWrite = sheets.hold()
+  await confirm.click()
+  await expect(confirm).toHaveAttribute("aria-busy", "true")
+
+  const paused = await dialog.evaluate(
+    (el) =>
+      el.getAnimations().filter((animation) => animation.playState === "paused")
+        .length,
+  )
+  expect(paused).toBeGreaterThan(0)
+
+  await holdStyle.evaluate((el) => {
+    el.parentNode?.removeChild(el)
+  })
+  await dialog.evaluate(async (el) => {
+    await Promise.all(el.getAnimations().map((animation) => animation.finished))
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        resolve()
+      })
+    })
+  })
+
+  releaseWrite()
+  await expect(dialog).toBeHidden()
+  await expect(
+    main.getByRole("status").filter({ hasText: /^Changes published\./ }),
+  ).toBeFocused()
+})
+
 test("stacks a failed publish's notice above the bar, which stays (S4, D14)", async ({
   page,
   sheets,

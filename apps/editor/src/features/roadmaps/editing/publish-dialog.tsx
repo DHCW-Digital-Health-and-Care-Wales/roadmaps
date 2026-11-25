@@ -55,7 +55,7 @@ export function PublishDialog({
   onCancel,
 }: PublishDialogProps) {
   const { t } = useTranslation()
-  const outcome = useFocusNoticeOnClose(notice)
+  const outcome = useFocusNoticeOnClose(open, notice)
   const confirm = useSessionAction(() => {
     outcome.confirmed()
     onConfirm()

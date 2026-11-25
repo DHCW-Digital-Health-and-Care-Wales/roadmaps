@@ -64,3 +64,19 @@ updates:
     ignore:
       - dependency-name: postgres
         update-types: ["version-update:semver-major"]
+
+  # The shared local Jaeger's image, pinned by digest in apps/api/jaeger/compose.yaml.
+  # Only a developer runs it, never CI. Jaeger v2 is STY-100's choice, so its major
+  # version stays.
+  - package-ecosystem: docker-compose
+    directory: /apps/api/jaeger
+    schedule:
+      interval: monthly
+    cooldown:
+      default-days: 7
+    groups:
+      jaeger:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: jaegertracing/jaeger
+        update-types: ["version-update:semver-major"]

@@ -264,7 +264,7 @@ the editor's Vite config. S1 is an observed run.
 - **D23** (owner, round 6): requests are capped at 1 MiB, one setting, over 256 KiB or
   leaving it to the edge. Gives S4.
 - **D24** (owner, round 7): OpenTelemetry, the shared Jaeger and probes left untraced
-  move to [STY-100](../../EPC-022-monorepo-and-backend-foundation/STY-100-the-api-traces-requests-locally.md), over one large pull
+  move to [STY-100](STY-100-the-api-traces-requests-locally.md), over one large pull
   request or splitting out the local running instead.
 - **D25** (owner, round 7): no container image, production server or hosted host values
   here; they belong to EPC-023, which builds the editor's files into the API's image

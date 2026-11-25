@@ -1,10 +1,9 @@
 # STY-100: The API traces its requests, and a developer reads them in a local Jaeger
 
-- **Status**: Proposed — acceptance criteria from the owner's STY-100 grilling
-  (2026-11-23); delivered after STY-101 (D21)
+- **Status**: Done
 - **Type**: Feature
 - **Area**: API
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-090 (hard), STY-101 (hard)
 - **Binding ADRs**: ADR-017 §Operation, §STY-090 amendments; ADR-018's application-log
   allow-list
@@ -223,3 +222,78 @@ file checks join STY-090's Compose test.
 - Metrics, hosted export and sampling, and trusting the load balancer's trace header:
   EPC-023.
 - Instrumentation of outgoing HTTP calls: the first story that makes one (D14).
+
+## Delivery
+
+### Departures
+
+- **S4, D15: the allow-list holds at the export pipeline, and the API makes its own
+  spans** (agent): FastAPI's own telemetry is off in `create_app`, whatever the
+  environment holds (its server span carries `url.path`, `url.query`, the `Host` and the
+  method as sent, and its `auto_configure` would export by OpenTelemetry's variables),
+  and no contrib instrumentation is added: `RequestContext` makes the server span and
+  `trace_queries` a span per statement (`apps/api/src/roadmaps_api/tracing.py`). Every
+  span then passes `AllowList`, a span processor in the API's process that rebuilds it
+  with only the listed keys before any exporter sees it, so a hand-written attribute,
+  event, link or status description never leaves the process. Nothing is exported
+  without an exporter, so nothing then needs filtering.
+- **S4: the server span's request ID is `roadmaps.request_id`, and its duration is the
+  span's own** (agent): no OpenTelemetry convention names a request ID; the duration
+  is the span's start and end, not an attribute. A request matching no route has no
+  `http.route`, as the HTTP conventions set.
+- **S5, D13: every 5xx marks its span an error** (agent): OpenTelemetry's HTTP
+  conventions mark a server span from 500 up, so `/ready`'s 503 is an error too, beside
+  a 500; a 4xx never is.
+- **S1: the service name is a new setting, `ROADMAPS_SERVICE_NAME`** (agent):
+  `scripts/api.sh` sets it to `roadmaps-api-<slot>` from `.env.worktree`'s
+  `WORKTREE_SLOT`, and `roadmaps-api` outside a worktree, which is also its default.
+  It is a `ROADMAPS_*` variable, as `apps/api/AGENTS.md` sets for settings, which now
+  names `OTEL_EXPORTER_OTLP_ENDPOINT` as the one other variable read. An invalid value of
+  either stops start-up, naming it.
+- **S2: the launcher's check is Python** (agent): `pnpm api:dev` runs
+  `python -m roadmaps_api.server --local-traces`, which checks Jaeger's OTLP port once
+  and, if it answers and no endpoint is set, sets `OTEL_EXPORTER_OTLP_ENDPOINT` for the
+  reload worker, logging `tracing.to_jaeger` or `tracing.off`. Its three cases are a
+  pytest test, under the API's coverage, in place of a test of the shell script.
+- **S8: the Compose file is `apps/api/jaeger/compose.yaml`, with `/tmp` in memory**
+  (agent): its own folder gives it its own Dependabot entry, beside the database's; the
+  image declares `/tmp` a volume, so `tmpfs` keeps even that in memory. The trace limit
+  is 10,000.
+- **S1, D19, D21: the exporter's failure lines hold no exception type** (agent): the
+  SDK logs them as formatted messages, without `exc_info`, so under test's and
+  production's rules a line holds its time, level and logger; a local API writes the
+  SDK's message, its URL included.
+- **S3: trace IDs come from the SDK's random generator** (agent), which never makes an
+  all-zero ID; STY-090's request ID came from `secrets`. Nothing takes a request ID as
+  proof of anything.
+
+### Contract for dependents
+
+- Code that adds to a trace writes to the current span or starts one from
+  `app.state.tracer`; a new attribute key needs its own Decisions entry and a place in
+  `SPAN_ATTRIBUTES`, on the terms of the log allow-list (`tracing.py`'s docstring). An
+  exception goes on a span through `record_exception`, which keeps its type and frames,
+  never its message.
+- A thread a service starts runs in `contextvars.copy_context()`, as
+  `ReadinessService.check` does, or its queries leave the request's trace and its log
+  lines its request ID.
+- A test reads spans through the `spans` fixture (`apps/api/tests/conftest.py`), passed
+  to `serving` or `create_app(settings, span_exporter=…)`; the conftest clears every
+  `OTEL_*` variable before each test.
+- `request_id_var` is gone: a log line takes its request, trace and span IDs from the
+  current span.
+- The story that instruments outgoing HTTP calls (D14) decides what trace context, if
+  any, those calls send.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | observed run: with `pnpm api:jaeger` up, `pnpm api:dev` logged `tracing.to_jaeger`; Jaeger listed `roadmaps-api-42` with the resource `service.name` and `deployment.environment.name` alone; `GET /api/v1/openapi.json` named by its route, a 404 by `GET` alone; `/ready`'s 503 (an older `alembic_version`) gave its server span and four `SELECT`/`WITH` child spans with placeholders; the probes' successes gave none; a planted query string, `User-Agent` and inbound `traceparent` were in no trace. A second API run as outside a worktree filed under `roadmaps-api`. With Jaeger stopped, the API logged the SDK's retries and failure (local, so with messages) and, once `pnpm api:jaeger` was back, exported the next request. `apps/api/tests/test_tracing.py` (`test_the_exporter_s_failures_are_logged_without_their_url_or_message`: a closed port, test's rules) |
+| S2       | `apps/api/tests/test_server.py` (the launcher's three cases); `apps/api/tests/test_tracing.py` (no endpoint exports nothing, FastAPI's auto-configuration and the SDK's traces endpoint set; an endpoint exports there); observed: `pnpm api:dev` with Jaeger stopped logged `tracing.off`, no exporter line, and its request line carried its trace                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| S3       | `apps/api/tests/test_tracing.py` (inbound `traceparent`, `tracestate` and `baggage` with `OTEL_PROPAGATORS` unset and set, and with `OTEL_SDK_DISABLED=true`); red with the caller's context extracted and with `OTEL_SDK_DISABLED` honoured                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| S4       | `apps/api/tests/test_tracing.py` (query string, captured headers, `User-Agent`, cookie, path, a raising route, a hand-written attribute, event and status description; each span's keys, events, links and resource, and the span serialised whole), `apps/api/tests/integration/test_tracing.py` (a bound planted value and a failing cast echoing it: placeholders kept, the error recorded by type, no value, database host or user); red with attributes unfiltered and with the status description kept                                                                                                                                                                                                                                                                                                                                                                         |
+| S5       | `apps/api/tests/test_tracing.py` (a row per route, unmatched path, undefined method, `Host` refusal, 413, 422, 500 and `/ready`'s 503: name, route, status, error; a successful `/health`; spans ending after their trace was kept or dropped; the bounded memory of dropped traces), `apps/api/tests/integration/test_tracing.py` (a successful `/ready` exports nothing; a failing one its server span and four query spans, children of it); red with the drop never set, with a late span of a dropped trace passed on, with the memory unbounded, with a 4xx marked an error and with the readiness thread outside the request's context                                                                                                                                                                                                                                        |
+| S6       | `apps/api/tests/test_tracing.py` (a 500's two lines carry the server span's trace and span; a line outside a request carries neither), `apps/api/tests/test_logs.py`; red with the trace fields written outside a request                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| S7       | `apps/api/tests/conftest.py` (`no_trace_export`), `apps/api/tests/test_tracing.py` (with `OTEL_EXPORTER_OTLP_ENDPOINT` set and FastAPI's auto-configuration on, a test's exporter is the only one: a stand-in receiver got nothing); red with the endpoint's exporter added beside it and with FastAPI's telemetry left to the environment; 100% branch coverage in `pnpm api:test`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| S8       | `build/api-compose.test.ts` (binding, digest, Jaeger v2, the memory store's limit flag, no volume); red with a port unbound, the digest removed, a zero limit, a volume and Jaeger v1; observed: six traces sent to the image with `max_traces=4` left the first two unfound and the last four found, all six without the flag                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |

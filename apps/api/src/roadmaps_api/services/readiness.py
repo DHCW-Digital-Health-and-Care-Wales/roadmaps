@@ -1,3 +1,4 @@
+import contextvars
 import logging
 import queue
 import threading
@@ -73,7 +74,9 @@ class ReadinessService:
     def check(self) -> None:
         """Raises `service.not_ready` unless the API may serve."""
         outcome: Outcome = queue.SimpleQueue()
-        threading.Thread(target=self._ask, args=(outcome,), daemon=True).start()
+        # In the request's context, so its queries are spans of the request's trace.
+        context = contextvars.copy_context()
+        threading.Thread(target=context.run, args=(self._ask, outcome), daemon=True).start()
         try:
             found = outcome.get(timeout=TIMEOUT_SECONDS)
         except queue.Empty:

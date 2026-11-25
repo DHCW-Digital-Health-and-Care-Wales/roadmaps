@@ -6,7 +6,7 @@ constants (ruff's `G` rules refuse formatted ones), and never with its arguments
 exception is written as codes and names that tell one failure from another: its type,
 the types of the exceptions it was raised from, and a database error's SQLSTATE and
 constraint name, beside its stack frames. A line written while serving a request
-carries its ID.
+carries its ID, which is its trace's, and the trace and span current then.
 
 A third party's message, which may be preformatted with a value (uvicorn formats some
 exceptions into theirs), and an exception's message are written only where the settings
@@ -20,17 +20,16 @@ import logging
 import sys
 import traceback
 from collections.abc import Callable
-from contextvars import ContextVar
 from datetime import UTC, datetime
 from typing import Any, Final, override
 
 import psycopg
+from opentelemetry import trace
+from opentelemetry.trace import format_span_id, format_trace_id
 
 from roadmaps_api.settings import Settings
 
 PACKAGE: Final = "roadmaps_api"
-
-request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
 
 # The `extra` fields a line may hold. Each is an ID, a code, a type, a name or a number,
 # never a value a caller or a person supplied: an access line names its request by its
@@ -117,9 +116,11 @@ class JsonFormatter(logging.Formatter):
             line["message"] = record.msg
         elif not own and self.messages:
             line["message"] = _text(record.getMessage)
-        request_id = request_id_var.get()
-        if request_id is not None:
-            line["request_id"] = request_id
+        # The current span is a request's, or a database span within it (`tracing`).
+        span = trace.get_current_span().get_span_context()
+        if span.is_valid:
+            line["request_id"] = line["trace_id"] = format_trace_id(span.trace_id)
+            line["span_id"] = format_span_id(span.span_id)
         line.update(
             {
                 field: value

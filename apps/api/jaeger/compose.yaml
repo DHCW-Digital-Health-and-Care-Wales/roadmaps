@@ -1,0 +1,22 @@
+# The Jaeger every worktree shares, on fixed ports, to read the API's local traces in
+# (ADR-017 Operation, STY-100). Start it once with `pnpm api:jaeger`, stop it with
+# `pnpm api:jaeger:stop`; worktree teardown leaves it, since other worktrees share it.
+# `pnpm api:dev` exports to it when it answers as the API starts. It is reachable only
+# from this machine and keeps traces in memory alone, so a stop forgets them
+# (build/api-compose.test.ts).
+services:
+  jaeger:
+    # Jaeger v2, pinned by digest, which Dependabot refreshes (.github/dependabot.yml).
+    # Find the digest with: docker buildx imagetools inspect jaegertracing/jaeger:<version>
+    image: jaegertracing/jaeger:2.23.0@sha256:3823829974ccfc2485d2e48b165579091f32295022ae80ca49704e2f4834116e
+    # The built-in configuration's memory store, capped at this many traces, the oldest
+    # dropped first.
+    command:
+      - "--set=extensions.jaeger_storage.backends.some_storage.memory.max_traces=10000"
+    ports:
+      # The UI, and OTLP over HTTP.
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4318:4318"
+    # The image declares /tmp a volume; memory here, so nothing outlives the container.
+    tmpfs:
+      - /tmp

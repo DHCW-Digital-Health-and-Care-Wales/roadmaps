@@ -13,6 +13,11 @@ from typing import Annotated, Any, Final
 import pytest
 from fastapi import APIRouter, FastAPI, Query, Request
 from fastapi.testclient import TestClient
+from opentelemetry import trace
+from opentelemetry.sdk.trace.export import SpanExporter
+from opentelemetry.trace import Status, StatusCode
+from sqlalchemy import text
+from sqlalchemy.orm import Session, sessionmaker
 
 # Imported only to raise one, as FastAPI's routing would for a status it never uses.
 from starlette.exceptions import HTTPException  # noqa: TID251
@@ -103,8 +108,31 @@ def add_test_routes(app: FastAPI) -> FastAPI:
 
     router.include_router(nested)
     router.include_router(admin, prefix="/admin")
+    add_tracing_routes(router)
     app.include_router(router)
     return app
+
+
+def add_tracing_routes(router: APIRouter) -> None:
+    """Routes that plant values where a span might take them up."""
+
+    @router.get("/annotated")
+    def annotated() -> dict[str, str]:
+        """Writes a span attribute, an event and a status description no list allows."""
+        span = trace.get_current_span()
+        span.set_attribute("user.email", PLANTED)
+        span.add_event(PLANTED, {"value": PLANTED})
+        span.set_status(Status(StatusCode.ERROR, PLANTED))
+        return {"status": "ok"}
+
+    @router.get("/query")
+    def query(request: Request) -> dict[str, str]:
+        """Binds the planted value to a query, then to one that fails echoing it."""
+        sessions: sessionmaker[Session] = request.app.state.sessions
+        with sessions() as session:
+            session.execute(text("SELECT :value"), {"value": PLANTED})
+            session.execute(text("SELECT CAST(:value AS integer)"), {"value": PLANTED})
+        return {"status": "ok"}
 
 
 def mounted_app() -> FastAPI:
@@ -119,9 +147,9 @@ def mounted_app() -> FastAPI:
 
 
 @contextmanager
-def serving(settings: Settings) -> Generator[TestClient]:
-    """A client of the test app, with its lifespan run."""
-    with TestClient(add_test_routes(create_app(settings))) as client:
+def serving(settings: Settings, span_exporter: SpanExporter | None = None) -> Generator[TestClient]:
+    """A client of the test app, with its lifespan run, its spans sent to the exporter."""
+    with TestClient(add_test_routes(create_app(settings, span_exporter=span_exporter))) as client:
         yield client
 
 

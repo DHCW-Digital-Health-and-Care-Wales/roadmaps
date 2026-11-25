@@ -1,15 +1,19 @@
 """The API's settings, read from environment variables only and failing closed.
 
 No `.env` file is read, so no file in a checkout can switch an environment to local
-(ADR-017 _Operation_). An unset `ROADMAPS_ENV` gets production's rules.
+(ADR-017 _Operation_). An unset `ROADMAPS_ENV` gets production's rules. Beside the
+`ROADMAPS_*` variables, OpenTelemetry's own `OTEL_EXPORTER_OTLP_ENDPOINT` names where
+traces go: unset, they go nowhere, in every environment (STY-100 D11).
 """
 
 import logging
 import os
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Final, NoReturn
+from urllib.parse import urlsplit
 
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -23,6 +27,13 @@ ALLOWED_HOSTS: Final = "ROADMAPS_ALLOWED_HOSTS"
 # refuses to start, in every environment, so no server holds the migration login
 # (STY-091 D31).
 MIGRATION_DATABASE_URL: Final = "ROADMAPS_MIGRATION_DATABASE_URL"
+# The base URL of an OTLP/HTTP receiver, Jaeger's locally (`pnpm api:dev`); no other
+# OpenTelemetry variable is read (`tracing`).
+OTLP_ENDPOINT: Final = "OTEL_EXPORTER_OTLP_ENDPOINT"
+# The service its traces are filed under: `roadmaps-api-<slot>` in a worktree.
+SERVICE_NAME: Final = "ROADMAPS_SERVICE_NAME"
+DEFAULT_SERVICE_NAME: Final = "roadmaps-api"
+_SERVICE_NAME_FORM = re.compile(r"[a-z0-9-]{1,63}")
 
 # Set by Cloud Run in a service, a job and a worker pool: a local environment there still
 # writes no message to the log (ADR-018 _Records and retention_).
@@ -50,6 +61,10 @@ class Settings:
     # Whether log lines carry an exception's and a third party's message: only a
     # developer's own machine, never test, production or Cloud Run (ADR-018).
     writes_messages: bool = False
+    # Where traces are exported, if anywhere; out of the repr, since a URL can hold a
+    # credential.
+    otlp_endpoint: str | None = field(default=None, repr=False)
+    service_name: str = DEFAULT_SERVICE_NAME
 
     @property
     def serves_live_openapi(self) -> bool:
@@ -89,6 +104,15 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
     if not all(hosts) or any("*" in host for host in hosts):
         invalid.append(ALLOWED_HOSTS)
 
+    # Empty is unset, as OpenTelemetry reads it.
+    otlp_endpoint = environ.get(OTLP_ENDPOINT, "").strip().removesuffix("/") or None
+    if otlp_endpoint is not None and not is_http_url(otlp_endpoint):
+        invalid.append(OTLP_ENDPOINT)
+
+    service_name = environ.get(SERVICE_NAME, DEFAULT_SERVICE_NAME)
+    if not _SERVICE_NAME_FORM.fullmatch(service_name):
+        invalid.append(SERVICE_NAME)
+
     if invalid:
         refuse(invalid)
     on_cloud_run = any(marker in environ for marker in CLOUD_RUN_MARKERS)
@@ -97,6 +121,8 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         database_url=database_url,
         allowed_hosts=hosts,
         writes_messages=environment is Environment.LOCAL and not on_cloud_run,
+        otlp_endpoint=otlp_endpoint,
+        service_name=service_name,
     )
 
 
@@ -123,3 +149,13 @@ def is_database_url(url: str) -> bool:
     except ArgumentError, ValueError:
         return False
     return True
+
+
+def is_http_url(url: str) -> bool:
+    """An absolute HTTP or HTTPS URL with a host and, if any, a numeric port."""
+    try:
+        parts = urlsplit(url)
+        _ = parts.port
+    except ValueError:
+        return False
+    return parts.scheme in {"http", "https"} and bool(parts.hostname)

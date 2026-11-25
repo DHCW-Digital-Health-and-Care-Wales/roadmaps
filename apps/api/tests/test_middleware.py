@@ -15,11 +15,14 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx2 import Response
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from opentelemetry.trace import StatusCode
 from starlette.types import Message, Receive, Scope, Send
 
 from roadmaps_api.middleware import PROBE_PATHS, REQUEST_ID_HEADER, RequestContext
 from roadmaps_api.routes import probes
 from roadmaps_api.settings import MAX_BODY_BYTES
+from roadmaps_api.tracing import create_tracer_provider
 from tests.support import PLANTED, TEST_HOST, Lines, make_settings, serving
 
 
@@ -155,7 +158,7 @@ SCOPE: Scope = {"type": "http", "method": "POST", "path": "/x", "headers": []}
 
 
 def test_an_error_after_the_response_started_is_logged_and_sends_nothing_more(
-    caplog: pytest.LogCaptureFixture,
+    caplog: pytest.LogCaptureFixture, spans: InMemorySpanExporter
 ) -> None:
     caplog.set_level(logging.INFO)
     sent: list[Message] = []
@@ -167,11 +170,15 @@ def test_an_error_after_the_response_started_is_logged_and_sends_nothing_more(
     async def send(message: Message) -> None:
         sent.append(message)
 
-    asyncio.run(RequestContext(app)(SCOPE, messages(), send))
+    tracer = create_tracer_provider(make_settings(), spans).get_tracer("test")
+    asyncio.run(RequestContext(app, tracer)(SCOPE, messages(), send))
 
     assert [message["type"] for message in sent] == ["http.response.start"]
     assert sent[0]["status"] == 200
     assert [record.msg for record in caplog.records] == ["request.failed", "request"]
+    [span] = spans.get_finished_spans()
+    assert span.status.status_code is StatusCode.ERROR
+    assert [event.name for event in span.events] == ["exception"]
 
 
 def test_the_probes_without_an_access_line_are_the_probe_routes() -> None:

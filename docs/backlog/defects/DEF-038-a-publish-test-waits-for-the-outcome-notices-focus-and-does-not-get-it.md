@@ -33,6 +33,10 @@ the last line of `confirmPublish` in `apps/editor/tests/e2e/fixtures/dialogs.ts`
    local run of `removing-an-item.spec.ts` at load average 11, and CI run 45087674954
    on PR #250's head, the reconnect spec again, which passed on its retry. That record
    there is numbered DEF-031, a number `main` has since given another defect.
+3. STY-100's full gate, on its branch's tree before its first commit (base `b42a16c8`;
+   no editor file changed), 8 cores at load average about 0.7: 449 of 450 passed,
+   failing the same reconnect test at the same line. The spec alone then passed 3 of 3
+   (`--repeat-each=3`). So it fails without load too.
 
 **Expected**: the notice has focus soon after the publish dialog hides.
 **Actual**: now and then it has none within 5 seconds.

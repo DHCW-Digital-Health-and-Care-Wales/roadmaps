@@ -66,8 +66,8 @@ jobs:
 
   # The checks of the repository as a whole, on every run: formatting, the root
   # package's own code and tests (the Markdown links, the agent-guide budget, the
-  # worktree and CI scripts, and that CI result needs every job), knip, the API's
-  # generated package and the workflows.
+  # worktree and CI scripts, and that CI result needs every job), the skills' script
+  # tests, knip, the API's generated package and the workflows.
   repository:
     name: Repository
     runs-on: ubuntu-latest
@@ -86,6 +86,14 @@ jobs:
       - run: pnpm repo:typecheck
       - run: pnpm repo:lint
       - run: pnpm repo:test
+      # The node --test suites of the skills' scripts: every *.test.mjs directly in a
+      # skill's scripts/, so a new one there runs unlisted; node expands the quoted
+      # pattern. The UX prototype suites launch Chromium: the runner's Chrome, as the
+      # Lighthouse job uses, so no browser is installed.
+      - name: Test the skills' scripts
+        run: node --test '.agents/skills/*/scripts/*.test.mjs'
+        env:
+          PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH: /usr/bin/google-chrome
       # Unused files, exports and dependencies across the pnpm workspace (knip.jsonc).
       - run: pnpm knip
       # The API's generated package: its types, its lint, its tests and, against

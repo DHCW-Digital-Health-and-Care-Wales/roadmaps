@@ -252,10 +252,13 @@ emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestM
 (including nested request models, never binding `snake_case`) or `ApiResponseModel`
 (camelCase wire format) and a story that changes routes or `ErrorCode` regenerates
 `apps/api/openapi.json` and `packages/api-types` (`pnpm api:contract`). From CHO-047,
-`ApiRequestModel` forbids extra keys (ADR-017 _CHO-047 amendments_); from CHO-053, a
-422 omits `input`, `msg`, `ctx` and `url`, trims the trailing unknown key on
-`extra_forbidden`, and keeps Pydantic's `loc` and `type` elsewhere without walking
-framework internals (ADR-020 _CHO-053 amendments_).
+`ApiRequestModel` forbids extra keys (ADR-017 _CHO-047 amendments_); from CHO-053 and
+DEF-040, a 422 omits `input`, `msg`, `ctx` and `url`, trims the trailing unknown key on
+`extra_forbidden`, truncates remaining string `loc` segments longer than 128 characters to
+127 characters plus `"…"`, and caps `params.errors` at 25 entries with
+`"truncated": true` only when more exist, without walking framework internals, while
+`ApiRequestModel` uses discriminated unions rather than undiscriminated recursive unions
+(ADR-020 _CHO-053 amendments_, _DEF-040 amendments_).
 
 ## Stories
 
@@ -336,8 +339,8 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
   the Sheets replacement runbook still describes CORS and a browser-held token (Done).
 - [DEF-039](../_archive/defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md):
   Dependabot cannot raise updates of the API's locked dependencies (Done).
-- [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md): a
-  small request can get a much larger 422, which lists every error (Needs triage).
+- [DEF-040](../_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md):
+  a small request can get a much larger 422, which lists every error (Done).
 - [DEF-041](../defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md):
   the editor's status messages quote English it cannot mark (Needs triage).
 - [DEF-042](../defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md): the

@@ -45,6 +45,9 @@ the root, unversioned (ADR-017's amendments).
   (`apps/api/src/roadmaps_api/wire.py`). A plain query parameter takes
   `Annotated[Model, Query()]` or an explicit `alias`, and `ApiError.params` keys are
   camelCase.
+- Use discriminated unions on `ApiRequestModel`, never undiscriminated recursive unions;
+  if a recursive request model is ever introduced, add an explicit depth validator
+  (ADR-020).
 - `apps/api/openapi.json` and `packages/api-types/src/generated/` are generated and
   committed, never edited by hand. After a change to a route, a wire model or
   `ErrorCode`, run `pnpm api:contract`, which needs no database, and commit what it

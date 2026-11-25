@@ -62,7 +62,7 @@ At commit `117f7b67` (`origin/main`):
 
 ## Out of scope
 
-- Triaging [DEF-040](../../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
+- Triaging [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
   (capping the number of errors listed and each `loc`'s length in a 422): stays
   `Needs triage` for the owner, updated to reflect both unbounded error count and
   caller-chosen dictionary keys.
@@ -84,7 +84,7 @@ None.
   docstring in `apps/api/src/roadmaps_api/wire.py` still governs how routes declare query,
   header, cookie and body models.
 - Get the owner to triage
-  [DEF-040](../../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
+  [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)
   before a request model takes a dictionary field (recorded in
   `EPC-022/delivery-notes.md`).
 - `apps/api/openapi.json` and `packages/api-types` are unchanged.

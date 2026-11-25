@@ -141,7 +141,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-037](defects/DEF-037-the-editors-layering-lint-skips-files-that-are-not-typescript.md)                         | The editor's layering lint skips files under `src/` that are not `.ts` or `.tsx`                 | Needs triage |
 | [DEF-038](defects/DEF-038-a-publish-test-waits-for-the-outcome-notices-focus-and-does-not-get-it.md)                | A publish test waits for the outcome notice's focus and does not get it                          | Needs triage |
 | [DEF-039](_archive/defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md)                        | Dependabot cannot raise updates of the API's locked dependencies                                 | Done         |
-| [DEF-040](defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                                       | A small request can get a much larger 422, which lists every error (EPC-022)                     | Needs triage |
+| [DEF-040](_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                              | A small request can get a much larger 422, which lists every error (EPC-022)                     | Done         |
 | [DEF-041](defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md)                              | The editor's status messages quote English it cannot mark                                        | Needs triage |
 | [DEF-042](defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md)                                          | The editor's fields hold English with no lang                                                    | Needs triage |
 

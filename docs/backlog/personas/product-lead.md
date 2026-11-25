@@ -56,7 +56,9 @@ binding ADRs.
 - **Tag items and pick product groupings**: add and rename tags (`tags:edit`, ADR-019;
   free text today, A8) and choose a roadmap's family and category. In API mode, a
   [Tenant Admin](tenant-admin.md) maintains families, categories, organisations and tag
-  retirement (ADR-019 Option 8); in today's Sheets mode, any connected lead edits them.
+  retirement (ADR-019 Option 8); in today's Sheets mode, any connected lead edits
+  families, while categories and organisations are read-only and tags are free text
+  (ADR-013, ADR-014).
 - **Add other details where appropriate**, without every item needing every field.
 - **Work with co-leads and stay aligned with peers**: add co-leads to roadmaps they are
   assigned to (or unassign themselves; ADR-019), and read peer roadmaps across their
@@ -79,8 +81,9 @@ binding ADRs.
   stakeholders and public who read the public site.
 - **Stale roadmaps.** A roadmap untouched for six weeks counts as stale (A7) and misleads
   its readers.
-- **Inconsistent tags.** Free-text tags drift ("Patients", "patient", "Citizen"); a shared
-  list will probably be wanted as the product grows (A8).
+- **Inconsistent tags.** Free-text tags in Sheets mode drift ("Patients", "patient",
+  "Citizen"); API mode replaces them with a tenant-scoped tag list (A8, ADR-015
+  Option 7).
 - **Saying too much.** An item that needs more than a phone screen to read has stopped
   being a roadmap item. The card size guides the detail; no limit is enforced yet (A11).
 

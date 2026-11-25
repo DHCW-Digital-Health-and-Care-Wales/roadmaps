@@ -1,4 +1,4 @@
-# Public Reader
+# Public reader
 
 - **Role**: Anyone who reads published roadmaps on the public site (`apps/public-site/`).
 - **Status**: Accepted — derived from [Product Lead](product-lead.md) A13 (2026-11-10),

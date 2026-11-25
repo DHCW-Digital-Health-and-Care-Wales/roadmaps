@@ -18,7 +18,7 @@ moves to `_archive/`, where its row here still points.
 - [Viewer](personas/viewer.md): read-only internal member who reviews unpublished drafts,
   cross-product plans, version history and the member directory (`Viewer` role, ADR-019).
   Accepted (2026-11-25).
-- [Public Reader](personas/public-reader.md): anyone reading published roadmaps on
+- [Public reader](personas/public-reader.md): anyone reading published roadmaps on
   `apps/public-site/` — health boards and Welsh Government stakeholders first, then DHCW
   staff, then patients and the public. Accepted (2026-11-25).
 

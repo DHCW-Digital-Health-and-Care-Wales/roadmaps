@@ -60,8 +60,9 @@ on roadmaps (`docs/backlog/personas/tenant-admin.md`).
 - Make one-time invitation links unmistakable: copy and send now, seven-day expiry, and
   that only the invited email address can use it.
 - State exact scope and blast radius before confirming destructive or tenant-wide changes
-  (removing a member keeps history and leaves other organisations untouched; retiring a
-  list entry or redacting content names how many roadmaps or items it affects).
+  (removing a member keeps history and leaves other organisations untouched; renaming or
+  retiring a list entry or redacting content names how many roadmaps or items it
+  affects).
 
 ## Viewer and read-only states
 

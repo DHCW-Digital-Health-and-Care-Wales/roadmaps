@@ -52,8 +52,8 @@ or tenant-wide administration. Each owner answer is cited by its number under
   and confirm or remove each member (ADR-019 Option 11).
 - **Keep shared lists tidy and step in on roadmaps**: manage families, categories,
   organisations and retired tags (`lists:edit`), manage roadmap assignments
-  (`assignments:manage`), edit or publish any roadmap (`roadmaps:edit-any`), and redact
-  content published in error (`content:redact`).
+  (`assignments:manage`), edit or publish any roadmap (`roadmaps:edit-any` and
+  `roadmaps:publish`), and redact content published in error (`content:redact`).
 
 ## Pain points and risks
 
@@ -77,9 +77,9 @@ or tenant-wide administration. Each owner answer is cited by its number under
   `roadmaps:edit-any`, the Admin risks colliding with an active lead unless they can see
   who is assigned and what draft or recent history exists first (T4).
 - **Tenant-wide blast radius.** Renaming or retiring a shared family, category,
-  organisation or tag (`lists:edit`), or redacting published content (`content:redact`),
-  can affect many roadmaps at once; they need to see what is affected before confirming
-  (T4).
+  organisation or tag (`lists:edit`; `tags:edit` for renaming tags), or redacting
+  published content (`content:redact`), can affect many roadmaps at once; they need to
+  see what is affected before confirming (T4).
 
 ## What they need from the product
 
@@ -112,8 +112,8 @@ Behaviours, not screens:
 - **No false permanence.** Removing a member ends their access to this tenant immediately;
   it does not delete past roadmap history or affect their access to other NHS Wales
   organisations.
-- **State blast radius plainly.** Before confirming a shared-list retirement or content
-  redaction, say how many roadmaps or items it affects (T4).
+- **State blast radius plainly.** Before confirming a shared-list rename or retirement or
+  a content redaction, say how many roadmaps or items it affects (T4).
 
 ## Out of scope for them
 

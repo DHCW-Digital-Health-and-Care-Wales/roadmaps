@@ -31,8 +31,9 @@ requires = ["uv_build>=0.13,<0.14"]
 build-backend = "uv_build"
 
 [tool.uv]
-# One uv everywhere: setup-uv in CI reads it from here.
-required-version = "==0.13.4"
+# Compatible uv 0.13 line: setup-uv in CI reads it here, and a range lets Dependabot's
+# own uv lock updates without failing on an exact-version mismatch (DEF-039).
+required-version = ">=0.13.4,<0.14"
 # A release younger than a week is never resolved, as pnpm's minimumReleaseAge holds
 # back the workspace's (pnpm-workspace.yaml), so a compromised one is usually found and
 # pulled first.

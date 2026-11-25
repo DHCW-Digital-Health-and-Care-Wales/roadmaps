@@ -8,7 +8,7 @@ import {
   reconnectDialog,
 } from "./fixtures/dialogs"
 import { escapeFrom } from "./fixtures/keyboard"
-import { boxOf, scrollsSideways } from "./fixtures/layout"
+import { animationsDone, boxOf, scrollsSideways } from "./fixtures/layout"
 import type { Language } from "./fixtures/look"
 import {
   focusClearOfBars,
@@ -174,14 +174,7 @@ test("focuses the publish outcome notice even when confirmed before the dialog f
   await holdStyle.evaluate((el) => {
     el.parentNode?.removeChild(el)
   })
-  await dialog.evaluate(async (el) => {
-    await Promise.all(el.getAnimations().map((animation) => animation.finished))
-    await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => {
-        resolve()
-      })
-    })
-  })
+  await animationsDone(page)
 
   releaseWrite()
   await expect(dialog).toBeHidden()

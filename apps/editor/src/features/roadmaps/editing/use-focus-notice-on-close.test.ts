@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react"
+import { renderHook } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import { useFocusNoticeOnClose } from "./use-focus-notice-on-close"
@@ -10,104 +10,83 @@ function makeNotice() {
   return { element, focus }
 }
 
+function renderOutcome(notice: () => HTMLElement | null) {
+  const opener = document.createElement("button")
+  const { result, rerender } = renderHook(
+    ({ open }: { open: boolean }) => useFocusNoticeOnClose(open, notice),
+    { initialProps: { open: true } },
+  )
+  return {
+    opener,
+    outcome: () => result.current,
+    setOpen: (open: boolean) => {
+      rerender({ open })
+    },
+  }
+}
+
 describe("useFocusNoticeOnClose", () => {
   it("focuses the notice on close even when the opening animation completes after confirming (DEF-038)", () => {
     const notice = makeNotice()
-    const opener = document.createElement("button")
-    const { result, rerender } = renderHook(
-      ({ open }: { open: boolean }) =>
-        useFocusNoticeOnClose(open, () => notice.element),
-      { initialProps: { open: true } },
-    )
+    const { opener, outcome, setOpen } = renderOutcome(() => notice.element)
 
-    act(() => {
-      result.current.confirmed()
-      // The opening animation finishes while the confirmed write is in flight.
-      result.current.onOpenChangeComplete(true)
-    })
+    outcome().confirmed()
+    // The opening animation finishes while the confirmed write is in flight.
+    outcome().onOpenChangeComplete(true)
+    setOpen(false)
 
-    rerender({ open: false })
+    expect(outcome().finalFocus(opener)).toBe(false)
 
-    expect(result.current.finalFocus(opener)).toBe(false)
-
-    act(() => {
-      result.current.onOpenChangeComplete(false)
-    })
+    outcome().onOpenChangeComplete(false)
 
     expect(notice.focus).toHaveBeenCalledOnce()
   })
 
   it("returns focus to otherwise (or true) and skips the notice when closed unconfirmed", () => {
     const notice = makeNotice()
-    const opener = document.createElement("button")
-    const { result, rerender } = renderHook(
-      ({ open }: { open: boolean }) =>
-        useFocusNoticeOnClose(open, () => notice.element),
-      { initialProps: { open: true } },
-    )
+    const { opener, outcome, setOpen } = renderOutcome(() => notice.element)
 
-    rerender({ open: false })
+    setOpen(false)
 
-    expect(result.current.finalFocus(opener)).toBe(opener)
-    expect(result.current.finalFocus()).toBe(true)
+    expect(outcome().finalFocus(opener)).toBe(opener)
+    expect(outcome().finalFocus()).toBe(true)
 
-    act(() => {
-      result.current.onOpenChangeComplete(false)
-    })
+    outcome().onOpenChangeComplete(false)
 
     expect(notice.focus).not.toHaveBeenCalled()
   })
 
   it("starts unconfirmed again on the next opening after a confirmed close", () => {
     const notice = makeNotice()
-    const opener = document.createElement("button")
-    const { result, rerender } = renderHook(
-      ({ open }: { open: boolean }) =>
-        useFocusNoticeOnClose(open, () => notice.element),
-      { initialProps: { open: true } },
-    )
+    const { opener, outcome, setOpen } = renderOutcome(() => notice.element)
 
-    act(() => {
-      result.current.confirmed()
-    })
-    rerender({ open: false })
-    act(() => {
-      result.current.onOpenChangeComplete(false)
-    })
+    outcome().confirmed()
+    setOpen(false)
+    outcome().onOpenChangeComplete(false)
     expect(notice.focus).toHaveBeenCalledOnce()
 
     // Reopen and cancel without confirming.
-    rerender({ open: true })
-    rerender({ open: false })
+    setOpen(true)
+    setOpen(false)
 
-    expect(result.current.finalFocus(opener)).toBe(opener)
+    expect(outcome().finalFocus(opener)).toBe(opener)
 
-    act(() => {
-      result.current.onOpenChangeComplete(false)
-    })
+    outcome().onOpenChangeComplete(false)
 
     expect(notice.focus).toHaveBeenCalledOnce()
   })
 
   it("falls back to otherwise when confirmed but no notice is mounted on close", () => {
-    const opener = document.createElement("button")
-    const { result, rerender } = renderHook(
-      ({ open }: { open: boolean }) => useFocusNoticeOnClose(open, () => null),
-      { initialProps: { open: true } },
-    )
+    const { opener, outcome, setOpen } = renderOutcome(() => null)
 
-    act(() => {
-      result.current.confirmed()
-    })
-    rerender({ open: false })
+    outcome().confirmed()
+    setOpen(false)
 
-    expect(result.current.finalFocus(opener)).toBe(opener)
-    expect(result.current.finalFocus()).toBe(true)
+    expect(outcome().finalFocus(opener)).toBe(opener)
+    expect(outcome().finalFocus()).toBe(true)
 
     expect(() => {
-      act(() => {
-        result.current.onOpenChangeComplete(false)
-      })
+      outcome().onOpenChangeComplete(false)
     }).not.toThrow()
   })
 })

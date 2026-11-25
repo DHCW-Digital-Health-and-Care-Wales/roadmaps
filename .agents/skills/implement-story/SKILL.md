@@ -78,11 +78,12 @@ dropping a gate is the owner's.
 
 Ask only about unresolved product behaviour, security or data contracts (token
 handling, scopes, what is read from Google), contradictory requirements that
-cannot be inferred safely, a needed new or successor ADR, or a requirement that
-can be met only by a custom layer or private internals for a corner case the
-framework, library or a standard extension does not support natively (propose
-adjusting to native support first; a custom workaround is a rare, explicitly
-agreed exception), and ask the moment the question appears, at any step. Each option states what the build does now
+cannot be inferred safely, a needed new or successor ADR, or a requirement
+that needs a custom layer or private internals for a corner case the framework,
+library or a standard extension does not support natively, and ask the moment
+the question appears, at any step. For such a corner case, propose adjusting
+the requirement to stay native first, leaving a custom workaround as a rare,
+explicitly agreed exception. Each option states what the build does now
 and what choosing it adds, removes or moves, so the chosen answer names its
 remaining work. Record each answer as an owner entry in the record's
 `## Decisions`, in the owner's terms, quoting where a paraphrase would narrow or

@@ -84,11 +84,11 @@ report in the conversation only.
      helpers, `createExternalStore`, `StatusPanel`, `ReconnectButton`,
      `renderWithProviders`, the in-memory repository, the fakes); code that
      hand-writes what an installed dependency provides, unless the call site
-     states what the dependency cannot do, or builds a custom layer over private
-     library internals for a corner case the framework or a standard extension
-     does not support natively without explicit owner agreement or an ADR; same
-     concept named differently across layers (`remove`/`delete`/`clear`,
-     `roadmap`/`sheet`/`board`).
+     states a concrete public-API gap; a custom layer or use of private
+     internals for a corner case the framework, library or a standard extension
+     does not support natively, unless an owner decision or ADR explicitly
+     agrees to that exception; same concept named differently across layers
+     (`remove`/`delete`/`clear`, `roadmap`/`sheet`/`board`).
    - **Dead or false text.** No-op assignments, unused parameters, exports or
      branches, suppressions with no reason, comments that went stale,
      including "left for S0n" or "TODO" after the story closed. Beyond the

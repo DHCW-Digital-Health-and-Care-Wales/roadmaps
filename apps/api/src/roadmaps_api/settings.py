@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 ENV: Final = "ROADMAPS_ENV"
 DATABASE_URL: Final = "ROADMAPS_DATABASE_URL"
 ALLOWED_HOSTS: Final = "ROADMAPS_ALLOWED_HOSTS"
+# Only the migrate command reads it: an API process that holds it refuses to start, in
+# every environment, so no server ever holds the migration login (STY-091 D31).
+MIGRATION_DATABASE_URL: Final = "ROADMAPS_MIGRATION_DATABASE_URL"
 
 # Set by Cloud Run in a service, a job and a worker pool: a local environment there still
 # writes no message to the log (ADR-018 _Records and retention_).
@@ -75,8 +78,11 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
             invalid.append(ENV)
 
     database_url = environ.get(DATABASE_URL, "").strip()
-    if not _is_database_url(database_url):
+    if not is_database_url(database_url):
         invalid.append(DATABASE_URL)
+
+    if MIGRATION_DATABASE_URL in environ:
+        invalid.append(MIGRATION_DATABASE_URL)
 
     hosts = tuple(host.strip().lower() for host in environ.get(ALLOWED_HOSTS, "").split(","))
     if not all(hosts) or any("*" in host for host in hosts):
@@ -94,7 +100,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
     )
 
 
-def _is_database_url(url: str) -> bool:
+def is_database_url(url: str) -> bool:
     """A psycopg URL SQLAlchemy can parse, so the engine never fails on it with its text."""
     if not url.startswith(DATABASE_URL_SCHEME):
         return False

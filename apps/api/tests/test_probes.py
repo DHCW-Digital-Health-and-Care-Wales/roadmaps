@@ -15,7 +15,7 @@ from sqlalchemy.engine import make_url
 
 from roadmaps_api.database import MAX_OVERFLOW, POOL_SIZE
 from roadmaps_api.repositories.readiness import ReadinessRepository
-from tests.support import DOWN_DATABASE_URL, Lines, database_url, make_settings, serving
+from tests.support import DOWN_DATABASE_URL, Lines, make_settings, serving
 
 # About two seconds, with room for a loaded machine.
 DEADLINE = 3.5
@@ -28,8 +28,8 @@ NOT_READY = {
 
 
 @pytest.fixture
-def ready_client() -> Iterator[TestClient]:
-    with serving(make_settings(database_url())) as client:
+def ready_client(database_url: str) -> Iterator[TestClient]:
+    with serving(make_settings(database_url)) as client:
         yield client
 
 
@@ -164,9 +164,9 @@ class FreezingProxy:
 
 
 def test_ready_gives_up_on_a_pooled_connection_whose_database_stops_answering(
-    lines: Lines,
+    lines: Lines, database_url: str
 ) -> None:
-    url = make_url(database_url())
+    url = make_url(database_url)
     proxy = FreezingProxy((url.host or "127.0.0.1", url.port or 5432))
     try:
         with serving(
@@ -195,6 +195,6 @@ def test_ready_lets_an_unexpected_error_through_as_a_500(
     def fail(_self: ReadinessRepository) -> None:
         raise ValueError
 
-    monkeypatch.setattr(ReadinessRepository, "select_one", fail)
+    monkeypatch.setattr(ReadinessRepository, "limit_statement_time", fail)
 
     assert ready_client.get("/ready").json()["code"] == "server.internal_error"

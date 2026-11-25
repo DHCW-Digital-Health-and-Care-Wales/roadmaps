@@ -6,7 +6,6 @@ route of their own, and the body limit a route that reads no body. The server te
 """
 
 import json
-import os
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from typing import Annotated, Any, Final
@@ -44,15 +43,6 @@ class Lines:
         parsed = [json.loads(line) for line in captured.out.splitlines()]
         # The test client's own lines, one per request it sends.
         return [line for line in parsed if line["logger"] != "httpx2"]
-
-
-def database_url() -> str:
-    """The test database, the Compose file's, which `scripts/api.sh test` starts."""
-    url = os.environ.get("ROADMAPS_TEST_DATABASE_URL")
-    if not url:
-        msg = "Run the tests with pnpm api:test, which sets ROADMAPS_TEST_DATABASE_URL."
-        raise RuntimeError(msg)
-    return url
 
 
 def make_settings(

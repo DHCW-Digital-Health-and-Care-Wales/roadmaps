@@ -42,7 +42,10 @@ ALLOWED_EXTRA_FIELDS: Final = frozenset(
         "status",
         "duration_ms",
         "code",
+        "cause",
         "invalid_settings",
+        # A revision `/ready` found ahead of the code's, only once it reads `NNNN_<slug>`.
+        "revision",
     }
 )
 

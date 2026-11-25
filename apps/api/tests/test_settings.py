@@ -59,6 +59,18 @@ BAD = {
         for pattern in ("*", "*.example")
         for environment in ("local", "test", "production", None)
     },
+    # No API process holds the migration login, in any environment (STY-091 S3, D31).
+    **{
+        f"the migration login's URL with ROADMAPS_ENV {environment or 'unset'}": (
+            {"ROADMAPS_ENV": environment, "ROADMAPS_MIGRATION_DATABASE_URL": URL},
+            ["ROADMAPS_MIGRATION_DATABASE_URL"],
+        )
+        for environment in ("local", "test", "production", None)
+    },
+    "an empty migration login's URL": (
+        {"ROADMAPS_MIGRATION_DATABASE_URL": ""},
+        ["ROADMAPS_MIGRATION_DATABASE_URL"],
+    ),
     "several bad settings": (
         {"ROADMAPS_ENV": "prod", "ROADMAPS_DATABASE_URL": None, "ROADMAPS_ALLOWED_HOSTS": None},
         ["ROADMAPS_ENV", "ROADMAPS_DATABASE_URL", "ROADMAPS_ALLOWED_HOSTS"],

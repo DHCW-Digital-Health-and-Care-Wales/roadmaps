@@ -9,6 +9,7 @@ import io
 import json
 import logging
 import sys
+import uuid
 from collections.abc import Callable
 from typing import Any
 
@@ -27,12 +28,12 @@ from roadmaps_api.app import create_app
 from roadmaps_api.database import create_database_engine
 from roadmaps_api.logs import JsonFormatter, StdoutHandler, exception_chain
 from roadmaps_api.settings import Environment, Settings, SettingsError, load_settings
+from tests.harness import PROBE_TABLE
 from tests.support import (
     DOWN_DATABASE_URL,
     PLANTED,
     ConfigureLogging,
     Lines,
-    database_url,
     make_settings,
     mounted_app,
     serving,
@@ -213,6 +214,7 @@ def test_ready_s_503_logs_a_warning_with_the_code_and_the_exception_s_type(
         "message": "readiness.failed",
         "request_id": response.headers["X-Request-ID"],
         "code": "service.not_ready",
+        "cause": "readiness.no_connection",
         "exception_type": "sqlalchemy.exc.OperationalError",
         "exception_causes": ["psycopg.OperationalError"],
         "stack": warning["stack"],
@@ -220,8 +222,8 @@ def test_ready_s_503_logs_a_warning_with_the_code_and_the_exception_s_type(
     assert (access["route"], access["status"]) == ("/ready", 503)
 
 
-def test_a_probe_that_succeeds_writes_no_access_line(lines: Lines) -> None:
-    with serving(make_settings(database_url())) as client:
+def test_a_probe_that_succeeds_writes_no_access_line(lines: Lines, database_url: str) -> None:
+    with serving(make_settings(database_url)) as client:
         assert client.get("/health").status_code == 200
         assert client.get("/ready").status_code == 200
 
@@ -241,8 +243,8 @@ def test_another_library_s_message_and_arguments_are_dropped(lines: Lines) -> No
     assert "message" not in own_object
 
 
-def test_the_engine_hides_sql_parameters() -> None:
-    engine = create_database_engine(database_url())
+def test_the_engine_hides_sql_parameters(database_url: str) -> None:
+    engine = create_database_engine(database_url)
 
     with engine.connect() as connection, pytest.raises(SQLAlchemyError) as raised:
         connection.execute(text("SELECT 1 / 0 WHERE :value = :value"), {"value": PLANTED})
@@ -375,20 +377,20 @@ def connect(url: str) -> None:
         engine.dispose()
 
 
-def refused() -> None:
+def refused(_url: str) -> None:
     connect(DOWN_DATABASE_URL)
 
 
-def wrong_password() -> None:
-    connect(make_url(database_url()).set(password=PLANTED).render_as_string(hide_password=False))
+def wrong_password(url: str) -> None:
+    connect(make_url(url).set(password=PLANTED).render_as_string(hide_password=False))
 
 
-def connect_timeout() -> None:
+def connect_timeout(_url: str) -> None:
     raise psycopg.errors.ConnectionTimeout
 
 
-def cancelled_statement() -> None:
-    engine = create_database_engine(database_url())
+def cancelled_statement(url: str) -> None:
+    engine = create_database_engine(url)
     try:
         with engine.connect() as connection:
             connection.execute(text("SET statement_timeout = '10ms'"))
@@ -397,54 +399,47 @@ def cancelled_statement() -> None:
         engine.dispose()
 
 
-# Each failure, its type, the types it was raised from and its SQLSTATE.
+# Each failure, given the test database's URL, its type, the types it was raised from and
+# its SQLSTATE.
 FAILURES = {
     "a refused connection": (
         refused,
-        "sqlalchemy.exc.OperationalError",
-        ["psycopg.OperationalError"],
-        None,
+        ("sqlalchemy.exc.OperationalError", ["psycopg.OperationalError"], None),
     ),
     "a wrong password": (
         wrong_password,
-        "sqlalchemy.exc.OperationalError",
-        ["psycopg.OperationalError"],
-        None,
+        ("sqlalchemy.exc.OperationalError", ["psycopg.OperationalError"], None),
     ),
-    "a connect timeout": (connect_timeout, "psycopg.errors.ConnectionTimeout", [], None),
+    "a connect timeout": (connect_timeout, ("psycopg.errors.ConnectionTimeout", [], None)),
     "a cancelled statement": (
         cancelled_statement,
-        "sqlalchemy.exc.OperationalError",
-        ["psycopg.errors.QueryCanceled"],
-        "57014",
+        ("sqlalchemy.exc.OperationalError", ["psycopg.errors.QueryCanceled"], "57014"),
     ),
 }
 
 
-@pytest.mark.parametrize(("fail", "kind", "causes", "sqlstate"), FAILURES.values(), ids=FAILURES)
+@pytest.mark.parametrize(("fail", "expected"), FAILURES.values(), ids=FAILURES)
 def test_an_exception_s_line_tells_failures_apart_by_codes(
     lines: Lines,
-    fail: Callable[[], None],
-    kind: str,
-    causes: list[str],
-    sqlstate: str | None,
+    database_url: str,
+    fail: Callable[[str], None],
+    expected: tuple[str, list[str], str | None],
 ) -> None:
-    log_failure(fail)
+    log_failure(lambda: fail(database_url))
 
     [line] = lines.read()
-    assert (line["exception_type"], line["exception_causes"]) == (kind, causes)
-    assert line.get("sqlstate") == sqlstate
+    assert (line["exception_type"], line["exception_causes"], line.get("sqlstate")) == expected
     assert "constraint_name" not in line
     assert line["stack"]
 
 
 def test_a_refused_connection_and_a_wrong_password_differ_only_in_a_local_log(
-    configure_logging: ConfigureLogging, capsys: pytest.CaptureFixture[str]
+    configure_logging: ConfigureLogging, capsys: pytest.CaptureFixture[str], database_url: str
 ) -> None:
     configure_logging(settings_for({"ROADMAPS_ENV": "local"}))
 
-    log_failure(refused)
-    log_failure(wrong_password)
+    log_failure(lambda: refused(database_url))
+    log_failure(lambda: wrong_password(database_url))
 
     refusal, password = logged_lines(capsys)
     assert refusal["exception_causes"] == password["exception_causes"]
@@ -453,32 +448,34 @@ def test_a_refused_connection_and_a_wrong_password_differ_only_in_a_local_log(
 
 @pytest.mark.parametrize("environment", ["test", "production"])
 def test_a_unique_violation_logs_its_sqlstate_and_constraint_never_the_value(
-    configure_logging: ConfigureLogging, capsys: pytest.CaptureFixture[str], environment: str
+    configure_logging: ConfigureLogging,
+    capsys: pytest.CaptureFixture[str],
+    database_url: str,
+    environment: str,
 ) -> None:
     configure_logging(settings_for({"ROADMAPS_ENV": environment}))
-    engine = create_database_engine(database_url())
+    planted = str(uuid.uuid4())
+    engine = create_database_engine(database_url)
     try:
         with engine.connect() as connection:
             connection.execute(
-                text("CREATE TABLE planted (value text CONSTRAINT planted_value_key UNIQUE)")
+                text("SELECT set_config('app.tenant_id', :tenant, true)"),
+                {"tenant": str(uuid.uuid4())},
             )
-            try:
-                insert = text("INSERT INTO planted VALUES (:value)")
-                log_failure(
-                    lambda: [connection.execute(insert, {"value": PLANTED}) for _ in range(2)]
-                )
-                connection.rollback()
-            finally:
-                connection.execute(text("DROP TABLE IF EXISTS planted"))
-                connection.commit()
+            insert = text(
+                f"INSERT INTO {PROBE_TABLE} (id, tenant_id) "  # noqa: S608 - the harness's constant
+                "VALUES (:id, NULLIF(current_setting('app.tenant_id'), '')::uuid)"
+            )
+            log_failure(lambda: [connection.execute(insert, {"id": planted}) for _ in range(2)])
+            connection.rollback()
     finally:
         engine.dispose()
 
     captured = capsys.readouterr()
     [line] = [json.loads(text) for text in captured.out.splitlines()]
     assert line["exception_causes"] == ["psycopg.errors.UniqueViolation"]
-    assert (line["sqlstate"], line["constraint_name"]) == ("23505", "planted_value_key")
-    assert PLANTED not in captured.out + captured.err
+    assert (line["sqlstate"], line["constraint_name"]) == ("23505", f"pk_{PROBE_TABLE}")
+    assert planted not in captured.out + captured.err
 
 
 def test_the_chain_follows_each_cause_then_context_stopping_at_a_repeat() -> None:

@@ -1,8 +1,8 @@
 # Replacing Google Sheets with an HTTP API
 
 Google Sheets is a temporary data source. The plan is a PostgreSQL-backed HTTP API
-behind an `ApiRoadmapRepository`; the UI, hooks and routes do not change (ADR-002). The
-port is `RoadmapRepository` in `apps/editor/src/domain/roadmap/roadmap-repository.ts`: read its
+behind an `ApiRoadmapRepository`; the UI, hooks and routes do not change (ADR-002), except
+the sign-in flow that ADR-018 reshapes (step 4). The port is `RoadmapRepository` in `apps/editor/src/domain/roadmap/roadmap-repository.ts`: read its
 doc comments first, since they are the contract.
 
 The database behind the API is decided by ADR-015: scoped by tenant, keeping every

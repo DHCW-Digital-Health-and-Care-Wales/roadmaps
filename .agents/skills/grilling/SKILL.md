@@ -7,7 +7,7 @@ Interview the user relentlessly until you reach a shared understanding. Map this
 
 Work the tree in **rounds**. The **frontier** is every decision whose prerequisites are already settled: the questions you can ask _now_ without guessing at answers you haven't heard yet. Ask the whole frontier in one round, then wait for the user's answers before the next round.
 
-Ask each round with the runtime's structured multiple-choice question tool, not as chat text. Put each frontier question in its own entry with 2–4 options; for an open-ended question, offer the main candidate answers and let the tool's "Other" option take the rest. Make your recommended answer the first option and mark it "(Recommended)", so picking the first option accepts it, and include the trade-off for each option. If the tool caps questions per call, send a larger frontier as consecutive calls in the same round. If no structured question tool is available, fall back to numbered chat questions, each with your recommended answer, worded so "yes" accepts it.
+Ask each round as numbered chat questions, never through a structured question tool. Put each frontier question in its own numbered item with 2–4 options; for an open-ended question, offer the main candidate answers and leave room for another answer. Put your recommended answer first, mark it "(Recommended)", include the trade-off for each option, and word the round so "yes" accepts your recommendations.
 
 When the answer changes what a user sees or does, include a short example scenario in the question that shows the impact: who does what, and what they now see.
 
@@ -21,7 +21,7 @@ The session is done when the frontier is empty: every branch of the design tree 
 
 When the plan is a backlog record, its template's Decisions and Open questions sections hold the answers and the questions still open.
 
-When the plan is an ADR, draft it before the first round: its Options section is the grilling script. List each option with what the build does now, what choosing it adds, removes or moves, and a one-line example of who sees what, recommended first. Put each option into its question as the option's label and `description`. Once the owner answers, mark the chosen option once, keep the others with the reason each lost, and cite the answer in Status (`.agents/skills/domain-modeling/ADR-FORMAT.md`).
+When the plan is an ADR, draft it before the first round: its Options section is the grilling script. List each option with what the build does now, what choosing it adds, removes or moves, and a one-line example of who sees what, recommended first. Once the owner answers, mark the chosen option once, keep the others with the reason each lost, and cite the answer in Status (`.agents/skills/domain-modeling/ADR-FORMAT.md`).
 
 ## Impact on existing behaviour
 

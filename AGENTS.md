@@ -46,6 +46,8 @@ writes_).
   new nested guide.
 - Use the existing isolated checkout and preserve unrelated work; create a worktree
   only when asked.
+- Ask the user questions in plain chat text (numbered when there are several, with your
+  recommended answer marked), never through a structured question tool.
 - Within a task's scope, prefer the cleaner structure (refactor, rename, extract) over
   the smallest diff. Leave each touched file tidier, in proportion; record any other
   actionable finding in the backlog (`docs/AGENTS.md`), since a PR note is not a record.

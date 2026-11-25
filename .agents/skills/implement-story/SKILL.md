@@ -91,10 +91,10 @@ widen it. An answer covers only what was asked: when review or later work
 widens or changes what an answered decision commits to, ask again, saying what
 changed; keep the answered entry as it was and add the change as an agent entry,
 without the owner's acceptance, until they reply. A delegated agent heads its
-handoff with the question and, in an orchestrate run, logs it as an
-`owner-question` note; otherwise, once its independent work is done, it asks
-through the runtime's pending-request tool, which its parent relays
-(`references/delegation.md`, Dispatch step 5). Continue independent work while
+handoff with the question (and, in an orchestrate run, logs it as an
+`owner-question` note) and returns it to its parent once its independent work
+is done, rather than calling a question tool; the parent relays it to the user
+in plain chat. Continue independent work while
 waiting; an unanswered question is not approval. When only work that rests on
 the answer remains, hand back with it as a blocker.
 

@@ -124,15 +124,20 @@ amendments_ stands.
 
 ### DEF-043 amendments
 
-From the owner's DEF-043 triage (2026-11-25, DEF-043 D1); the rest of _The API's own
-responses_, _CHO-053 amendments_ and _DEF-040 amendments_ stands.
+From the owner's DEF-043 triage and review (2026-11-25, DEF-043 D1–D2); the rest of
+_The API's own responses_, _CHO-053 amendments_ and _DEF-040 amendments_ stands.
 
-- **Collection fields in `ApiRequestModel` are bounded natively in Pydantic**: every
-  `list` field sets `Field(max_length=…)`, and every `dict`, `set`, `frozenset` and
-  variadic `tuple` field pairs `FailFast()` with `Field(max_length=…)`, especially for
-  collections nested beneath a dictionary (`apps/api/AGENTS.md`). The API adds no custom
-  pre-validation framework layer; Pydantic stops validating excess or failing entries
-  before `validation_error` slices `exc.errors()`.
+- **Collections and dictionary keys in `ApiRequestModel` are bounded natively in
+  Pydantic**: every collection — nested collection type arguments included — uses a
+  concrete builtin (`list`, `dict`, `set`, `frozenset` or variadic `tuple`, not
+  `Sequence` or `Mapping`), sets `Field(max_length=…)` on every `list`, pairs `FailFast()`
+  with `Field(max_length=…)` on every `dict`, `set`, `frozenset` and variadic `tuple`, and
+  bounds every `dict` key with `Annotated[str, StringConstraints(max_length=…)]`
+  (`apps/api/AGENTS.md`). The API adds no custom pre-validation framework layer:
+  `Field(max_length=M)` on `list` stops upfront at one `too_long` error when `len > M` and
+  caps failing-item errors at `M` when `len <= M`; `FailFast()` with `Field(max_length=M)`
+  stops on the first failing entry or first unique excess entry; and bounding `dict` keys
+  stops an oversize key at one `string_too_long` error before its value is validated.
 
 ## Consequences
 
@@ -152,10 +157,13 @@ responses_, _CHO-053 amendments_ and _DEF-040 amendments_ stands.
   fixed-depth schemas (and for any future recursive model with a depth validator, as
   `apps/api/AGENTS.md` requires).
 - **Collection validation work is bounded natively ([DEF-043](../backlog/_archive/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md), `Done`)**:
-  `apps/api/AGENTS.md` requires `Field(max_length=…)` on `list` fields and `FailFast()`
-  alongside `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple`
-  fields in `ApiRequestModel`, bounding Pydantic's pre-handler validation work without a
-  custom framework layer.
+  `apps/api/AGENTS.md` requires concrete builtin collections (nested type arguments
+  included) with `Field(max_length=…)` on `list`, `FailFast()` alongside
+  `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple`, and
+  `Annotated[str, StringConstraints(max_length=…)]` on `dict` keys in `ApiRequestModel`,
+  bounding collection and dictionary-key amplification natively without a custom framework
+  layer (linear top-level unknown-key validation remains bounded by Starlette's 1 MiB body
+  limit).
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

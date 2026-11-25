@@ -63,6 +63,12 @@ before-validator checking `len()`.
   `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple` fields) in
   ADR-020 and `apps/api/AGENTS.md` before the first request model with a collection, with
   no custom runtime framework layer.
+- **D2** (owner, 2026-11-25, review): Widen D1 to close the dictionary-key amplification
+  and nested-collection findings from Round 1 review — bound every collection in
+  `ApiRequestModel` (nested collection type arguments included, using concrete builtins
+  `list`, `dict`, `set`, `frozenset` and variadic `tuple`, not `Sequence` or `Mapping`),
+  and bound every `dict` key with `Annotated[str, StringConstraints(max_length=…)]`
+  alongside `FailFast()` and `Field(max_length=…)`.
 
 ## Delivery
 
@@ -72,15 +78,17 @@ None.
 
 ### Contract for dependents
 
-- Future `ApiRequestModel` classes with collection fields bound every collection natively
-  in Pydantic (`Field(max_length=…)` on `list` fields; `FailFast()` paired with
-  `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple` fields), as
-  recorded in `apps/api/AGENTS.md` and `ADR-020` (_DEF-043 amendments_), with no custom
+- Future `ApiRequestModel` classes with collections bound every collection natively in
+  Pydantic, nested collection type arguments included, using concrete builtins
+  (`Field(max_length=…)` on `list`; `FailFast()` paired with `Field(max_length=…)` on
+  `dict`, `set`, `frozenset` and variadic `tuple`;
+  `Annotated[str, StringConstraints(max_length=…)]` on `dict` keys), as recorded in
+  `apps/api/AGENTS.md` and `ADR-020` (_DEF-043 amendments_), with no custom
   pre-validation framework layer.
 - `apps/api/openapi.json` and `packages/api-types` are unchanged.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `docs/adr/ADR-020-the-editor-and-the-api-share-one-origin.md` (`_DEF-043 amendments_` and _Consequences_), `apps/api/AGENTS.md`, `docs/backlog/README.md`, `docs/backlog/EPC-022-monorepo-and-backend-foundation/README.md`, `delivery-notes.md` and `DEF-040`'s relative link; verified by `pnpm format:check && pnpm test:docs`, live-docs `rg` sweep, and an observed Pydantic 2.14.3 run confirming `Field(max_length=2)` on `list` and `FailFast()` + `Field(max_length=2)` on `dict`/`set`/`frozenset`/variadic `tuple` each stop at 1 error |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `docs/adr/ADR-020-the-editor-and-the-api-share-one-origin.md` (`_DEF-043 amendments_` and _Consequences_), `apps/api/AGENTS.md`, `docs/backlog/README.md`, `docs/backlog/EPC-022-monorepo-and-backend-foundation/README.md`, `delivery-notes.md` and `DEF-040`'s relative link; verified by `pnpm format:check && pnpm test:docs`, live-docs `rg` sweep, and observed Pydantic 2.14.3 runs confirming: `Field(max_length=2)` on `list` stops at 1 `too_long` error for `len > 2` and caps failing items at 2 for `len == 2`; `FailFast()` + `Field(max_length=2)` on `dict`/`set`/`frozenset`/variadic `tuple` stops at 1 error; and `Annotated[str, StringConstraints(max_length=128)]` on `dict` keys with `FailFast()` stops a 100,000-char key with 2,000 unknown keys or invalid list items beneath it at 1 `string_too_long` error |

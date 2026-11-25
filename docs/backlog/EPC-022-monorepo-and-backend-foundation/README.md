@@ -258,9 +258,10 @@ DEF-040, a 422 omits `input`, `msg`, `ctx` and `url`, trims the trailing unknown
 127 characters plus `"…"`, and caps `params.errors` at 25 entries with
 `"truncated": true` only when more exist, without walking framework internals, while
 `ApiRequestModel` uses discriminated unions rather than undiscriminated recursive unions
-and bounds every collection field natively (`Field(max_length=…)` on `list`; `FailFast()`
-with `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple`) (ADR-020
-_CHO-053 amendments_, _DEF-040 amendments_, _DEF-043 amendments_).
+and bounds every collection natively, nested type arguments included, using concrete
+builtins (`Field(max_length=…)` on `list`; `FailFast()` with `Field(max_length=…)` on
+`dict`, `set`, `frozenset` and variadic `tuple`; `StringConstraints(max_length=…)` on
+`dict` keys) (ADR-020 _CHO-053 amendments_, _DEF-040 amendments_, _DEF-043 amendments_).
 
 ## Stories
 

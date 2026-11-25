@@ -34,7 +34,7 @@ of their own and take the page's `cy`. The last two are named in Welsh by an
 ## Cause
 
 Verified for the three fields reproduced, by code for the rest: no control that takes
-roadmap content sets `lang`. The search: `rg -n '<(Input|Textarea|textarea)\b'
+roadmap content sets `lang`. The search: `rg -n '<(Input|Textarea|textarea|Control)\b'
 apps/editor/src/features/roadmaps`, leaving out the navigation's search box:
 
 - `editing/edit-form.tsx`: the item and roadmap forms' text fields and text areas.
@@ -43,6 +43,9 @@ apps/editor/src/features/roadmaps`, leaving out the navigation's search box:
 - `editing/quick-add.tsx`: the new item's title.
 - `dialogs/add-roadmap-form.tsx`: the new roadmap's text fields.
 - `families/family-form.tsx`: the family's name; its colour is in no language.
+
+Both roadmap forms' "Product lead" field holds people's names, which are in no one
+language, as DEF-033's Delivery treats them.
 
 A `lang` on a control also reaches a name given to it by `aria-label`, which is in the
 interface's language, as for the details, rename and quick add fields.

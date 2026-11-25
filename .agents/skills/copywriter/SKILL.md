@@ -5,15 +5,15 @@ description: The product's voice and copy rules, in English and Welsh, for the e
 
 # Copywriter
 
-The voice of an internal DHCW tool, used only by DHCW staff, in which Product
-Leads manage their products' public Now / Next / Later roadmaps
-(`docs/backlog/personas/product-lead.md`).
-They come to get a job done: move an item, sharpen its outcome, fix a tag. The
-interface copy should be nearly invisible, earning attention only when
-something needs a decision or has gone wrong. What the Product Lead publishes is shown
-on a separate public site, so the interface also helps them write it well: field
-labels, hints and examples are copy too. The public site's own copy follows
-the same rules in the register _The public site_ sets.
+The voice of an internal tool for NHS Wales organisations (DHCW first), in which
+Product Leads, Tenant Admins and Viewers work with public Now / Next / Later
+roadmaps (`docs/backlog/personas/`).
+Product Leads come to get a job done: move an item, sharpen its outcome, fix a
+tag. The interface copy should be nearly invisible, earning attention only when
+something needs a decision or has gone wrong. What they publish is shown on a
+separate public site (`apps/public-site/`), so editor copy also helps them write
+it well: field labels, hints and examples are copy too. The public site's own
+copy follows the same rules in the register _The public site_ sets.
 
 **Two things carry the rules, and this is only one of them.** The type system
 and the linter hold the mechanics: `pnpm typecheck` fails on a missing or extra
@@ -44,9 +44,17 @@ reviewers (`quality-review`) are the only gate on it, so apply it deliberately.
   who grants access.
 - **Product Lead, arriving**: what the tool is for and the one step to start.
   Connecting is a step, not the subject; no jargon about Google or tokens.
-- **Public reader**: reads the public site, never this tool, but reads every
-  item a Product Lead publishes. Hints and examples steer that text towards plain, outcome-first
-  language.
+- **Tenant Admin**: manages one organisation's members, invitations, roles and
+  shared lists, and steps in on roadmaps. Name roles and organisations plainly,
+  make one-time invitation links unmistakable, and state blast radius before
+  confirming destructive or tenant-wide changes.
+- **Viewer and read-only states**: reads roadmaps, unpublished drafts, history
+  and the member directory without editing (including a Product Lead on an
+  unassigned peer roadmap or read-only list). Distinguish published from draft
+  at a glance; never shame with "access denied".
+- **Public reader**: reads published roadmaps on `apps/public-site/`. There,
+  write directly in plain, outcome-first language; in the editor, let them shape
+  field hints and examples.
 - **Welsh-language reader**: the same voice, equally plain. A Welsh string
   longer or more formal than its English is not done. This covers interface
   copy; Welsh roadmap content is optional for now, so never block publishing on

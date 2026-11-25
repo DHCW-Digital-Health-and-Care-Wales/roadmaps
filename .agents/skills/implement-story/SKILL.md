@@ -63,9 +63,9 @@ branch. Keep an eligibility table only when selection is contested.
 At the beginning of the delivery session, identify the UI the work will change
 and capture its before screenshots per `references/screenshots.md`, before any
 implementation edit. Read the record in full, its epic's `delivery-notes.md`
-when there is one, its binding ADRs, the Product Lead persona
-(`docs/backlog/personas/product-lead.md`) when it changes what users see, and
-the `AGENTS.md` along each affected path. Trace
+when there is one, its binding ADRs, the relevant personas in `docs/backlog/personas/` (`product-lead.md`,
+`tenant-admin.md`, `viewer.md`, `public-reader.md`) when it changes what users
+see, and the `AGENTS.md` along each affected path. Trace
 the record's assumptions against the actual code and test contracts. Record
 routine name, path or implementation drift and the chosen correction in its
 Delivery section's Departures; preserve the original acceptance criteria.

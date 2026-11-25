@@ -11,8 +11,8 @@ from the repository root.
 The full gate before a PR runs what CI runs for the change: the root's
 `pnpm format:check && pnpm repo:typecheck && pnpm repo:lint && pnpm repo:test`, then
 the gate of each app that `scripts/ci/classify-changes.sh` marks for the changed paths
-(`git diff --name-only <base> | scripts/ci/classify-changes.sh`), so a root file that
-runs every app's CI jobs runs every app's gate:
+(`git diff --no-renames --name-only <base> | scripts/ci/classify-changes.sh`, so a moved
+file keeps its old path), so a root file that runs every app's CI jobs runs every app's gate:
 
 | App         | Its gate                                                                                                                                                            |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -85,10 +85,11 @@ specs of any journey it changes; with those green, commit it and start the next
 round's reviewers. Every head you push gets the full gate first, on its
 current base: fetch the base before that gate and rebase when it has moved
 (`pull-requests.md`, _Update a branch_), since a base found moved at the push
-costs the gate again. A head that differs from one that passed it only in
-Markdown needs just its table rows, with `pnpm format:check` and
-`pnpm test:docs`: of the gate, only those read Markdown. A rebase onto a base
-that changed only Markdown makes such a head.
+costs the gate again. After a passing full gate, a later head needs only: the table rows for what the
+branch's own commits changed since then; the root checks; and each app gate
+`classify-changes.sh` marks in both `<base>..<head>` and `<passed head>..<head>`
+(with `--no-renames`). If only Markdown changed, run only those rows plus
+`pnpm format:check` and `pnpm test:docs`.
 
 CI is the shared merge gate, and independent review covers requirements and
 judgement beyond deterministic checks. Never rely on one as a replacement for

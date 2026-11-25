@@ -61,8 +61,8 @@ Trace each piece of friction to its cause, checking these categories:
   (`--help` for its options) on the primary task's Claude Code session log;
   the current directory's newest is the default, so pass the primary log when
   the retro runs in a later session. It times only what the session ran:
-  milestones, commands by kind (Vitest and Playwright runs, builds, type
-  checks, lint, dev or preview server start-up), what the test runners
+  milestones, commands by kind (Vitest, Playwright and pytest runs, builds,
+  type checks, lint, dev or preview server start-up), what the test runners
   reported, background work and the waits between. Where no such log exists,
   use commit, PR, CI and review timestamps through `git` and `gh`. For the
   largest phases, find what would start them sooner, run them in parallel, or

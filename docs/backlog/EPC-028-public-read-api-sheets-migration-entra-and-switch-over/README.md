@@ -70,10 +70,12 @@ _Candidate scope, to be grilled and split into stories when this epic is planned
 ## Shared assumptions and contracts
 
 Any hosted deployment of the API and any real provider client or real data wait for
-recorded DHCW cyber security sign-off on
+recorded DHCW cyber security **Phase 1 (Google Workspace)** sign-off on
 [STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
-(ADR-018 _EPC-024 amendments_, held by
-[EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md)). Production
+(`docs/analysis/identity-threat-model.md`, ADR-018 _EPC-024 amendments_, `STY-102` D4,
+D8, held by [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md));
+enabling Microsoft Entra ID and identity linking additionally waits for **Phase 2
+(Entra & linking addendum)** sign-off after the Entra spike. Production
 cut-over of real data additionally requires EPC-023's custom domain, load balancer,
 Cloud Armor rate limits, private Cloud SQL, IAM jobs and log export plus the independent
 penetration test (ADR-018).

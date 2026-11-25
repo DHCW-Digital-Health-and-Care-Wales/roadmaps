@@ -1,7 +1,8 @@
 # STY-102: Threat model for sign-in, sessions, invitations and linking
 
-- **Status**: Needs grilling — first identity record per ADR-018; written early so DHCW
-  cyber security can review while local/dev work proceeds (ADR-018 _EPC-024 amendments_)
+- **Status**: Proposed — grilled 2026-11-25; first identity record per ADR-018; written
+  early so DHCW cyber security can review while local/dev work proceeds (ADR-018
+  _EPC-024 amendments_)
 - **Type**: Docs
 - **Area**: Docs
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
@@ -65,22 +66,7 @@ mistaken for completed cyber sign-off
 
 ## Open questions
 
-- **Q1**: What structure does DHCW's cyber security team prefer for the threat model?
-  - (a) STRIDE-by-flow Markdown document under `docs/analysis/identity-threat-model.md`
-    with Mermaid data-flow diagrams, threat/control matrix, residual-risk register and
-    sign-off checklist (recommended) — self-contained in git, easy to export or review in
-    PRs and meetings.
-  - (b) A DHCW-specific template or external format (please share template or required
-    headings) — matches internal governance paperwork directly if one is mandated.
-- **Q2**: Once DHCW cyber security completes its review, should the sign-off outcome be
-  recorded in-place inside `docs/analysis/identity-threat-model.md` (with a follow-on PR
-  creating records for any findings) or tracked as a separate backlog chore blocking
-  `EPC-023`'s first deploy?
-  - (a) Record the outcome in `docs/analysis/identity-threat-model.md`'s Sign-off section
-    and cite it from `EPC-023`'s deploy precondition (recommended) — keeps the threat model
-    and its approval in one authoritative document.
-  - (b) Open a dedicated sign-off chore in `EPC-023` that closes only when cyber signs
-    off — makes the wait visible in `docs/backlog/README.md` as an open record.
+None.
 
 ## Decisions
 
@@ -88,6 +74,47 @@ mistaken for completed cyber sign-off
   allow local/dev identity implementation (`STY-106`, `STY-110`, etc.) to proceed in
   parallel while cyber security sign-off gates deployment and real data (recorded in
   ADR-018 _EPC-024 amendments_).
+- **D2** (owner, 2026-11-25, STY-102 grilling R1 #1a): use a STRIDE-by-flow Markdown
+  document at `docs/analysis/identity-threat-model.md` with Mermaid data-flow diagrams,
+  a threat/control matrix, a residual-risk register and a sign-off section.
+- **D3** (owner, 2026-11-25, STY-102 grilling R1 #2a): write the document to be
+  self-contained in prose — summarising each control, trust boundary and ADR decision
+  inline alongside relative links as citations — so a cyber reviewer reading an export
+  without GitHub repo access can review it standalone.
+- **D4** (owner, 2026-11-25, STY-102 grilling R1 #4a): analyse Microsoft Entra ID and
+  the `link` flow now against ADR-018, explicitly flagging the three Entra spike unknowns
+  (verified email claim, federated credential vs certificate, `acrs` step-up) as
+  `Pending Entra spike`, and split the sign-off record into **Phase 1 (Google Workspace
+  deployment — gates `EPC-023`)** and **Phase 2 (Entra & linking addendum — gates
+  `EPC-028` Entra enablement)**.
+- **D5** (owner, 2026-11-25, STY-102 grilling R1 #5a): explicitly include the platform
+  operator CLI flows (`create-tenant`, bootstrap/replacement admin invitation,
+  `disable-person`, `remove-identity`, IAM override guard and Cloud Audit Log
+  attribution) in S2's flow-by-flow analysis alongside browser/API identity flows.
+- **D6** (owner, 2026-11-25, STY-102 grilling R1 #6a): record the cyber security
+  sign-off outcome in-place inside `docs/analysis/identity-threat-model.md`'s Sign-off
+  section (entered only by the owner), cited by `EPC-023` and `EPC-028`.
+- **D7** (owner, 2026-11-25, STY-102 grilling R2 #1a, #2a): public-repo hygiene —
+  two-layer split. `docs/analysis/identity-threat-model.md` is a **public-safe** design
+  threat model covering architecture, trust boundaries, flows, standard threat classes,
+  mitigating controls, tests/checks and only the high-level accepted residual risks
+  already public in ADR-018. Threat rows carry **disposition only** (`Mitigated`,
+  `Accepted residual risk`, `Pending Entra spike`) — no `High`/`Medium`/`Low` or numeric
+  severity/exploitability ratings, no unfixed/exploitable gaps, no internal WAF or
+  rate-limit thresholds, and no reviewer PII. Unfixed gaps, formal risk scoring, cyber
+  review findings and internal ticket references stay in DHCW's private governance space.
+- **D8** (owner, 2026-11-25, STY-102 grilling R2 #3a): sanitise S3's public Cyber
+  security sign-off record — record only **Phase** (`Phase 1: Google Workspace` /
+  `Phase 2: Entra & linking`), **Status** (`Pending` / `Signed off`), **Date** and
+  **Disposition** (`Approved` / `Approved — conditions met`), entered only by the owner;
+  reviewer names, internal ticket references and raw findings remain in DHCW's private
+  governance record.
+- **D9** (owner, 2026-11-25, STY-102 grilling R2 #4a): private-first gap reporting — if
+  the `STY-102` delivery agent discovers any unmitigated security gap in the ADRs or
+  unstarted stories while modelling, it must stop and report the finding to the owner in
+  chat before writing it to any tracked file or opening a PR, so the owner decides
+  whether to tighten a story requirement directly (without advertising an open
+  vulnerability in the public repo), track it privately or accept it.
 
 ## Out of scope
 

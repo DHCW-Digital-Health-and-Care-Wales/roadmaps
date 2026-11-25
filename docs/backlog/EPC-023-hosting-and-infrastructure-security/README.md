@@ -194,13 +194,15 @@ lives:_
 
 ## Shared assumptions and contracts
 
-- **Precondition for any hosted deployment (ADR-018 _EPC-024 amendments_)**: no hosted
-  deployment of the API in any environment (non-production included), and no real
-  provider OAuth client or secret (since real staff sign-ins store real personal data),
-  may be provisioned or receive traffic until DHCW cyber security sign-off on
+- **Precondition for any hosted deployment (ADR-018 _EPC-024 amendments_, `STY-102` D4, D8)**:
+  no hosted deployment of the API in any environment (non-production included), and no
+  real provider OAuth client or secret (since real staff sign-ins store real personal
+  data), may be provisioned or receive traffic until DHCW cyber security **Phase 1
+  (Google Workspace)** sign-off on
   [STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
-  is recorded by the owner (never an agent), citing DHCW cyber security's own reference
-  (ticket or signed document), reviewer, date, findings and disposition.
+  (`docs/analysis/identity-threat-model.md`) is recorded by the owner (never an agent)
+  with phase, status, date and disposition; reviewer names, internal ticket references
+  and raw findings remain in DHCW's private governance record.
 
 ## Stories
 

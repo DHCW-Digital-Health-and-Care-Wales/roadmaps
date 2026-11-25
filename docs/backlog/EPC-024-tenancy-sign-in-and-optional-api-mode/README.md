@@ -73,10 +73,11 @@ Audited at `7d40d5cc` on 2026-11-25:
 - `apps/editor/src/infrastructure/roadmaps-api/` holds only `api-error.ts` (currently
   exempted in `knip.jsonc` until `composeApp` imports it).
 
-### F3 — No UX or persona exists yet for Tenant Admins, Viewers or sign-in/account screens
+### F3 — No UX prototypes exist yet for sign-in, account or member screens
 
-- `docs/backlog/personas/` previously held only `product-lead.md`; `tenant-admin.md` and
-  `viewer.md` were added on 2026-11-25 as drafts.
+- `docs/backlog/personas/` previously held only `product-lead.md`; `tenant-admin.md`,
+  `viewer.md` and `public-reader.md` were added and accepted alongside the updated
+  `product-lead.md` on 2026-11-25.
 - ADR-018 and ADR-019 introduce new screens (Sign-in, "You haven't been invited",
   Account page, Tenant switcher, Invitation acceptance, Members & Invitations) that need
   cohesive prototyping before UI stories code them.

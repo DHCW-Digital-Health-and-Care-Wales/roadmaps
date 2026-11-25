@@ -63,6 +63,9 @@ const STATIC = [
   `export * from "../../../../packages/./api-types/src/index.ts"`,
   `export * from "../../../../packages//api-types/src/index.ts"`,
   `export * from "../../../../packages/other/../api-types/src/index.ts"`,
+  // Vite's queries and fragments name the same module.
+  `import source from "@roadmaps/api-types?raw"`,
+  `export * from "../../../../packages/api-types#fragment"`,
 ]
 
 const DEFERRED = [
@@ -73,6 +76,8 @@ const DEFERRED = [
   `export type Code = import("@roadmaps/api-types").ErrorCode`,
   `export type Schemas = typeof import("../../../../packages/api-types/src/index.ts")`,
   `export const load = () => import("../../../../packages/./api-types/src/index.ts")`,
+  `export const load = () => import("@roadmaps/api-types?v=1")`,
+  "export const load = (rest: string) => import(`@roadmaps/api-types${rest}`)",
 ]
 
 describe("only src/infrastructure/ may import the API's generated package", () => {

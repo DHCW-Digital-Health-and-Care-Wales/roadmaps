@@ -9,10 +9,11 @@ import type { Linter, Rule } from "eslint"
 
 /**
  * A specifier that reaches the package: any with an `api-types` segment, so its name, a
- * subpath of it and every spelling of a path into its folder (`packages/./api-types`,
- * `packages//api-types`). No folder of the editor's own takes that name.
+ * subpath of it, every spelling of a path into its folder (`packages/./api-types`,
+ * `packages//api-types`) and each with a query or fragment, as Vite reads one. No folder
+ * of the editor's own takes that name.
  */
-const API_TYPES = String.raw`(?:^|/)api-types(?:/|$)`
+const API_TYPES = String.raw`(?:^|/)api-types(?:[/?#]|$)`
 
 const MESSAGE =
   "Only src/infrastructure/ may import @roadmaps/api-types, the API's generated types and schemas (ADR-017)."
@@ -30,12 +31,13 @@ interface Specifier {
 }
 
 /**
- * A specifier's text as far as it is written: a template's own parts, with `*` for each
- * expression between them, so a path built onto the package's name is still read.
+ * A specifier's text as far as it is written: a template's own parts, with `/` for each
+ * expression between them, so whatever is built onto the package's name still reads as
+ * a path from it.
  */
 function writtenText({ value, quasis }: Specifier): string {
   if (typeof value === "string") return value
-  return quasis?.map((quasi) => quasi.value.cooked ?? "").join("*") ?? ""
+  return quasis?.map((quasi) => quasi.value.cooked ?? "").join("/") ?? ""
 }
 
 const noDeferredImport: Rule.RuleModule = {

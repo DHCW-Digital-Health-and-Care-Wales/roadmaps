@@ -338,7 +338,8 @@ Audited at `977a632d`:
 - **S6: a path is matched by its `api-types` segment** (agent, from review): matching
   `packages/api-types` as text let through spellings that resolve to the same folder
   (`packages/./api-types`, `packages//api-types`, `packages/x/../api-types`), so both
-  rules refuse any specifier with an `api-types` segment; no folder of the editor's own
+  rules refuse any specifier with an `api-types` segment, one with a query or fragment
+  (`?raw`) or text a template builds onto it included; no folder of the editor's own
   takes that name. Like every layering rule, they read `.ts` and `.tsx` files, the only
   ones under `src/` (DEF-037).
 - **S3, S4: three more root scripts, and the generator's own update** (agent, from

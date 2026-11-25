@@ -39,7 +39,7 @@ extensions.
 
 - `rg -n 'ts,tsx' apps/editor/eslint.config.ts apps/editor/build eslint.base.ts` — the
   globs.
-- `find apps/editor/src -type f -regex '.*\.\([cm]?js\|jsx\|[cm]ts\)'` — no file
+- `git ls-files apps/editor/src | grep -E '\.(js|jsx|mjs|cjs|mts|cts)$'` — no file
   today.
 
 ## Acceptance criteria

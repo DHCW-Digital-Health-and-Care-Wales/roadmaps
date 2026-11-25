@@ -34,7 +34,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "axe-core": "^4.14.0",
+    "axe-core": "^4.14.1",
     "eslint": "catalog:",
     "eslint-plugin-i18next": "catalog:",
     "globals": "catalog:",

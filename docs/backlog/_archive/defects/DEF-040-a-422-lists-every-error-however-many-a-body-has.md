@@ -64,7 +64,7 @@ causes apply:
 **Given** a route taking an `ApiRequestModel` body with dictionary and nested fields
 **When** validation fails with a string `loc` segment of 128 characters or fewer
 **Then** that segment is returned unchanged
-**And** when a remaining string `loc` segment exceeds 128 characters, it is truncated to its first 127 characters plus `"…"`, while `extra_forbidden` still trims its trailing unknown key and non-string segments (such as list indices) stay intact, bounding quadratic dictionary-key amplification.
+**And** when a remaining string `loc` segment exceeds 128 characters, it is truncated to its first 127 characters plus `"…"`, while `extra_forbidden` still trims its trailing unknown key and non-string segments (such as list indices) stay intact, bounding quadratic dictionary-key response amplification.
 
 ### S3: ADR-020, the API guide and backlog records hold the settled rule
 
@@ -103,15 +103,20 @@ None.
   `len(exc.errors()) > 25`, trims the trailing unknown key on `extra_forbidden`, and
   truncates any remaining string `loc` segment longer than 128 characters to its first 127
   characters plus `"…"` (ADR-020 _DEF-040 amendments_).
-- `apps/api/AGENTS.md` requires discriminated unions on `ApiRequestModel` (never
-  undiscriminated recursive unions) and an explicit depth validator if a recursive request
-  model is ever introduced.
+- Because the cap slices `exc.errors()` after Pydantic validates the body, it bounds the
+  422 response rather than Pydantic's validation memory on an unbounded collection; future
+  request models keep collection fields bounded natively with `max_length`, above all
+  beneath a dictionary (recorded in `EPC-022/delivery-notes.md`; proved at the model seam
+  in `apps/api/tests/test_errors.py`).
+- `apps/api/AGENTS.md` requires discriminated unions for recursive shapes in
+  `ApiRequestModel` (never undiscriminated recursive unions) and an explicit depth
+  validator if a recursive request model is ever introduced.
 - `apps/api/openapi.json` and `packages/api-types` are unchanged.
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                     |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `apps/api/tests/test_errors.py` (`test_a_422_caps_listed_errors_and_marks_truncation_only_past_the_cap` at 25 and 26 errors; `test_a_422_bounds_quadratic_dictionary_amplification`). Test-first: the 26-error and quadratic tests failed red before `errors.py` capped `exc.errors()`                                                                      |
-| S2       | `apps/api/tests/test_errors.py` (`test_a_422_truncates_long_string_loc_segments` at 128 chars, 129 chars, long dict key + `extra_forbidden` + int index, and long trailing `extra_forbidden`; `test_a_422_bounds_quadratic_dictionary_amplification`). Test-first: the 129-char and 200-char dict-key rows failed red before `errors.py` truncated `loc`    |
-| S3       | `docs/adr/ADR-020-the-editor-and-the-api-share-one-origin.md` (`_DEF-040 amendments_` and _Consequences_), `apps/api/AGENTS.md`, `docs/backlog/README.md`, `docs/backlog/EPC-022-monorepo-and-backend-foundation/README.md`, `delivery-notes.md` and `CHO-053`'s relative links; verified by `pnpm format:check && pnpm test:docs` and live-docs `rg` sweep |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/test_errors.py` (`test_a_422_caps_listed_errors_and_marks_truncation_only_past_the_cap` at 25 and 26 errors; `test_a_422_bounds_the_response_for_a_long_dictionary_key_with_many_errors`). Test-first: the 26-error and dictionary-response tests failed red before `errors.py` capped `exc.errors()`                                                                                                                                     |
+| S2       | `apps/api/tests/test_errors.py` (`test_a_422_truncates_long_string_loc_segments` at 128 chars, 129 chars, long dict key + `extra_forbidden` + int index, and long trailing `extra_forbidden`; `test_a_422_bounds_the_response_for_a_long_dictionary_key_with_many_errors`; `test_a_bounded_collection_under_a_long_key_fails_with_one_too_long_error`). Test-first: the 129-char and 200-char dict-key rows failed red before `errors.py` truncated `loc` |
+| S3       | `docs/adr/ADR-020-the-editor-and-the-api-share-one-origin.md` (`_DEF-040 amendments_` and _Consequences_), `apps/api/AGENTS.md`, `docs/backlog/README.md`, `docs/backlog/EPC-022-monorepo-and-backend-foundation/README.md`, `delivery-notes.md`, `CHO-054` and `CHO-053`'s relative links; verified by `pnpm format:check && pnpm test:docs` and live-docs `rg` sweep                                                                                    |

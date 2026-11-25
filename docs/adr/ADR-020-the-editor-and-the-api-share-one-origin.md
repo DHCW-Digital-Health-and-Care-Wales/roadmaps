@@ -102,8 +102,10 @@ responses_ stands.
 
 ### DEF-040 amendments
 
-From the owner's DEF-040 triage and grilling (2026-11-25, DEF-040 D1–D3); the rest of
-_The API's own responses_ and _CHO-053 amendments_ stands.
+From the owner's DEF-040 triage and grilling (2026-11-25, DEF-040 D1–D3); this narrows
+_CHO-053 amendments_'s pass-through for string `loc` segments longer than 128 characters
+and caps the listed error count; the rest of _The API's own responses_ and _CHO-053
+amendments_ stands.
 
 - **A 422 caps `params.errors` at 25 entries**: `validation_error`
   (`apps/api/src/roadmaps_api/errors.py`, held by `apps/api/tests/test_errors.py`) slices
@@ -114,10 +116,13 @@ _The API's own responses_ and _CHO-053 amendments_ stands.
   unknown key on `extra_forbidden` (_CHO-053 amendments_), any remaining string `loc`
   segment longer than 128 characters is truncated to its first 127 characters plus `"…"`,
   bounding caller-chosen dictionary keys in 422 responses.
-- **Recursive unions stay native to Pydantic**: the API adds no custom pre-parse JSON
-  depth walker; `apps/api/AGENTS.md` forbids undiscriminated recursive unions in
+- **Validation work stays native to Pydantic**: the API adds no custom pre-parse JSON
+  depth walker. `apps/api/AGENTS.md` forbids undiscriminated recursive unions in
   `ApiRequestModel` (use discriminated unions, and add an explicit depth validator only if
-  a recursive request model is ever introduced).
+  a recursive request model is ever introduced). Because `validation_error` slices
+  `exc.errors()` after Pydantic finishes validating, the cap bounds the 422 response
+  rather than Pydantic's validation memory on unbounded collections; bounding collection
+  size stays native to Pydantic (`max_length` on collection fields).
 
 ## Consequences
 
@@ -131,11 +136,14 @@ _The API's own responses_ and _CHO-053 amendments_ stands.
 - **ADR-016's custom domain** stays a precondition of switching the deployed editor to
   the API; the deployed Sheets editor stays on GitHub Pages until then.
 - **EPC-023** provisions the service, the load balancer, the domain and the edge limits.
-- **422 response size is bounded ([DEF-040](../backlog/_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md), `Done`)**:
+- **422 responses are bounded ([DEF-040](../backlog/_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md), `Done`)**:
   capping `params.errors` at 25 entries (with `"truncated": true` only when more) and
-  truncating string `loc` segments past 128 characters bounds 422 responses even on
-  dictionary fields, while `apps/api/AGENTS.md` keeps recursive request models off
-  undiscriminated unions.
+  truncating string `loc` segments past 128 characters bounds the 422 response for
+  fixed-depth schemas (and for any future recursive model with a depth validator, as
+  `apps/api/AGENTS.md` requires). Because the cap runs after Pydantic builds
+  `exc.errors()`, it bounds the response rather than Pydantic's validation memory on
+  unbounded collections; request models keep collection fields bounded natively with
+  `max_length`.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

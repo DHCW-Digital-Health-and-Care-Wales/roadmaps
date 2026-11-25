@@ -102,15 +102,20 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
 3. **Config.** Add e.g. `VITE_ROADMAPS_API_URL` to the Zod schema in
    `apps/editor/src/app/config.ts`, `apps/editor/.env.example` and `apps/editor/.env.production`.
 4. **Swap it in** `composeApp` (`apps/editor/src/app/composition.ts`): construct
-   `ApiRoadmapRepository` instead of `GoogleSheetsRoadmapRepository`. If the API accepts
-   Google access tokens, pass `getAccessToken: authClient.getAccessToken`. If it has its
-   own sign-in, write a new `AuthClient` adapter (the port is in `apps/editor/src/domain/auth/`) and
-   swap it in the same place.
+   `ApiRoadmapRepository` instead of `GoogleSheetsRoadmapRepository`, and write a new
+   `AuthClient` adapter for the API's own sign-in (the port is in `apps/editor/src/domain/auth/`;
+   ADR-018): `connect()` posts the sign-in start for the chosen provider and navigates to
+   the authorisation address it returns, the signed-in state comes from a "who am I" call,
+   and a 401 moves the state to `expired`. The API keeps the session in an `HttpOnly`
+   cookie, so no access token reaches the browser or the repository: do not pass
+   `getAccessToken` to `ApiRoadmapRepository`. Swap the adapter in the same place.
 5. **Copy.** Some strings name the spreadsheet or Google Sheets, because that is what
    users must act on today. Search `apps/editor/src/i18n/locales/en.ts` for "spreadsheet" and
    "Google Sheets", and reword them in `en.ts` and `cy.ts`; no component changes.
 6. **E2E.** Add a fake for the API to `apps/editor/tests/e2e/fixtures/` (the hermetic guard fails on
    any unfaked origin) and retire the Sheets fake when it is no longer used.
-7. **Deploy.** The API must allow CORS from the Pages origin with the `Authorization`
-   header. Record the change in an ADR that amends ADR-002, then delete
+7. **Deploy.** The API serves the editor's built files on the same origin as its
+   endpoints (one Cloud Run service per environment, ADR-020), so the API sends no CORS
+   headers and the editor sends no `Authorization` header: the session cookie carries the
+   sign-in (ADR-018). Record the change in an ADR that amends ADR-002, then delete
    `apps/editor/src/infrastructure/google-sheets/` once nothing uses it.

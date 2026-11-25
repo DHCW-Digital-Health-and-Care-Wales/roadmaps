@@ -4,12 +4,14 @@
   EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
   the owner's STY-090 grilling (_STY-090 amendments_), STY-091 grilling (_STY-091
-  amendments_), STY-101 grilling (_STY-101 amendments_) and STY-092 grilling (_STY-092
+  amendments_), STY-101 grilling (_STY-101 amendments_), STY-092 grilling (_STY-092
+  amendments_) and the owner's answer to CHO-047's delivery question (_CHO-047
   amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
   STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
   and the test workers; STY-101: two plain-text refusals, log messages; STY-092:
-  camelCase JSON contract, committed OpenAPI and raw TS schemas, import boundary)
+  camelCase JSON contract, committed OpenAPI and raw TS schemas, import boundary;
+  CHO-047, 2026-11-25: request models forbid extra keys)
 
 ## Context
 
@@ -230,12 +232,11 @@ STY-092 records the agent's decisions that build on them.
   (`alias_generator=to_camel`, `serialize_by_alias=True`, `validate_by_alias=True`,
   `validate_by_name=False`, which never binds `snake_case` keys on inbound JSON bodies or
   `Annotated[Model, Query()]` query models: required fields answer 422 `missing` at their
-  camelCase alias and optional fields ignore `snake_case` until `extra="forbid"` lands
-  with CHO-047) and `ApiResponseModel` (`validate_by_name=True`, so Python builds
+  camelCase alias; what becomes of an unknown key, a `snake_case` one among them, is in
+  _CHO-047 amendments_) and `ApiResponseModel` (`validate_by_name=True`, so Python builds
   responses in `snake_case` while serialising `camelCase`). Every model reachable from a
   request, nested models included, inherits `ApiRequestModel`; plain function query
-  parameters use `Annotated[Model, Query()]` or an explicit `alias`; `extra="forbid"` on
-  `ApiRequestModel` waits for CHO-047 and the first request-body or query-model story.
+  parameters use `Annotated[Model, Query()]` or an explicit `alias`.
 - **OpenAPI exposes `ErrorCode` and `ErrorResponse`** (`{detail, code, params}`) in
   `components.schemas` and strips FastAPI's built-in `HTTPValidationError` and
   `ValidationError` (pointing generated 422 response refs to `ErrorResponse`), served
@@ -255,6 +256,16 @@ STY-092 records the agent's decisions that build on them.
   → non-retryable `unknown`, other malformed or unknown `4xx` → `invalid-response`),
   keeping edge refusals and rolling deploys usable without adding speculative
   `AppErrorKind`s. STY-092 records the edge-case refinements built on this (D20).
+
+### CHO-047 amendments
+
+From the owner's answer to CHO-047's delivery question (2026-11-25, CHO-047 D4); the
+rest of _STY-092 amendments_ stands.
+
+- **`ApiRequestModel` forbids extra keys** from CHO-047, ahead of the first request-body
+  or query-model story it was to wait for. A key a request model does not declare, a
+  field's `snake_case` name among them, is refused with a 422 (`extra_forbidden`),
+  whose `loc` never holds that key.
 
 ## Consequences
 

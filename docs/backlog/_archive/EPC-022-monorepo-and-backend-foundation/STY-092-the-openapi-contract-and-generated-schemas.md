@@ -297,6 +297,10 @@ held by observed planted-violation runs in Scenario evidence.
   replace nonexistent `src/main.tsx` with `src/vite-env.d.ts` in S6/Tests (the editor's
   entry is `src/app/main.tsx`, and `projectService: true` rejects nonexistent paths).
   Changes S1, S2, S6, Tests.
+- **D23** (owner, 2026-11-25, CHO-047 D4): CHO-047 turns `extra="forbid"` on for
+  `ApiRequestModel`, ahead of the first request-body or query-model story, so a key a
+  request model does not declare, a `snake_case` one among them, is refused. Refines
+  D13, D17 and D22. Changes S1.
 
 ## Starting point
 

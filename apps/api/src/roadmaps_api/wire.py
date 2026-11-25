@@ -10,10 +10,24 @@ from pydantic.alias_generators import to_camel
 
 
 class ApiRequestModel(BaseModel):
-    """Binds camelCase names alone, never a field's snake_case name.
+    """Binds camelCase names alone, and refuses any key it does not declare.
 
-    A snake_case key is ignored like any unknown one: a required field is then missing,
-    and an optional one keeps its default.
+    A field's snake_case name is such a key: sending it answers `extra_forbidden`, and
+    `missing` beside it for a required field.
+
+    Which keys a model is given is FastAPI's choice (as 0.163 makes it):
+
+    - A query model is given the whole query string. A route with one takes no other
+      query parameter, whether its own, a dependency's or one given where its router is
+      included, or it refuses valid requests. Where another party writes the query, as a
+      sign-in provider's callback, which may add parameters of its own, take plain
+      aliased parameters or set `extra="ignore"`. Plain query parameters ignore keys
+      they do not declare.
+    - A header or cookie model is given every header or cookie, so it sets
+      `extra="ignore"`. A header model's field reads the header its alias names, here the
+      camelCase one, so give each the header's name as an explicit `alias`.
+    - Several body parameters, or an embedded one, are each read from the body by name,
+      and its other top-level keys are ignored: take a body as one model, not embedded.
     """
 
     model_config = ConfigDict(
@@ -21,6 +35,7 @@ class ApiRequestModel(BaseModel):
         serialize_by_alias=True,
         validate_by_alias=True,
         validate_by_name=False,
+        extra="forbid",
     )
 
 

@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useLayoutEffect, useRef } from "react"
 
 export interface FocusNoticeOnClose {
   /** Call as the dialog's write is confirmed: its outcome then takes focus. */
@@ -17,12 +17,19 @@ export interface FocusNoticeOnClose {
  * closed (STY-052 S4, D21), as the dialog's own return of focus would land on a control
  * that may since have moved, or gone. `notice` finds the notice when the dialog
  * closes; with none there, focus returns as the dialog would return it. Each opening
- * starts unconfirmed.
+ * starts unconfirmed — reset when `open` becomes `true`, not in
+ * `onOpenChangeComplete(true)`, which can fire after the user confirms if they act
+ * before the opening animation finishes (DEF-038).
  */
 export function useFocusNoticeOnClose(
+  open: boolean,
   notice: () => HTMLElement | null,
 ): FocusNoticeOnClose {
   const confirmedRef = useRef(false)
+  useLayoutEffect(() => {
+    if (open) confirmedRef.current = false
+  }, [open])
+
   return {
     confirmed: () => {
       confirmedRef.current = true
@@ -31,9 +38,8 @@ export function useFocusNoticeOnClose(
       if (confirmedRef.current && notice()) return false
       return otherwise ?? true
     },
-    onOpenChangeComplete: (open) => {
-      if (open) confirmedRef.current = false
-      else if (confirmedRef.current) notice()?.focus()
+    onOpenChangeComplete: (opened) => {
+      if (!opened && confirmedRef.current) notice()?.focus()
     },
   }
 }

@@ -4,8 +4,9 @@
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
 - **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-024–EPC-027's API
-  (and recorded DHCW cyber security sign-off on `STY-102` before any hosted API
-  deployment or real provider client)
+  (and recorded DHCW cyber security Phase 1 sign-off on `STY-102` before any hosted API
+  deployment or Google Workspace client, and Phase 2 sign-off before any hosted Entra
+  registration or credential)
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
@@ -194,15 +195,27 @@ lives:_
 
 ## Shared assumptions and contracts
 
-- **Precondition for any hosted deployment (ADR-018 _EPC-024 amendments_, `STY-102` D4, D8)**:
-  no hosted deployment of the API in any environment (non-production included), and no
-  real provider OAuth client or secret (since real staff sign-ins store real personal
-  data), may be provisioned or receive traffic until DHCW cyber security **Phase 1
-  (Google Workspace)** sign-off on
-  [STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
-  (`docs/analysis/identity-threat-model.md`) is recorded by the owner (never an agent)
-  with phase, status, date and disposition; reviewer names, internal ticket references
-  and raw findings remain in DHCW's private governance record.
+- **Precondition for any hosted deployment (ADR-018 _EPC-024 amendments_, `STY-102` D4, D8, D10, D11)**:
+  - **Phase 1 (Google Workspace)**: no hosted deployment of the API in any environment
+    (non-production included), and no Google Workspace OAuth client, secret or real data
+    (real staff sign-ins store real personal data), may be provisioned or receive traffic
+    until `docs/analysis/identity-threat-model.md` ([STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md))
+    records **Phase 1** as `Status: Signed off` with disposition `Approved` or
+    `Approved — conditions met` (open conditions remain `Pending`), the date and the
+    `Reviewed revision` commit SHA, entered only by the owner (never an agent); reviewer
+    names, internal ticket references and raw findings remain in DHCW's private
+    governance record.
+  - **Phase 2 (Entra & linking addendum)**: no Entra app registration with a hosted
+    redirect URI, no hosted Entra credential, and no Entra issuer in hosted settings may
+    be provisioned or configured until **Phase 2** is recorded under the same rule
+    (entered only by the owner, `Status: Signed off`, `Approved` or
+    `Approved — conditions met`, date and `Reviewed revision` commit SHA). The `EPC-028`
+    Entra spike may run before Phase 2 only with a spike-only registration, operators'
+    own accounts, and nothing persisted to a hosted database (or waits for its own
+    owner-recorded cyber approval if NHS Wales requires one).
+  - **Reopen rule**: any material change to a signed-off phase's flows or controls
+    returns that phase to `Pending` until the owner records it as reviewed or not
+    material.
 
 ## Stories
 

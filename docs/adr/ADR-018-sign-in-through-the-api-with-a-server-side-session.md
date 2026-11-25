@@ -8,7 +8,8 @@
   EPC-024 planning decision (_EPC-024 amendments_).
 - Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages;
   amended in EPC-024, 2026-11-25: threat model review gates deployment and real data
-  rather than local/dev identity implementation)
+  rather than local/dev identity implementation, phased by Google Workspace / Entra and
+  with the Entra spike boundary from STY-102 grilling)
 
 ## Context
 
@@ -307,21 +308,35 @@ rest of _Records and retention_ stands.
 ### EPC-024 amendments
 
 From the owner's EPC-024 planning answers (2026-11-25, Q2; real-identities and hosted
-deployment gate confirmed by owner on PR #327, 2026-11-25). This amends _Assurance_'s
+deployment gate confirmed by owner on PR #327, 2026-11-25) and STY-102 grilling and
+review follow-up (2026-11-25, STY-102 D4, D8, D10, D11). This amends _Assurance_'s
 clause `"reviewed by DHCW's cyber security team before any identity code is built"`;
 writing the threat model first (`STY-102`) and the independent penetration test before
 switching the deployed editor stand.
 
 - **Threat model review gates any hosted deployment and real data, not local/dev
-  coding**: the threat model of sign-in, sessions, invitations and linking is still
-  written first (`STY-102`, a hard prerequisite of identity code stories `STY-104`,
-  `STY-106` and `STY-110`), while local and development identity implementation
-  (EPC-024, EPC-025) may proceed in parallel with DHCW's cyber security review. Recorded
-  cyber security sign-off on `STY-102` gates **any hosted deployment of the API in any
-  environment** and **any real provider client, secret or real data** — real staff
-  identities (names and emails returned by DHCW's Google Workspace or Entra) count as
-  real personal data regardless of environment (held in `EPC-023`, `EPC-028` and
-  `STY-102`). Accepted risk: rework if the review changes the flow.
+  coding, in two phases**: the threat model of sign-in, sessions, invitations and
+  linking is still written first (`STY-102`, a hard prerequisite of identity code
+  stories `STY-104`, `STY-106` and `STY-110`), while local and development identity
+  implementation (EPC-024, EPC-025) may proceed in parallel with DHCW's cyber security
+  review. Real staff identities (names and emails returned by DHCW's Google Workspace or
+  Entra) count as real personal data regardless of environment.
+  - **Phase 1 (Google Workspace)** sign-off on `docs/analysis/identity-threat-model.md`
+    — recorded only by the owner as `Status: Signed off` with disposition `Approved` or
+    `Approved — conditions met` and the reviewed commit SHA (`Reviewed revision`) —
+    gates **any hosted deployment of the API in any environment** and **the Google
+    Workspace OAuth client, secret or real data** (held in `EPC-023` and `EPC-028`).
+  - **Phase 2 (Entra & linking addendum)** sign-off — recorded by the owner under the
+    same rule after the `EPC-028` Entra spike — gates **any Entra app registration with
+    a hosted redirect URI, any hosted Entra credential, and any Entra issuer in hosted
+    settings** (held in `EPC-023` and `EPC-028`).
+  - **Entra spike boundary**: the `EPC-028` Entra spike may run before Phase 2 only with
+    a spike-only registration, operators' own accounts, and nothing persisted to a
+    hosted database (or waits for its own owner-recorded cyber approval if NHS Wales
+    requires one).
+  - **Reopen rule**: any material change to a signed-off phase's flows or controls
+    returns that phase to `Pending` until the owner records it as reviewed or not
+    material. Accepted risk: rework if the review changes the flow.
 
 ## Consequences
 

@@ -21,3 +21,9 @@ from EPC-022 when the backend work moved here. See `docs/AGENTS.md`.
 - **The first migration that inserts seed/lookup rows must teach the test harness to put
   them back** after each `TRUNCATE … CASCADE`, with a test (carried from EPC-022 _The
   API's conventions_ / STY-091 D15).
+- **Public-repo security hygiene (`STY-102` D7, D9, D12)**: never publish unfixed
+  security gaps, severity/exploitability ratings, internal WAF/rate-limit thresholds,
+  reviewer PII or internal ticket references in tracked files, commit messages, PR
+  bodies, Review records, review threads or Delivery sections. If delivery or review
+  discovers an unmitigated security gap, report it to the owner in chat first before
+  writing it to any public surface.

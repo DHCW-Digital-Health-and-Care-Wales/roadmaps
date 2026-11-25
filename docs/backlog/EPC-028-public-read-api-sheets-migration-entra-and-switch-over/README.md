@@ -69,16 +69,27 @@ _Candidate scope, to be grilled and split into stories when this epic is planned
 
 ## Shared assumptions and contracts
 
-Any hosted deployment of the API and any real provider client or real data wait for
-recorded DHCW cyber security **Phase 1 (Google Workspace)** sign-off on
-[STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
-(`docs/analysis/identity-threat-model.md`, ADR-018 _EPC-024 amendments_, `STY-102` D4,
-D8, held by [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md));
-enabling Microsoft Entra ID and identity linking additionally waits for **Phase 2
-(Entra & linking addendum)** sign-off after the Entra spike. Production
-cut-over of real data additionally requires EPC-023's custom domain, load balancer,
-Cloud Armor rate limits, private Cloud SQL, IAM jobs and log export plus the independent
-penetration test (ADR-018).
+Any hosted deployment of the API and the Google Workspace OAuth client or real data wait
+for **Phase 1 (Google Workspace)** sign-off in `docs/analysis/identity-threat-model.md`
+([STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md),
+ADR-018 _EPC-024 amendments_, `STY-102` D4, D8, D10, D11, held by
+[EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md)): entered only by
+the owner as `Status: Signed off` with disposition `Approved` or
+`Approved — conditions met` (open conditions remain `Pending`), date and
+`Reviewed revision` commit SHA. Any Entra app registration with a hosted redirect URI,
+hosted Entra credential or hosted Entra issuer waits for **Phase 2 (Entra & linking
+addendum)** sign-off recorded by the owner under the same rule after the Entra spike
+(the spike itself may run before Phase 2 only with a spike-only registration, operators'
+own accounts, and nothing persisted to a hosted database, or waits for separate cyber
+approval if NHS Wales requires one). Any material change to a signed-off phase's flows
+or controls returns that phase to `Pending` until the owner records it as reviewed or
+not material. The Phase 2 addendum and all Entra/linking PRs follow `STY-102` D7, D9 and
+D12's public-repo hygiene and private-first gap-reporting rules (never publish unfixed
+security gaps, severity ratings, internal thresholds, reviewer PII or ticket references
+in tracked files, commit messages, PR bodies, Review records or review threads).
+Production cut-over of real data additionally requires EPC-023's custom domain, load
+balancer, Cloud Armor rate limits, private Cloud SQL, IAM jobs and log export plus the
+independent penetration test (ADR-018).
 
 ## Stories
 

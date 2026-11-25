@@ -8,7 +8,7 @@
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-015 §Tenancy, §People, access and permissions; ADR-018 §Assurance,
-  §EPC-024 amendments; ADR-019 §Enforcement; ADR-020
+  §EPC-024 amendments; ADR-019 §Platform operators, §Enforcement; ADR-020
 - **Suggested model**: Opus — security threat modelling across OIDC, cookies, RLS,
   invitations and future Entra linking
 
@@ -64,10 +64,6 @@ such as a ticket or signed document, reviewer, date, findings and disposition, i
 **Pending**) cited by `EPC-023` and `EPC-028` so a `Done` `STY-102` draft is never
 mistaken for completed cyber sign-off
 
-## Open questions
-
-None.
-
 ## Decisions
 
 - **D1** (owner, 2026-11-25, EPC-024 planning Q2): write the threat model first, but
@@ -115,6 +111,35 @@ None.
   chat before writing it to any tracked file or opening a PR, so the owner decides
   whether to tighten a story requirement directly (without advertising an open
   vulnerability in the public repo), track it privately or accept it.
+- **D10** (owner, 2026-11-25, STY-102 review follow-up #1a; amends ADR-018
+  _EPC-024 amendments_ and clarifies D4): **Phase 1 (Google Workspace)** gates any
+  hosted API deployment and the **Google Workspace** client/secret only; **Phase 2
+  (Entra & linking addendum)**, recorded by the owner under the same rule, gates any
+  Entra registration with a hosted redirect URI, any hosted Entra credential, and any
+  Entra issuer in hosted settings. The `EPC-028` Entra spike is permitted before Phase 2
+  only with a spike-only registration, operators' own accounts, and nothing persisted to
+  a hosted database (or waits for its own owner-recorded cyber approval if NHS Wales
+  requires one).
+- **D11** (owner, 2026-11-25, STY-102 review follow-up #2a; refines D8 and overrides
+  S3's sign-off fields): keep D8's privacy (no reviewer names, internal ticket
+  references or raw findings in the public repo), add **Reviewed revision** (the git
+  commit SHA of `docs/analysis/identity-threat-model.md` that cyber reviewed, matching
+  DHCW's private governance record), state that any material change to a signed-off
+  phase's flows or controls returns that phase to `Pending` until the owner records it
+  as reviewed or not material, and have `EPC-023` and `EPC-028` explicitly require
+  `Status: Signed off` with disposition `Approved` or `Approved — conditions met`
+  (outstanding conditions stay `Pending`).
+- **D12** (owner, 2026-11-25, STY-102 review follow-up #3a; refines D7 and D9, and
+  overrides S2's control/residual-risk wording and S3's public backlog-filing clause for
+  unfixed security gaps): public dispositions in `docs/analysis/identity-threat-model.md`
+  are `Mitigated` (verified by test/check), `Mitigated by design` (control designed,
+  implementing story not yet Done), `Accepted residual risk` (only risks recorded in
+  ADR-018; any newly accepted risk amends ADR-018 first), `Pending Entra spike`, and
+  `Under review` (neutral marker for a privately tracked item, with no vulnerability
+  detail). Extend D9's private-first gap rule to reviewers and every public PR surface
+  (PR body, Review record, review threads, commit messages and Delivery sections),
+  record it in `EPC-024/delivery-notes.md` and `EPC-028`'s contract, and have
+  `docs/analysis/identity-threat-model.md` state its own public-safe rules.
 
 ## Out of scope
 

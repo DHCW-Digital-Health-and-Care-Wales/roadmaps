@@ -9,6 +9,7 @@
 - **Depends on**: none
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020 (_CHO-053 amendments_, _DEF-040 amendments_)
 - **Suggested model**: Sonnet — one handler and its rows, once the limits are chosen
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/324
 
 ## Summary
 

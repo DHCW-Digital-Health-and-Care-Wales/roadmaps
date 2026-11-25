@@ -368,7 +368,8 @@ pytest-xdist 3.8.0:
 
 - **Tests followed the code** (agent): the harness, the roles and the listener were
   built before their tests, so each test's red was shown by breaking the finished code
-  (Scenario evidence), not by a test that came first.
+  (Scenario evidence), not by a test that came first. The review fix to S8's login
+  lookup came test-first.
 - **S1: who grants the logins' memberships** (agent, from D3 and D26): the file grants
   only roles' memberships, since it names no login; the local runner, and EPC-023
   where the API is hosted, grants each login its one role after the file, and the
@@ -393,7 +394,11 @@ pytest-xdist 3.8.0:
   (`readiness.no_connection`, `readiness.revision_not_served`,
   `readiness.login_unsafe`) beside the response's `code`; the ahead line is an
   information line, `readiness.ahead`, with a `revision` field, written only once the
-  revision reads as `NNNN_<slug>`.
+  revision reads as `NNNN_<slug>` (ASCII digits only).
+- **S8: the login is found by its exact name** (agent, from review): `/ready` looks the
+  session's login and the application's role up in `pg_roles` by name, never through a
+  `::regrole` cast, which refuses a Cloud SQL IAM login's name (`name@project.iam`) and
+  folds case; D34's "a hosted IAM login is served either way" now holds as built.
 - **S9: where the harness and its tests live** (agent): the harness is
   `apps/api/tests/harness.py`, its run hooks and fixtures (`database_url`,
   `worker_database`, `worker_admin`) `apps/api/tests/conftest.py`, so the existing
@@ -401,15 +406,25 @@ pytest-xdist 3.8.0:
   which went; the new suites are in `apps/api/tests/integration/`. The emptying runs
   after each test that takes `database_url`, the fixture through which a test reaches
   the database as the application. The log test's unique violation moved to the probe
-  table, since the application's login can no longer create one.
+  table, since the application's login can no longer create one. The tests that
+  bootstrap the shared roles take turns through a lock file the workers share
+  (`shared_roles` in `apps/api/tests/conftest.py`), since PostgreSQL refuses concurrent
+  updates to one role; pytest-xdist's `xdist_group` with `--dist=loadgroup` grouped
+  nothing under pytest 9.2 here. Every test runs without
+  `ROADMAPS_MIGRATION_DATABASE_URL`, which a developer may have exported to draft a
+  revision, and `pnpm api:test` unsets it.
 - **S2: drafting a revision** (agent, from D8 and D9): `[tool.alembic]` in
   `apps/api/pyproject.toml` serves Alembic's own command line (the revision ID is the
   file's name, `file_template = "%%(rev)s"`), whose migration environment then connects
   to `ROADMAPS_MIGRATION_DATABASE_URL`; `roadmaps_api.migrate` hands the environment
-  its connection. A test runs `alembic check` from that configuration.
+  its connection. A test runs `alembic check` from that configuration. Both read the
+  URL through `settings.migration_url`, so "only the migrate command reads it" (D22)
+  reads "only the migration tooling".
 - **S10: the ADRs** (agent): ADR-015's and ADR-017's _STY-091 amendments_ already state
   what the build does, so neither changes; `apps/api/AGENTS.md` and
   `apps/api/README.md` gain the roles, the migrations and the database tests' guide.
+  STY-100 gains D22, since `/ready` no longer runs the one `SELECT 1` its S5 and D17
+  name.
 
 ### Contract for dependents
 
@@ -443,6 +458,6 @@ person_id=…))` (`apps/api/src/roadmaps_api/database.py`); the factory
 | S5       | `apps/api/tests/integration/test_migrations.py` (`test_the_models_match_the_migrations`, with its standing failing case; `test_alembic_s_command_line_drafts_from_the_pyproject_configuration`)                                                                                                                                                                                                                                                                                     |
 | S6       | `apps/api/tests/integration/test_tenancy.py`; red with `set_config(…, false)`, with the listener setting nothing, and with the probe's policy `true`                                                                                                                                                                                                                                                                                                                                |
 | S7       | `apps/api/tests/integration/test_readiness.py` (`test_ready_answers_by_the_database_s_revision`, a row per revision; `test_the_code_s_latest_revision_is_read_once_at_start_up`); `apps/api/tests/test_logs.py` (the warning's cause); red with the ahead or the row-count rule loosened                                                                                                                                                                                            |
-| S8       | `apps/api/tests/integration/test_readiness.py` (the two served logins; `test_ready_refuses_a_login_that_holds_more_than_the_application_s_role`, a row per refusal; the migration login); red without each of the `BYPASSRLS`, `ADMIN`, ownership, schema `CREATE` and `TEMPORARY` conditions                                                                                                                                                                                       |
-| S9       | `apps/api/tests/conftest.py`, `apps/api/tests/harness.py`, `apps/api/tests/integration/AGENTS.md`; `pnpm api:test`: 4 workers, 226 tests, 100% branch coverage; red when the emptying takes `alembic_version` too; CI's worker count: the PR's run of `API: verify`                                                                                                                                                                                                                 |
+| S8       | `apps/api/tests/integration/test_readiness.py` (the two served logins; `test_ready_refuses_a_login_that_holds_more_than_the_application_s_role`, a row per refusal; the migration login; `test_ready_judges_the_login_it_connects_as_by_its_exact_name`, an IAM-named login and a mixed-case one); red without each of the `BYPASSRLS`, `ADMIN`, ownership, schema `CREATE` and `TEMPORARY` conditions, and the exact-name rows red before the fix                                  |
+| S9       | `apps/api/tests/conftest.py`, `apps/api/tests/harness.py`, `apps/api/tests/integration/AGENTS.md`; `pnpm api:test`: 4 workers, 230 tests, 100% branch coverage; the bootstrap file's tests 30 runs in a row at 4 workers with no failure after the shared-roles lock (4 failures in 25 before it); red when the emptying takes `alembic_version` too; CI's worker count: the PR's run of `API: verify`                                                                              |
 | S10      | ADR-015 and ADR-017 _STY-091 amendments_ (unchanged); `apps/api/AGENTS.md`, `apps/api/README.md`                                                                                                                                                                                                                                                                                                                                                                                    |

@@ -29,4 +29,7 @@ def bootstrap_sql() -> str:
 def database_scoped_sql() -> str:
     """The bootstrap's part for one database, from the file itself."""
     _, marker, scoped = bootstrap_sql().partition(DATABASE_SCOPED_MARKER)
+    if not marker:
+        msg = f"bootstrap.sql has no line {DATABASE_SCOPED_MARKER.strip()!r}."
+        raise ValueError(msg)
     return marker + scoped

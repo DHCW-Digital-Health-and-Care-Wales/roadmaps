@@ -22,7 +22,7 @@ from psycopg import sql
 from roadmaps_api.roles import APP_ROLE, MIGRATION_ROLE, OWNER_ROLE, bootstrap_sql
 from roadmaps_api.settings import SettingsError
 from tests import harness
-from tests.support import Lines
+from tests.support import DOWN_DATABASE_URL, Lines
 from tools import bootstrap_database
 from tools.bootstrap_database import (
     ADMIN_DATABASE_URL,
@@ -313,6 +313,7 @@ def run_runner(environment: dict[str, str]) -> subprocess.CompletedProcess[str]:
     )
 
 
+@pytest.mark.usefixtures("shared_roles")
 def test_the_runner_makes_two_logins_each_in_one_role_and_a_second_run_changes_nothing(
     bootstrapped_database: str,
 ) -> None:
@@ -339,6 +340,7 @@ def test_the_runner_makes_two_logins_each_in_one_role_and_a_second_run_changes_n
     assert json.loads(second.stdout.splitlines()[-1])["message"] == "bootstrap.done"
 
 
+@pytest.mark.usefixtures("shared_roles")
 def test_the_runner_creates_a_missing_login_with_its_fixed_password(
     bootstrapped_database: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -360,6 +362,7 @@ def test_the_runner_creates_a_missing_login_with_its_fixed_password(
             connection.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(login)))
 
 
+@pytest.mark.usefixtures("shared_roles", "json_logging")
 def test_the_runner_reports_the_file_s_refusal(
     bootstrapped_database: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -374,16 +377,10 @@ def test_the_runner_reports_the_file_s_refusal(
     assert "schema public holds objects of another role" in capsys.readouterr().err
 
 
-@pytest.mark.usefixtures("json_logging")
-def test_the_runner_logs_a_failure_s_type(capsys: pytest.CaptureFixture[str]) -> None:
-    code = bootstrap_database.main(
-        {
-            "ROADMAPS_ENV": "local",
-            ADMIN_DATABASE_URL: "postgresql+psycopg://roadmaps:roadmaps@127.0.0.1:1/roadmaps",
-        }
-    )
+def test_the_runner_logs_a_failure_s_type(lines: Lines) -> None:
+    code = bootstrap_database.main({"ROADMAPS_ENV": "local", ADMIN_DATABASE_URL: DOWN_DATABASE_URL})
 
-    [line] = [json.loads(text) for text in capsys.readouterr().out.splitlines()]
+    [line] = lines.read()
     assert code == 1
     assert (line["message"], line["exception_type"]) == (
         "bootstrap.failed",
@@ -436,6 +433,7 @@ BAD_RUNS: dict[str, tuple[dict[str, str], list[str]]] = {
 }
 
 
+@pytest.mark.usefixtures("json_logging")
 @pytest.mark.parametrize(("environ", "named"), BAD_RUNS.values(), ids=BAD_RUNS)
 def test_the_runner_refuses_outside_a_local_database_naming_the_setting_never_its_value(
     capsys: pytest.CaptureFixture[str],
@@ -444,10 +442,11 @@ def test_the_runner_refuses_outside_a_local_database_naming_the_setting_never_it
 ) -> None:
     with pytest.raises(SettingsError) as raised:
         admin_url(environ)
+    code = bootstrap_database.main(environ)
 
-    assert raised.value.invalid == named
-    assert SECRET not in str(raised.value) + capsys.readouterr().out
-    assert bootstrap_database.main(environ) == 1
+    captured = capsys.readouterr()
+    assert (raised.value.invalid, code) == (named, 1)
+    assert SECRET not in str(raised.value) + captured.out + captured.err
 
 
 LOOPBACKS = ["127.0.0.1", "127.0.0.2", "[::1]"]

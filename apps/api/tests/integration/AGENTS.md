@@ -20,9 +20,11 @@ harness's fixtures.
   membership or a role's grants does it on throwaway roles of its own
   (`harness.unique_name`) and drops them, as `test_bootstrap.py` and `test_readiness.py`
   do. A test that needs a database the template's state does not fit makes its own with
-  `harness.create_database` and drops it.
-- A test that changes a table `alembic_version` aside, or the database's own state,
-  puts it back before the next test on its worker.
+  `harness.create_database` and drops it. A test that bootstraps the shared roles
+  themselves takes the `shared_roles` fixture, so such tests take turns across workers.
+- A test that changes `alembic_version`, a table's definition or grants, the database's
+  own state, or rows without taking `database_url` puts it back before the next test on
+  its worker.
 
 ## Row-level security and settings
 
@@ -33,5 +35,6 @@ harness's fixtures.
 - Commit the transaction whose setting a test expects not to outlive it: a session that
   closes rolls back, and a rollback undoes even a session-wide `set_config`, so the test
   passes either way.
-- Prove a refusal on the engine with a pool of one connection, so the next transaction
-  meets the connection the last one used.
+- Prove that row-level security refuses a transaction after one with a tenant on an
+  engine with a pool of one connection, so the next transaction meets the connection the
+  last one used.

@@ -87,13 +87,10 @@ def test_the_command_brings_the_database_to_the_latest_revision_as_the_owner(
     )
 
 
-@pytest.mark.usefixtures("json_logging")
-def test_the_command_refuses_a_missing_migration_url_naming_it(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def test_the_command_refuses_a_missing_migration_url_naming_it(lines: Lines) -> None:
     assert migrate.main({}) == 1
 
-    [line] = [json.loads(text) for text in capsys.readouterr().out.splitlines()]
+    [line] = lines.read()
     assert (line["message"], line["invalid_settings"]) == (
         "settings.invalid",
         [MIGRATION_DATABASE_URL],

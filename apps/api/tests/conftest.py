@@ -1,3 +1,4 @@
+import fcntl
 import logging
 import logging.config
 import os
@@ -9,6 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from roadmaps_api.logs import log_config
+from roadmaps_api.settings import MIGRATION_DATABASE_URL
 from tests import harness
 from tests.support import ConfigureLogging, Lines, make_settings, serving
 
@@ -68,10 +70,34 @@ def worker_admin(worker_database: str) -> Iterator[psycopg.Connection]:
 
 
 @pytest.fixture
+def shared_roles(tmp_path_factory: pytest.TempPathFactory) -> Iterator[None]:
+    """Holds the run's lock on the shared roles, for a test that bootstraps them.
+
+    PostgreSQL refuses a transaction's update to a role another transaction has just
+    updated ("tuple concurrently updated"), so such tests take turns across the workers,
+    whose temporary directories share a parent.
+    """
+    lock = tmp_path_factory.getbasetemp().parent / "shared-roles.lock"
+    with lock.open("w") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        yield
+
+
+@pytest.fixture
 def database_url(worker_database: str, worker_admin: psycopg.Connection) -> Iterator[str]:
     """The worker's database as the application's login, emptied after the test."""
     yield harness.app_url(worker_database)
     harness.empty_tables(worker_admin)
+
+
+@pytest.fixture(autouse=True)
+def no_migration_login(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The migration login a developer exported to draft a revision reaches no test.
+
+    The API refuses to start with it set, and the server tests' processes inherit the
+    environment.
+    """
+    monkeypatch.delenv(MIGRATION_DATABASE_URL, raising=False)
 
 
 @pytest.fixture

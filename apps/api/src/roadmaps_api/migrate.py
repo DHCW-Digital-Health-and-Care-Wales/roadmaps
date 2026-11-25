@@ -3,7 +3,8 @@
 `pnpm api:migrate` and `pnpm api:dev` run it locally, and each deploy where the API is
 hosted runs it before the new version takes traffic (EPC-023), never the API at
 start-up. It connects as a login of the migration role, from
-`ROADMAPS_MIGRATION_DATABASE_URL`, which only this command reads (STY-091 D22, D31).
+`ROADMAPS_MIGRATION_DATABASE_URL`, which only the migration tooling reads (STY-091 D22,
+D31).
 """
 
 import logging
@@ -19,21 +20,12 @@ from sqlalchemy.pool import NullPool
 
 from roadmaps_api.logs import log_config
 from roadmaps_api.migrations import alembic_config
-from roadmaps_api.settings import MIGRATION_DATABASE_URL, SettingsError, is_database_url
+from roadmaps_api.settings import SettingsError, migration_url
 
 # Named, since `python -m` runs this module as __main__.
 logger = logging.getLogger("roadmaps_api.migrate")
 
 LATEST: Final = "head"
-
-
-def migration_url(environ: Mapping[str, str]) -> str:
-    """The migration login's URL, or logs and raises `SettingsError` naming the setting."""
-    url = environ.get(MIGRATION_DATABASE_URL, "").strip()
-    if not is_database_url(url):
-        logger.error("settings.invalid", extra={"invalid_settings": [MIGRATION_DATABASE_URL]})
-        raise SettingsError([MIGRATION_DATABASE_URL])
-    return url
 
 
 def upgrade(url: str) -> None:

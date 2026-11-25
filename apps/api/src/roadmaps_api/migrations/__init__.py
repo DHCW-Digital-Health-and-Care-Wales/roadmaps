@@ -16,7 +16,8 @@ from sqlalchemy import Connection
 
 MIGRATIONS_DIR: Final = Path(__file__).parent
 # Four digits, then a slug of lower-case words joined by underscores.
-REVISION: Final = re.compile(r"(?P<number>\d{4})_[a-z0-9]+(?:_[a-z0-9]+)*")
+# ASCII digits only: `\d` takes any script's.
+REVISION: Final = re.compile(r"(?P<number>[0-9]{4})_[a-z0-9]+(?:_[a-z0-9]+)*")
 # The length of `alembic_version.version_num`, Alembic's `VARCHAR(32)`.
 REVISION_MAX_LENGTH: Final = 32
 

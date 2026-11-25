@@ -31,7 +31,8 @@ class Found:
     """What the database answered."""
 
     login_is_safe: bool
-    # `alembic_version`'s rows, or None without the table.
+    # `alembic_version`'s rows; None without the table, or for an unsafe login, whose
+    # revision is not read.
     revisions: list[str] | None
 
 

@@ -29,16 +29,13 @@ the root, unversioned (ADR-017's amendments).
   roles; locally `apps/api/tools/bootstrap_database.py` runs it, and the hosting
   infrastructure runs it where the API is hosted.
 - A schema change is a revision in `apps/api/src/roadmaps_api/migrations/versions/`,
-  numbered next in the line (`0002_<slug>.py`, its revision ID the file's name), drafted
+  numbered next in the line (`NNNN_<slug>.py`, its revision ID the file's name), drafted
   by autogenerate and finished by hand (`[tool.alembic]` in `apps/api/pyproject.toml`).
   It upgrades only, stays compatible with the version before it, which serves while a
   deploy migrates, and grants `roadmaps_app` exactly what each object it creates needs,
   routines included. Give each tenant-owned table forced row-level security with
   `TENANT_POLICY` (`apps/api/src/roadmaps_api/database.py`); `alembic_version` is the
   one table without it.
-- A service takes the tenant and person for its transactions from the session it opens
-  (`sessions(info=session_info(tenant_id=…, person_id=…))`), which the session's
-  listener sets on each transaction.
 - A test that reaches the database follows `apps/api/tests/integration/AGENTS.md`.
 
 ## Errors and responses
@@ -66,8 +63,7 @@ the root, unversioned (ADR-017's amendments).
 - Read settings from `ROADMAPS_*` environment variables only
   (`apps/api/src/roadmaps_api/settings.py`), never a `.env` file. Fail closed on missing
   or invalid values, naming the setting and never its value; an unset `ROADMAPS_ENV`
-  takes production rules. Only `roadmaps_api.migrate` reads
-  `ROADMAPS_MIGRATION_DATABASE_URL`, and the API refuses to start with it set.
+  takes production rules.
 
 ## Commands and checks
 

@@ -1,8 +1,8 @@
 # The API's local database, one per worktree slot (ADR-017 Operation), and the one CI's
-# API job tests against. Run it through `pnpm api:db:up`, `pnpm api:dev` or
-# `pnpm api:test` (scripts/api.sh), which name the Compose project for the slot and set
-# DB_PORT from it. The credentials are for this local container alone, reachable only
-# from this machine (build/api-compose.test.ts).
+# API job tests against. Run it through `pnpm api:db:up`, `pnpm api:dev`,
+# `pnpm api:migrate` or `pnpm api:test` (scripts/api.sh), which name the Compose project
+# for the slot and set DB_PORT from it. The credentials are for this local container
+# alone, reachable only from this machine (build/api-compose.test.ts).
 services:
   db:
     # Pinned by digest, which Dependabot refreshes (.github/dependabot.yml). Find the

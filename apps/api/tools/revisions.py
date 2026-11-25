@@ -77,9 +77,9 @@ def _numbering_problems(by_number: dict[int, list[Script]]) -> list[str]:
         elif len(numbered) > 1:
             repeated = ", ".join(script.revision for script in numbered)
             found.append(f"number {number:04d} repeats: {repeated}")
-        elif (number == 1 or len(below) == 1) and numbered[0].down_revisions != (
-            () if number == 1 else (below[0].revision,)
-        ):
-            follows = ", ".join(numbered[0].down_revisions) or "no revision"
-            found.append(f"{numbered[0].revision} follows {follows}, not the revision below it")
+        elif number == 1 or len(below) == 1:
+            expected = () if number == 1 else (below[0].revision,)
+            if numbered[0].down_revisions != expected:
+                follows = ", ".join(numbered[0].down_revisions) or "no revision"
+                found.append(f"{numbered[0].revision} follows {follows}, not the revision below it")
     return found

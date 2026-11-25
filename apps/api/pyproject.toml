@@ -16,9 +16,9 @@ dev = [
   "httpx2>=2.16",
   "import-linter>=2.16",
   "pytest>=9.2",
+  "pytest-xdist>=3.8",
   # Exact: a bump can change their rules, so each is a deliberate change with its fixes
   # (ADR-017 Tooling).
-  "pytest-xdist>=3.8",
   "ruff==0.17.5",
   "ty==0.0.104",
 ]
@@ -86,7 +86,7 @@ layers = [
 
 [tool.alembic]
 # For Alembic's own command line, run from apps/api to draft a revision by autogenerate
-# (`uv run --locked alembic revision --autogenerate --rev-id 0002_<slug> -m "<slug>"`,
+# (`uv run --locked alembic revision --autogenerate --rev-id NNNN_<slug> -m "<slug>"`,
 # with ROADMAPS_MIGRATION_DATABASE_URL set), which is then finished by hand.
 # `roadmaps_api.migrate`, which applies them, finds the revisions from the package.
 script_location = "%(here)s/src/roadmaps_api/migrations"

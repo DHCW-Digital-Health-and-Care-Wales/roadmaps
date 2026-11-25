@@ -11,22 +11,28 @@ from roadmaps_api.database import TIMEOUT_SECONDS
 # application's, held without ADMIN, and those also admitted; and neither the login nor
 # any role it is a member of has a role attribute that passes row-level security or
 # administers roles or databases, owns an object, or may create on the database or on
-# any schema, or create a temporary table.
+# any schema, or create a temporary table. Roles are found by their exact names, never
+# parsed as identifiers: Cloud SQL names an IAM login after its principal
+# (`name@project.iam`), which a `::regrole` cast refuses, and the cast folds case.
 LOGIN_IS_SAFE: Final = text("""
-WITH RECURSIVE held (roleid, admin_option) AS (
-    SELECT roleid, admin_option FROM pg_auth_members WHERE member = session_user::regrole
+WITH RECURSIVE login AS (
+    SELECT oid FROM pg_roles WHERE rolname = session_user
+),
+held (roleid, admin_option) AS (
+    SELECT roleid, admin_option FROM pg_auth_members WHERE member = (SELECT oid FROM login)
     UNION
     SELECT member.roleid, member.admin_option
     FROM pg_auth_members AS member JOIN held ON member.member = held.roleid
 ),
 roles AS (
-    SELECT session_user::regrole::oid AS oid
+    SELECT oid FROM login
     UNION
     SELECT roleid FROM held
 )
 SELECT
     EXISTS (
-        SELECT FROM held WHERE roleid = to_regrole(:app_role)
+        SELECT FROM held JOIN pg_roles ON pg_roles.oid = held.roleid
+        WHERE rolname = :app_role
     )
     AND NOT EXISTS (
         SELECT FROM held JOIN pg_roles ON pg_roles.oid = held.roleid

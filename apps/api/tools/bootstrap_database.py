@@ -28,7 +28,7 @@ from sqlalchemy.engine import make_url
 
 from roadmaps_api.logs import log_config
 from roadmaps_api.roles import APP_ROLE, MIGRATION_ROLE, bootstrap_sql
-from roadmaps_api.settings import ENV, Environment, SettingsError, is_database_url
+from roadmaps_api.settings import ENV, Environment, SettingsError, is_database_url, refuse
 
 logger = logging.getLogger("roadmaps_api.bootstrap")
 
@@ -52,8 +52,7 @@ def admin_url(environ: Mapping[str, str]) -> str:
     if not (is_database_url(url) and _is_loopback(make_url(url).host)):
         invalid.append(ADMIN_DATABASE_URL)
     if invalid:
-        logger.error("settings.invalid", extra={"invalid_settings": invalid})
-        raise SettingsError(invalid)
+        refuse(invalid)
     return url
 
 
@@ -72,12 +71,11 @@ def libpq_url(url: str) -> str:
 def bootstrap(url: str) -> None:
     """Makes the logins and the roles in the URL's database, or changes nothing."""
     with psycopg.connect(libpq_url(url)) as connection:
-        is_superuser = connection.execute(
+        row = connection.execute(
             "SELECT rolsuper FROM pg_roles WHERE rolname = current_user"
         ).fetchone()
-        if not (is_superuser and is_superuser[0]):
-            logger.error("settings.invalid", extra={"invalid_settings": [ADMIN_DATABASE_URL]})
-            raise SettingsError([ADMIN_DATABASE_URL])
+        if not (row and row[0]):
+            refuse([ADMIN_DATABASE_URL])
         for login in LOGINS:
             exists = connection.execute(
                 "SELECT FROM pg_roles WHERE rolname = %s", (login,)

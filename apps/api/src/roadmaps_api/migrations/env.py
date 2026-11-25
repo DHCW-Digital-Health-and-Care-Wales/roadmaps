@@ -13,9 +13,9 @@ from alembic import context
 from sqlalchemy import Connection, create_engine, text
 from sqlalchemy.pool import NullPool
 
-from roadmaps_api.migrate import migration_url
 from roadmaps_api.models import Base
 from roadmaps_api.roles import OWNER_ROLE
+from roadmaps_api.settings import migration_url
 
 
 def run(connection: Connection) -> None:

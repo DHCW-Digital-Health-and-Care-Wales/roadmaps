@@ -83,7 +83,9 @@ case "${1:-}" in
     shift
     db_up
     # The harness builds a template database from it, then one per worker
-    # (tests/integration/AGENTS.md).
+    # (tests/integration/AGENTS.md); the migration login a developer exported to draft a
+    # revision stays out.
+    unset ROADMAPS_MIGRATION_DATABASE_URL
     export ROADMAPS_ADMIN_DATABASE_URL="$ADMIN_DATABASE_URL"
     uv run --locked coverage erase
     uv run --locked coverage run -m pytest "$@"

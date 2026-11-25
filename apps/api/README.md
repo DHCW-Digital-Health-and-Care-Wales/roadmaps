@@ -58,13 +58,15 @@ Migrations are Alembic revisions in `src/roadmaps_api/migrations/versions/`, num
 `0001_<slug>` in one line. They upgrade only, run as their own step as the migration
 login, never at the API's start-up, and grant `roadmaps_app` exactly what each object
 needs. Draft one from `apps/api` with
-`uv run --locked alembic revision --autogenerate --rev-id 0002_<slug> -m "<slug>"`, with
+`uv run --locked alembic revision --autogenerate --rev-id NNNN_<slug> -m "<slug>"`, `NNNN`
+the next free number,, with
 `ROADMAPS_MIGRATION_DATABASE_URL` set, then finish it by hand.
 
 Settings come from environment variables only, which `pnpm api:dev` sets for the slot:
 `ROADMAPS_ENV` (`local`, `test` or `production`, the default),
 `ROADMAPS_DATABASE_URL` (`postgresql+psycopg://…`) and `ROADMAPS_ALLOWED_HOSTS` (the
 `Host` names served, comma-separated, never a wildcard). A missing or bad one stops
-start-up, naming it, as does `ROADMAPS_MIGRATION_DATABASE_URL`, which only
-`python -m roadmaps_api.migrate` reads. Every log line is JSON on stdout; only a local API's lines carry
+start-up, naming it, as does `ROADMAPS_MIGRATION_DATABASE_URL`, which only the migration
+tooling reads: `python -m roadmaps_api.migrate`, and Alembic's command line when
+drafting. Every log line is JSON on stdout; only a local API's lines carry
 an exception's or another library's message.

@@ -213,6 +213,10 @@ file checks join STY-090's Compose test.
   that carries it. The exporter's failure lines (S1, D19) follow STY-101 S6: no URL or
   message under test's and production's rules, where D19's closed-port test runs, and
   the SDK's message on a developer's local API. Changes S1, S5, D19.
+- **D22** (agent, 2026-11-25, from STY-091's delivery): `/ready` no longer runs one
+  `SELECT 1`; it sets its statement timeout, reads the login's roles, then reads
+  `alembic_version` (STY-091 S7, S8). "Its `SELECT 1`" in S5 and D17 now means each of
+  the probe's database spans: a successful probe still exports none of them.
 
 ## Out of scope
 

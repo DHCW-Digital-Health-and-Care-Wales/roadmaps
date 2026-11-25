@@ -20,8 +20,14 @@ from tests import harness
 from tests.support import Lines, make_settings, serving
 from tools.bootstrap_database import MIGRATION_LOGIN
 
-LATEST = latest_revision().name
+LATEST = latest_revision()
+# Revisions around the code's latest, whatever its number.
+ABOVE = f"{LATEST.number + 1:04d}_next"
+BELOW = f"{LATEST.number - 1:04d}_older"
+ANOTHER_SLUG = f"{LATEST.number:04d}_another_slug"
+MOVED = "alembic_version_moved"
 NOT_READY = {"detail": "The service is not ready.", "code": "service.not_ready", "params": {}}
+NOT_SERVED = [{"message": "readiness.failed", "cause": "readiness.revision_not_served"}]
 
 
 def warnings_of(lines: Lines) -> list[dict[str, Any]]:
@@ -30,11 +36,13 @@ def warnings_of(lines: Lines) -> list[dict[str, Any]]:
 
 @pytest.fixture
 def versions(worker_admin: psycopg.Connection) -> Iterator[psycopg.Connection]:
-    """The worker's `alembic_version`, put back after the test."""
+    """The worker's `alembic_version`, its name and its row put back after the test."""
     yield worker_admin
     with worker_admin.transaction():
+        if worker_admin.execute("SELECT to_regclass(%s)", (MOVED,)).fetchone() != (None,):
+            worker_admin.execute(f"ALTER TABLE {MOVED} RENAME TO alembic_version".encode())
         worker_admin.execute("DELETE FROM alembic_version")
-        worker_admin.execute("INSERT INTO alembic_version VALUES (%s)", (LATEST,))
+        worker_admin.execute("INSERT INTO alembic_version VALUES (%s)", (LATEST.name,))
 
 
 def holding(*revisions: str) -> Callable[[psycopg.Connection], None]:
@@ -47,25 +55,28 @@ def holding(*revisions: str) -> Callable[[psycopg.Connection], None]:
 
 
 def without_the_table(connection: psycopg.Connection) -> None:
-    # Renamed, and put back by the test.
-    connection.execute("ALTER TABLE alembic_version RENAME TO alembic_version_moved")
+    connection.execute(f"ALTER TABLE alembic_version RENAME TO {MOVED}".encode())
 
 
 @dataclass(frozen=True)
 class Case:
     change: Callable[[psycopg.Connection], None]
     status: int
+    # The fields of each line besides the access line.
+    logged: list[dict[str, str]]
 
 
 REVISIONS = {
-    "the code's latest": Case(holding(LATEST), 200),
-    "one numbered above it": Case(holding("0002_next"), 200),
-    "one numbered below it": Case(holding("0000_older"), 503),
-    "another slug at a number the code knows": Case(holding("0001_another_slug"), 503),
-    "a value not of the form NNNN_<slug>": Case(holding("1a2b3c4d5e6f"), 503),
-    "no row": Case(holding(), 503),
-    "more than one row": Case(holding(LATEST, "0002_next"), 503),
-    "no alembic_version table": Case(without_the_table, 503),
+    "the code's latest": Case(holding(LATEST.name), 200, []),
+    "one numbered above it": Case(
+        holding(ABOVE), 200, [{"message": "readiness.ahead", "revision": ABOVE}]
+    ),
+    "one numbered below it": Case(holding(BELOW), 503, NOT_SERVED),
+    "another slug at a number the code knows": Case(holding(ANOTHER_SLUG), 503, NOT_SERVED),
+    "a value not of the form NNNN_<slug>": Case(holding("1a2b3c4d5e6f"), 503, NOT_SERVED),
+    "no row": Case(holding(), 503, NOT_SERVED),
+    "more than one row": Case(holding(LATEST.name, ABOVE), 503, NOT_SERVED),
+    "no alembic_version table": Case(without_the_table, 503, NOT_SERVED),
 }
 
 
@@ -74,28 +85,17 @@ def test_ready_answers_by_the_database_s_revision(
     versions: psycopg.Connection, database_url: str, lines: Lines, case: Case
 ) -> None:
     case.change(versions)
-    try:
-        with serving(make_settings(database_url)) as client:
-            response = client.get("/ready")
-    finally:
-        if case.change is without_the_table:
-            versions.execute("ALTER TABLE alembic_version_moved RENAME TO alembic_version")
+
+    with serving(make_settings(database_url)) as client:
+        response = client.get("/ready")
 
     assert response.status_code == case.status
-    warnings = warnings_of(lines)
     if case.status == 503:
         assert response.json() == NOT_READY
-        [warning] = warnings
-        assert (warning["message"], warning["cause"]) == (
-            "readiness.failed",
-            "readiness.revision_not_served",
-        )
-    elif case is REVISIONS["one numbered above it"]:
-        assert [(line["message"], line["revision"]) for line in warnings] == [
-            ("readiness.ahead", "0002_next")
-        ]
-    else:
-        assert warnings == []
+    logged = warnings_of(lines)
+    assert len(logged) == len(case.logged)
+    for line, expected in zip(logged, case.logged, strict=True):
+        assert expected.items() <= line.items()
 
 
 def test_the_code_s_latest_revision_is_read_once_at_start_up(
@@ -133,7 +133,10 @@ class Roles:
 
     @property
     def login_url(self) -> str:
-        return harness.login_url(f"{self.prefix}_login", self.database, "throwaway")
+        return self.url_for(f"{self.prefix}_login")
+
+    def url_for(self, login: str) -> str:
+        return harness.login_url(login, self.database, "throwaway")
 
     def run(self, connection: psycopg.Connection, statement: str) -> None:
         connection.execute(
@@ -238,3 +241,38 @@ def test_ready_refuses_the_migration_login(worker_database: str, lines: Lines) -
 
     [warning] = warnings_of(lines)
     assert warning["cause"] == "readiness.login_unsafe"
+
+
+# Logins whose names are not plain lower-case identifiers, each made beside a safe login
+# whose name differs only by case, where it differs.
+NAMED = {
+    "an IAM service account's, as Cloud SQL names it": ("{p}-api@my-project.iam", False, 200),
+    "a mixed-case login with BYPASSRLS": ("{p}_Twin", True, 503),
+}
+
+
+@pytest.mark.parametrize(("name", "bypasses", "status"), NAMED.values(), ids=NAMED)
+def test_ready_judges_the_login_it_connects_as_by_its_exact_name(
+    roles: Roles,
+    worker_admin: psycopg.Connection,
+    name: str,
+    status: int,
+    *,
+    bypasses: bool,
+) -> None:
+    login = name.replace("{p}", roles.prefix)
+    made = {login.lower(): False, login: bypasses}
+    for role, bypass in made.items():
+        worker_admin.execute(
+            sql.SQL("CREATE ROLE {} LOGIN PASSWORD 'throwaway' {} IN ROLE {}").format(
+                sql.Identifier(role),
+                sql.SQL("BYPASSRLS" if bypass else "NOBYPASSRLS"),
+                sql.Identifier(roles.app),
+            )
+        )
+    try:
+        with serving(make_settings(roles.url_for(login))) as client:
+            assert client.get("/ready").status_code == status
+    finally:
+        for role in made:
+            worker_admin.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))

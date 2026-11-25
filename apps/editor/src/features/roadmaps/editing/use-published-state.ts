@@ -38,7 +38,7 @@ export type PublishedStateOutcomeNotice =
   | { kind: "failed"; published: boolean; error: AppErrorKind; kept: boolean }
 
 /** What the action asks, as its dialog says it. */
-export interface PublishedStateQuestion {
+interface PublishedStateQuestion {
   /** Publish, the roadmap not being published, or unpublish. */
   publishing: boolean
   /** The pending changes: they go with a publish, or stay with an unpublish. */

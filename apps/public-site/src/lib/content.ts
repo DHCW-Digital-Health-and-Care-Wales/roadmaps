@@ -37,7 +37,7 @@ export const SECTIONS = SECTION_IDS.map((id) => ({
 }))
 
 /** Id of the "Other roadmaps" group, for roadmaps with no Category. */
-export type CategoryKey = CategoryId | "other"
+type CategoryKey = CategoryId | "other"
 
 /** A landing page group of roadmaps. */
 export interface Category<Id extends CategoryKey = CategoryKey> {
@@ -78,7 +78,7 @@ export const ORGANISATION_GROUP_IDS = [
   "other-nhs-wales-bodies",
 ] as const
 
-export type OrganisationGroupId = (typeof ORGANISATION_GROUP_IDS)[number]
+type OrganisationGroupId = (typeof ORGANISATION_GROUP_IDS)[number]
 
 /** An organisation a card's work can be for. */
 export interface Organisation {

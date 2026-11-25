@@ -128,7 +128,7 @@ const WELSH_HEADER = /^(.+?)[\s([\-_]+(?:cy|cym|cymraeg|welsh)[\s)\]]*$/i
 // Welsh usually runs about as long as English, or up to a third longer, so a
 // gap of more than 2x in words suggests a missing or misplaced translation.
 // Short text is only checked for being untranslated or a placeholder.
-export const TRANSLATION_CHECK = {
+const TRANSLATION_CHECK = {
   minWordsToCompare: 8,
   minLengthRatio: 0.5,
   minWordsIfSame: 3,

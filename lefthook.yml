@@ -15,6 +15,7 @@ pre-commit:
       glob: "*.ts"
       exclude:
         - "apps/**"
+        - "packages/**"
       run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
 
     - name: eslint (editor)
@@ -25,6 +26,11 @@ pre-commit:
     - name: eslint (public site)
       root: apps/public-site/
       glob: "*.{ts,tsx}"
+      run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
+
+    - name: eslint (api types)
+      root: packages/api-types/
+      glob: "*.ts"
       run: node_modules/.bin/eslint --max-warnings=0 --no-warn-ignored {staged_files}
 
     # Formats and fixes, as Prettier does, and restages; a finding ruff cannot fix stops

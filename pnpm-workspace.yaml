@@ -1,5 +1,6 @@
 packages:
   - apps/*
+  - packages/*
 
 # A version more than one package uses is named once here and referenced as `catalog:`
 # (ADR-016 Workspace tooling).

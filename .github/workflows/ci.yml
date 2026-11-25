@@ -66,7 +66,8 @@ jobs:
 
   # The checks of the repository as a whole, on every run: formatting, the root
   # package's own code and tests (the Markdown links, the agent-guide budget, the
-  # worktree and CI scripts, and that CI result needs every job) and the workflows.
+  # worktree and CI scripts, and that CI result needs every job), knip, the API's
+  # generated package and the workflows.
   repository:
     name: Repository
     runs-on: ubuntu-latest
@@ -85,6 +86,15 @@ jobs:
       - run: pnpm repo:typecheck
       - run: pnpm repo:lint
       - run: pnpm repo:test
+      # Unused files, exports and dependencies across the pnpm workspace (knip.jsonc).
+      - run: pnpm knip
+      # The API's generated package: its types, its lint, its tests and, against
+      # apps/api/openapi.json, any drift in what it commits; API: verify holds that
+      # document to the code.
+      - run: pnpm --filter @roadmaps/api-types typecheck
+      - run: pnpm --filter @roadmaps/api-types lint
+      - run: pnpm --filter @roadmaps/api-types test
+      - run: pnpm api-types:check
       # Pinned by version and checksum; actionlint runs shellcheck on each run: block.
       - name: Lint the workflows with actionlint
         env:
@@ -343,8 +353,9 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-  # The API (apps/api): ruff, import-linter, the transaction check, ty and pytest at 100%
-  # branch coverage, through its pnpm scripts, which run uv. pnpm api:test starts the
+  # The API (apps/api): ruff, import-linter, the transaction check, ty, drift in its
+  # committed OpenAPI document and pytest at 100% branch coverage, through its pnpm
+  # scripts, which run uv. pnpm api:test starts the
   # database of apps/api/compose.yaml, as it does locally, in the runner's Docker.
   api-verify:
     name: "API: verify"
@@ -370,6 +381,7 @@ jobs:
           working-directory: apps/api
       - run: pnpm api:lint
       - run: pnpm api:typecheck
+      - run: pnpm api:openapi:check
       - run: pnpm api:test
 
   # The one check main's ruleset requires. It needs every job but deploy, runs whatever

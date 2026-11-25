@@ -12,6 +12,7 @@ from roadmaps_api.database import create_database_engine, create_sessions
 from roadmaps_api.errors import register_error_handlers
 from roadmaps_api.middleware import RequestContext
 from roadmaps_api.migrations import latest_revision
+from roadmaps_api.openapi import document_refusals
 from roadmaps_api.routes import api_v1, probes
 from roadmaps_api.settings import Settings, SettingsError, load_settings
 
@@ -64,6 +65,7 @@ def create_app(settings: Settings) -> FastAPI:
     register_error_handlers(app)
     app.include_router(probes.router)
     app.include_router(api_v1.router)
+    document_refusals(app)
     # Added innermost first: a request meets RequestContext, then the Host allow-list,
     # then the body limit. Both answer in Starlette's plain text, not the envelope
     # (ADR-017 _Errors_). The limit counts a body as a route reads it: no route gets more

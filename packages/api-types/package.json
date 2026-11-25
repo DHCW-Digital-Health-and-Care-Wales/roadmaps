@@ -1,0 +1,32 @@
+{
+  "name": "@roadmaps/api-types",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The DHCW Roadmaps API's TypeScript types and zod/mini schemas, generated from apps/api/openapi.json (ADR-017). It ships its source: nothing builds it.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.ts",
+    "check": "node scripts/check.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint --max-warnings=0 .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@hey-api/openapi-ts": "0.99.0",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "globals": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -190,7 +190,7 @@ export function useHasJs(): boolean {
   )
 }
 
-export function navigate(href: string, { scroll = true } = {}) {
+function navigate(href: string, { scroll = true } = {}) {
   const { pathname, search, hash } = window.location
   if (href !== `${pathname}${search}${hash}`) {
     window.history.pushState({}, "", href)

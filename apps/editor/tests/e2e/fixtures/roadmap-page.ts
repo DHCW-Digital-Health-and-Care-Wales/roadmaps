@@ -62,7 +62,7 @@ export function moreButton(page: Page, language: Language = "en"): Locator {
  * Opens More and chooses `item`, returning once the menu has gone: the choice is acted
  * on as it finishes closing.
  */
-export async function chooseFromMore(
+async function chooseFromMore(
   page: Page,
   item: string,
   language: Language = "en",
@@ -116,7 +116,7 @@ export type LongRoadmapTab = "ProductA" | "ProductC"
  * The example spreadsheet with a dozen more items on the roadmap tab `tab`, "Planned
  * work 1" to "Planned work 12", so its page runs to several screens.
  */
-export function withLongRoadmap(tab: LongRoadmapTab): readonly FakeTab[] {
+function withLongRoadmap(tab: LongRoadmapTab): readonly FakeTab[] {
   const roadmap = EXAMPLE_SPREADSHEET.find(({ title }) => title === tab)
   const [header = [], ...rows] = roadmap?.rows ?? []
   const horizons = ["Now", "Next", "Later", "Delivered this year"]
@@ -187,7 +187,7 @@ const NEVER_SETTLED = "the pinned bars never held still"
  * frame or two at a height it then leaves (its title changes size as it sticks), and
  * the page follows it. `false` when they are still moving after two seconds.
  */
-export function barsHeldStill(page: Page): Promise<boolean> {
+function barsHeldStill(page: Page): Promise<boolean> {
   return page.evaluate(
     () =>
       new Promise<boolean>((resolve) => {

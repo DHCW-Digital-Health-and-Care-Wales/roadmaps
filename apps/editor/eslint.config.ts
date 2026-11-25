@@ -2,6 +2,7 @@ import i18next from "eslint-plugin-i18next"
 import { globalIgnores } from "eslint/config"
 
 import { reactAppConfig } from "../../eslint.base.ts"
+import { apiTypesImport, apiTypesRules } from "./build/api-types-lint.ts"
 import { designTokenRules } from "./build/design-token-lint.ts"
 import { e2eRules } from "./build/e2e-lint.ts"
 
@@ -24,10 +25,18 @@ const unconfiguredCn = {
 }
 
 /** `no-restricted-imports` with the given patterns, always forbidding the bare `cn`. */
-function restrictedImports(
+function infrastructureImports(
   patterns: unknown[] = [],
 ): ["error", { paths: (typeof unconfiguredCn)[]; patterns: unknown[] }] {
   return ["error", { paths: [unconfiguredCn], patterns }]
+}
+
+/**
+ * The rule for every file outside `src/infrastructure/`: it also forbids the API's
+ * generated package (build/api-types-lint.ts).
+ */
+function restrictedImports(patterns: unknown[] = []) {
+  return infrastructureImports([apiTypesImport, ...patterns])
 }
 
 const frameworks = [
@@ -88,7 +97,8 @@ export default reactAppConfig(
     rules: { "react-refresh/only-export-components": "off" },
   },
   {
-    // Later blocks set the rule again for their layer, so each keeps `unconfiguredCn`.
+    // Later blocks set the rule again for their layer, so each is built the same way,
+    // keeping `unconfiguredCn` and, outside infrastructure, the API's generated package.
     files: ["src/**/*.{ts,tsx}"],
     rules: { "no-restricted-imports": restrictedImports() },
   },
@@ -111,7 +121,7 @@ export default reactAppConfig(
   {
     files: ["src/infrastructure/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": restrictedImports([
+      "no-restricted-imports": infrastructureImports([
         ...frameworks,
         ...layers("features", "app", "routes", "components", "i18n"),
       ]),
@@ -172,6 +182,8 @@ export default reactAppConfig(
       ),
     },
   },
+  // Only infrastructure imports the API's generated package: build/api-types-lint.ts.
+  ...apiTypesRules,
   // Off-brand styling fails lint (ADR-010): build/design-token-lint.ts.
   ...designTokenRules,
   // A Playwright test never slows the machine: build/e2e-lint.ts.

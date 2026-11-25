@@ -19,6 +19,8 @@ from fastapi.responses import JSONResponse
 # unreadable body, so its handler is registered here. Routes raise `ApiError`.
 from starlette.exceptions import HTTPException  # noqa: TID251
 
+from roadmaps_api.wire import ApiResponseModel
+
 
 class ErrorCode(StrEnum):
     NOT_FOUND = "request.not_found"
@@ -56,6 +58,14 @@ _FASTAPI_REFUSALS: Final[dict[HTTPStatus, tuple[ErrorCode, dict[str, Any]]]] = {
     HTTPStatus.NOT_FOUND: (ErrorCode.NOT_FOUND, {}),
     HTTPStatus.METHOD_NOT_ALLOWED: (ErrorCode.METHOD_NOT_ALLOWED, {}),
 }
+
+
+class ErrorResponse(ApiResponseModel):
+    """The envelope of every refusal, as the OpenAPI document describes it."""
+
+    detail: str
+    code: ErrorCode
+    params: dict[str, Any]
 
 
 class ApiError(Exception):

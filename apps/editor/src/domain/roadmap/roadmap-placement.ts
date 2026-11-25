@@ -14,13 +14,6 @@ export const ROADMAP_PLACEMENTS = [
 
 export type RoadmapPlacement = (typeof ROADMAP_PLACEMENTS)[number]
 
-/** The placements that are horizons; the rest are sections. */
-export const ROADMAP_HORIZONS = [
-  "now",
-  "next",
-  "later",
-] as const satisfies readonly RoadmapPlacement[]
-
 export function isRoadmapPlacement(value: string): value is RoadmapPlacement {
   return (ROADMAP_PLACEMENTS as readonly string[]).includes(value)
 }

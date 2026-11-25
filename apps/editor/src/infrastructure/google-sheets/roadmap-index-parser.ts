@@ -28,7 +28,7 @@ import { ProblemLog, type SheetProblem } from "./sheet-problem-log"
 /** A mistake in the roadmap index, as data for a later sheet-health view (no prose). */
 export type RoadmapIndexProblem = SheetProblem<RoadmapIndexProblemCode>
 
-export type RoadmapIndexProblemCode =
+type RoadmapIndexProblemCode =
   | HeaderProblemCode
   /** A column other than `Sheet` has no header. */
   | "missing-column"
@@ -98,7 +98,7 @@ const OPTIONAL_COLUMNS = [
 /** The editor's own columns, which the public site ignores: none is a mistake to miss. */
 const EDITOR_COLUMNS = ["Family ID", "Category ID"] as const
 
-export type RoadmapIndexColumn =
+type RoadmapIndexColumn =
   "Sheet" | (typeof OPTIONAL_COLUMNS)[number] | (typeof EDITOR_COLUMNS)[number]
 
 export const FAMILY_WELSH = "Family (cy)"

@@ -73,7 +73,7 @@ function citedRecordIds(path: string): string[] {
  * `apps/editor/tests/e2e/AGENTS.md` that looked like repo-root paths. Review by 2027-02-24.
  */
 const REPO_ROOT_PREFIX =
-  /^(?:apps|docs|build|scripts|fixtures|\.agents|\.claude|\.github)\//
+  /^(?:apps|packages|docs|build|scripts|fixtures|\.agents|\.claude|\.github)\//
 const PLACEHOLDER = /[<>*…{}$]/
 const GITIGNORED_PATH =
   /(?:^|\/)(?:\.env[^/]*\.local|\.data|node_modules|\.artifacts)(?:\/|$)/

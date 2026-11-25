@@ -3,10 +3,10 @@
 - **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
   STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
   the API skeleton (STY-090) and, from the owner's review of it, STY-101 and STY-091 are
-  done; STY-100 (owner, 2026-11-23) and STY-092 (owner, 2026-11-24) are Proposed; the
-  remaining API placeholders' acceptance criteria come next
-- **Progress**: 13 of 20 terminal (STY-085 to STY-091, STY-095, CHO-044, STY-096 to
-  STY-098, STY-101); next selectable: STY-092 and STY-100
+  done, and so is STY-092; STY-100 (owner, 2026-11-23) is Proposed; the remaining API
+  placeholders' acceptance criteria come next
+- **Progress**: 14 of 20 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
+  STY-098, STY-101); next selectable: STY-100
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -262,7 +262,7 @@ emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestM
 | STY-089 | [One copy of the spreadsheet fixtures](../_archive/EPC-022-monorepo-and-backend-foundation/STY-089-one-copy-of-the-spreadsheet-fixtures.md)                               | Infrastructure + CI/CD       | STY-098          | ✅    |
 | STY-090 | [The API skeleton](../_archive/EPC-022-monorepo-and-backend-foundation/STY-090-the-api-skeleton.md)                                                                       | API + CI/CD                  | STY-087          | ✅    |
 | STY-091 | [Migrations, tenant listener, test harness](../_archive/EPC-022-monorepo-and-backend-foundation/STY-091-migrations-tenant-listener-and-test-harness.md)                   | API + CI/CD                  | STY-101          | ✅    |
-| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)                                                                                 | API + Infrastructure + CI/CD | STY-090, STY-101 |       |
+| STY-092 | [The OpenAPI contract and schemas](../_archive/EPC-022-monorepo-and-backend-foundation/STY-092-the-openapi-contract-and-generated-schemas.md)                             | API + Infrastructure + CI/CD | STY-090, STY-101 | ✅    |
 | STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                                                                                               | API                          | `tenants` story  |       |
 | STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                                                                                       | API                          | invitations      |       |
 | STY-095 | [The public site adopts the conventions](../_archive/EPC-022-monorepo-and-backend-foundation/STY-095-the-public-site-adopts-the-workspace-conventions.md)                 | Features/UI + CI/CD + Docs   | STY-088          | ✅    |
@@ -276,8 +276,8 @@ emptying, with a test (D15). From STY-092, API JSON schemas inherit `ApiRequestM
 | CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                                 | API                          | —                |       |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                          | —                |       |
 
-_STY-085 to STY-091, STY-095, CHO-044, STY-096 to STY-098 and STY-101 are done.
-STY-092 and STY-100 are Proposed; STY-093 is a Placeholder
+_STY-085 to STY-092, STY-095, CHO-044, STY-096 to STY-098 and STY-101 are done.
+STY-100 is Proposed; STY-093 is a Placeholder
 until its acceptance criteria are written: ADR-017 is accepted. STY-094
 is a Placeholder until the invitation story exists, and STY-099 until design input
 settles what the public sees.
@@ -324,6 +324,9 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
   a fresh clone got no Git hooks from `pnpm install` (Done).
 - [DEF-033](../defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md):
   the editor leaves text it always shows in one language unmarked (Needs triage).
+- [DEF-036](../defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md):
+  the Sheets replacement runbook still describes CORS and a browser-held token (Needs
+  triage).
 
 ## Related
 

@@ -32,11 +32,6 @@ const badgeVariants = cva(
   },
 )
 
-/** The names of the tag variants, for tables that map a state to one. */
-export type TagVariant = NonNullable<
-  VariantProps<typeof badgeVariants>["variant"]
->
-
 function Badge({
   className,
   variant = "neutral",
@@ -59,4 +54,4 @@ function Badge({
   })
 }
 
-export { Badge, badgeVariants }
+export { Badge }

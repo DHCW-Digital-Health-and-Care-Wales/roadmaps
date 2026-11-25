@@ -78,7 +78,7 @@ export function titleWithFamily({
 }
 
 /** Whether a placement is one of the horizons, not one of the sections. */
-export const isHorizon = (id: Placement): id is Horizon =>
+const isHorizon = (id: Placement): id is Horizon =>
   (HORIZON_IDS as readonly Placement[]).includes(id)
 
 /** The id of a horizon's or section's heading, the same in both layouts. */

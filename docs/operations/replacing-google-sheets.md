@@ -9,17 +9,19 @@ The database behind the API is decided by ADR-015: scoped by tenant, keeping eve
 version as change sets and snapshots, with a private scratch, a shared draft and
 publications. EPC-022 builds it and this adapter.
 
-1. **Adapter.** Create `apps/editor/src/infrastructure/roadmaps-api/` with:
-   - a small HTTP client that uses `fetch`, passes the caller's `signal` through, and maps
-     failures to `AppError` kinds the same way the Sheets client does (401 →
-     `unauthenticated`, 403 → `forbidden`, 404 → `not-found`, 429 → `rate-limited`, 5xx →
-     retryable `unknown`, fetch failure → `network`, unparsable body →
-     `invalid-response`). A write the API refuses because part of what it changes is
+1. **Adapter.** Build on `apps/editor/src/infrastructure/roadmaps-api/`, which holds
+   `toApiError`: a non-2xx answer as an `AppError`, by the envelope's code, mapped for
+   every code the contract names, else by the status (ADR-017's amendments). Add:
+   - a small HTTP client that uses `fetch`, passes the caller's `signal` through and
+     gives each non-2xx answer to `toApiError`, then checks the signal, which
+     `toApiError` does not; a fetch failure is `network`, and a success whose body
+     can't be parsed `invalid-response`. A write the API refuses because part of what it changes is
      locked to this account, though the account may change the rest, is `protected`
      (STY-051): the Sheets client knows Google's by its message, as Google gives it no
      status of its own; an API gives it a status or a code of its own, or never
      answers so if it has no such lock;
-   - Zod schemas for the responses;
+   - the generated `zod/mini` schemas of `@roadmaps/api-types` for the responses, which
+     only `infrastructure/` may import;
    - `ApiRoadmapRepository implements RoadmapRepository`:
      - `listRoadmaps` maps each roadmap to the domain's `Roadmap` (ADR-009), in the
        API's order, with ids that are URL-safe slugs;
@@ -80,8 +82,9 @@ publications. EPC-022 builds it and this adapter.
        and rejects with `invalid-data` without a usable one; an API that needs no
        template never does. A lost answer is settled by something only that write
        made, such as a key the client chose, never by the short name or the values;
-   - an `index.ts` barrel. The existing ESLint rules already keep this folder away from
-     React, TanStack and features.
+   - an export from its `index.ts` barrel. The existing ESLint rules already keep this
+     folder away from React, TanStack and features. Once `composeApp` imports it, remove
+     its temporary entry in `knip.jsonc`.
 2. **Contract test.** In `api-roadmap-repository.test.ts`, run the shared contract
    (`apps/editor/src/domain/roadmap/testing/roadmap-repository-contract.ts`) against an MSW fake of
    the API, then add tests for each status mapping. `withRoadmaps(roadmaps, items?,

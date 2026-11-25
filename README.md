@@ -25,6 +25,10 @@ This repository is one pnpm workspace
   FastAPI service over PostgreSQL
   ([ADR-017](docs/adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md)),
   run locally and in CI only for now.
+- `packages/api-types/` (`@roadmaps/api-types`): the API's TypeScript types and
+  `zod/mini` schemas, generated from its committed OpenAPI document
+  (`apps/api/openapi.json`) and committed, with no build step; of the editor, only
+  `apps/editor/src/infrastructure/` imports it.
 
 Licensed under the [MIT License](LICENSE).
 
@@ -68,6 +72,10 @@ from `ROADMAPS_DATA=e2e/fixtures/roadmaps.json`):
 pnpm typecheck      # TypeScript, every package, and ty for the API
 pnpm lint           # ESLint, zero warnings allowed, and the API's checks
 pnpm format:check   # Prettier over the whole repository (pnpm format to fix)
+pnpm knip           # unused files, exports and dependencies across the pnpm workspace
+pnpm api:contract   # regenerate apps/api/openapi.json, then packages/api-types from it
+pnpm api:openapi:check  # fail if openapi.json differs from the API's code
+pnpm api-types:check    # fail if packages/api-types differs from openapi.json
 pnpm test           # Vitest, every package, and the API's pytest (starts its database)
 pnpm test:docs      # the Markdown tests alone (links, agent guides)
 pnpm build          # every app's production build

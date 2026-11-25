@@ -22,7 +22,7 @@ export interface RoadmapLists {
 }
 
 /** Whether each list is being read for the first time. */
-export type RoadmapListsReading = Readonly<Record<keyof RoadmapLists, boolean>>
+type RoadmapListsReading = Readonly<Record<keyof RoadmapLists, boolean>>
 
 /**
  * The family and category lists, fetched while connected and only once `needed`, so a

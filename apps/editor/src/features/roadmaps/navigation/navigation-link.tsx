@@ -17,7 +17,7 @@ import { RoadmapSwatch } from "../components/roadmap-swatch"
 import type { FoundPart } from "./narrow-roadmaps"
 
 /** What marks a destination beside its name, and alone in a rail. */
-export type NavigationMark =
+type NavigationMark =
   /** A page's icon, shown in both forms. */
   | { icon: ReactNode }
   /**

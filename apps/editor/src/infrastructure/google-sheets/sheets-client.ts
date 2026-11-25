@@ -11,7 +11,7 @@ const SHEETS_API_BASE_URL = "https://sheets.googleapis.com/v4/spreadsheets"
 export const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
 
 /** Returns the current OAuth access token, or `null` when not connected. */
-export type AccessTokenProvider = () => string | null
+type AccessTokenProvider = () => string | null
 
 export interface SheetsClientOptions {
   getAccessToken: AccessTokenProvider
@@ -21,7 +21,7 @@ export interface SheetsClientOptions {
   baseUrl?: string | undefined
 }
 
-export interface GetJsonOptions {
+interface GetJsonOptions {
   searchParams?: Readonly<Record<string, string>> | undefined
   signal?: AbortSignal | undefined
 }

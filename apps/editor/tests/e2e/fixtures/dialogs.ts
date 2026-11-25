@@ -286,7 +286,7 @@ const REMOVAL = {
 >
 
 /** The removal dialog asking about the item titled `title`, open or not. */
-export function removalDialog(
+function removalDialog(
   page: Page,
   title: string,
   language: Language = "en",

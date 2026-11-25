@@ -62,7 +62,7 @@ const roadmap = z.strictObject({
   ),
 })
 
-export const snapshotSchema = z
+const snapshotSchema = z
   .array(roadmap)
   .min(1)
   .refine(

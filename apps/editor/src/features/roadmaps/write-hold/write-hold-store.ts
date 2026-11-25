@@ -8,7 +8,7 @@ import type { AppErrorKind } from "@/lib/errors"
 import { createExternalStore } from "@/lib/external-store"
 
 /** The write held, as its dialog names it. */
-export type HeldWrite =
+type HeldWrite =
   /** The Publish changes or Save changes of a roadmap's pending edits. */
   | "publish"
   | "save"
@@ -37,7 +37,7 @@ export interface WriteHoldRequest {
   readonly reads: readonly HoldRead[]
 }
 
-export type HoldRefresh =
+type HoldRefresh =
   | { readonly status: "idle" }
   | { readonly status: "reading" }
   | { readonly status: "failed"; readonly error: AppErrorKind }

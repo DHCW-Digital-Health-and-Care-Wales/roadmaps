@@ -1,16 +1,16 @@
 # STY-092: The OpenAPI contract and the editor's generated schemas
 
-- **Status**: Proposed — acceptance criteria from the owner's STY-092 grilling and
-  review (2026-11-24); selectable now (STY-090 and STY-101 are done)
+- **Status**: Done
 - **Type**: Feature
 - **Area**: API + Infrastructure + CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: STY-090 (hard), STY-101 (hard)
 - **Binding ADRs**: ADR-017 §Errors, §The contract with the editor, §STY-101 amendments,
   §STY-092 amendments; ADR-016 §Layout and name, §Workspace tooling, §STY-092 amendments;
   ADR-002
 - **Suggested model**: Sonnet — generation, drift checks, lint boundary and error parser
   with settled tools and rules
+- **Delivered**: _(add on delivery)_
 
 ## Summary
 
@@ -36,7 +36,7 @@ runtime code changes.
 
 ### S1: The API's JSON wire format is strictly camelCase on requests and responses, and OpenAPI enumerates every error code
 
-**Given** the API's FastAPI application and [errors.py](../../../apps/api/src/roadmaps_api/errors.py)
+**Given** the API's FastAPI application and [errors.py](../../../../apps/api/src/roadmaps_api/errors.py)
 **When** `app.openapi()` is built (or `/api/v1/openapi.json` is served locally)
 **Then** two shared Pydantic base models enforce camelCase on the wire: `ApiResponseModel`
 (`alias_generator=to_camel`, `serialize_by_alias=True`, `validate_by_alias=True`,
@@ -323,3 +323,61 @@ Audited at `977a632d`:
 - Using `@roadmaps/api-types` in `apps/public-site` (and routing `packages/api-types/*`
   to `site=true` in `classify-changes.sh`): outside EPC-022, when the public site moves to
   the API read.
+
+## Delivery
+
+### Departures
+
+- **S6: `import()` and `import("…")` types need a rule of the app's own** (agent):
+  `no-restricted-imports`, in every non-infrastructure block as S6 says, reads neither,
+  so `api-types/no-deferred-import` (`apps/editor/build/api-types-lint.ts`) holds them.
+  An existing rule would not do: `no-restricted-syntax` is the design tokens' on the
+  same files, and flat config lets one block's options replace another's. A specifier
+  built at run time, and Vite's `import.meta.glob`, are not read. The layering rules
+  miss the same two forms (DEF-035).
+- **S7: one test moved so that `knip` sees unused files** (agent):
+  `lint-exceptions.test.ts` read every module with `import.meta.glob`, which `knip`
+  counts as importing them, so no file under the editor's `src/` could be reported
+  unused. It is now `apps/editor/build/lint-exceptions.test.ts`, reading from disk.
+- **S7: what the first run found** (agent, from D7): unused shadcn parts removed
+  (among them the whole submenu, its open-state styling noted in
+  `dropdown-menu.tsx` for whoever adds one back), `ROADMAP_HORIZONS` (ADR-011's code
+  sketch still shows it), `useHeldWrite`, the `TagVariant` type, unused barrel
+  re-exports, a second declaration of `RoadmapCopiedCells` that TypeScript merged, and
+  `export` on names only their own module uses. `knip.jsonc` also names the skills'
+  scripts as entry points, leaves the design-token lint fixtures out, and keeps
+  `dhcw-design-system`, whose Sass the token tests read from `node_modules` by path.
+- **S3: the package has its own tests** (agent): the drift check's cases are
+  `packages/api-types/scripts/contract.test.ts`, which CI's Repository job runs beside
+  the steps D14 names. `@hey-api/openapi-ts` is pinned exactly, since a release can
+  change what it writes and so fail the drift check. It writes `.ts` import
+  extensions and reads no `tsconfig.json`, so a copy generated anywhere is the same.
+  `src/index.ts` re-exports the generated types' index and `zod.gen.ts`.
+
+### Contract for dependents
+
+- A story that adds a route, a wire model or an `ErrorCode` runs `pnpm api:contract`
+  and commits what it writes; a new code also maps it in `BY_CODE`
+  (`apps/editor/src/infrastructure/roadmaps-api/api-error.ts`).
+- `toApiError(response)` takes any non-2xx answer and resolves with an `AppError`
+  holding the status and never the body's text. It also resolves when the body cannot
+  be read, an aborted request's included, so the adapter's client checks its signal
+  afterwards.
+- The adapter story removes `knip.jsonc`'s temporary entry for
+  `src/infrastructure/roadmaps-api/index.ts` once `composeApp` imports it, and
+  exports what it adds from that barrel.
+- The generated `zod/mini` objects drop unknown keys rather than refusing them.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/test_wire.py` (bound and missing names, a row per body, query and nested case; the response model), `apps/api/tests/test_openapi.py` (the schemas, the 422 ref and FastAPI's schemas gone, the local live document), `apps/api/tests/test_errors.py` (every refusal's `params` keys are camelCase); red against empty base models and an unshaped document                               |
+| S2       | `apps/api/tests/test_export_openapi.py` (no `ROADMAPS_*` set and `ROADMAPS_ENV=local`; a row per divergence; a missing file; the module run as CI runs it); red against a stub tool; observed: `env -i`, with and without `ROADMAPS_ENV=local`, `--check` exited 0; a planted `ErrorCode` failed `pnpm api:openapi:check`                                                                                |
+| S3       | `packages/api-types/scripts/contract.test.ts` (added, changed and removed files, a diverging document, an unreadable one, the CLI's exit codes); red with each branch of the comparison broken, without recursion, without the empty-result guard and with exit 0; observed: after the planted code's export and before generating, `pnpm api-types:check` failed naming `types.gen.ts` and `zod.gen.ts` |
+| S4       | `.prettierignore`, `packages/api-types/eslint.config.ts` and `tsconfig.json`, `lefthook.yml`; `pnpm format:check` and the package's `typecheck` and `lint` in the gate                                                                                                                                                                                                                                   |
+| S5       | `apps/editor/src/infrastructure/roadmaps-api/api-error.test.ts` (every code, the envelope over the status, each fallback, no body text in the error); red against a stub parser; observed: a planted Python `ErrorCode`, after `pnpm api:contract`, failed `pnpm editor:typecheck` with TS2741 at `BY_CODE` and at the test's table                                                                      |
+| S6       | `apps/editor/build/api-types-lint.test.ts` (every folder but infrastructure, and `src/vite-env.d.ts`; static, relative, `import()` and `import("…")` forms; allowed in infrastructure); red before the rules, without each rule, without the relative-path pattern, and with the features block not carrying it                                                                                          |
+| S7       | observed: a planted unused export in the editor and the public site and a planted unused dependency in the package failed `pnpm knip`, naming each; a planted unused file in each workspace and root folder (seven) was reported as an unused file; with them removed it passed                                                                                                                          |
+| S8       | `scripts/ci/classify-changes.test.ts` (the package's paths, another package, a package whose name starts the same); red without the case, without either app and with it widened to `packages/*`; `.github/workflows/ci.yml`, `lefthook.yml`                                                                                                                                                             |
+| S9       | `apps/api/AGENTS.md`, `apps/api/README.md`, `apps/editor/AGENTS.md`, `apps/editor/README.md`, `AGENTS.md`, `README.md`, `docs/operations/replacing-google-sheets.md`, `.agents/skills/implement-story/references/validation.md`; ADR-016's and ADR-017's _STY-092 amendments_ (unchanged), which state what the build does                                                                               |

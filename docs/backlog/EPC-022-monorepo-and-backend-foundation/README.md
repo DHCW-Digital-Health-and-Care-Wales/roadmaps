@@ -332,6 +332,8 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
 - [DEF-036](../defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md):
   the Sheets replacement runbook still describes CORS and a browser-held token (Needs
   triage).
+- [DEF-039](../defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md):
+  Dependabot cannot raise updates of the API's locked dependencies (Needs triage).
 - [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md): a
   small request can get a much larger 422, which lists every error (Needs triage).
 

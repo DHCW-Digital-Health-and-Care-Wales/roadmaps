@@ -136,6 +136,7 @@ Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status toke
 | [DEF-036](defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md)                 | The Sheets replacement runbook still describes CORS and a browser-held token                     | Needs triage |
 | [DEF-037](defects/DEF-037-the-editors-layering-lint-skips-files-that-are-not-typescript.md)                         | The editor's layering lint skips files under `src/` that are not `.ts` or `.tsx`                 | Needs triage |
 | [DEF-038](defects/DEF-038-a-publish-test-waits-for-the-outcome-notices-focus-and-does-not-get-it.md)                | A publish test waits for the outcome notice's focus and does not get it                          | Needs triage |
+| [DEF-039](defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md)                                 | Dependabot cannot raise updates of the API's locked dependencies                                 | Needs triage |
 | [DEF-040](defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md)                                       | A small request can get a much larger 422, which lists every error (EPC-022)                     | Needs triage |
 
 A defect found during delivery is recorded in `defects/` with

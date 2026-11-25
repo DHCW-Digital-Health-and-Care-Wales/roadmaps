@@ -267,6 +267,30 @@ test("names milestones once per PR and says what ended each wait", () => {
   )
 })
 
+test("says a delegated task's notice ended a wait, not a person", () => {
+  // The notice T3 Code writes into the parent's log when a delegated task ends.
+  const notice =
+    "Delegated task node:delegated-task:abc (r1 review) in child thread thread:delegated-task:abc [completed]:\nNo findings."
+  const t = buildTimeline(
+    parseLog(
+      log(
+        said(0, "Review it"),
+        { type: "queue-operation", timestamp: at(300), content: notice },
+        said(301, notice),
+        said(900, "Delegated task management is what I asked about"),
+      ),
+    ),
+    { gapSeconds: 60 },
+  )
+  assert.deepEqual(
+    t.waits.map((w) => [w.endedBy, w.ms]),
+    [
+      ["person", 599_000],
+      ["backgroundTask", 300_000],
+    ],
+  )
+})
+
 test("renders every section as Markdown", () => {
   const t = buildTimeline(
     parseLog(

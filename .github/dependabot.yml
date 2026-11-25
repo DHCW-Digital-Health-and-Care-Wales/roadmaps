@@ -29,9 +29,11 @@ updates:
     groups:
       pnpm:
         patterns: ["*"]
-        # Its own pull request: a bump also needs the E2E jobs' image tag and digest in
-        # ci.yml, which their check steps ask for, so it cannot hold up the rest.
-        exclude-patterns: ["@playwright/test"]
+        # A pull request each, so neither can hold up the rest: a Playwright bump also
+        # needs the E2E jobs' image tag and digest in ci.yml, which their check steps
+        # ask for, and a release of the API types' generator, pinned exactly, can change
+        # what it writes, so its bump also needs `pnpm api-types:generate`.
+        exclude-patterns: ["@playwright/test", "@hey-api/openapi-ts"]
 
   # The API's uv project; ruff and ty are pinned exactly there, so their bumps come here
   # too, each a deliberate change with its fixes (ADR-017 Tooling).

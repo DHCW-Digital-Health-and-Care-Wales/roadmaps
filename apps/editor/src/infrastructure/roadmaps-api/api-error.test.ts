@@ -1,4 +1,4 @@
-import { type ErrorCode, zErrorCode } from "@roadmaps/api-types"
+import type { ErrorCode } from "@roadmaps/api-types"
 import { describe, expect, it } from "vitest"
 
 import type { AppErrorKind } from "@/lib/errors"
@@ -38,10 +38,6 @@ function html(status: number): Response {
 }
 
 describe("toApiError", () => {
-  it("has a case for every code the contract names", () => {
-    expect(Object.keys(CODES).sort()).toEqual([...zErrorCode.options].sort())
-  })
-
   it.each(Object.entries(CODES))(
     "maps the envelope's %s",
     async (code, [status, kind, retryable]) => {

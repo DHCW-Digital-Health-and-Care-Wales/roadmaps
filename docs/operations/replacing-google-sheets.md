@@ -15,11 +15,11 @@ publications. EPC-022 builds it and this adapter.
    - a small HTTP client that uses `fetch`, passes the caller's `signal` through and
      gives each non-2xx answer to `toApiError`, then checks the signal, which
      `toApiError` does not; a fetch failure is `network`, and a success whose body
-     can't be parsed `invalid-response`. A write the API refuses because part of what it changes is
-     locked to this account, though the account may change the rest, is `protected`
-     (STY-051): the Sheets client knows Google's by its message, as Google gives it no
-     status of its own; an API gives it a status or a code of its own, or never
-     answers so if it has no such lock;
+     can't be parsed `invalid-response`. A write the API refuses because part of what
+     it changes is locked to this account, though the account may change the rest, is
+     `protected` (STY-051): the Sheets client knows Google's by its message, as Google
+     gives it no status of its own; an API gives it a status or a code of its own, or
+     never answers so if it has no such lock;
    - the generated `zod/mini` schemas of `@roadmaps/api-types` for the responses, which
      only `infrastructure/` may import;
    - `ApiRoadmapRepository implements RoadmapRepository`:
@@ -87,7 +87,10 @@ publications. EPC-022 builds it and this adapter.
      its temporary entry in `knip.jsonc`.
 2. **Contract test.** In `api-roadmap-repository.test.ts`, run the shared contract
    (`apps/editor/src/domain/roadmap/testing/roadmap-repository-contract.ts`) against an MSW fake of
-   the API, then add tests for each status mapping. `withRoadmaps(roadmaps, items?,
+   the API. `api-error.test.ts` holds `toApiError`'s status and code mappings, so
+   add one test that a non-2xx answer goes through it, and tests of the client's own
+   `network`, `invalid-response`, abort and any `protected` cases.
+   `withRoadmaps(roadmaps, items?,
 options?)` seeds the fake with roadmaps, their items, and how a publish's write
    behaves (`ContractWrite`: fails, or its answer is lost), whose items cannot be
    read (`unreadableItems`), the `families` and `categories` lists (by default those

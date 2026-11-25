@@ -9,6 +9,7 @@
 // departure: its hidden "Close" is the caller's `closeLabel`, since `components/ui`
 // carries no copy. The title keeps clear of it (`pe-10`). Upstream's footer "Close",
 // backdrop blur and muted footer band are gone. `DialogClose` is the secondary button.
+// `DialogTrigger`, which nothing uses, is left out (knip).
 //
 // A dialog is a header, a body and a footer (EPC-019). On a screen with room for it (the
 // `pinned` variant in globals.css) the header and footer stay put, each set apart by a

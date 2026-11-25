@@ -37,7 +37,6 @@ async function reports(code: string, filePath: string): Promise<string[]> {
  */
 const OUTSIDE = [
   "src/app/main.tsx",
-  "src/assets",
   "src/components/theme/theme-preference.ts",
   "src/domain/roadmap/roadmap.ts",
   "src/features/auth/use-session-warning.ts",
@@ -51,7 +50,6 @@ const OUTSIDE = [
 
 /** Folders with no TypeScript to lint. */
 const WITHOUT_TYPESCRIPT = new Set(["src/assets"])
-const FILES = OUTSIDE.filter((path) => !WITHOUT_TYPESCRIPT.has(path))
 
 const STATIC = [
   `import { zErrorResponse } from "@roadmaps/api-types"`,
@@ -61,6 +59,10 @@ const STATIC = [
   `export { zErrorCode } from "../../../../packages/api-types/src/index.ts"`,
   `import type { ErrorCode } from "../../../packages/api-types"`,
   `import schemas from "../../../node_modules/@roadmaps/api-types/src/index.ts"`,
+  // Spellings TypeScript and Vite resolve to the folder all the same.
+  `export * from "../../../../packages/./api-types/src/index.ts"`,
+  `export * from "../../../../packages//api-types/src/index.ts"`,
+  `export * from "../../../../packages/other/../api-types/src/index.ts"`,
 ]
 
 const DEFERRED = [
@@ -70,6 +72,7 @@ const DEFERRED = [
   "export const load = (name: string) => import(`@roadmaps/api-types/${name}`)",
   `export type Code = import("@roadmaps/api-types").ErrorCode`,
   `export type Schemas = typeof import("../../../../packages/api-types/src/index.ts")`,
+  `export const load = () => import("../../../../packages/./api-types/src/index.ts")`,
 ]
 
 describe("only src/infrastructure/ may import the API's generated package", () => {
@@ -77,29 +80,35 @@ describe("only src/infrastructure/ may import the API's generated package", () =
     const folders = readdirSync(join(EDITOR, "src"), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => `src/${entry.name}`)
-      .filter((folder) => folder !== "src/infrastructure")
+      .filter(
+        (folder) =>
+          folder !== "src/infrastructure" && !WITHOUT_TYPESCRIPT.has(folder),
+      )
 
     for (const folder of folders) {
       expect(
-        OUTSIDE.some((path) => `${path}/`.startsWith(`${folder}/`)),
+        OUTSIDE.some((path) => path.startsWith(`${folder}/`)),
         `Add a file of ${folder} to OUTSIDE.`,
       ).toBe(true)
     }
   })
 
-  it.each(FILES)("rejects every static import of it in %s", async (file) => {
+  it.each(OUTSIDE)("rejects every static import of it in %s", async (file) => {
     for (const code of STATIC) {
       expect(await reports(code, file), code).toEqual(["no-restricted-imports"])
     }
   })
 
-  it.each(FILES)("rejects every deferred import of it in %s", async (file) => {
-    for (const code of DEFERRED) {
-      expect(await reports(code, file), code).toEqual([
-        "api-types/no-deferred-import",
-      ])
-    }
-  })
+  it.each(OUTSIDE)(
+    "rejects every deferred import of it in %s",
+    async (file) => {
+      for (const code of DEFERRED) {
+        expect(await reports(code, file), code).toEqual([
+          "api-types/no-deferred-import",
+        ])
+      }
+    },
+  )
 
   it.each([
     "src/infrastructure/roadmaps-api/api-error.ts",

@@ -91,9 +91,9 @@ jobs:
       # The API's generated package: its types, its lint, its tests and, against
       # apps/api/openapi.json, any drift in what it commits; API: verify holds that
       # document to the code.
-      - run: pnpm --filter @roadmaps/api-types typecheck
-      - run: pnpm --filter @roadmaps/api-types lint
-      - run: pnpm --filter @roadmaps/api-types test
+      - run: pnpm api-types:typecheck
+      - run: pnpm api-types:lint
+      - run: pnpm api-types:test
       - run: pnpm api-types:check
       # Pinned by version and checksum; actionlint runs shellcheck on each run: block.
       - name: Lint the workflows with actionlint

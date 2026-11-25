@@ -8,10 +8,11 @@
 import type { Linter, Rule } from "eslint"
 
 /**
- * A specifier that reaches the package: by its name, any subpath of it, or a path into
- * its folder, as a relative import or one through `node_modules` spells it.
+ * A specifier that reaches the package: any with an `api-types` segment, so its name, a
+ * subpath of it and every spelling of a path into its folder (`packages/./api-types`,
+ * `packages//api-types`). No folder of the editor's own takes that name.
  */
-const API_TYPES = String.raw`(?:^|/)(?:@roadmaps|packages)/api-types(?:/|$)`
+const API_TYPES = String.raw`(?:^|/)api-types(?:/|$)`
 
 const MESSAGE =
   "Only src/infrastructure/ may import @roadmaps/api-types, the API's generated types and schemas (ADR-017)."

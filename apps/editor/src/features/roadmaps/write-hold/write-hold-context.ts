@@ -2,7 +2,7 @@ import { createContext, use } from "react"
 
 import type { WriteHoldRequest, WriteHoldStore } from "./write-hold-store"
 
-/** Provided by `WriteHoldProvider`; read it through the hooks below. */
+/** Provided by `WriteHoldProvider`; read it through `useWriteHold`. */
 export const WriteHoldContext = createContext<WriteHoldStore | null>(null)
 
 function useWriteHoldStore(): WriteHoldStore {

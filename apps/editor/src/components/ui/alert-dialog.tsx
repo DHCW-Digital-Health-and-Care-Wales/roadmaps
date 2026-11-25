@@ -7,6 +7,7 @@
 // than the screen, as one that lists what it changes can be, scrolls. Upstream's `size`
 // prop, `AlertDialogMedia`, backdrop blur and muted footer band are gone. `AlertDialogCancel`
 // is the secondary button (upstream's `outline` variant no longer exists).
+// `AlertDialogTrigger` and `AlertDialogAction`, which nothing uses, are left out (knip).
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog"
 import { cn } from "@/lib/utils"

@@ -87,7 +87,6 @@ function touchesDesignRules({ directive }: Directive): boolean {
     : DESIGN_RULES.test(rules.join(" "))
 }
 
-// This file names the directives it looks for in strings, which parsing ignores.
 const all = sources.flatMap(([path, text]) => directives(path, text))
 
 describe("design rule exceptions (ADR-010)", () => {

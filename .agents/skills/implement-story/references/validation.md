@@ -21,8 +21,8 @@ runs every app's CI jobs runs every app's gate:
 | API         | `pnpm api:lint && pnpm api:typecheck && pnpm api:openapi:check && pnpm api:test`; `api:test` starts the slot's database in Docker, as `api:dev` does                |
 
 Whatever the change, the full gate also runs the rest of CI's Repository job on the
-workspace: `pnpm knip`, `pnpm api-types:check`, and the `typecheck`, `lint` and `test`
-scripts of `@roadmaps/api-types` (`pnpm --filter @roadmaps/api-types <script>`).
+workspace: `pnpm knip && pnpm api-types:typecheck && pnpm api-types:lint &&
+pnpm api-types:test && pnpm api-types:check`.
 
 The table below says what each kind of change additionally needs.
 

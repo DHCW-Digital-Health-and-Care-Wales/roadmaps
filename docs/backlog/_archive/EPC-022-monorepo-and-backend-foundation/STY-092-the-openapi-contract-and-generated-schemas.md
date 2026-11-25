@@ -335,6 +335,17 @@ Audited at `977a632d`:
   same files, and flat config lets one block's options replace another's. A specifier
   built at run time, and Vite's `import.meta.glob`, are not read. The layering rules
   miss the same two forms (DEF-035).
+- **S6: a path is matched by its `api-types` segment** (agent, from review): matching
+  `packages/api-types` as text let through spellings that resolve to the same folder
+  (`packages/./api-types`, `packages//api-types`, `packages/x/../api-types`), so both
+  rules refuse any specifier with an `api-types` segment; no folder of the editor's own
+  takes that name. Like every layering rule, they read `.ts` and `.tsx` files, the only
+  ones under `src/` (DEF-037).
+- **S3, S4: three more root scripts, and the generator's own update** (agent, from
+  review and the epic's _Workspace commands_): `api-types:typecheck`, `api-types:lint`
+  and `api-types:test` beside the ones D14 names, which CI and the pre-PR gate run; and
+  Dependabot proposes `@hey-api/openapi-ts` on its own, outside the grouped pnpm
+  update, since its bump can need the source regenerated.
 - **S7: one test moved so that `knip` sees unused files** (agent):
   `lint-exceptions.test.ts` read every module with `import.meta.glob`, which `knip`
   counts as importing them, so no file under the editor's `src/` could be reported

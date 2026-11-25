@@ -43,7 +43,7 @@ End-to-end tests of the production build, with Google faked (ADR-006).
   compared boxes in one `boxesOf` call (`apps/editor/tests/e2e/fixtures/layout.ts`).
 - Wait for popup focus/close transitions to settle before acting next: opening helpers
   (`openDialog`, `openAccountMenu`) return once focus is inside; closing/confirming
-  helpers (`chooseFromMore`, `confirmPublish`, `escapeFrom`) return once the popup is
+  helpers (`refreshRoadmap`, `confirmPublish`, `escapeFrom`) return once the popup is
   gone. Press Escape inside a focused popup with `escapeFrom`.
 - Redden a race deterministically by holding what a step waits for (`page.route`,
   `page.clock.pauseAt`, or a paused closing animation like `holdPublishDialogClosing`),

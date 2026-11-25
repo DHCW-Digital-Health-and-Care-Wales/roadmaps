@@ -9,7 +9,7 @@
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020 (_DEF-040 amendments_, _DEF-043 amendments_)
 - **Suggested model**: Sonnet — native Pydantic model convention once the owner settles
   the rule
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/325
 
 ## Summary
 

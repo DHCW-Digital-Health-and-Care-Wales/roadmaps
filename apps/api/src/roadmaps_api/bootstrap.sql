@@ -85,6 +85,16 @@ BEGIN
         RAISE EXCEPTION 'bootstrap: roadmaps_owner has a member it did not grant: %', found;
     END IF;
 
+    -- The owner and migration roles hold nothing the file did not grant them.
+    SELECT string_agg(format('%s holds %s', member::regrole, roleid::regrole), ', ')
+    INTO found
+    FROM pg_auth_members
+    WHERE member = 'roadmaps_owner'::regrole
+        OR (member = 'roadmaps_migrator'::regrole AND roleid <> 'roadmaps_owner'::regrole);
+    IF found IS NOT NULL THEN
+        RAISE EXCEPTION 'bootstrap: a role holds one the file did not grant: %', found;
+    END IF;
+
     SELECT string_agg(roleid::regrole::text, ', ') INTO found
     FROM pg_auth_members WHERE member = 'roadmaps_app'::regrole;
     IF found IS NOT NULL THEN

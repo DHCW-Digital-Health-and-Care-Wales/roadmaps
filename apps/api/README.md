@@ -57,10 +57,9 @@ owner's.
 Migrations are Alembic revisions in `src/roadmaps_api/migrations/versions/`, numbered
 `0001_<slug>` in one line. They upgrade only, run as their own step as the migration
 login, never at the API's start-up, and grant `roadmaps_app` exactly what each object
-needs. Draft one from `apps/api` with
-`uv run --locked alembic revision --autogenerate --rev-id NNNN_<slug> -m "<slug>"`, `NNNN`
-the next free number,, with
-`ROADMAPS_MIGRATION_DATABASE_URL` set, then finish it by hand.
+needs. To draft one, set `ROADMAPS_MIGRATION_DATABASE_URL` and run
+`uv run --locked alembic revision --autogenerate --rev-id NNNN_<slug> -m "<slug>"` from
+`apps/api`, where `NNNN` is the next free number, then finish it by hand.
 
 Settings come from environment variables only, which `pnpm api:dev` sets for the slot:
 `ROADMAPS_ENV` (`local`, `test` or `production`, the default),

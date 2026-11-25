@@ -74,6 +74,8 @@ REVISIONS = {
     "one numbered below it": Case(holding(BELOW), 503, NOT_SERVED),
     "another slug at a number the code knows": Case(holding(ANOTHER_SLUG), 503, NOT_SERVED),
     "a value not of the form NNNN_<slug>": Case(holding("1a2b3c4d5e6f"), 503, NOT_SERVED),
+    # Arabic-Indic digits, which `\d` would read as a number above the latest.
+    "a number in another script's digits": Case(holding("٩٩٩٩_next"), 503, NOT_SERVED),
     "no row": Case(holding(), 503, NOT_SERVED),
     "more than one row": Case(holding(LATEST.name, ABOVE), 503, NOT_SERVED),
     "no alembic_version table": Case(without_the_table, 503, NOT_SERVED),
@@ -243,36 +245,46 @@ def test_ready_refuses_the_migration_login(worker_database: str, lines: Lines) -
     assert warning["cause"] == "readiness.login_unsafe"
 
 
-# Logins whose names are not plain lower-case identifiers, each made beside a safe login
-# whose name differs only by case, where it differs.
+@dataclass(frozen=True)
+class Named:
+    """A login whose name is not a plain lower-case identifier.
+
+    It is made beside a safe login whose name differs only by case, where it differs.
+    """
+
+    name: str
+    bypasses_rls: bool
+    status: int
+
+
 NAMED = {
-    "an IAM service account's, as Cloud SQL names it": ("{p}-api@my-project.iam", False, 200),
-    "a mixed-case login with BYPASSRLS": ("{p}_Twin", True, 503),
+    "an IAM service account's, as Cloud SQL names it": Named(
+        "{p}-api@my-project.iam", bypasses_rls=False, status=200
+    ),
+    "a mixed-case login with BYPASSRLS": Named("{p}_Twin", bypasses_rls=True, status=503),
 }
 
 
-@pytest.mark.parametrize(("name", "bypasses", "status"), NAMED.values(), ids=NAMED)
+@pytest.mark.parametrize("case", NAMED.values(), ids=NAMED)
 def test_ready_judges_the_login_it_connects_as_by_its_exact_name(
-    roles: Roles,
-    worker_admin: psycopg.Connection,
-    name: str,
-    status: int,
-    *,
-    bypasses: bool,
+    roles: Roles, worker_admin: psycopg.Connection, lines: Lines, case: Named
 ) -> None:
-    login = name.replace("{p}", roles.prefix)
-    made = {login.lower(): False, login: bypasses}
-    for role, bypass in made.items():
-        worker_admin.execute(
-            sql.SQL("CREATE ROLE {} LOGIN PASSWORD 'throwaway' {} IN ROLE {}").format(
-                sql.Identifier(role),
-                sql.SQL("BYPASSRLS" if bypass else "NOBYPASSRLS"),
-                sql.Identifier(roles.app),
-            )
-        )
+    login = case.name.replace("{p}", roles.prefix)
+    made = {login.lower(): False, login: case.bypasses_rls}
     try:
+        for role, bypass in made.items():
+            worker_admin.execute(
+                sql.SQL("CREATE ROLE {} LOGIN PASSWORD 'throwaway' {} IN ROLE {}").format(
+                    sql.Identifier(role),
+                    sql.SQL("BYPASSRLS" if bypass else "NOBYPASSRLS"),
+                    sql.Identifier(roles.app),
+                )
+            )
         with serving(make_settings(roles.url_for(login))) as client:
-            assert client.get("/ready").status_code == status
+            assert client.get("/ready").status_code == case.status
     finally:
         for role in made:
-            worker_admin.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(role)))
+            worker_admin.execute(sql.SQL("DROP ROLE IF EXISTS {}").format(sql.Identifier(role)))
+
+    causes = [line["cause"] for line in warnings_of(lines)]
+    assert causes == ([] if case.status == 200 else ["readiness.login_unsafe"])

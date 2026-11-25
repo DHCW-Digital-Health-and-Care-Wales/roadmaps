@@ -49,7 +49,8 @@ def admin_url(environ: Mapping[str, str]) -> str:
     if environ.get(ENV) not in LOCAL_ENVIRONMENTS:
         invalid.append(ENV)
     url = environ.get(ADMIN_DATABASE_URL, "").strip()
-    if not (is_database_url(url) and _is_loopback(make_url(url).host)):
+    # No query parameter: libpq would connect by its `host`, `hostaddr` or `service`.
+    if not (is_database_url(url) and not make_url(url).query and _is_loopback(make_url(url).host)):
         invalid.append(ADMIN_DATABASE_URL)
     if invalid:
         refuse(invalid)
@@ -70,7 +71,8 @@ def libpq_url(url: str) -> str:
 
 def bootstrap(url: str) -> None:
     """Makes the logins and the roles in the URL's database, or changes nothing."""
-    with psycopg.connect(libpq_url(url)) as connection:
+    # At the URL's own address, whatever libpq's environment (`PGHOSTADDR`) says.
+    with psycopg.connect(libpq_url(url), hostaddr=make_url(url).host) as connection:
         row = connection.execute(
             "SELECT rolsuper FROM pg_roles WHERE rolname = current_user"
         ).fetchone()

@@ -244,6 +244,18 @@ REFUSALS = {
         after=None,
         message="{p}_app exists and {p}_admin cannot administer it",
     ),
+    "the owner role a member of another": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_extra; GRANT {p}_extra TO {p}_owner",
+        message="a role holds one the file did not grant: {p}_owner holds {p}_extra",
+    ),
+    "the migration role a member of a role but the owner": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_extra; GRANT {p}_extra TO {p}_migrator",
+        message="a role holds one the file did not grant: {p}_migrator holds {p}_extra",
+    ),
     "the application's role a member of another": Refusal(
         superuser=True,
         before=None,
@@ -389,8 +401,13 @@ def test_the_runner_logs_a_failure_s_type(lines: Lines) -> None:
 
 
 def test_the_runner_refuses_an_admin_login_that_is_not_a_superuser(
-    lines: Lines, database_url: str
+    lines: Lines, database_url: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # libpq's environment cannot send the runner elsewhere: it connects to the URL's
+    # address, not to an unroutable one.
+    monkeypatch.setenv("PGHOSTADDR", "192.0.2.1")
+    monkeypatch.setenv("PGCONNECT_TIMEOUT", "2")
+
     with pytest.raises(SettingsError) as raised:
         bootstrap_database.bootstrap(database_url)
 
@@ -422,6 +439,17 @@ BAD_RUNS: dict[str, tuple[dict[str, str], list[str]]] = {
             [ADMIN_DATABASE_URL],
         )
         for host in ("db.example", "10.0.0.5", "localhost")
+    },
+    **{
+        f"a {parameter} parameter libpq would connect by": (
+            {"ROADMAPS_ENV": "local", ADMIN_DATABASE_URL: f"{LOCAL_URL}?{parameter}={value}"},
+            [ADMIN_DATABASE_URL],
+        )
+        for parameter, value in (
+            ("host", "db.example"),
+            ("hostaddr", "10.0.0.5"),
+            ("service", "prod"),
+        )
     },
     "a socket and no host": (
         {

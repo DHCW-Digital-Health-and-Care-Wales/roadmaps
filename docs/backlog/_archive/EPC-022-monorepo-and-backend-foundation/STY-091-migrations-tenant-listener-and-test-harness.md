@@ -373,15 +373,16 @@ pytest-xdist 3.8.0:
 - **S1: who grants the logins' memberships** (agent, from D3 and D26): the file grants
   only roles' memberships, since it names no login; the local runner, and EPC-023
   where the API is hosted, grants each login its one role after the file, and the
-  runner revokes the other role from each login. The file also stops when
-  `roadmaps_app` is a member of any role or a role is a member of both the migration
+  runner revokes the other role from each login. The file also stops when the owner role holds any role, the migration role any
+  role but the owner, `roadmaps_app` is a member of any role or a role is a member of both the migration
   and application roles, beside the stops S1 lists; a non-superuser runner's own
   memberships (the `ADMIN` PostgreSQL gives a role's creator, and `SET` on the owner)
   are its, not foreign members. Its check of objects in `public` leaves out a relation's
   row type and an array type, which follow their relation or element.
 - **S1: a loopback address** (agent): the local runner takes only an IP literal on the
   loopback range (`127.0.0.0/8`, `::1`), so `localhost`, a name, is refused as a remote
-  host is.
+  host is; it refuses an admin URL with any query parameter (`host`, `hostaddr`,
+  `service`), and connects at the URL's address whatever `PGHOSTADDR` says.
 - **S4: two more rows** (agent): the check also fails numbers that start at `0000` and a
   revision that does not follow the one numbered below it, which the one-head rule
   alone misses (a line in the wrong order). It lives in `apps/api/tools/revisions.py`,
@@ -459,5 +460,5 @@ person_id=…))` (`apps/api/src/roadmaps_api/database.py`); the factory
 | S6       | `apps/api/tests/integration/test_tenancy.py`; red with `set_config(…, false)`, with the listener setting nothing, and with the probe's policy `true`                                                                                                                                                                                                                                                                                                                                |
 | S7       | `apps/api/tests/integration/test_readiness.py` (`test_ready_answers_by_the_database_s_revision`, a row per revision; `test_the_code_s_latest_revision_is_read_once_at_start_up`); `apps/api/tests/test_logs.py` (the warning's cause); red with the ahead or the row-count rule loosened                                                                                                                                                                                            |
 | S8       | `apps/api/tests/integration/test_readiness.py` (the two served logins; `test_ready_refuses_a_login_that_holds_more_than_the_application_s_role`, a row per refusal; the migration login; `test_ready_judges_the_login_it_connects_as_by_its_exact_name`, an IAM-named login and a mixed-case one); red without each of the `BYPASSRLS`, `ADMIN`, ownership, schema `CREATE` and `TEMPORARY` conditions, and the exact-name rows red before the fix                                  |
-| S9       | `apps/api/tests/conftest.py`, `apps/api/tests/harness.py`, `apps/api/tests/integration/AGENTS.md`; `pnpm api:test`: 4 workers, 230 tests, 100% branch coverage; the bootstrap file's tests 30 runs in a row at 4 workers with no failure after the shared-roles lock (4 failures in 25 before it); red when the emptying takes `alembic_version` too; CI's worker count: the PR's run of `API: verify`                                                                              |
+| S9       | `apps/api/tests/conftest.py`, `apps/api/tests/harness.py`, `apps/api/tests/integration/AGENTS.md`; `pnpm api:test`: 4 workers, 236 tests, 100% branch coverage; the bootstrap file's tests 30 runs in a row at 4 workers with no failure after the shared-roles lock (4 failures in 25 before it); red when the emptying takes `alembic_version` too; CI's worker count: the PR's run of `API: verify`                                                                              |
 | S10      | ADR-015 and ADR-017 _STY-091 amendments_ (unchanged); `apps/api/AGENTS.md`, `apps/api/README.md`                                                                                                                                                                                                                                                                                                                                                                                    |

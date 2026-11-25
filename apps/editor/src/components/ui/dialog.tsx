@@ -9,6 +9,7 @@
 // departure: its hidden "Close" is the caller's `closeLabel`, since `components/ui`
 // carries no copy. The title keeps clear of it (`pe-10`). Upstream's footer "Close",
 // backdrop blur and muted footer band are gone. `DialogClose` is the secondary button.
+// `DialogTrigger`, which nothing uses, is left out (knip).
 //
 // A dialog is a header, a body and a footer (EPC-019). On a screen with room for it (the
 // `pinned` variant in globals.css) the header and footer stay put, each set apart by a
@@ -34,10 +35,6 @@ import { Button } from "@/components/ui/button"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
-}
-
-function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
 function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
@@ -237,8 +234,5 @@ export {
   DialogFooter,
   DialogForm,
   DialogHeader,
-  DialogOverlay,
-  DialogPortal,
   DialogTitle,
-  DialogTrigger,
 }

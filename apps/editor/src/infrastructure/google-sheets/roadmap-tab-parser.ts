@@ -32,7 +32,7 @@ import { ProblemLog, type SheetProblem } from "./sheet-problem-log"
 /** A mistake in a roadmap tab, as data for a later sheet-health view (no prose). */
 export type RoadmapTabProblem = SheetProblem<RoadmapTabProblemCode>
 
-export type RoadmapTabProblemCode =
+type RoadmapTabProblemCode =
   | HeaderProblemCode
   /** A column other than `Title` has no header. */
   | "missing-column"

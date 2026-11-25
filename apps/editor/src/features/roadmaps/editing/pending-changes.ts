@@ -701,6 +701,6 @@ export function changedParts(changes: RoadmapChanges): ChangedPart[] {
 }
 
 /** An item's fields that are pending, in the form's order. */
-export function changedItemFields(entry: ItemChanges): EditableItemField[] {
+function changedItemFields(entry: ItemChanges): EditableItemField[] {
   return EDITABLE_ITEM_FIELDS.filter((field) => entry.fields[field])
 }

@@ -20,6 +20,7 @@ writes_).
 | `apps/editor/`                | `apps/editor/AGENTS.md`, with `apps/typescript-react-conventions.md`                 |
 | `apps/public-site/`           | `apps/public-site/AGENTS.md`, with `apps/typescript-react-conventions.md`            |
 | `apps/api/`                   | `apps/api/AGENTS.md`                                                                 |
+| `packages/api-types/`         | `apps/api/AGENTS.md`, _The contract_                                                 |
 | `docs/`                       | `docs/AGENTS.md`                                                                     |
 | `.agents/skills/`, `.claude/` | The `writing-for-agents` skill and `docs/operations/authoring-agent-instructions.md` |
 | Anything else                 | This file                                                                            |
@@ -29,7 +30,8 @@ writes_).
 - Run the workspace's scripts from the root: a script for one app or the root
   package carries its prefix (`pnpm editor:dev`, `pnpm repo:test`), and `lint`,
   `typecheck`, `test`, `build`, `format:check` and `test:docs` run across the
-  workspace. Each app's guide gives its preconditions.
+  workspace, as `pnpm knip` (unused files, exports and dependencies) does from the
+  root alone. Each app's guide gives its preconditions.
 - Before a PR, run the checks implement-story's `references/validation.md` sets
   for the kind of change.
 - In a shared checkout, or a scratch directory whose `node_modules` links to it, run

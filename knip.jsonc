@@ -1,0 +1,32 @@
+// `pnpm knip`: unused files, exports and dependencies across the pnpm workspace
+// (ADR-016, STY-092 amendments). CI's Repository job runs it.
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  // The API is a uv project, which knip cannot read.
+  "ignoreWorkspaces": ["apps/api"],
+  // Generated to hold the whole contract, so API stories land ahead of the editor's use.
+  "ignoreIssues": {
+    "packages/api-types/src/generated/**": ["exports", "types"],
+  },
+  "workspaces": {
+    ".": {
+      "entry": [
+        // The skills' scripts, which their SKILL.md files run from the command line,
+        // and the script one inlines into the pages it makes.
+        ".agents/skills/*/scripts/*.mjs",
+        ".agents/skills/ux-prototypes/assets/review-chrome.js",
+      ],
+    },
+    "apps/editor": {
+      "entry": [
+        // Temporary: nothing imports the API's error mapping yet. Remove this entry
+        // when `composeApp` wires `ApiRoadmapRepository` (EPC-022).
+        "src/infrastructure/roadmaps-api/index.ts",
+      ],
+      // Read as input by build/design-token-lint.test.ts, never imported.
+      "ignore": ["build/fixtures/**"],
+      // Its Sass is read from node_modules by path, in the tokens tests.
+      "ignoreDependencies": ["dhcw-design-system"],
+    },
+  },
+}

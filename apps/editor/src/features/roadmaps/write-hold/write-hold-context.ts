@@ -1,12 +1,8 @@
-import { createContext, use, useSyncExternalStore } from "react"
+import { createContext, use } from "react"
 
-import type {
-  WriteHold,
-  WriteHoldRequest,
-  WriteHoldStore,
-} from "./write-hold-store"
+import type { WriteHoldRequest, WriteHoldStore } from "./write-hold-store"
 
-/** Provided by `WriteHoldProvider`; read it through the hooks below. */
+/** Provided by `WriteHoldProvider`; read it through `useWriteHold`. */
 export const WriteHoldContext = createContext<WriteHoldStore | null>(null)
 
 function useWriteHoldStore(): WriteHoldStore {
@@ -23,10 +19,4 @@ function useWriteHoldStore(): WriteHoldStore {
  */
 export function useWriteHold(): (request: WriteHoldRequest) => Promise<void> {
   return useWriteHoldStore().hold
-}
-
-/** The hold under way, if any, re-rendering on change. */
-export function useHeldWrite(): WriteHold | null {
-  const store = useWriteHoldStore()
-  return useSyncExternalStore(store.subscribe, store.getSnapshot)
 }

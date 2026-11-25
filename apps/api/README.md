@@ -21,6 +21,9 @@ pnpm api:format     # ruff format, and ruff's fixes
 pnpm api:lint       # ruff, import-linter and the transaction check
 pnpm api:typecheck  # ty
 pnpm api:test       # pytest at 100% branch coverage, up to four workers, each on its own database
+pnpm api:openapi    # write openapi.json, the contract; needs no database
+pnpm api:openapi:check  # fail if openapi.json differs from the code
+pnpm api:contract   # api:openapi, then the editor's types and schemas (packages/api-types)
 ```
 
 Outside a worktree the API listens on <http://127.0.0.1:8000> and its database on
@@ -39,6 +42,20 @@ origin.
 `/ready` serves the database when it answers within about two seconds, at the code's
 latest revision or one numbered above it, through a login that holds the application's
 role and nothing more; its warning names which of the three failed.
+
+## The contract
+
+[`openapi.json`](openapi.json) is the API's OpenAPI document, committed. It names every
+error code (`ErrorCode`) and the one shape of a refusal (`ErrorResponse`,
+`{detail, code, params}`), in place of FastAPI's own for a 422; two refusals are plain
+text, a 400 for a `Host` not served and a 413 for an oversize body. `pnpm api:openapi`
+builds it from fixed production settings, whatever the environment holds.
+[`packages/api-types`](../../packages/api-types/) is generated from it, and CI fails when
+either drifts. JSON on the wire is camelCase: request models inherit `ApiRequestModel`,
+which never binds a field's snake_case name, nested models included, and response models
+`ApiResponseModel`, which Python builds in snake_case
+([`src/roadmaps_api/wire.py`](src/roadmaps_api/wire.py)). After changing a route, a model
+or an error code, run `pnpm api:contract` and commit what it writes.
 
 ## The database
 

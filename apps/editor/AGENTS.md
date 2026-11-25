@@ -32,6 +32,9 @@ Under `apps/editor/src/`:
   `infrastructure`, `app` or `routes`.
 - `app/` is the composition root, the only place that wires concrete adapters to the
   ports; `routes/` stay thin and delegate to feature pages.
+- Only `infrastructure/` imports `@roadmaps/api-types`, the types and `zod/mini`
+  schemas generated from the API's contract (`packages/api-types/`, ADR-017); parse the
+  API's answers with them rather than a hand-written schema.
 - `apps/editor/eslint.config.ts` enforces these imports; its message names the rule.
 
 Rules no lint catches:

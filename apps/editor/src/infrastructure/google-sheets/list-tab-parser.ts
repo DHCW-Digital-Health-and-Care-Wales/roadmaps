@@ -23,7 +23,7 @@ export const CATEGORIES_TAB = "Categories"
 /** A mistake in a list tab, as data for a later sheet-health view (no prose). */
 export type ListTabProblem = SheetProblem<ListTabProblemCode>
 
-export type ListTabProblemCode =
+type ListTabProblemCode =
   | HeaderProblemCode
   /** No tab has the list's title; no list. */
   | "missing-tab"
@@ -52,7 +52,7 @@ export interface ListTab<T> {
 }
 
 type Rows = readonly (readonly string[])[]
-export type ListColumn = "ID" | "Name" | "Colour"
+type ListColumn = "ID" | "Name" | "Colour"
 
 /** One kept row's cells, trimmed. */
 interface ListRow {

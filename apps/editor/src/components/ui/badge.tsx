@@ -3,7 +3,8 @@
 // its ink colour, and wrapping text, as a status label is free text. Variants are DHCW's
 // tag palette as status tokens (neutral, info, success, warning, danger) and `outline`
 // (DHCW's white tag). A tag is a label: it has no hover or focus styles and never looks
-// clickable. Imports cn from @/lib/utils.
+// clickable. Imports cn from @/lib/utils. Only `Badge` is exported: nothing else uses
+// `badgeVariants` (knip).
 import { mergeProps } from "@base-ui/react/merge-props"
 import { useRender } from "@base-ui/react/use-render"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -32,11 +33,6 @@ const badgeVariants = cva(
   },
 )
 
-/** The names of the tag variants, for tables that map a state to one. */
-export type TagVariant = NonNullable<
-  VariantProps<typeof badgeVariants>["variant"]
->
-
 function Badge({
   className,
   variant = "neutral",
@@ -59,4 +55,4 @@ function Badge({
   })
 }
 
-export { Badge, badgeVariants }
+export { Badge }

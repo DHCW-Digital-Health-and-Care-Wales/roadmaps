@@ -4,13 +4,28 @@ The two exceptions, the `Host` allow-list's 400 and the body limit's 413, are
 Starlette's plain text (`test_middleware.py`).
 """
 
-from collections.abc import Callable
+import re
+from collections.abc import Callable, Iterator
 
 import pytest
 from fastapi.testclient import TestClient
 from httpx2 import Response
 
 from tests.support import PLANTED
+
+CAMEL_CASE = re.compile(r"[a-z][a-zA-Z0-9]*")
+
+
+def keys(node: object) -> Iterator[str]:
+    """Every key anywhere in a refusal's params, which are camelCase as the wire is."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            yield key
+            yield from keys(value)
+    elif isinstance(node, list):
+        for value in node:
+            yield from keys(value)
+
 
 REFUSALS = {
     "an unknown path": (
@@ -85,6 +100,7 @@ def test_a_refusal_is_the_envelope_without_the_input(
     assert set(body) == {"detail", "code", "params"}
     assert body["code"] == code
     assert body["params"] == params
+    assert all(CAMEL_CASE.fullmatch(key) for key in keys(body["params"]))
     assert isinstance(body["detail"], str)
     assert PLANTED not in response.text
     assert "Traceback" not in response.text

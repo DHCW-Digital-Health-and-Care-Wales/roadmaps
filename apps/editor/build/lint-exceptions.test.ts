@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from "node:fs"
+import { join, relative } from "node:path"
+
 import { Linter } from "eslint"
 import tseslint from "typescript-eslint"
 import { describe, expect, it } from "vitest"
@@ -16,14 +19,24 @@ const ALLOWED = [
 /** Rules a directive must not name, and directives that name none switch off all. */
 const DESIGN_RULES = /\bno-restricted-syntax\b|\bbetter-tailwindcss\//
 
-/** Every source module, as text; `routeTree.gen.ts` is generated and not linted. */
-const sources = Object.entries(
-  import.meta.glob<string>(["/src/**/*.{ts,tsx}", "!/src/routeTree.gen.ts"], {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  }),
-)
+const EDITOR = join(import.meta.dirname, "..")
+
+/**
+ * Every source module, as text; `routeTree.gen.ts` is generated and not linted. Read
+ * from disk, not with `import.meta.glob`, which `pnpm knip` counts as importing every
+ * module, so that none would ever be reported unused.
+ */
+const sources = readdirSync(join(EDITOR, "src"), {
+  recursive: true,
+  withFileTypes: true,
+})
+  .filter((entry) => entry.isFile() && /\.tsx?$/.test(entry.name))
+  .map((entry) => join(entry.parentPath, entry.name))
+  .map((file): [string, string] => [
+    `/${relative(EDITOR, file)}`,
+    readFileSync(file, "utf8"),
+  ])
+  .filter(([path]) => path !== "/src/routeTree.gen.ts")
 
 interface Directive {
   path: string
@@ -74,7 +87,6 @@ function touchesDesignRules({ directive }: Directive): boolean {
     : DESIGN_RULES.test(rules.join(" "))
 }
 
-// This file names the directives it looks for in strings, which parsing ignores.
 const all = sources.flatMap(([path, text]) => directives(path, text))
 
 describe("design rule exceptions (ADR-010)", () => {

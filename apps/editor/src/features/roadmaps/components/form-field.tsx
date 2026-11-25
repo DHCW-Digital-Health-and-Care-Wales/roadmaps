@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { FieldError } from "./field-error"
 
 /** What a field's control takes to be named, described and marked by the field. */
-export interface FormFieldControl {
+interface FormFieldControl {
   id: string
   "aria-invalid": true | undefined
   "aria-describedby": string | undefined

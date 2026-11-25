@@ -1,16 +1,7 @@
 import type { LocalisedText } from "./localised-text"
 
 /** A roadmap's own copy of its family and category, as its row holds them (ADR-013). */
-export interface RoadmapCopiedCells {
-  family: LocalisedText | null
-  /** Lower-case `#rrggbb`, or `null` when blank or not a colour. */
-  colour: string | null
-  /** The category's English name as written, `""` for none. */
-  category: string
-}
-
-/** A roadmap's own copy of its family and category, as its row holds them (ADR-013). */
-export interface RoadmapCopiedCells {
+interface RoadmapCopiedCells {
   family: LocalisedText | null
   /** Lower-case `#rrggbb`, or `null` when blank or not a colour. */
   colour: string | null

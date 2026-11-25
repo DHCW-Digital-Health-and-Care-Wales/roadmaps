@@ -23,7 +23,7 @@ hold them.
 - The design lint rules live in `apps/editor/build/design-token-lint.ts`; a changed rule
   changes a line of `apps/editor/build/fixtures/design-token-lint/`, whose test proves
   each message. Their one exception is `RoadmapSwatch`'s data colour, which
-  `apps/editor/src/styles/lint-exceptions.test.ts` lists.
+  `apps/editor/build/lint-exceptions.test.ts` lists.
 
 ## Upgrading the DHCW pin
 

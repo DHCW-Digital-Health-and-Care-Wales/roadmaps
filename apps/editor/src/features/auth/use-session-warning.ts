@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { useAuth } from "./use-auth"
 
 /** How long before the session's end the warning opens (STY-017 D4). */
-export const SESSION_WARNING_MS = 2 * 60_000
+const SESSION_WARNING_MS = 2 * 60_000
 
 export interface SessionWarning {
   /** Whether the warning is showing. */

@@ -23,8 +23,10 @@ public site (`apps/public-site/`) and the API (`apps/api/`).
 3. Run the checks: `pnpm format:check`, and the `typecheck`, `lint` and `test` scripts of
    each app you changed (`pnpm editor:test`, `pnpm site:test`, `pnpm api:test`, …), with
    its E2E suite (`pnpm editor:test:e2e`, `pnpm site:test:e2e`).
-   `pnpm typecheck && pnpm lint && pnpm test` runs every app's. CI runs the same checks,
-   and the public site's Lighthouse budgets.
+   `pnpm typecheck && pnpm lint && pnpm test` runs every app's. Run `pnpm knip` too,
+   and after a change to an API route, wire model or error code, `pnpm api:contract`,
+   committing what it writes. CI runs the same checks, fails when the committed
+   contract is out of date, and holds the public site to its Lighthouse budgets.
 4. Open a pull request into `main` and fill in the template. Keep it small and focused
    on one change.
 5. The code owner ([`.github/CODEOWNERS`](.github/CODEOWNERS)) reviews it, and the _CI

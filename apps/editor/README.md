@@ -93,7 +93,7 @@ flowchart TD
 | Folder                                                                         | Holds                                                                           | May import                       |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- | -------------------------------- |
 | `apps/editor/src/domain/`                                                      | `Roadmap`, `RoadmapRepository`, `AuthClient`: plain TypeScript types/ports      | `lib/` only                      |
-| `apps/editor/src/infrastructure/`                                              | Google Sheets and GIS adapters; Zod parsing of everything Google returns        | `domain/`, `lib/`                |
+| `apps/editor/src/infrastructure/`                                              | Google Sheets and GIS adapters, the API's error mapping; Zod at the boundary    | `domain/`, `lib/`, `api-types`   |
 | `apps/editor/src/features/<name>/`                                             | hooks (TanStack Query), components and pages for one feature                    | `domain/`, `lib/`, `components/` |
 | `apps/editor/src/routes/`                                                      | thin TanStack Router file routes                                                | features                         |
 | `apps/editor/src/app/`                                                         | config, composition root, providers, router                                     | everything                       |

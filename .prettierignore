@@ -1,5 +1,9 @@
 pnpm-lock.yaml
 apps/editor/src/routeTree.gen.ts
+# The API's contract and the source generated from it, as their generators write them,
+# which their drift checks compare byte for byte
+apps/api/openapi.json
+packages/api-types/src/generated
 apps/editor/build/fixtures
 # Playwright writes aria snapshots in its own format (apps/editor/tests/e2e/AGENTS.md)
 apps/editor/tests/e2e/*-snapshots

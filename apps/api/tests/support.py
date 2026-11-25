@@ -13,13 +13,13 @@ from typing import Annotated, Any, Final
 import pytest
 from fastapi import APIRouter, FastAPI, Query, Request
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
 
 # Imported only to raise one, as FastAPI's routing would for a status it never uses.
 from starlette.exceptions import HTTPException  # noqa: TID251
 
 from roadmaps_api.app import create_app
 from roadmaps_api.settings import Environment, Settings, load_settings
+from roadmaps_api.wire import ApiRequestModel
 
 TEST_HOST: Final = "testserver"
 # A port where nothing listens: the database is down.
@@ -53,7 +53,7 @@ def make_settings(
     return Settings(environment=environment, database_url=url, allowed_hosts=hosts)
 
 
-class Echo(BaseModel):
+class Echo(ApiRequestModel):
     name: str
 
 

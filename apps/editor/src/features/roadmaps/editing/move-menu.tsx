@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
 import type { OrderMove } from "./pending-orders"
 
 /** An item's place in its placement's order, as its Move menu offers to change it. */
-export interface MenuPosition {
+interface MenuPosition {
   /** Its 0-based place among the placement's items, as the page shows them. */
   at: number
   /** How many items the placement shows. */

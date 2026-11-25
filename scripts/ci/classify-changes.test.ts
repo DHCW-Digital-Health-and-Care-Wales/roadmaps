@@ -61,7 +61,19 @@ describe("classify-changes.sh", () => {
   })
 
   it.each([
+    [
+      "the API's generated schemas",
+      ["packages/api-types/src/generated/zod.gen.ts"],
+    ],
+    ["the generated package's manifest", ["packages/api-types/package.json"]],
+  ])("runs the editor's and the API's jobs for %s", (_case, paths) => {
+    expect(classify(...paths)).toBe("editor=true\nsite=false\napi=true\n")
+  })
+
+  it.each([
     ["the lockfile", ["pnpm-lock.yaml"]],
+    ["any other package", ["packages/other/src/index.ts"]],
+    ["a package whose name starts as api-types", ["packages/api-types-x/a.ts"]],
     [
       "the root's configuration",
       ["package.json", "pnpm-workspace.yaml", ".nvmrc"],

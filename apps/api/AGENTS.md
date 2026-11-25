@@ -38,11 +38,25 @@ the root, unversioned (ADR-017's amendments).
   one table without it.
 - A test that reaches the database follows `apps/api/tests/integration/AGENTS.md`.
 
+## The contract (ADR-017)
+
+- JSON on the wire is camelCase. Every model a request reaches, nested ones included,
+  inherits `ApiRequestModel`, and a response's inherits `ApiResponseModel`
+  (`apps/api/src/roadmaps_api/wire.py`). A plain query parameter takes
+  `Annotated[Model, Query()]` or an explicit `alias`, and `ApiError.params` keys are
+  camelCase.
+- `apps/api/openapi.json` and `packages/api-types/src/generated/` are generated and
+  committed, never edited by hand. After a change to a route, a wire model or
+  `ErrorCode`, run `pnpm api:contract`, which needs no database, and commit what it
+  writes. CI fails on drift: `pnpm api:openapi:check` for the document,
+  `pnpm api-types:check` for the generated source.
+
 ## Errors and responses
 
 - Refuse with `ApiError(ErrorCode.…)` (`apps/api/src/roadmaps_api/errors.py`). Add each
-  new code to `ErrorCode` with its status and detail, and map it in the editor's API
-  adapter (ADR-017 _Errors_).
+  new code to `ErrorCode` with its status and detail, and map it in
+  `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`, which fails the editor's
+  typecheck until it does (ADR-017 _Errors_).
 - Never put submitted input, an exception's text or a traceback in a response, and send
   no CORS header (`apps/api/src/roadmaps_api/middleware.py`, ADR-020).
 

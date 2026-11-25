@@ -1,4 +1,4 @@
-export const themes = ["light", "dark"] as const
+const themes = ["light", "dark"] as const
 export type Theme = (typeof themes)[number]
 
 /** Light unless the user chose otherwise (ADR-005). */

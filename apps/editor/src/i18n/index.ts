@@ -3,8 +3,6 @@ export { formatCalendarDate } from "./format-calendar-date"
 export { formatDuration } from "./format-duration"
 export { resolveLanguage, storeLanguagePreference } from "./language-preference"
 export {
-  defaultLanguage,
-  isLanguage,
   languageEndonyms,
   supportedLanguages,
   type Language,

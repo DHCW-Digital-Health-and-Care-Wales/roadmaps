@@ -6,7 +6,7 @@ exception's text. The two exceptions are Starlette's middleware's plain-text ref
 400 for a `Host` not allowed and a 413 for a body over the limit (`create_app`).
 """
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from http import HTTPStatus
 from typing import Any, Final
@@ -19,7 +19,6 @@ from fastapi.responses import JSONResponse
 # unreadable body, so its handler is registered here. Routes raise `ApiError`.
 from starlette.exceptions import HTTPException  # noqa: TID251
 
-from roadmaps_api.error_locations import DeclaredLocations
 from roadmaps_api.wire import ApiResponseModel
 
 
@@ -91,18 +90,22 @@ def error_response(
     )
 
 
+def _error_location(loc: Sequence[str | int], error_type: str) -> list[str | int]:
+    # An `extra_forbidden` error ends with the unknown key the caller sent (ADR-020).
+    return list(loc[:-1] if error_type == "extra_forbidden" else loc)
+
+
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     def api_error(_request: Request, exc: ApiError) -> JSONResponse:
         return error_response(exc.code, exc.params)
 
     @app.exception_handler(RequestValidationError)
-    def validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    def validation_error(_request: Request, exc: RequestValidationError) -> JSONResponse:
         # Where and how each error failed, never the input or the message, which can
-        # quote it, nor a key the caller chose.
-        locations = DeclaredLocations(request.scope)
+        # quote it, nor an unknown key on `extra_forbidden` (ADR-020 _CHO-053 amendments_).
         errors = [
-            {"loc": locations.cut(error["loc"], error["type"]), "type": error["type"]}
+            {"loc": _error_location(error["loc"], error["type"]), "type": error["type"]}
             for error in exc.errors()
         ]
         return error_response(ErrorCode.INVALID, {"errors": errors})

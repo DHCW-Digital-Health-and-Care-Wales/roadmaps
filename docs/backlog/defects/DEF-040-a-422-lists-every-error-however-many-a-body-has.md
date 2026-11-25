@@ -33,9 +33,8 @@ Verified: `validation_error` (`apps/api/src/roadmaps_api/errors.py`) lists all o
 `exc.errors()`. Search: `rg -n 'RequestValidationError' apps/api/src` finds that one
 handler. For a model that holds itself through a union of models, Pydantic's own list
 of errors also doubles with each level of nesting, so the body limit alone does not
-bound it. CHO-047 shortens a `loc` that names a caller's key, which makes some answers
-smaller, and adds work to follow each: measured on a development machine, up to about
-twice the earlier handler's time for bodies near the limit.
+bound it. CHO-053 removed CHO-047's schema walk (leaving only the trailing-key slice on
+`extra_forbidden`), so only the unbounded list of errors in `exc.errors()` remains.
 
 ## Open questions
 

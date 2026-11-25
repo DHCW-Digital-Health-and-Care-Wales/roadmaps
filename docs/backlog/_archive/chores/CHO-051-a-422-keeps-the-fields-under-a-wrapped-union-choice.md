@@ -1,10 +1,9 @@
 # CHO-051: A 422 keeps the fields under a union choice that a validator wraps
 
-- **Status**: Proposed — a review finding CHO-047 declined; nothing takes such a union
-  yet
+- **Status**: Won't do — owner, 2026-11-25 (D2, CHO-053); archived
 - **Type**: Chore
 - **Area**: API
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: CHO-047 (hard)
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020
 - **Suggested model**: Sonnet — one branch of one walk, with its rows
@@ -42,3 +41,8 @@ writes that only resembles the choice's label is still cut
 - **D1** (agent, 2026-11-25, CHO-047 review): declined in CHO-047 over matching
   Pydantic's labels there: it fails closed, no route has such a union, and an exact
   match needs Pydantic's own naming of each choice.
+- **D2** (owner, 2026-11-25, CHO-053): Won't do.
+  [CHO-053](CHO-053-a-422-trims-only-the-forbidden-key-without-walking-internals.md)
+  replaces `error_locations.py`'s schema walk with trimming only the trailing key on
+  `extra_forbidden`, so wrapped union choices keep their nested field locations natively.
+  Reopen if the API ever reintroduces schema-walked `loc` filtering.

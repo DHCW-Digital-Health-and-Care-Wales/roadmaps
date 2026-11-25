@@ -2,8 +2,10 @@
 
 - Status: Accepted — owner, 2026-11-21; drafted from the owner's answers in the
   identity and authorisation grilling (2026-11-21); the options chosen are marked ✅.
-  Amended by the owner's STY-101 grilling (_STY-101 amendments_).
-- Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list)
+  Amended by the owner's STY-101 grilling (_STY-101 amendments_) and CHO-053 decision
+  (_CHO-053 amendments_).
+- Date: 2026-11-21 (amended in STY-101: Starlette's body limit and `Host` allow-list;
+  CHO-053: 422 `loc` trimming)
 
 ## Context
 
@@ -77,6 +79,25 @@ _The API's own responses_ stands.
   streamed one is left unread, with the route's own answer.
 - **The allow-list names no wildcard, in any environment**, and never redirects a bare
   name to its `www.` host.
+
+### CHO-053 amendments
+
+From the owner's CHO-053 decision (2026-11-25, CHO-053 D1); the rest of _The API's own
+responses_ stands.
+
+- **A 422 omits `input`, `msg`, `ctx` and `url`, and trims the trailing unknown key on
+  `extra_forbidden`**, keeping Pydantic's `loc` and `type` elsewhere
+  (`apps/api/src/roadmaps_api/errors.py`, held by `apps/api/tests/test_errors.py`).
+  Keeping `{loc, type}` gives developers and AI agents field-level diagnostics when a
+  request fails validation, while `ApiRequestModel` still forbids extra keys (ADR-017
+  _CHO-047 amendments_).
+- **The API does not walk FastAPI's or Pydantic's internal schemas at runtime to filter
+  `loc`**: every API response is `application/json` under `nosniff`,
+  `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `same-origin`
+  and `no-store`, so a caller-chosen key in `loc` (for example on a dictionary field)
+  carries no script-execution or cross-user risk and does not justify coupling to private
+  framework internals (`fastapi._compat`, `_get_param_model`, Pydantic `core_schema`) or
+  truncating nested locations on shapes a custom walker omits.
 
 ## Consequences
 

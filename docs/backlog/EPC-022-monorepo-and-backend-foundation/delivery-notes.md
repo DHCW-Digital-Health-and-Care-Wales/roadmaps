@@ -30,9 +30,6 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **Row-level security does not cover `TRUNCATE` or `REFERENCES`**: PostgreSQL applies
   neither to policies, so the first schema story's enforcement suite also proves the
   application's role holds neither on any table.
-- **A 422's `loc` follows only the shapes `error_locations.py` knows** (CHO-047, whose
-  _Contract for dependents_ lists them): any other ends the `loc` at its field, and a
-  FastAPI or Pydantic bump that changes what the walk reads fails `test_errors.py`.
 - **Before a route takes a request model, read `ApiRequestModel`'s docstring**
   (`apps/api/src/roadmaps_api/wire.py`): which keys FastAPI gives a query, header,
   cookie or body model decides what its `extra="forbid"` refuses (CHO-047 D4).

@@ -26,6 +26,7 @@ import { renderWithProviders } from "@/test/render-with-providers"
 
 import { holdCall } from "../testing/held-call"
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { marked } from "../testing/marked"
 import { expectWriteHold, refreshHold } from "../testing/write-hold"
 
 function member(id: string, title: string, published: boolean): Roadmap {
@@ -89,6 +90,28 @@ async function openChange(user: ReturnType<typeof userEvent.setup>) {
   return within(main().getByRole("form", { name: "Change Single Record" }))
 }
 
+describe("A family's names, each in one language (DEF-033 S1)", () => {
+  it.each<["en" | "cy", string, string[]]>([
+    ["cy", "Cymraeg: Cofnod Sengl", ["en: Single Record"]],
+    ["en", "Welsh: Cofnod Sengl", ["cy: Cofnod Sengl"]],
+  ])(
+    "are marked where they differ from the %s interface",
+    async (language, welshLine, expected) => {
+      await renderPage(repositoryWith(), connected, language)
+
+      const heading = await main().findByRole("heading", {
+        level: 3,
+        name: "Single Record",
+      })
+      // The heading and the line under it that gives the Welsh name.
+      const names = heading.parentElement
+      if (names === null) throw new Error("No family names")
+      expect(names).toHaveTextContent(welshLine)
+      expect(marked(names)).toEqual(expected)
+    },
+  )
+})
+
 describe("FamiliesPage (STY-029)", () => {
   it("lists each family with its names and roadmaps, and the categories (S1)", async () => {
     await renderPage()
@@ -98,7 +121,7 @@ describe("FamiliesPage (STY-029)", () => {
     ).closest("li")
     if (family === null) throw new Error("No family entry")
     const entry = within(family)
-    expect(entry.getByText("Welsh: Cofnod Sengl")).toBeInTheDocument()
+    expect(family).toHaveTextContent("Welsh: Cofnod Sengl")
     expect(
       entry.getByRole("link", { name: "Product A roadmap" }),
     ).toBeInTheDocument()
@@ -307,7 +330,7 @@ describe("FamiliesPage (STY-029)", () => {
       })
     ).closest("li")
     if (entry === null) throw new Error("No family entry")
-    expect(within(entry).getByText("Welsh: Cofnod Sengl")).toBeInTheDocument()
+    expect(entry).toHaveTextContent("Welsh: Cofnod Sengl")
     expect(within(entry).getByText("#00796b")).toBeInTheDocument()
   })
 

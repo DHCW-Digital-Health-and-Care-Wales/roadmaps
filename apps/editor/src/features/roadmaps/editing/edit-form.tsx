@@ -53,13 +53,13 @@ export interface EditFormField<F extends string> {
    * With `options`, any number of them chosen, as checkboxes, instead of one (STY-034):
    * the field's value holds the chosen ones' values as `ofValue` reads it and `toValue`
    * writes it. The checkboxes open on request (STY-038): shut, the field shows
-   * `summary` of the chosen ones on one line, or `none` when that is empty, beside a
+   * `summary` of the chosen ones on one line, or `none` when that is `null`, beside a
    * button named with `subject` ("Change organisations").
    */
   many?: {
     ofValue: (value: string) => readonly string[]
     toValue: (chosen: readonly string[]) => string
-    summary: (chosen: readonly string[]) => string
+    summary: (chosen: readonly string[]) => ReactNode
     none: string
     subject: string
   }
@@ -254,7 +254,7 @@ export function EditForm<F extends string>({
                 key={field.name}
                 label={name}
                 subject={subject}
-                summary={summary(chosen) || null}
+                summary={summary(chosen)}
                 none={none}
                 hint={field.hint}
               >
@@ -272,7 +272,10 @@ export function EditForm<F extends string>({
                           toggle(option.value, checked)
                         }}
                       />
-                      <span className="min-w-0 wrap-break-word">
+                      <span
+                        lang={option.lang}
+                        className="min-w-0 wrap-break-word"
+                      >
                         {option.label}
                       </span>
                     </label>

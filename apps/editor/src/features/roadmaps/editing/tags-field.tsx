@@ -23,7 +23,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
-import { unmarked } from "../shown-content"
+import { WrittenText } from "../components/content-text"
+import { useWritten } from "../hooks/use-content"
 import {
   addTags,
   asOneName,
@@ -63,6 +64,8 @@ export interface TagsFieldProps {
  */
 export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
   const { t } = useTranslation()
+  // The tags being edited are the English ones.
+  const written = useWritten()
   const [tags, setTags] = useState(initial)
   const [draft, setDraft] = useState(NO_DRAFT)
   // What shutting the field did not keep as typed, said until the tags next change.
@@ -88,8 +91,9 @@ export function TagsField({ label, initial, inUse, onChange }: TagsFieldProps) {
       subject={t("roadmaps.edit.tags.subject")}
       summary={
         tags.length > 0 ? (
-          // English, being edited: no Welsh to stand in for.
-          <TagList tags={tags.map((name) => ({ ...unmarked(name), name }))} />
+          <TagList
+            tags={tags.map((name) => ({ ...written(name, "en"), name }))}
+          />
         ) : null
       }
       none={t("roadmaps.edit.tags.none")}
@@ -152,6 +156,7 @@ function TagsEditor({
   onApply,
 }: TagsEditorProps) {
   const { t } = useTranslation()
+  const written = useWritten()
   const id = useId()
   const addId = `${id}-add`
   const elsewhereId = `${id}-elsewhere`
@@ -334,7 +339,10 @@ function TagsEditor({
                 </>
               ) : (
                 <>
-                  <Badge className="min-w-0 shrink justify-start text-left">
+                  <Badge
+                    lang={written(tag, "en").lang}
+                    className="min-w-0 shrink justify-start text-left"
+                  >
                     {tag}
                   </Badge>
                   <div className="flex shrink-0 gap-2">
@@ -470,7 +478,7 @@ function TagsEditor({
                     }}
                   >
                     <PlusIcon data-icon="inline-start" aria-hidden="true" />
-                    {tag}
+                    <WrittenText written="en" text={tag} />
                   </Button>
                 </li>
               ))}

@@ -506,7 +506,11 @@ export const en = {
         organisationIds: "Organisations",
         details: "Details",
       } satisfies Record<EditableItemField, string>,
-      /** One checkbox of the form's organisations: "Cardiff and Vale (CAVUHB)" (STY-034). */
+      /**
+       * One checkbox of the form's organisations: "Cardiff and Vale (CAVUHB)" (STY-034).
+       * The whole label is marked English, both being English in both languages
+       * (ADR-014), so neither catalogue adds a word to the placeholders and punctuation.
+       */
       organisationChoice: "{{shortName}} ({{code}})",
       /**
        * Codes the item names that the organisation list doesn't hold, comma separated
@@ -939,7 +943,7 @@ export const en = {
              * Under a field whose Welsh changed, or whose horizon as written changed
              * while it is unplaced: what only the item shows, which the English may not.
              */
-            welsh: "In Welsh: {{text}}",
+            welsh: "In Welsh: <welsh />",
             writtenAs: "Written as “{{horizon}}”",
           },
           /** `title` is the item's title as it was loaded. */
@@ -1012,7 +1016,7 @@ export const en = {
         "Couldn't refresh the families, categories and organisations",
       heading: "Families",
       /** Under a family's name. */
-      welshName: "Welsh: {{name}}",
+      welshName: "Welsh: <name />",
       noWelshName: "No Welsh name",
       noRoadmaps: "No roadmaps",
       /** Beside a published roadmap, in the confirmation. */
@@ -1064,10 +1068,10 @@ export const en = {
         useTheirs: "Use theirs",
       },
       notice: {
-        added: "{{name}} added",
-        changed: "{{name}} changed",
+        added: "<name /> added",
+        changed: "<name /> changed",
         changedPublic:
-          "{{name}} changed. The public site shows it after its next nightly update.",
+          "<name /> changed. The public site shows it after its next nightly update.",
         gone: "This family is no longer listed, so your change wasn't saved.",
         failed: {
           add: "Couldn't add the family",

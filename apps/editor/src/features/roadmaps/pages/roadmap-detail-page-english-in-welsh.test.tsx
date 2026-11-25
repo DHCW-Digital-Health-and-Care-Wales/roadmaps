@@ -12,6 +12,7 @@ import { matchMediaQueries } from "@/test/media-query"
 import { renderWithProviders } from "@/test/render-with-providers"
 
 import { createInMemoryRoadmapRepository } from "../testing/in-memory-roadmap-repository"
+import { marked } from "../testing/marked"
 import { confirmRemoval } from "../testing/removal-dialog"
 
 // English shown in place of empty Welsh, marked `lang="en"` where the page shows it
@@ -34,14 +35,6 @@ const items: RoadmapItem[] = [
 
 function main() {
   return within(screen.getByRole("main"))
-}
-
-/** What `container` marks with a `lang` of its own, as `lang: text`. */
-function marked(container: HTMLElement): string[] {
-  return [...container.querySelectorAll("[lang]")].map(
-    (element) =>
-      `${element.getAttribute("lang") ?? ""}: ${element.textContent}`,
-  )
 }
 
 async function renderPage(language: Language) {

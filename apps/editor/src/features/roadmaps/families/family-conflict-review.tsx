@@ -1,10 +1,12 @@
 import { TriangleAlertIcon } from "lucide-react"
-import type { RefObject } from "react"
+import type { ReactNode, RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { Button } from "@/components/ui/button"
 import type { FamilyConflict } from "@/domain/roadmap/family-changes"
+
+import { WrittenText } from "../components/content-text"
 
 export interface FamilyConflictReviewProps {
   ref: RefObject<HTMLDivElement | null>
@@ -39,6 +41,13 @@ export function FamilyConflictReview({
       <ul className="mb-4 flex flex-col gap-4">
         {conflicts.map((conflict) => {
           const field = t(`roadmaps.families.form.${conflict.field}`)
+          // The name being changed is the English one; a colour is in no language.
+          const shown = (value: string) =>
+            conflict.field === "name" ? (
+              <WrittenText written="en" text={value} />
+            ) : (
+              value
+            )
           return (
             <li
               key={conflict.field}
@@ -48,11 +57,11 @@ export function FamilyConflictReview({
               <dl className="grid gap-3 sm:grid-cols-2">
                 <ConflictValue
                   label={t("roadmaps.families.refused.yours")}
-                  value={conflict.pending}
+                  value={shown(conflict.pending)}
                 />
                 <ConflictValue
                   label={t("roadmaps.families.refused.theirs")}
-                  value={conflict.current}
+                  value={shown(conflict.current)}
                 />
               </dl>
               <div className="flex flex-wrap gap-3">
@@ -84,7 +93,7 @@ export function FamilyConflictReview({
   )
 }
 
-function ConflictValue({ label, value }: { label: string; value: string }) {
+function ConflictValue({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="flex flex-col gap-1 border border-border bg-card p-3">
       <dt className="font-bold">{label}</dt>

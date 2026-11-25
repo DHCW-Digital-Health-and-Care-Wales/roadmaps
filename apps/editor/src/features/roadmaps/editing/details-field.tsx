@@ -26,9 +26,11 @@ import {
   shiftedDetails,
   withoutDetail,
 } from "@/domain/roadmap/item-details"
+import { useLanguage } from "@/i18n"
 import { cn } from "@/lib/utils"
 
 import { DetailList } from "../components/detail-list"
+import { showEnglishDetails } from "../localise-details"
 import {
   type EditorLine,
   identify,
@@ -92,6 +94,7 @@ export function DetailsField({
   onChange,
 }: DetailsFieldProps) {
   const { t } = useTranslation()
+  const language = useLanguage()
   const [lines, setLines] = useState(() => orBlank(initial.map(identify)))
   const [current, setCurrent] = useState(() => lines[0]?.id ?? 0)
   const [opened, setOpened] = useState(false)
@@ -101,7 +104,11 @@ export function DetailsField({
     <OpeningField
       label={label}
       subject={t("roadmaps.edit.details.subject")}
-      summary={kept.length > 0 ? <DetailList details={kept} /> : null}
+      summary={
+        kept.length > 0 ? (
+          <DetailList details={showEnglishDetails(kept, language)} />
+        ) : null
+      }
       none={t("roadmaps.edit.details.none")}
       hint={t("roadmaps.edit.details.hint")}
       onShut={() => {

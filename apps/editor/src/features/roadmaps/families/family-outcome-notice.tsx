@@ -1,11 +1,13 @@
 import { CircleCheckIcon, TriangleAlertIcon } from "lucide-react"
 import type { RefObject } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { DismissibleNotice } from "@/components/layout/dismissible-notice"
 import { useNoticeDwell } from "@/features/auth/use-notice-dwell"
 
-/** What a family write did, or that the family had gone. */
+import { WrittenText } from "../components/content-text"
+
+/** What a family write did, naming the family in English, or that it had gone. */
 export type FamilyNotice =
   | { kind: "added" | "changed" | "changedPublic"; name: string }
   | { kind: "gone" }
@@ -41,9 +43,16 @@ export function FamilyOutcomeNotice({
       {...dwell}
     >
       <p>
-        {notice.kind === "gone"
-          ? t("roadmaps.families.notice.gone")
-          : t(`roadmaps.families.notice.${notice.kind}`, { name: notice.name })}
+        {notice.kind === "gone" ? (
+          t("roadmaps.families.notice.gone")
+        ) : (
+          <Trans
+            i18nKey={`roadmaps.families.notice.${notice.kind}`}
+            components={{
+              name: <WrittenText written="en" text={notice.name} />,
+            }}
+          />
+        )}
       </p>
     </DismissibleNotice>
   )

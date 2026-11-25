@@ -1,6 +1,9 @@
-import type { LocalisedText } from "@/domain/roadmap/localised-text"
+import type {
+  ContentLanguage,
+  LocalisedText,
+} from "@/domain/roadmap/localised-text"
 
-import { useContent } from "../hooks/use-content"
+import { useContent, useWritten } from "../hooks/use-content"
 import type { ShownContent } from "../shown-content"
 
 /**
@@ -14,7 +17,21 @@ export function ContentText({ value }: { value: LocalisedText }) {
   return <ShownText content={useContent()(value)} />
 }
 
-/** Content already resolved (`useContent`), marked as `ContentText` marks it. */
+/**
+ * Text shown in one language, `written`, whatever the interface's, marked where the two
+ * differ. Inside a sentence it is a `<Trans>` component, as `ContentText` is.
+ */
+export function WrittenText({
+  text,
+  written,
+}: {
+  text: string
+  written: ContentLanguage
+}) {
+  return <ShownText content={useWritten()(text, written)} />
+}
+
+/** Text already resolved (`useContent`, `useWritten`), marked where it takes a `lang`. */
 export function ShownText({
   content: { text, lang },
 }: {

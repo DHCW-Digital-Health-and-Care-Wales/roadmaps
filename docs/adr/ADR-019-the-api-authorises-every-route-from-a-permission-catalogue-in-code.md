@@ -165,8 +165,8 @@ The analysis behind both is
 ## Consequences
 
 - **The Families page changes for Product Leads** when the editor switches to the API:
-  today any connected lead manages families and categories; then it is read-only for
-  them, and admins manage the lists.
+  today any connected lead manages families (categories are fixed, ADR-013); then the
+  Families page is read-only for them, and admins manage the lists.
 - **A Viewer is a new kind of user** the editor has not had: everything is read-only
   for them, and EPC-025 (`STY-113`) and EPC-027 design that.
 - **The editor's interface shows permissions as hints only**; the API decides.

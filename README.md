@@ -5,9 +5,11 @@
 Digital Health and Care Wales (DHCW) publishes the Now / Next / Later roadmaps of its
 products. Product Leads, DHCW staff, manage them in the Roadmap Editor; a separate app,
 the public site, reads the same Google Spreadsheet and shows the published roadmaps to
-the public. The
-[Product Lead persona](docs/backlog/personas/product-lead.md) describes who the editor is
-for.
+the public. The personas in [`docs/backlog/personas/`](docs/backlog/README.md#personas)
+describe who the editor ([Product Lead](docs/backlog/personas/product-lead.md),
+[Tenant Admin](docs/backlog/personas/tenant-admin.md),
+[Viewer](docs/backlog/personas/viewer.md)) and the public site
+([Public reader](docs/backlog/personas/public-reader.md)) are for.
 
 This repository is one pnpm workspace
 ([ADR-016](docs/adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md)):

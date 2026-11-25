@@ -3,7 +3,11 @@
 An internal tool for Digital Health and Care Wales (DHCW) staff: Product Leads use it to
 manage the public Now / Next / Later roadmaps of their products. A separate app, the
 public site, reads the same data source and shows the published roadmaps. The
-[Product Lead persona](../../docs/backlog/personas/product-lead.md) describes who it is for.
+[Product Lead](../../docs/backlog/personas/product-lead.md),
+[Tenant Admin](../../docs/backlog/personas/tenant-admin.md) and
+[Viewer](../../docs/backlog/personas/viewer.md) personas describe who the editor is for
+(and [Public reader](../../docs/backlog/personas/public-reader.md) shapes what Product
+Leads publish).
 
 It is a static, frontend-only React app hosted on GitHub Pages:
 **<https://dhcw-digital-health-and-care-wales.github.io/roadmaps/>**. You connect a

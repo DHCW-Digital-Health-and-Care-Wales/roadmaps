@@ -10,7 +10,7 @@
   ADR-002
 - **Suggested model**: Sonnet — generation, drift checks, lint boundary and error parser
   with settled tools and rules
-- **Delivered**: _(add on delivery)_
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/303
 
 ## Summary
 

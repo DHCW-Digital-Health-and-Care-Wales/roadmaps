@@ -240,6 +240,9 @@ function arrival(entry) {
   if (blocks(entry).some((b) => b.type === "tool_result")) return "ownCommand"
   const said = entryText(entry)
   if (said.includes("<task-notification>")) return "backgroundTask"
+  // T3 Code's notice that a delegated task ended: no person sent it.
+  if (said.startsWith("Delegated task node:delegated-task:"))
+    return "backgroundTask"
   if (said.startsWith("Update on pull request")) return "prUpdate"
   return "person"
 }

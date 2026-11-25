@@ -74,10 +74,11 @@ the root, unversioned (ADR-017's amendments).
 
 ## Settings
 
-- Read settings from `ROADMAPS_*` environment variables only
-  (`apps/api/src/roadmaps_api/settings.py`), never a `.env` file. Fail closed on missing
-  or invalid values, naming the setting and never its value; an unset `ROADMAPS_ENV`
-  takes production rules.
+- Read settings from environment variables only
+  (`apps/api/src/roadmaps_api/settings.py`), never a `.env` file; give each of the
+  API's own the `ROADMAPS_` prefix. Fail closed on an invalid or missing required
+  value, naming the setting and never its value; an unset `ROADMAPS_ENV` takes
+  production rules.
 
 ## Commands and checks
 

@@ -111,8 +111,10 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
    `expired` on a 401. Then `connect()` posts the sign-in start for the chosen provider and
    navigates to the authorisation address it returns, and the signed-in state comes from a
    "who am I" call. The API keeps the session in an `HttpOnly` cookie, so do not pass a
-   token to `ApiRoadmapRepository`. The session warning (STY-017) and the reconnect flow
-   (STY-057) change shape with the port. Swap the adapter in the same place.
+   token to `ApiRoadmapRepository`. ADR-018 also requires a state-changing request to name
+   the person the editor believes is signed in, and a held form to be discarded when a
+   different person signs in (_Sessions_ and _The editor_). The session warning (STY-017)
+   and the reconnect flow (STY-057) change shape with the port. Swap the adapter in the same place.
 5. **Copy.** Some strings name the spreadsheet or Google Sheets, because that is what
    users must act on today. Search `apps/editor/src/i18n/locales/en.ts` for "spreadsheet" and
    "Google Sheets", and reword them in `en.ts` and `cy.ts`; no component changes.
@@ -121,5 +123,7 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
 7. **Deploy.** The API serves the editor's built files on the same origin as its
    endpoints (one Cloud Run service per environment, ADR-020), so the API sends no CORS
    headers and the editor sends no `Authorization` header: the session cookie carries the
-   sign-in (ADR-018). Record the change in an ADR that amends ADR-002, then delete
+   sign-in (ADR-018). Real data waits for the custom domain and its load balancer, the
+   edge rate limits and the independent penetration test (ADR-016, ADR-018, ADR-020).
+   Record the change in an ADR that amends ADR-002, then delete
    `apps/editor/src/infrastructure/google-sheets/` once nothing uses it.

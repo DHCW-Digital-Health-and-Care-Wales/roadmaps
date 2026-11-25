@@ -156,7 +156,6 @@ class Shapes(ApiRequestModel):
     leaves: list[Leaf] = Field([])
     counts: dict[str, int] = Field({})
     buckets: dict[str, list[Leaf]] = Field({})
-    bounded_buckets: dict[str, Annotated[list[Leaf], Field(max_length=10)]] = Field({})
     pet: Annotated[Cat | Dog, Field(discriminator="kind")] | None = None
     wrapped: WrappedLeaf | int = 0
 
@@ -367,24 +366,5 @@ def test_a_422_bounds_the_response_for_a_long_dictionary_key_with_many_errors(
         == {"loc": ["body", "buckets", "k" * 127 + "…", index, "itemCount"], "type": "int_parsing"}
         for index, error in enumerate(params["errors"])
     )
-    assert long_key not in response.text
-    assert PLANTED not in response.text
-
-
-def test_a_bounded_collection_under_a_long_key_fails_with_one_too_long_error(
-    locations_client: TestClient,
-) -> None:
-    # Bounding pre-handler validation work stays native to Pydantic (`max_length` on the
-    # collection, which rejects oversize input before validating each element).
-    long_key = "k" * 500
-    response = locations_client.post(
-        "/test/shapes",
-        json={"boundedBuckets": {long_key: [{"itemCount": PLANTED} for _ in range(40)]}},
-    )
-
-    assert response.status_code == 422
-    assert response.json()["params"] == {
-        "errors": [{"loc": ["body", "boundedBuckets", "k" * 127 + "…"], "type": "too_long"}]
-    }
     assert long_key not in response.text
     assert PLANTED not in response.text

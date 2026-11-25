@@ -4,20 +4,21 @@
 - **Type**: Docs
 - **Area**: API + Docs
 - **Epic**: standalone
-- **Depends on**: CHO-053 (hard)
+- **Depends on**: CHO-053 (hard), DEF-040 (hard)
 - **Binding ADRs**: ADR-020 (_CHO-053 amendments_, _DEF-040 amendments_)
 - **Suggested model**: Haiku — one-line guide correction
 
 ## Summary
 
-A 422 response omits submitted values, error messages and forbidden keys while passing
-other Pydantic `loc` segments (such as a dictionary key) through truncated past 128
-characters and capping `params.errors` at 25 entries with `"truncated": true` only when
-more exist (ADR-020 _CHO-053 amendments_, _DEF-040 amendments_). `apps/api/AGENTS.md:60`
-still states an absolute rule ("Never put submitted input, an exception's text or a
-traceback in a response"), which contradicts that amendment. Done: sharpen that line to
-state the exact refusal rule (no submitted value, exception text, traceback or forbidden
-key; link ADR-020 for the 422 `loc` pass-through, truncation and cap rules).
+A 422 response omits submitted values, error messages and forbidden keys, while passing
+other Pydantic `loc` segments (such as a dictionary key) through with string segments
+truncated past 128 characters. It also caps `params.errors` at 25 entries, setting
+`"truncated": true` only when more exist (ADR-020 _CHO-053 amendments_, _DEF-040
+amendments_). The _Errors and responses_ section of `apps/api/AGENTS.md` still states an
+absolute rule ("Never put submitted input, an exception's text or a traceback in a
+response"), which contradicts those amendments. Done: sharpen that line to state the exact
+refusal rule (no submitted value, exception text, traceback or forbidden key; link ADR-020
+for the 422 `loc` pass-through, truncation and cap rules).
 
 ## Measurement
 

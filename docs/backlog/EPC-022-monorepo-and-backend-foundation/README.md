@@ -345,6 +345,9 @@ the other schema stories follow STY-093, adding their factories; the editor's ad
   the editor's status messages quote English it cannot mark (Needs triage).
 - [DEF-042](../defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md): the
   editor's fields hold English with no `lang` (Needs triage).
+- [DEF-043](../defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md):
+  unbounded collections in request models can exhaust memory during validation (Needs
+  triage).
 
 ## Related
 

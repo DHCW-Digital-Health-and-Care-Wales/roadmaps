@@ -33,11 +33,13 @@ What agents delivering or reviewing this epic's stories need; see `docs/AGENTS.m
 - **Before a route takes a request model, read `ApiRequestModel`'s docstring**
   (`apps/api/src/roadmaps_api/wire.py`): which keys FastAPI gives a query, header,
   cookie or body model decides what its `extra="forbid"` refuses (CHO-047 D4).
-- **Give every collection field in an `ApiRequestModel` a `max_length`**, above all
-  beneath a dictionary: DEF-040 caps the 422 response after Pydantic builds
-  `exc.errors()`, not the memory Pydantic spends validating an unbounded collection first,
-  and bounding only the dictionary key does not stop Pydantic validating every item
-  beneath it (a `max_length` on the collection fails early with one `too_long` error).
+- **Before a request model takes a collection field (above all beneath a dictionary),
+  get the owner to triage
+  [DEF-043](../defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md)**:
+  DEF-040 caps the 422 response after Pydantic builds `exc.errors()`, not the memory
+  Pydantic spends validating an unbounded collection first. On Pydantic 2.14,
+  `max_length` bounds a `list` one item past the limit, while `dict`, `set`, `frozenset`
+  and variadic `tuple` validate every invalid item unless paired with `FailFast()`.
 - **A local API's log lines hold messages**: `ROADMAPS_ENV=local` writes an exception's
   and a third party's message (ADR-018 _STY-101 amendments_), so an API test that
   asserts no planted value reaches the log runs under test's or production's rules

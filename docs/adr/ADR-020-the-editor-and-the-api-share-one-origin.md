@@ -116,13 +116,10 @@ amendments_ stands.
   unknown key on `extra_forbidden` (_CHO-053 amendments_), any remaining string `loc`
   segment longer than 128 characters is truncated to its first 127 characters plus `"…"`,
   bounding caller-chosen dictionary keys in 422 responses.
-- **Validation work stays native to Pydantic**: the API adds no custom pre-parse JSON
-  depth walker. `apps/api/AGENTS.md` forbids undiscriminated recursive unions in
+- **Recursive unions stay native to Pydantic**: the API adds no custom pre-parse JSON
+  depth walker; `apps/api/AGENTS.md` forbids undiscriminated recursive unions in
   `ApiRequestModel` (use discriminated unions, and add an explicit depth validator only if
-  a recursive request model is ever introduced). Because `validation_error` slices
-  `exc.errors()` after Pydantic finishes validating, the cap bounds the 422 response
-  rather than Pydantic's validation memory on unbounded collections; bounding collection
-  size stays native to Pydantic (`max_length` on collection fields).
+  a recursive request model is ever introduced).
 
 ## Consequences
 
@@ -140,10 +137,11 @@ amendments_ stands.
   capping `params.errors` at 25 entries (with `"truncated": true` only when more) and
   truncating string `loc` segments past 128 characters bounds the 422 response for
   fixed-depth schemas (and for any future recursive model with a depth validator, as
-  `apps/api/AGENTS.md` requires). Because the cap runs after Pydantic builds
-  `exc.errors()`, it bounds the response rather than Pydantic's validation memory on
-  unbounded collections; request models keep collection fields bounded natively with
-  `max_length`.
+  `apps/api/AGENTS.md` requires).
+- **Open follow-on ([DEF-043](../backlog/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md), `Needs triage`)**:
+  because `validation_error` slices `exc.errors()` after Pydantic finishes validating, the
+  cap bounds the 422 response rather than Pydantic's pre-handler validation memory on
+  unbounded collections; no route takes a request model with a collection field yet.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

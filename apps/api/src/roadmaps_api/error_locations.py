@@ -74,27 +74,27 @@ class DeclaredLocations:
         if error_type == "extra_forbidden":
             rest = rest[:-1]
         if source == "body":
-            length = self._declared_in_body(rest)
+            length = self._count_declared_in_body(rest)
         else:
-            length = self._declared_in_parameters(str(source), rest)
+            length = self._count_declared_in_parameters(str(source), rest)
         return [source, *rest[:length]]
 
-    def _declared_in_body(self, segments: Sequence[Segment]) -> int:
+    def _count_declared_in_body(self, segments: Sequence[Segment]) -> int:
         # FastAPI's one field for the whole body, a model of its own over several parameters.
         body: ModelField | None = self._route.body_field
-        return 0 if body is None else self._declared(_schema_of(body), segments)
+        return 0 if body is None else self._count_declared(_schema_of(body), segments)
 
-    def _declared_in_parameters(self, source: str, segments: Sequence[Segment]) -> int:
+    def _count_declared_in_parameters(self, source: str, segments: Sequence[Segment]) -> int:
         lengths = [0]
         for parameter in _parameters(self._route.dependant, source):
             if _get_param_model(parameter) is not None:
-                lengths.append(self._declared(_schema_of(parameter), segments))
+                lengths.append(self._count_declared(_schema_of(parameter), segments))
             # Any other parameter comes by its own name.
             elif segments and segments[0] == (parameter.validation_alias or parameter.alias):
-                lengths.append(1 + self._declared(_schema_of(parameter), segments[1:]))
+                lengths.append(1 + self._count_declared(_schema_of(parameter), segments[1:]))
         return max(lengths)
 
-    def _declared(self, schema: CoreSchema, segments: Sequence[Segment]) -> int:
+    def _count_declared(self, schema: CoreSchema, segments: Sequence[Segment]) -> int:
         """How many leading segments `schema` declares, over every way it can follow them.
 
         One segment at a time, never by recursion: a model that holds itself lets a
@@ -118,7 +118,11 @@ class DeclaredLocations:
         worked out once for all of them. Each `_Reached` keeps its schemas, so none of
         their ids is given to another while it is here.
         """
-        return self._reached.setdefault(tuple(map(id, schemas)), _Reached(schemas))
+        key = tuple(map(id, schemas))
+        reached = self._reached.get(key)
+        if reached is None:
+            reached = self._reached[key] = _Reached(schemas)
+        return reached
 
     def _follow(self, reached: _Reached, segment: Segment) -> list[CoreSchema | None]:
         """What `segment` leads to, from every schema the walk may be at."""

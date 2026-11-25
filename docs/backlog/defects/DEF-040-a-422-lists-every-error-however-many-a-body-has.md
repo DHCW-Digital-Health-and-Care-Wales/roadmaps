@@ -42,3 +42,6 @@ twice the earlier handler's time for bodies near the limit.
 1. Should a 422 list at most some number of errors, which changes what a refusal tells
    the editor? Recommended: yes, a small fixed number, with the first request-body
    story.
+2. A limit on the errors listed bounds the answer, not what Pydantic does first for a
+   model that holds itself through a union. What bounds that, such as a limit on
+   nesting or discriminated unions alone, is to be settled before the first such model.

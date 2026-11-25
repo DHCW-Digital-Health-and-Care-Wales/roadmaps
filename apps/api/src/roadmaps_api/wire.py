@@ -3,8 +3,6 @@
 A request's models, nested ones included, inherit `ApiRequestModel`, and a route's plain
 query parameter takes `Annotated[Model, Query()]` or an explicit `alias`. A response's
 inherit `ApiResponseModel`. `ApiError.params` keeps camelCase keys by hand.
-`apps/api/AGENTS.md` (_The contract_) says where FastAPI hands a model more than the
-caller's keys for it, or less.
 """
 
 from pydantic import BaseModel, ConfigDict
@@ -16,6 +14,20 @@ class ApiRequestModel(BaseModel):
 
     A field's snake_case name is such a key: sending it answers `extra_forbidden`, and
     `missing` beside it for a required field.
+
+    Which keys a model is given is FastAPI's choice (as 0.163 makes it):
+
+    - A query model is given the whole query string. A route with one takes no other
+      query parameter, whether its own, a dependency's or one given where its router is
+      included, or it refuses valid requests. Where another party writes the query, as a
+      sign-in provider's callback, which may add parameters of its own, take plain
+      aliased parameters or set `extra="ignore"`. Plain query parameters ignore keys
+      they do not declare.
+    - A header or cookie model is given every header or cookie, so it sets
+      `extra="ignore"`. A header model's field reads the header its alias names, here the
+      camelCase one, so give each the header's name as an explicit `alias`.
+    - Several body parameters, or an embedded one, are each read from the body by name,
+      and its other top-level keys are ignored: take a body as one model, not embedded.
     """
 
     model_config = ConfigDict(

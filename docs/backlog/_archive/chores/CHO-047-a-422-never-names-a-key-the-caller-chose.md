@@ -83,9 +83,12 @@ the caller's key, with its `type` unchanged
 ### Contract for dependents
 
 - `ApiRequestModel` forbids extra keys (D4), and no route takes one yet, so
-  `apps/api/openapi.json` and `packages/api-types` are unchanged. `apps/api/AGENTS.md`
-  (_The contract_) holds what FastAPI's handling of models asks of a route.
-- A `loc` follows models, lists, sets, tuples, unions and validators around them. Any
+  `apps/api/openapi.json` and `packages/api-types` are unchanged.
+  `ApiRequestModel`'s docstring (`apps/api/src/roadmaps_api/wire.py`) holds what
+  FastAPI's handling of models asks of a route.
+- A `loc` follows models, lists, sets, tuples, unions and validators around them, but
+  not under a union's choice that an after, wrap or `Annotated` validator wraps, whose
+  label is Pydantic's own ([CHO-051](../../chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)). Any
   other shape ends it at the field that has it: a dictionary, by design, and also a
   dataclass, `TypedDict`, `NamedTuple` or `Sequence` field, which a story that needs
   their depth adds, with a row in `apps/api/tests/test_errors.py`. A parameter that is
@@ -98,7 +101,7 @@ the caller's key, with its `type` unchanged
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                          |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1, D2   | `apps/api/tests/test_errors.py` (`test_a_422_names_only_what_the_schema_declares`, a row per shape, bodies and query models; `test_the_walk_takes_each_shared_step_once_however_many_errors_share_it`, the work a caller can force)                                                                                                                              |
-| D4       | `apps/api/tests/test_wire.py` (`test_a_request_model_refuses_what_it_does_not_declare`: unknown and `snake_case` keys of a body, a query model and a nested model); observed in a scratch app: the answers of a query model beside another query parameter, header and cookie models with and without `extra="ignore"`, and several and embedded body parameters |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1, D2   | `apps/api/tests/test_errors.py` (`test_a_422_names_only_what_the_schema_declares`, a row per shape, bodies and query models; `test_the_walk_takes_each_shared_step_once_however_many_errors_share_it`, the work a caller can force)                                                                                                                                                                                                                         |
+| D4       | `apps/api/tests/test_wire.py` (`test_a_request_model_refuses_what_it_does_not_declare`: `snake_case` keys of a body, a query model and a nested model; other unknown keys are rows of `test_errors.py`). Observed in a scratch app, for `ApiRequestModel`'s docstring: a query model beside another query parameter, header and cookie models with and without `extra="ignore"`, a header field read by its alias, and several and embedded body parameters |

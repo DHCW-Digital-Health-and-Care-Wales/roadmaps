@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 
 from roadmaps_api.app import create_app
 from roadmaps_api.wire import ApiRequestModel, ApiResponseModel
-from tests.support import PLANTED, make_settings
+from tests.support import make_settings
 
 
 class Child(ApiRequestModel):
@@ -97,7 +97,8 @@ def test_a_request_binds_camel_case_names_alone(
 type Refusals = list[tuple[list[object], str]]
 
 # Each request, and where it is refused: a required field missing at its camelCase alias,
-# and a key its model does not declare, at the model that forbids it.
+# and a snake_case name, which its model does not declare, at the model that forbids it.
+# `test_errors.py` holds what a 422's `loc` keeps of any other unknown key.
 REFUSED: dict[str, tuple[str, str, Any, Refusals]] = {
     "a snake_case required field of a body": (
         "POST",
@@ -144,24 +145,6 @@ REFUSED: dict[str, tuple[str, str, Any, Refusals]] = {
         {"childNode": {"item_name": "a", "itemCount": 1}},
         [(["body", "childNode"], "extra_forbidden")],
     ),
-    "an unknown key of a body": (
-        "POST",
-        "/test/search",
-        {"searchTerm": "a", PLANTED: 1},
-        [(["body"], "extra_forbidden")],
-    ),
-    "an unknown key of a query model": (
-        "GET",
-        f"/test/search?searchTerm=a&{PLANTED}=1",
-        None,
-        [(["query"], "extra_forbidden")],
-    ),
-    "an unknown key of a nested model": (
-        "POST",
-        "/test/nested",
-        {"childNode": {"itemCount": 1, PLANTED: 1}},
-        [(["body", "childNode"], "extra_forbidden")],
-    ),
 }
 
 
@@ -176,7 +159,6 @@ def test_a_request_model_refuses_what_it_does_not_declare(
     assert response.json()["params"] == {
         "errors": [{"loc": loc, "type": error_type} for loc, error_type in errors]
     }
-    assert PLANTED not in response.text
 
 
 BUILT: dict[str, Callable[[], Found]] = {

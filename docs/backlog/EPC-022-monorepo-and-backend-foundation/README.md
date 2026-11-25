@@ -5,8 +5,8 @@
   the API skeleton (STY-090) and, from the owner's review of it, STY-101 and STY-091 are
   done, and so are STY-092, STY-100 and CHO-047; the remaining API placeholders'
   acceptance criteria come next
-- **Progress**: 16 of 20 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
-  STY-098, STY-100, STY-101, CHO-047); next selectable: none — STY-093, STY-094,
+- **Progress**: 16 of 21 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
+  STY-098, STY-100, STY-101, CHO-047); next selectable: CHO-051 — STY-093, STY-094,
   STY-099 and CHO-049 wait for their acceptance criteria
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
@@ -279,6 +279,7 @@ keeps only what the schema declares.
 | STY-101 | [The skeleton leans on its framework](../_archive/EPC-022-monorepo-and-backend-foundation/STY-101-the-api-skeleton-leans-on-its-framework.md)                             | API + CI/CD + Docs           | CHO-048          | ✅    |
 | CHO-047 | [A 422 never names a key the caller chose](../_archive/chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                        | API                          | —                | ✅    |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                          | —                |       |
+| CHO-051 | [A 422 keeps a wrapped union choice's fields](../chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)                                                   | API                          | CHO-047          |       |
 
 _STY-085 to STY-092, STY-095, CHO-044, STY-096 to STY-098, STY-100, STY-101 and CHO-047
 are done. STY-093 is a Placeholder

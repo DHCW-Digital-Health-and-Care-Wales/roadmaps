@@ -265,9 +265,7 @@ rest of _STY-092 amendments_ stands.
 - **`ApiRequestModel` forbids extra keys** from CHO-047, ahead of the first request-body
   or query-model story it was to wait for. A key a request model does not declare, a
   field's `snake_case` name among them, is refused with a 422 (`extra_forbidden`),
-  whose `loc` ends at the model that refused it. Where FastAPI gives a model keys that
-  are not the caller's for it, or keeps some from it, `apps/api/AGENTS.md`
-  (_The contract_) holds what a route does.
+  whose `loc` never holds that key.
 
 ## Consequences
 

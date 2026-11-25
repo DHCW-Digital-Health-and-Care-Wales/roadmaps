@@ -535,7 +535,10 @@ def test_the_walk_takes_each_shared_step_once_however_many_errors_share_it(
     monkeypatch: pytest.MonkeyPatch,
     sharing: Callable[[int], dict[str, object]],
 ) -> None:
-    """A caller chooses how many errors a body has, and how deep: see DEF-040."""
+    """A step into the schema that several errors take is worked out once.
+
+    A caller chooses how many errors a body has, and how deep.
+    """
     taken: list[object] = []
     steps = error_locations._steps  # noqa: SLF001 the walk's cost shows nowhere else
 

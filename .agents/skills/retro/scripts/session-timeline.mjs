@@ -28,6 +28,7 @@ const USAGE =
 const SCOPED = {
   "Vitest suite (full)": "Vitest tests (targeted)",
   "E2E suite (full)": "E2E tests (targeted)",
+  "pytest suite (full)": "pytest tests (targeted)",
 }
 
 /** Kinds of test run, whose runner summaries are worth reading. */
@@ -42,28 +43,55 @@ const TEST_KINDS = new Set([
  * Bash call's chain. A call can match several kinds when it chains them. A
  * targeted kind with no pattern of its own is reached only through `SCOPED`.
  */
-const NEVER = /$^/
+const NEVER = /(?!)/
+
+/**
+ * `pnpm api:test`, or pytest as the command run, never a word a search, an
+ * install or a path names: after `uv run` and its options, after `python -m`
+ * or `coverage run -m`, or where a command starts, past `VAR=…`, `timeout N`
+ * and a path. Asking for its help or version runs no tests.
+ */
+const PYTEST_RUN = new RegExp(
+  [
+    String.raw`\bpnpm (?:run )?api:test\b(?![:\w-])`,
+    "(?:" +
+      [
+        String.raw`\buv run(?:\s+-\S+(?:\s+[^-\s]\S*)?)*\s+`,
+        String.raw`\b(?:python3?|coverage run)\s+-m\s+`,
+        String.raw`(?:^|\(|\bdo|\bthen)\s*(?:\w+=\S*\s+)*(?:timeout\s+\d+\s+)?(?:\S*\/)?`,
+      ].join("|") +
+      String.raw`)pytest(?![-\w])(?!\s+(?:--help|--version|-h)\b)`,
+  ].join("|"),
+)
 const KINDS = [
   [
     "Vitest suite (full)",
-    // The root `pnpm test` (not `test:e2e` or `test:watch`) or `vitest run`;
-    // the scope rule in `kindsOf` catches a narrowed run.
-    /\bpnpm (?:run )?test\b(?![:\w-])|\bvitest run\b/,
+    // `pnpm test`, a JavaScript package's (not `test:e2e` or `test:watch`),
+    // or `vitest run`; the scope rule in `kindsOf` catches a narrowed run.
+    /\bpnpm (?:run )?(?:(?:editor|site|repo):)?test\b(?![:\w-])|\bvitest run\b/,
   ],
-  ["Vitest tests (targeted)", /\bvitest related\b/],
+  ["Vitest tests (targeted)", /\bvitest related\b|\bpnpm (?:run )?test:docs\b/],
   ["E2E suite (full)", /\btest:e2e\b|\bplaywright test\b/],
   ["E2E tests (targeted)", NEVER],
+  ["pytest suite (full)", PYTEST_RUN],
+  ["pytest tests (targeted)", NEVER],
   ["Script tests", /\bnode --test\b/],
-  ["Type checks", /\btsc\b|\btypecheck\b/],
-  ["Builds", /\bpnpm (?:run )?(?:editor:)?build\b(?!:)|\bvite build\b/],
-  ["Lint", /\bpnpm (?:run )?lint\b|\beslint\b/],
-  ["Format", /\bprettier\b|\bpnpm (?:run )?format\b/],
+  ["Type checks", /\btsc\b|\btypecheck\b|\bty check\b/],
+  ["Builds", /\bpnpm (?:run )?(?:\w+:)?build\b(?!:)|\bvite build\b/],
+  [
+    "Lint",
+    /\bpnpm (?:run )?(?:\w+:)?lint\b|\beslint\b|\bruff check\b|\blint-imports\b/,
+  ],
+  ["Format", /\bprettier\b|\bpnpm (?:run )?(?:\w+:)?format\b|\bruff format\b/],
   ["Workflow lint", /\bactionlint\b/],
   [
     "Dev server start-up",
-    /\bpnpm (?:run )?(?:editor:)?(?:dev|preview)\b|\bvite (?:dev|preview|serve)\b/,
+    /\bpnpm (?:run )?(?:\w+:)?(?:dev|preview)\b|\bvite (?:dev|preview|serve)\b/,
   ],
-  ["Dependency install", /\bpnpm (?:install|add)\b|\bplaywright install\b/],
+  [
+    "Dependency install",
+    /\bpnpm (?:install|add)\b|\bplaywright install\b|\buv (?:add|sync)\b/,
+  ],
   ["Git and GitHub", /^\s*(?:git|gh)\s(?!.*--watch\b)(?!\s*run watch\b)/],
   ["CI watches", /\bgh (?:pr checks\b.*--watch|run watch)\b/],
   ["Deliberate waits", /tail -f \/dev\/null|\bsleep \d|^\s*until\b/],
@@ -80,6 +108,8 @@ const MILESTONES = [
 const RUNNER_DURATIONS = [
   ["Vitest", /^\s*Duration\s+([\d.]+)(m?s)\b/gm],
   ["Playwright", /\b\d+ (?:passed|failed) \(([\d.]+)(m|s)\)/gm],
+  // Its last line, `236 passed in 12.26s`, inside `=` banners unless `-q`.
+  ["pytest", /^=*\s*(?:\d+ \w+, )*\d+ \w+ in ([\d.]+)(s)\b/gm],
   // TAP (`#`) or the spec reporter (`ℹ`), in milliseconds: the empty group
   // gives `runnerMs` no unit.
   ["node --test", /^(?:# |ℹ )duration_ms ([\d.]+)()$/gm],
@@ -108,22 +138,26 @@ export function commandWords(command) {
     .replace(/\b(?:ba|z)?sh\s+-\w*c\s+(['"])([\s\S]*?)\1/g, " $2 ")
     .replace(/'[^']*'|"(?:[^"\\]|\\.)*"/g, "''")
     .replace(/\d*>>?(?:&\d+|\s*[^\s;&|()]+)|(?<!<)<(?!<)\s*[^\s;&|()]+/g, " ")
-    .replace(/\S+\.(?:test|spec)\.[A-Za-z]\w*\S*/g, " test-file ")
-    .replace(/\S*\.[A-Za-z]\w*\b/g, " ")
+    .replace(
+      /[^\s;&|()]+\.(?:test|spec)\.[A-Za-z]\w*[^\s;&|()]*|[^\s;&|()]*\btest_\w*\.py\b[^\s;&|()]*/g,
+      " test-file ",
+    )
+    .replace(/[^\s;&|()]*\.[A-Za-z]\w*\b/g, " ")
 }
 
 /**
  * Whether a test command runs only some tests: it names a test file, or a
  * path follows the runner's own word, as in `vitest run src/features/auth/`
  * or `playwright test tests/e2e/auth.spec.ts`. Only paths and files mark a
- * scope: a name filter (`vitest run roadmaps`, `-t name`, `--grep name`)
+ * scope: a name filter (`vitest run roadmaps`, `-t name`, `--grep name`,
+ * pytest's `-k name` or `-m mark`)
  * counts as the suite, and a later argument holding a `/` can mark one
  * wrongly.
  */
 function isScoped(command) {
   if (/\btest-file\b/.test(command)) return true
   const [, ...after] = command.split(
-    /\b(?:vitest(?: run)?|playwright test|test)\b/,
+    /\b(?:vitest(?: run)?|playwright test|pytest|test)\b/,
   )
   return after
     .join(" ")

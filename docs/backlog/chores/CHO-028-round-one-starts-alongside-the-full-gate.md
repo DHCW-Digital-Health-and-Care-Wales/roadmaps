@@ -28,17 +28,20 @@ guides say so.
 From the quick add orchestrated run's progress log and handoffs, outside the repository
 (UTC). STY-080's gate and round 1 ran on branch head `8882bd6`, squashed into `94d1e8c`;
 STY-081's on `beb0c3b`, squashed into `d6bbc69`; STY-082's on `4b88a06`, squashed into
-`93b12d4`. STY-075's row is from its run summary:
+`93b12d4`. STY-075's row is from its run summary. STY-091's (EPC-022 run) is from that
+run's log and delivery session; its gate ran on the tree that, with the fix its row names,
+was committed as `f245a3dc`, squashed into `d38185bd`:
 
-| Area                   | Measurement                                                                                                                                             | Verdict                  |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Gate on round 1's head | Started 12:22, finished about 12:35: typecheck, lint, format and 3034 unit tests passed; 11 E2E failed                                                  | failures already found   |
-| Round 1                | Started 12:25; Opus and quality reports by 12:41, Sol's by 12:42                                                                                        | about 10 minutes earlier |
-| STY-081 gate           | Started 14:22:11, finished about 14:32: all green (3055 unit, 664 E2E)                                                                                  | nothing to find          |
-| STY-081 round 1        | Started 14:22:47, before the unit tests (156 s) had finished; all three reports by 14:29                                                                | about 10 minutes earlier |
-| STY-081 fixes          | Made after the gate ended, at 14:32, as `validation.md` sets for a background suite                                                                     | rule held                |
-| STY-082 gate, round 1  | Round 1 waited: the gate ran 16:34 to 16:45, all green; round 1 started 16:46, Opus and quality reports by 16:48, Sol's before 16:53                    | about 11 minutes waited  |
-| STY-075 (EPC-018 run)  | Round 1 dispatched at 16:25, four minutes before the first full E2E run finished green (`docs/analysis/delivery-runs/2026-11-19-epc-018-moved-item.md`) | three observations       |
+| Area                   | Measurement                                                                                                                                                                           | Verdict                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Gate on round 1's head | Started 12:22, finished about 12:35: typecheck, lint, format and 3034 unit tests passed; 11 E2E failed                                                                                | failures already found                                                            |
+| Round 1                | Started 12:25; Opus and quality reports by 12:41, Sol's by 12:42                                                                                                                      | about 10 minutes earlier                                                          |
+| STY-081 gate           | Started 14:22:11, finished about 14:32: all green (3055 unit, 664 E2E)                                                                                                                | nothing to find                                                                   |
+| STY-081 round 1        | Started 14:22:47, before the unit tests (156 s) had finished; all three reports by 14:29                                                                                              | about 10 minutes earlier                                                          |
+| STY-081 fixes          | Made after the gate ended, at 14:32, as `validation.md` sets for a background suite                                                                                                   | rule held                                                                         |
+| STY-082 gate, round 1  | Round 1 waited: the gate ran 16:34 to 16:45, all green; round 1 started 16:46, Opus and quality reports by 16:48, Sol's before 16:53                                                  | about 11 minutes waited                                                           |
+| STY-075 (EPC-018 run)  | Round 1 dispatched at 16:25, four minutes before the first full E2E run finished green (`docs/analysis/delivery-runs/2026-11-19-epc-018-moved-item.md`)                               | three observations                                                                |
+| STY-091 gate, round 1  | Round 1 waited: the gate ran 23:49:46 to 00:00:31; one guide check failed (record IDs in an edited guide), fixed and rerun from 00:00:59, green by 00:01:19; round 1 started 00:02:27 | about 13 minutes from the gate's start; its fix came before round 1 read the tree |
 
 ## Acceptance criteria
 
@@ -55,9 +58,11 @@ and when its fix is made
   - (a) No, as today (recommended): round 1 waits for the whole gate, and `delegation.md`'s
     Worker contract names the full gate, since three deliveries (STY-075, STY-080,
     STY-081) started round 1 during it. Each delivery keeps the wait, about 10 minutes in
-    STY-080 and STY-081, and 11 in STY-082, which waited. Three observations, none with a gate
-    failure that no reviewer found, are too few to change when reviews start (`orchestrate`'s run-summary
-    reference, _Evaluate after real use_).
+    STY-080 and STY-081, 11 in STY-082 and 13 in STY-091 (from the gate's start), which
+    waited. Three early-start observations, none with a gate failure that no reviewer found,
+    are too few to change when reviews start (`orchestrate`'s run-summary reference, _Evaluate
+    after real use_). STY-091's gate, which waited, failed one guide check, fixed before round 1
+    read the tree.
   - (b) Yes, once typecheck, lint and the unit tests pass. A gate failure counts as a finding
     above P3, so its fix gets a re-check, and it is fixed only after the round's reviewers
     have reported. This saves the wait, adds a re-check whenever the gate fails, and changes

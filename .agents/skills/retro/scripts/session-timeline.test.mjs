@@ -673,3 +673,136 @@ test("keeps the commands either side of a redirect apart", () => {
     ],
   )
 })
+
+test("takes no kind from an empty command between separators", () => {
+  assert.deepEqual(
+    kindsOf("mkdir -p a;\nls", "cat <<'EOF' > a.py\nx = 1\nEOF\n\nls"),
+    [],
+  )
+})
+
+test("knows the API's pytest suite, and a run scoped by path as targeted, not by name", () => {
+  assert.deepEqual(
+    kindsOf(
+      "pnpm api:test",
+      "timeout 600 pnpm api:test > /tmp/x.log 2>&1",
+      "cd apps/api; uv run --locked pytest -q -n0",
+      "uv run --locked pytest -q -k ready",
+      "uv run --locked pytest -q -n0 tests/test_revisions.py tests/test_settings.py",
+      "uv run --locked pytest tests/integration/test_readiness.py::test_ready",
+      "uv run --locked pytest -p no:cacheprovider tests/integration/",
+      "for i in 1 2; do r=$(uv run --locked pytest -q -n4); done",
+      "/tmp/x/.venv/bin/python -m pytest -q tests/test_x.py",
+      "timeout 600 .venv/bin/pytest -q",
+      "r=$(pytest -q)",
+      "for f in a; do PYTHONPATH=. pytest -q; done",
+      "(timeout 900 pytest -q)",
+      "uv run --locked --directory apps/api pytest",
+      "uv run --with pytest-cov pytest -q",
+      "uv run --locked coverage run -m pytest",
+    ),
+    [
+      ["pytest suite (full)", 12],
+      ["pytest tests (targeted)", 4],
+    ],
+  )
+})
+
+test("takes no pytest run from a command that only names pytest", () => {
+  assert.deepEqual(
+    kindsOf(
+      "grep -n pytest apps/api/pyproject.toml",
+      "rg -n pytest apps/api",
+      "uv pip list | grep pytest",
+      "uv run --locked pip show pytest",
+      "pkill -f pytest",
+      "for p in fastapi pytest coverage; do echo $p; done",
+      "cat /tmp/pytest-of-x/pytest-1/stderr",
+      "uv run --locked pytest --help",
+      "uv run --locked pytest -h",
+      "pytest --version",
+      "uv run pytest-watch",
+    ),
+    [],
+  )
+})
+
+test("knows each app's own scripts and the API's Python tools", () => {
+  assert.deepEqual(
+    kindsOf(
+      "pnpm editor:test",
+      "pnpm site:test",
+      "pnpm repo:test",
+      "pnpm test:docs",
+      "pnpm site:test:e2e",
+      "pnpm editor:typecheck",
+      "pnpm api:typecheck",
+      "uv run --locked ty check",
+      "pnpm site:build",
+      "pnpm editor:lint",
+      "pnpm api:lint",
+      "uv run --locked ruff check tests --output-format concise",
+      "uv run --locked lint-imports",
+      "pnpm api:format",
+      "uv run --locked ruff format --check",
+      "pnpm site:dev",
+      "pnpm site:preview",
+      "pnpm api:dev",
+      "uv add 'alembic>=1.20'",
+      "uv sync --locked",
+      "uv lock --check",
+      "pnpm api:db:up",
+    ),
+    [
+      ["Vitest suite (full)", 3],
+      ["Vitest tests (targeted)", 1],
+      ["E2E suite (full)", 1],
+      ["Type checks", 3],
+      ["Builds", 1],
+      ["Lint", 4],
+      ["Format", 2],
+      ["Dev server start-up", 3],
+      ["Dependency install", 2],
+    ],
+  )
+})
+
+test("reads pytest's own duration, with or without its banner", () => {
+  const t = buildTimeline(
+    parseLog(
+      log(
+        call(0, "a", "Bash", { command: "pnpm api:test" }),
+        result(
+          20,
+          "a",
+          "4 workers [236 items]\n============ 236 passed in 12.26s ============",
+        ),
+        call(21, "b", "Bash", { command: "uv run pytest -q tests/test_x.py" }),
+        result(30, "b", "1 failed, 62 passed, 3 warnings in 4.20s"),
+      ),
+    ),
+  )
+  assert.deepEqual(
+    t.runners.map((r) => [r.runner, r.ms]),
+    [
+      ["pytest", 12_260],
+      ["pytest", 4_200],
+    ],
+  )
+  assert.equal(t.unreportedTests, 0)
+})
+
+test("keeps the commands either side of a test file apart", () => {
+  assert.deepEqual(
+    kindsOf(
+      "sed -i s/a/b/ src/app.test.ts; pnpm editor:test",
+      "sed -i s/a/b/ tests/test_readiness.py; pnpm api:test",
+      "cat tests/test_readiness.py; git status",
+    ),
+    [
+      ["Vitest suite (full)", 1],
+      ["pytest suite (full)", 1],
+      ["Git and GitHub", 1],
+    ],
+  )
+})

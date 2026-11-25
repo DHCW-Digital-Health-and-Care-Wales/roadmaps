@@ -1,8 +1,8 @@
 # Replacing Google Sheets with an HTTP API
 
 Google Sheets is a temporary data source. The plan is a PostgreSQL-backed HTTP API
-behind an `ApiRoadmapRepository`; the UI, hooks and routes do not change (ADR-002). The
-port is `RoadmapRepository` in `apps/editor/src/domain/roadmap/roadmap-repository.ts`: read its
+behind an `ApiRoadmapRepository`; the UI, hooks and routes do not change (ADR-002), except
+the sign-in flow that ADR-018 reshapes (step 4). The port is `RoadmapRepository` in `apps/editor/src/domain/roadmap/roadmap-repository.ts`: read its
 doc comments first, since they are the contract.
 
 The database behind the API is decided by ADR-015: scoped by tenant, keeping every
@@ -99,18 +99,28 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
    (`noStartingPoint`), which an API that needs no template fakes as whatever makes it
    answer so; `failing()` fails every
    request. The Google adapter's test is the worked example.
-3. **Config.** Add e.g. `VITE_ROADMAPS_API_URL` to the Zod schema in
-   `apps/editor/src/app/config.ts`, `apps/editor/.env.example` and `apps/editor/.env.production`.
+3. **Config.** The API shares the editor's origin in every environment (ADR-020), so the
+   adapter calls relative `/api` paths and needs no API address setting: add none to the
+   Zod schema in `apps/editor/src/app/config.ts`, `apps/editor/.env.example` or
+   `apps/editor/.env.production`.
 4. **Swap it in** `composeApp` (`apps/editor/src/app/composition.ts`): construct
-   `ApiRoadmapRepository` instead of `GoogleSheetsRoadmapRepository`. If the API accepts
-   Google access tokens, pass `getAccessToken: authClient.getAccessToken`. If it has its
-   own sign-in, write a new `AuthClient` adapter (the port is in `apps/editor/src/domain/auth/`) and
-   swap it in the same place.
+   `ApiRoadmapRepository` instead of `GoogleSheetsRoadmapRepository`, and write a new
+   `AuthClient` adapter for the API's own sign-in. Reshape the port first, in
+   `apps/editor/src/domain/auth/auth-client.ts`: drop `getAccessToken`, since no access
+   token leaves it (ADR-018), and keep `reportUnauthenticated`, which moves the state to
+   `expired` on a 401. Then `connect()` posts the sign-in start for the chosen provider and
+   navigates to the authorisation address it returns, and the signed-in state comes from a
+   "who am I" call. The API keeps the session in an `HttpOnly` cookie, so do not pass a
+   token to `ApiRoadmapRepository`. ADR-018 also requires a state-changing request to name the person the editor believes is signed in. A tab that regains focus re-checks "who am I", and on a different person discards the held form unsent and treats itself as signed out, dropping that session's cached data (_Sessions_ and _The editor_). The session warning (STY-017) and the reconnect flow (STY-057) change shape with the port. Build the sign-in code only after ADR-018's threat model is reviewed by DHCW's cyber security team. Swap the adapter in the same place.
 5. **Copy.** Some strings name the spreadsheet or Google Sheets, because that is what
    users must act on today. Search `apps/editor/src/i18n/locales/en.ts` for "spreadsheet" and
    "Google Sheets", and reword them in `en.ts` and `cy.ts`; no component changes.
 6. **E2E.** Add a fake for the API to `apps/editor/tests/e2e/fixtures/` (the hermetic guard fails on
    any unfaked origin) and retire the Sheets fake when it is no longer used.
-7. **Deploy.** The API must allow CORS from the Pages origin with the `Authorization`
-   header. Record the change in an ADR that amends ADR-002, then delete
+7. **Deploy.** The API serves the editor's built files on the same origin as its
+   endpoints (one Cloud Run service per environment, ADR-020), so the editor's endpoints send no CORS
+   headers and the editor sends no `Authorization` header: the session cookie carries the
+   sign-in (ADR-018). Real data waits for the custom domain and its load balancer, the
+   edge rate limits and the independent penetration test (ADR-016, ADR-018, ADR-020).
+   Record the change in an ADR that amends ADR-002, then delete
    `apps/editor/src/infrastructure/google-sheets/` once nothing uses it.

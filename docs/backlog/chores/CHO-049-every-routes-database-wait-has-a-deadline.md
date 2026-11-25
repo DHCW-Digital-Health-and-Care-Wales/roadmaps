@@ -4,7 +4,7 @@
   first route that queries, or by EPC-023's choice of hosted database
 - **Type**: Chore
 - **Area**: API
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-017 §Operation
 - **Suggested model**: Sonnet — engine settings and one test of a silent network

@@ -4,7 +4,7 @@
 - **Severity**: Low — a developer's commits and pushes go unchecked locally until CI
   checks them; nothing reaches `main` unchecked
 - **Area**: CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-016 §Workspace tooling
 - **Suggested model**: Sonnet — one install script, checked in a scratch clone

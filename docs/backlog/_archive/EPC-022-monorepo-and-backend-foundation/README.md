@@ -1,13 +1,12 @@
 # EPC-022: Monorepo and backend foundation — an API and its database beside the Sheets editor
 
-- **Status**: Active — every binding ADR is accepted (owner, 2026-11-21); STY-085 to
-  STY-088, the two apps' alignment (owner, 2026-11-23: STY-095 to STY-098), STY-089 and
-  the API skeleton (STY-090) and, from the owner's review of it, STY-101 and STY-091 are
-  done, and so are STY-092, STY-100, CHO-047 and CHO-053 (with CHO-051 closed Won't do);
-  the remaining API placeholders' acceptance criteria come next
-- **Progress**: 18 of 22 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
-  STY-098, STY-100, STY-101, CHO-047, CHO-051, CHO-053); next selectable: none — STY-093,
-  STY-094, STY-099 and CHO-049 wait for their acceptance criteria
+- **Status**: Done — monorepo, public-site alignment, API skeleton, migrations/harness,
+  OpenAPI contract and tracing delivered (18 of 18 foundation records terminal); the four
+  remaining placeholders and candidate backend/editor work moved to EPC-024–EPC-029
+  (owner, 2026-11-25)
+- **Progress**: 18 of 18 terminal (STY-085 to STY-092, STY-095, CHO-044, STY-096 to
+  STY-098, STY-100, STY-101, CHO-047, CHO-051, CHO-053); STY-093 and CHO-049 moved to
+  EPC-024, STY-094 to EPC-025, STY-099 to EPC-029
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-002
 
 ## Summary
@@ -101,7 +100,7 @@ Owner answers of 2026-11-21 (monorepo grilling), drafted into ADR-016 and ADR-01
 
 Owner answers of 2026-11-21 (identity and authorisation grilling, and the review of
 its drafts), from the
-[identity and authorisation analysis](../../analysis/identity-and-authorisation.md):
+[identity and authorisation analysis](../../../analysis/identity-and-authorisation.md):
 
 12. **Sign-in**: through the API, with DHCW's Google Workspace first and Entra next,
     after which Google is retired; an opaque server-side session; a person exists only
@@ -265,45 +264,42 @@ builtins (`Field(max_length=…)` on `list`; `FailFast()` with `Field(max_length
 
 ## Stories
 
-| ID      | Story                                                                                                                                                                     | Area                         | Depends on       | State      |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------- | ---------- |
-| STY-085 | [Rename the repository to roadmaps](../_archive/EPC-022-monorepo-and-backend-foundation/STY-085-rename-the-repository-to-roadmaps.md)                                     | CI/CD + Docs                 | —                | ✅         |
-| STY-086 | [Move the editor into apps/editor](../_archive/EPC-022-monorepo-and-backend-foundation/STY-086-move-the-editor-into-a-pnpm-workspace.md)                                  | CI/CD + Docs                 | STY-085          | ✅         |
-| STY-087 | [Workspace tooling and the ruleset](../_archive/EPC-022-monorepo-and-backend-foundation/STY-087-workspace-tooling-and-the-main-ruleset.md)                                | CI/CD                        | STY-086          | ✅         |
-| STY-088 | [Bring the public site in](../_archive/EPC-022-monorepo-and-backend-foundation/STY-088-bring-the-public-site-into-the-workspace.md)                                       | CI/CD + Docs                 | STY-087          | ✅         |
-| STY-089 | [One copy of the spreadsheet fixtures](../_archive/EPC-022-monorepo-and-backend-foundation/STY-089-one-copy-of-the-spreadsheet-fixtures.md)                               | Infrastructure + CI/CD       | STY-098          | ✅         |
-| STY-090 | [The API skeleton](../_archive/EPC-022-monorepo-and-backend-foundation/STY-090-the-api-skeleton.md)                                                                       | API + CI/CD                  | STY-087          | ✅         |
-| STY-091 | [Migrations, tenant listener, test harness](../_archive/EPC-022-monorepo-and-backend-foundation/STY-091-migrations-tenant-listener-and-test-harness.md)                   | API + CI/CD                  | STY-101          | ✅         |
-| STY-092 | [The OpenAPI contract and schemas](../_archive/EPC-022-monorepo-and-backend-foundation/STY-092-the-openapi-contract-and-generated-schemas.md)                             | API + Infrastructure + CI/CD | STY-090, STY-101 | ✅         |
-| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                                                                                               | API                          | `tenants` story  |            |
-| STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                                                                                       | API                          | invitations      |            |
-| STY-095 | [The public site adopts the conventions](../_archive/EPC-022-monorepo-and-backend-foundation/STY-095-the-public-site-adopts-the-workspace-conventions.md)                 | Features/UI + CI/CD + Docs   | STY-088          | ✅         |
-| CHO-044 | [One dev-ports resolver](../_archive/chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                                                              | CI/CD                        | STY-095          | ✅         |
-| STY-096 | [The site's interface text in typed catalogues](../_archive/EPC-022-monorepo-and-backend-foundation/STY-096-the-public-sites-interface-text-moves-to-typed-catalogues.md) | Features/UI + i18n           | CHO-044          | ✅         |
-| STY-097 | [One version per shared dependency, one font](../_archive/EPC-022-monorepo-and-backend-foundation/STY-097-one-version-per-shared-dependency-and-one-font.md)              | Features/UI + CI/CD          | STY-096          | ✅         |
-| STY-098 | [The editor marks English in place of Welsh](../_archive/EPC-022-monorepo-and-backend-foundation/STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)             | Domain + Features/UI         | STY-097          | ✅         |
-| STY-099 | [The site takes the DHCW design tokens](STY-099-the-public-site-takes-the-dhcw-design-tokens.md)                                                                          | Features/UI                  | STY-098          |            |
-| STY-100 | [The API traces its requests](../_archive/EPC-022-monorepo-and-backend-foundation/STY-100-the-api-traces-requests-locally.md)                                             | API                          | STY-101          | ✅         |
-| STY-101 | [The skeleton leans on its framework](../_archive/EPC-022-monorepo-and-backend-foundation/STY-101-the-api-skeleton-leans-on-its-framework.md)                             | API + CI/CD + Docs           | CHO-048          | ✅         |
-| CHO-047 | [A 422 never names a key the caller chose](../_archive/chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                                        | API                          | —                | ✅         |
-| CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                              | API                          | —                |            |
-| CHO-051 | [A 422 keeps a wrapped union choice's fields](../_archive/chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)                                          | API                          | CHO-047          | ✗ Won't do |
-| CHO-053 | [A 422 trims only the forbidden key without walking internals](../_archive/chores/CHO-053-a-422-trims-only-the-forbidden-key-without-walking-internals.md)                | API + Docs                   | CHO-047          | ✅         |
+| ID      | Story                                                                                                                                             | Area                         | Depends on       | State      |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ---------------- | ---------- |
+| STY-085 | [Rename the repository to roadmaps](STY-085-rename-the-repository-to-roadmaps.md)                                                                 | CI/CD + Docs                 | —                | ✅         |
+| STY-086 | [Move the editor into apps/editor](STY-086-move-the-editor-into-a-pnpm-workspace.md)                                                              | CI/CD + Docs                 | STY-085          | ✅         |
+| STY-087 | [Workspace tooling and the ruleset](STY-087-workspace-tooling-and-the-main-ruleset.md)                                                            | CI/CD                        | STY-086          | ✅         |
+| STY-088 | [Bring the public site in](STY-088-bring-the-public-site-into-the-workspace.md)                                                                   | CI/CD + Docs                 | STY-087          | ✅         |
+| STY-089 | [One copy of the spreadsheet fixtures](STY-089-one-copy-of-the-spreadsheet-fixtures.md)                                                           | Infrastructure + CI/CD       | STY-098          | ✅         |
+| STY-090 | [The API skeleton](STY-090-the-api-skeleton.md)                                                                                                   | API + CI/CD                  | STY-087          | ✅         |
+| STY-091 | [Migrations, tenant listener, test harness](STY-091-migrations-tenant-listener-and-test-harness.md)                                               | API + CI/CD                  | STY-101          | ✅         |
+| STY-092 | [The OpenAPI contract and schemas](STY-092-the-openapi-contract-and-generated-schemas.md)                                                         | API + Infrastructure + CI/CD | STY-090, STY-101 | ✅         |
+| STY-093 | [A deterministic seeder](../../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-093-a-deterministic-seeder.md)                                   | API                          | STY-103          | → EPC-024  |
+| STY-094 | [Ask for access to a tenant](../../EPC-025-tenant-members-and-invitations/STY-094-ask-for-access-to-a-tenant.md)                                  | API                          | STY-110          | → EPC-025  |
+| STY-095 | [The public site adopts the conventions](STY-095-the-public-site-adopts-the-workspace-conventions.md)                                             | Features/UI + CI/CD + Docs   | STY-088          | ✅         |
+| CHO-044 | [One dev-ports resolver](../chores/CHO-044-one-dev-ports-resolver-for-both-apps.md)                                                               | CI/CD                        | STY-095          | ✅         |
+| STY-096 | [The site's interface text in typed catalogues](STY-096-the-public-sites-interface-text-moves-to-typed-catalogues.md)                             | Features/UI + i18n           | CHO-044          | ✅         |
+| STY-097 | [One version per shared dependency, one font](STY-097-one-version-per-shared-dependency-and-one-font.md)                                          | Features/UI + CI/CD          | STY-096          | ✅         |
+| STY-098 | [The editor marks English in place of Welsh](STY-098-the-editor-marks-english-shown-in-place-of-welsh.md)                                         | Domain + Features/UI         | STY-097          | ✅         |
+| STY-099 | [The site takes the DHCW design tokens](../../EPC-029-public-site-dhcw-design-tokens/STY-099-the-public-site-takes-the-dhcw-design-tokens.md)     | Features/UI                  | STY-098          | → EPC-029  |
+| STY-100 | [The API traces its requests](STY-100-the-api-traces-requests-locally.md)                                                                         | API                          | STY-101          | ✅         |
+| STY-101 | [The skeleton leans on its framework](STY-101-the-api-skeleton-leans-on-its-framework.md)                                                         | API + CI/CD + Docs           | CHO-048          | ✅         |
+| CHO-047 | [A 422 never names a key the caller chose](../chores/CHO-047-a-422-never-names-a-key-the-caller-chose.md)                                         | API                          | —                | ✅         |
+| CHO-049 | [Every route's database wait has a deadline](../../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                   | API                          | —                | → EPC-024  |
+| CHO-051 | [A 422 keeps a wrapped union choice's fields](../chores/CHO-051-a-422-keeps-the-fields-under-a-wrapped-union-choice.md)                           | API                          | CHO-047          | ✗ Won't do |
+| CHO-053 | [A 422 trims only the forbidden key without walking internals](../chores/CHO-053-a-422-trims-only-the-forbidden-key-without-walking-internals.md) | API + Docs                   | CHO-047          | ✅         |
 
 _STY-085 to STY-092, STY-095, CHO-044, STY-096 to STY-098, STY-100, STY-101, CHO-047
-and CHO-053 are done (CHO-051 is Won't do). STY-093 is a Placeholder
-until its acceptance criteria are written: ADR-017 is accepted. STY-094
-is a Placeholder until the invitation story exists, and STY-099 until design input
-settles what the public sees.
-Candidate scope, to split next: the first schema,
-`tenants` first, and its enforcement suite; people, identities, memberships, roles, assignments and
-invitations, with ADR-019's authorisation suite; the threat model, then sign-in with
-Google and the mock provider, sessions and signing out (ADR-018); the scratch, draft,
-save, publish and restore path; the API's endpoints for the roadmap repository's calls
-and for the public read; serving the editor's built files with their document headers
-(ADR-020); the import of the spreadsheet's data; and the editor's API
-adapter with its build-time switch, signing in through the API. Entra, with its spike,
-is a later story._
+and CHO-053 are done (CHO-051 is Won't do). On 2026-11-25 the owner decomposed the
+remaining backend, editor API and public-site token work into dedicated epics so EPC-022
+could close cleanly as the foundation epic: `STY-093` and `CHO-049` moved to
+[EPC-024](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md), `STY-094` to
+[EPC-025](../../EPC-025-tenant-members-and-invitations/README.md), `STY-099` to
+[EPC-029](../../EPC-029-public-site-dhcw-design-tokens/README.md), and the roadmap API,
+editor editing and switch-over work to
+[EPC-026](../../EPC-026-roadmaps-lists-and-versioned-api/README.md),
+[EPC-027](../../EPC-027-editor-roadmap-editing-on-the-api/README.md) and
+[EPC-028](../../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)._
 
 ## Sequencing
 
@@ -312,60 +308,76 @@ change, with no other editor-code pull request open while it is in flight (STY-0
 D8), then STY-087, whose hooks and gate the API joins. Then two tracks run in
 parallel: the repository's (STY-088 into a protected `main`, then the alignment
 sequence STY-095, CHO-044, STY-096, STY-097 and STY-098, strictly in that order, each
-merged before the next starts, then STY-089 and the STY-099 placeholder) and the API's (STY-090, then STY-101 after the standalone CHO-048, then
-STY-091, STY-092 and STY-100 in any order). CHO-031 (supply-chain checks) is done, beside STY-087. The
-threat model comes before
-any identity story (ADR-018); STY-094 follows the invitation story. The first schema
-story, which creates `tenants`, follows STY-091, and STY-093 follows it (STY-091 D27);
-the other schema stories follow STY-093, adding their factories; the editor's adapter follows STY-092.
+merged before the next starts, then STY-089) and the API's (STY-090, then STY-101 after
+the standalone CHO-048, then STY-091, STY-092 and STY-100 in any order). CHO-031
+(supply-chain checks) is done, beside STY-087. All follow-on schema, identity, editor
+API and public-site token sequencing now lives in EPC-024–EPC-029.
 
 ## Out of scope
 
-- The editor's new editing model: a server scratch, a shared draft, permissions and
-  assignments in the interface (ADR-015 _Consequences_). A later epic, once this one's
-  API exists.
-- Switching the deployed editor to the API, retiring the Sheets adapter, and moving
-  the public site to the API's read: after an environment exists.
+- Tenancy, sign-in, optional editor API mode, members and invitations:
+  [EPC-024](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md) and
+  [EPC-025](../../EPC-025-tenant-members-and-invitations/README.md).
+- Roadmaps, lists and versioned API, and the editor's new editing model:
+  [EPC-026](../../EPC-026-roadmaps-lists-and-versioned-api/README.md) and
+  [EPC-027](../../EPC-027-editor-roadmap-editing-on-the-api/README.md).
+- Switching the deployed editor to the API, retiring the Sheets adapter, Entra ID and
+  moving the public site to the API's read:
+  [EPC-028](../../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md).
 - Infrastructure as code, provisioned environments, Google Cloud hosting and custom
-  domains: [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md), handed
+  domains: [EPC-023](../../EPC-023-hosting-and-infrastructure-security/README.md), handed
   a service that runs locally and in CI. A cross-repository deploy trigger was rejected
   (ADR-016), not deferred.
 - Live presence and real-time updates.
 
 ## Defects
 
-- [DEF-028](../_archive/defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md):
+- [DEF-028](../defects/DEF-028-a-fresh-clone-gets-no-git-hooks-from-pnpm-install.md):
   a fresh clone got no Git hooks from `pnpm install` (Done).
-- [DEF-033](../_archive/defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md):
+- [DEF-033](../defects/DEF-033-the-editor-leaves-text-it-always-shows-in-one-language-unmarked.md):
   the editor leaves text it always shows in one language unmarked (Done).
-- [DEF-036](../_archive/defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md):
+- [DEF-036](../defects/DEF-036-the-sheets-replacement-runbook-describes-cors-and-browser-held-tokens.md):
   the Sheets replacement runbook still describes CORS and a browser-held token (Done).
-- [DEF-039](../_archive/defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md):
+- [DEF-039](../defects/DEF-039-dependabot-cannot-update-the-apis-locked-dependencies.md):
   Dependabot cannot raise updates of the API's locked dependencies (Done).
-- [DEF-040](../_archive/defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md):
+- [DEF-040](../defects/DEF-040-a-422-lists-every-error-however-many-a-body-has.md):
   a small request can get a much larger 422, which lists every error (Done).
-- [DEF-041](../defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md):
-  the editor's status messages quote English it cannot mark (Needs triage).
-- [DEF-042](../defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md): the
-  editor's fields hold English with no `lang` (Needs triage).
-- [DEF-043](../_archive/defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md):
+- [DEF-041](../../defects/DEF-041-the-editors-status-messages-quote-english-it-cannot-mark.md):
+  the editor's status messages quote English it cannot mark (moved to standalone when
+  EPC-022 archived; Needs triage).
+- [DEF-042](../../defects/DEF-042-the-editors-fields-hold-english-with-no-lang.md): the
+  editor's fields hold English with no `lang` (moved to standalone when EPC-022 archived;
+  Needs triage).
+- [DEF-043](../defects/DEF-043-unbounded-collections-in-request-models-can-exhaust-memory-during-validation.md):
   unbounded collections in request models can exhaust memory during validation (Done).
 
 ## Related
 
-- [ADR-015](../../adr/ADR-015-the-roadmap-database-is-postgresql-tenant-scoped-and-versioned.md),
-  [ADR-016](../../adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md),
-  [ADR-017](../../adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md),
-  [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
-  [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md),
-  [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md),
-  [ADR-002](../../adr/ADR-002-layered-architecture-and-repository-boundary.md)
-- [Identity and authorisation analysis](../../analysis/identity-and-authorisation.md)
-- [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md) — hosting and
+- [ADR-015](../../../adr/ADR-015-the-roadmap-database-is-postgresql-tenant-scoped-and-versioned.md),
+  [ADR-016](../../../adr/ADR-016-one-pnpm-workspace-for-the-editor-public-site-and-api.md),
+  [ADR-017](../../../adr/ADR-017-the-api-is-synchronous-fastapi-over-sqlalchemy-and-psycopg.md),
+  [ADR-018](../../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
+  [ADR-019](../../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md),
+  [ADR-020](../../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md),
+  [ADR-002](../../../adr/ADR-002-layered-architecture-and-repository-boundary.md)
+- [Identity and authorisation analysis](../../../analysis/identity-and-authorisation.md)
+- [EPC-023](../../EPC-023-hosting-and-infrastructure-security/README.md) — hosting and
   infrastructure security, a placeholder
-- [Replacing Google Sheets](../../operations/replacing-google-sheets.md)
-- [STY-048](../EPC-011-adding-roadmaps-and-items/STY-048-remove-a-roadmap.md) —
+- [EPC-024](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md) — tenancy,
+  sign-in and optional API mode
+- [EPC-025](../../EPC-025-tenant-members-and-invitations/README.md) — tenant members and
+  invitations
+- [EPC-026](../../EPC-026-roadmaps-lists-and-versioned-api/README.md) — roadmaps, lists
+  and versioned API
+- [EPC-027](../../EPC-027-editor-roadmap-editing-on-the-api/README.md) — editor roadmap
+  editing on the API
+- [EPC-028](../../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md) —
+  public read API, Sheets migration, Entra and switch-over
+- [EPC-029](../../EPC-029-public-site-dhcw-design-tokens/README.md) — public site DHCW
+  design tokens
+- [Replacing Google Sheets](../../../operations/replacing-google-sheets.md)
+- [STY-048](../../EPC-011-adding-roadmaps-and-items/STY-048-remove-a-roadmap.md) —
   removing a roadmap, bound by ADR-015 Option 8
-- [CHO-005](../chores/CHO-005-send-last-updated-to-the-api-in-utc.md)
-- [CHO-031](../_archive/chores/CHO-031-supply-chain-checks-on-every-pull-request.md) —
+- [CHO-005](../../chores/CHO-005-send-last-updated-to-the-api-in-utc.md)
+- [CHO-031](../chores/CHO-031-supply-chain-checks-on-every-pull-request.md) —
   supply-chain checks, beside STY-087 ✅

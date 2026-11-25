@@ -4,7 +4,7 @@
   promoted once design input settles what the public sees
 - **Type**: Refactor + Feature
 - **Area**: Features/UI
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
+- **Epic**: [EPC-029-public-site-dhcw-design-tokens](README.md)
 - **Depends on**: STY-098 (hard; after the alignment sequence)
 - **Binding ADRs**: ADR-010
 - **Suggested model**: Opus — a visible change to the public site, designed first

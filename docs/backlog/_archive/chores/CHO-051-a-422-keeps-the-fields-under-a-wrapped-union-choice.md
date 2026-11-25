@@ -3,7 +3,7 @@
 - **Status**: Won't do — owner, 2026-11-25 (D2, CHO-053); archived
 - **Type**: Chore
 - **Area**: API
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: CHO-047 (hard)
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020
 - **Suggested model**: Sonnet — one branch of one walk, with its rows

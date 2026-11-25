@@ -274,7 +274,7 @@ rest of _STY-092 amendments_ stands.
 - ty's 0.0.x releases can change rules; a bump is a deliberate change with its fixes.
 - `docs/operations/replacing-google-sheets.md` changes with the adapter: its responses
   are parsed by the generated schemas, not hand-written ones.
-- Follow-on work (EPC-022): STY-090 (the API skeleton), STY-100 (tracing), STY-091
-  (migrations, the tenant listener and the test harness), STY-092 (the OpenAPI contract
-  and `packages/api-types`), STY-093 (the seeder). The public endpoints and the licence
-  statement arrive with the public read, in EPC-022's later stories.
+- Follow-on work: EPC-022 delivered STY-090 (the API skeleton), STY-100 (tracing),
+  STY-091 (migrations, the tenant listener and the test harness) and STY-092 (the OpenAPI
+  contract and `packages/api-types`); STY-093 (the seeder) moved to EPC-024. The public
+  endpoints and the licence statement arrive with the public read in EPC-028.

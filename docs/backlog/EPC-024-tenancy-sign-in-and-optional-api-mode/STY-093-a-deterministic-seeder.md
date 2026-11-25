@@ -4,9 +4,9 @@
   acceptance criteria are written
 - **Type**: Feature
 - **Area**: API
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
-- **Depends on**: STY-091 (hard), the first schema story, which creates `tenants`
-  (hard; not yet written)
+- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
+- **Depends on**: STY-091 (hard; Done), STY-103 (hard; creates `tenants`, `people`,
+  `roles` and `memberships`)
 - **Binding ADRs**: ADR-017 §Operation
 - **Suggested model**: Sonnet — a small harness the schema stories extend
 

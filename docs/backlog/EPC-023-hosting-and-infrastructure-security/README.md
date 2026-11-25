@@ -3,15 +3,17 @@
 - **Status**: Needs grilling — a placeholder holding the infrastructure-held protections
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
-- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-022's API
+- **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-024–EPC-027's API
+  (and recorded DHCW cyber security sign-off on `STY-102` before any hosted API
+  deployment or real provider client)
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
 
-EPC-022 builds the API and its database to run locally and in CI; provisioning the
-environments they run in, Google Cloud hosting and custom domains are left to a later
-epic (EPC-022 _Out of scope_). This is that epic, opened early as a placeholder so
-nothing found before then is lost. Several protections the identity and authorisation
+EPC-022 built the monorepo and API foundation, and EPC-024–EPC-028 build the API and its
+database to run locally and in CI; provisioning the environments they run in, Google Cloud
+hosting and custom domains are left to this epic. This epic was opened early as a
+placeholder so nothing found before then is lost. Several protections the identity and authorisation
 design relies on cannot be held by application code: the editor's own domain, per-address
 rate limits, private networking for the database, the provider registrations, CI's
 cloud identity, who ran a platform job, and alerting on security events. Product Leads see none of this beyond a new
@@ -23,6 +25,10 @@ candidate scope below is a list of findings, not a plan.
 - The editor's domain, and who owns its DNS
 - Who in NHS Wales approves the Entra app registration, and the lead time
 - Where security alerts go: DHCW's security monitoring, and who answers them
+- How a hosted non-production environment authenticates (e.g. for the penetration test):
+  real staff identities in a named pre-production environment holding production's
+  controls (load balancer, Cloud Armor, cyber sign-off), or testing on production before
+  cut-over — the local mock provider is never admitted on Cloud Run (ADR-018)
 
 ## Findings
 
@@ -147,7 +153,10 @@ lives:_
   uvicorn answers a request it cannot parse (a bad header line, two `Host` headers, a
   `Content-Length` that is no number) with its own fixed `400` text, before the API's
   middleware, so without STY-090 S5's headers or a request ID: the edge refuses such
-  requests, or the production server is configured to.
+  requests, or the production server is configured to. The production image build also
+  runs ADR-018's test proving the image refuses any non-HTTPS or loopback issuer and the
+  local mock provider whenever `K_SERVICE`, `CLOUD_RUN_JOB` or `CLOUD_RUN_WORKER_POOL`
+  is set (handed over from `STY-106`).
 
 ### Operations
 
@@ -185,7 +194,13 @@ lives:_
 
 ## Shared assumptions and contracts
 
-None yet.
+- **Precondition for any hosted deployment (ADR-018 _EPC-024 amendments_)**: no hosted
+  deployment of the API in any environment (non-production included), and no real
+  provider OAuth client or secret (since real staff sign-ins store real personal data),
+  may be provisioned or receive traffic until DHCW cyber security sign-off on
+  [STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)
+  is recorded by the owner (never an agent), citing DHCW cyber security's own reference
+  (ticket or signed document), reviewer, date, findings and disposition.
 
 ## Stories
 
@@ -193,20 +208,26 @@ None yet: written when the epic is planned.
 
 ## Sequencing
 
-After EPC-022's API runs locally and in CI, and before the deployed editor switches to
-the API (ADR-015 _Consequences_, ADR-016). The Entra registration request can start at
-once, since its approval has its own lead time.
+After [EPC-022](../_archive/EPC-022-monorepo-and-backend-foundation/README.md)'s foundation
+and alongside [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)–[EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md),
+before the deployed editor switches to the API in
+[EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)
+(ADR-015 _Consequences_, ADR-016). The Entra registration request and cyber security
+review of `STY-102` (ADR-018 _EPC-024 amendments_) can start at once, since approvals
+have their own lead time.
 
 ## Out of scope
 
 - The API's own protections (sessions, CSRF, route policies, the invitation cap,
   security events, the editor's document headers while it serves them): ADR-018,
-  ADR-019, ADR-020 and EPC-022's stories.
+  ADR-019, ADR-020 and EPC-024–EPC-028's stories.
 - SCIM provisioning from Entra: dropped, over-built for a handful of editors per
   tenant; the invitation is the gate and the access review (ADR-019) keeps memberships
   current. Reconsider if a
   tenant grows to hundreds of members.
-- Switching the deployed editor to the API: its own later epic, which this one enables.
+- Switching the deployed editor to the API:
+  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md),
+  which this epic enables.
 
 ## Defects
 
@@ -215,7 +236,12 @@ None.
 ## Related
 
 - [Identity and authorisation analysis](../../analysis/identity-and-authorisation.md)
-- [EPC-022](../EPC-022-monorepo-and-backend-foundation/README.md)
+- [EPC-022](../_archive/EPC-022-monorepo-and-backend-foundation/README.md),
+  [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md),
+  [EPC-025](../EPC-025-tenant-members-and-invitations/README.md),
+  [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md),
+  [EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md),
+  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)
 - [ADR-018](../../adr/ADR-018-sign-in-through-the-api-with-a-server-side-session.md),
   [ADR-019](../../adr/ADR-019-the-api-authorises-every-route-from-a-permission-catalogue-in-code.md),
   [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md),

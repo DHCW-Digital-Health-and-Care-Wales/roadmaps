@@ -5,7 +5,7 @@
   High once a route takes a dictionary of collections or models, where one request within
   the body limit can trigger quadratic response-size amplification
 - **Area**: API + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020 (_CHO-053 amendments_, _DEF-040 amendments_)
 - **Suggested model**: Sonnet — one handler and its rows, once the limits are chosen

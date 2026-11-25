@@ -4,7 +4,7 @@
 - **Severity**: Low — in Welsh, a screen reader reads an English title, tag or detail
   quoted in a message with Welsh pronunciation
 - **Area**: Features/UI
-- **Epic**: EPC-022-monorepo-and-backend-foundation
+- **Epic**: standalone (found during EPC-022)
 - **Depends on**: none
 - **Binding ADRs**: ADR-008
 - **Suggested model**: Opus — messages built as plain text would have to carry elements

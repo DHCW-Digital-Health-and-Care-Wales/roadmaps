@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor + Docs
 - **Area**: CI/CD + Docs
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-016 §Layout and name, ADR-007
 - **Suggested model**: Sonnet — a sweep of names and addresses, then an observed

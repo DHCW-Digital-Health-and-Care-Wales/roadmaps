@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Refactor + Copy
 - **Area**: Features/UI + i18n (en + cy)
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: CHO-044 (hard; the sequence is strict, STY-095 D4)
 - **Binding ADRs**: ADR-008, ADR-016 §STY-095 and §STY-096 amendments
 - **Suggested model**: Opus — a string migration through the prerender, with Welsh

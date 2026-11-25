@@ -4,7 +4,7 @@
 - **Severity**: Low — in Welsh, a screen reader may read the English in a field with
   Welsh pronunciation
 - **Area**: Features/UI
-- **Epic**: EPC-022-monorepo-and-backend-foundation
+- **Epic**: standalone (found during EPC-022)
 - **Depends on**: none
 - **Binding ADRs**: ADR-008
 - **Suggested model**: Sonnet — a few fields, once the open question is answered

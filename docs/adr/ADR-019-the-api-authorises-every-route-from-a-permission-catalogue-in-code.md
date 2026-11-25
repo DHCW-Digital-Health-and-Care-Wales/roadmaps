@@ -168,7 +168,7 @@ The analysis behind both is
   today any connected lead manages families and categories; then it is read-only for
   them, and admins manage the lists.
 - **A Viewer is a new kind of user** the editor has not had: everything is read-only
-  for them, and the editor's switch-over epic designs that.
+  for them, and EPC-025 (`STY-113`) and EPC-027 design that.
 - **The editor's interface shows permissions as hints only**; the API decides.
 - **ADR-015 is amended** (its _ADR-018 and ADR-019 amendments_):
   - ADR-015 Option 22: the Product Lead role also holds `roadmaps:edit` and `roadmaps:publish`;
@@ -185,9 +185,10 @@ The analysis behind both is
   - _Tenancy_: beside the existing tenant procedure, the closed list of definer
     functions gains the platform procedures (issue an operator invitation, disable a
     person and revoke their sessions, remove an identity).
-- **Follow-on work**: EPC-022's schema story for people, memberships, roles and
-  assignments with the enforcement suite above; the editor's new editing model (a later
-  epic) builds the screens for members, assignments, the access review and the Viewer.
+- **Follow-on work**: EPC-024's schema and authorisation stories (`STY-103`, `STY-104`,
+  `STY-105`, `STY-106`) with the enforcement suite above; EPC-025's screens and endpoints
+  for members, invitations and the access review (`STY-110`–`STY-114`); and EPC-026/027
+  for roadmap assignments and Viewer roadmap screens.
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

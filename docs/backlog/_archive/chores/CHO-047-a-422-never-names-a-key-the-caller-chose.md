@@ -3,7 +3,7 @@
 - **Status**: Done
 - **Type**: Chore
 - **Area**: API
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-017 (_Errors_), ADR-020 (validation errors leave out the
   submitted input)

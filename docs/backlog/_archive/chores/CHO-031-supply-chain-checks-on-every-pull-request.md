@@ -4,7 +4,7 @@
   and CodeQL's default setup (D3)
 - **Type**: Chore
 - **Area**: CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](../EPC-022-monorepo-and-backend-foundation/README.md)
 - **Depends on**: none; it changes `ci.yml` and `.github/dependabot.yml`, as STY-087 and
   STY-090 do, so whichever lands later rebases
 - **Binding ADRs**: none

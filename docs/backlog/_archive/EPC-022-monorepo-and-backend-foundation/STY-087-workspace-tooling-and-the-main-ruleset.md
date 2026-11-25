@@ -4,7 +4,7 @@
   at Dependabot's first monthly run
 - **Type**: Refactor
 - **Area**: CI/CD
-- **Epic**: [EPC-022-monorepo-and-backend-foundation](../../EPC-022-monorepo-and-backend-foundation/README.md)
+- **Epic**: [EPC-022-monorepo-and-backend-foundation](README.md)
 - **Depends on**: STY-086 (hard); CHO-031 also changes `ci.yml` and
   `.github/dependabot.yml`, so whichever lands later rebases
 - **Binding ADRs**: ADR-016 §Workspace tooling, §CI, §Who may change main, ADR-007

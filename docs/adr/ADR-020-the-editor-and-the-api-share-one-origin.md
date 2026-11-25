@@ -135,9 +135,10 @@ _The API's own responses_, _CHO-053 amendments_ and _DEF-040 amendments_ stands.
   bounds every `dict` key with `Annotated[str, StringConstraints(max_length=…)]`
   (`apps/api/AGENTS.md`). The API adds no custom pre-validation framework layer:
   `Field(max_length=M)` on `list` stops upfront at one `too_long` error when `len > M` and
-  caps failing-item errors at `M` when `len <= M`; `FailFast()` with `Field(max_length=M)`
-  stops on the first failing entry or first unique excess entry; and bounding `dict` keys
-  stops an oversize key at one `string_too_long` error before its value is validated.
+  bounds items validated per list to `M` when `len <= M`; `FailFast()` with
+  `Field(max_length=M)` stops on the first failing entry or first unique excess entry; and
+  bounding `dict` keys alongside `FailFast()` stops an oversize key at one
+  `string_too_long` error before its value is validated.
 
 ## Consequences
 
@@ -162,8 +163,8 @@ _The API's own responses_, _CHO-053 amendments_ and _DEF-040 amendments_ stands.
   `Field(max_length=…)` on `dict`, `set`, `frozenset` and variadic `tuple`, and
   `Annotated[str, StringConstraints(max_length=…)]` on `dict` keys in `ApiRequestModel`,
   bounding collection and dictionary-key amplification natively without a custom framework
-  layer (linear top-level unknown-key validation remains bounded by Starlette's 1 MiB body
-  limit).
+  layer (unknown-key validation at any depth and nested `list` items within their bounds
+  remain bounded by Starlette's 1 MiB body limit).
 
 ## Options (owner's choice marked ✅, 2026-11-21)
 

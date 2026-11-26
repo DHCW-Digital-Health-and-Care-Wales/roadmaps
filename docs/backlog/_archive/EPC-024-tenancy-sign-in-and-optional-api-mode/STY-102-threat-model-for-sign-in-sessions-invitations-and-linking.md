@@ -11,6 +11,7 @@
   §EPC-024 amendments; ADR-019 §Platform operators, §Enforcement; ADR-020
 - **Suggested model**: Opus — security threat modelling across OIDC, cookies, RLS,
   invitations and future Entra linking
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/331
 
 ## Summary
 

@@ -11,7 +11,8 @@
   rather than local/dev identity implementation, phased by Google Workspace / Entra and
   with the Entra spike boundary from STY-102 grilling; amended in STY-102 review
   follow-up, 2026-11-26: Consequences accepted-risk alignment, post-theft cookie replay,
-  and own-device operational assumption)
+  and own-device operational assumption; amended in STY-103, 2026-11-26: single role per
+  invitation in v1)
 
 ## Context
 
@@ -349,6 +350,14 @@ penetration test before switching the deployed editor stand.
   device rather than shared clinical workstations (revisited if later user research shows
   shared-device use). Existing timeout, server-scratch, asserted-person and tab-focus
   controls remain in place as defence-in-depth.
+
+### STY-103 amendments
+
+From the owner's STY-103 grilling (2026-11-26, STY-103 D3). Where this bullet differs
+from _Getting in_ and _Records and retention_ above, it holds; the rest stands.
+
+- **One role per invitation in v1**: an invitation names one `role_id` rather than a
+  list of roles (matching `memberships.role_id` in ADR-015 _STY-103 amendments_).
 
 ## Consequences
 

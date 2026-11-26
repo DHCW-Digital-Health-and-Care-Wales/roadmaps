@@ -114,6 +114,14 @@ fields without echoing submitted values
   standing test — keeping raw tokens out of Cloud Logging and two-year log exports
   (recorded in ADR-019 _STY-102 amendments_). The exact out-of-band mechanism stays open
   in Q3 for `STY-104` grilling.
+- **D2** (owner, 2026-11-26, `STY-103` grilling R1 #1a, #4a, #5a, #6a and R2 #4a, #6a):
+  `invitations`, `roadmaps_platform` and `roadmaps_platform_definer` already exist from
+  `STY-103`; `STY-104` adds the platform definer procedures (owned by
+  `roadmaps_platform_definer`, executable by `roadmaps_platform`) in its own incremental
+  migration. `create-tenant` takes bilingual tenant names (`name_en` required, `name_cy`
+  optional), seeds `tenant_scopes` (`'access'`, `'lists'`) and the three shipped roles with
+  `system_key` (`'admin'`, `'product_lead'`, `'viewer'`), and `invite-admin` resolves the
+  shipped Admin role by `system_key = 'admin'`.
 
 ## Out of scope
 

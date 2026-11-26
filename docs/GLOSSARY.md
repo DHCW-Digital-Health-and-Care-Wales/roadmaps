@@ -304,8 +304,8 @@ link; the only way into a tenant (ADR-018).
 _Avoid_: Sign-up, registration
 
 **Membership** _(planned)_:
-A person's place in one tenant, with the roles they hold there; a person can have
-memberships in several tenants (ADR-015, ADR-019).
+A person's place in one tenant, with the role they hold there; a person can have
+memberships in several tenants (ADR-015, ADR-019, STY-103).
 _Avoid_: Account, seat
 
 **Sign-in identity** _(planned)_:

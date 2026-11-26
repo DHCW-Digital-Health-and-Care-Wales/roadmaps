@@ -95,7 +95,12 @@ least one Admin survives and the second operation is refused with a dedicated er
 
 ## Decisions
 
-_Recorded during grilling._
+- **D1** (owner, 2026-11-26, `STY-103` grilling R1 #2b, #7a, #8a and R2 #1a, #4a): each
+  membership holds a single `role_id` (updating a member's role takes a single `roleId`),
+  ending a membership sets `memberships.ended_at` (filtered by default via SQLAlchemy
+  `SoftEndMixin` and PostgreSQL RLS), active members' identity emails and last sign-in are
+  readable under `identities` tenant RLS (with `members:manage` enforced in the service),
+  and the shipped Admin role is identified by `roles.system_key = 'admin'`.
 
 ## Out of scope
 

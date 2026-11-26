@@ -2,7 +2,7 @@
 
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 2b, 3a, 4a, 5a);
   stories start `Needs grilling` / `Placeholder` and become selectable as each is grilled
-- **Progress**: 1 of 10 terminal; next selectable: none (grill STY-103 and STY-108 next)
+- **Progress**: 1 of 10 terminal; next selectable: STY-103 (grill STY-108 next)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -23,9 +23,6 @@ fail cleanly against a stub repository until
 
 ## Owner decisions waiting
 
-- [STY-103](STY-103-tenancy-people-roles-memberships-and-access-history-schema.md#open-questions) —
-  `invitations` timing, multi-role join table and tenant slug rules (definer role split
-  settled in `STY-103` D1 / `STY-102` D13)
 - [STY-104](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md#open-questions) —
   CLI entrypoints, local link format and hosted Cloud Run out-of-band link mechanism
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —

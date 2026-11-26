@@ -22,13 +22,13 @@ requests (`STY-094`) follow at the end of the epic.
 ## Owner decisions waiting
 
 - [STY-110](STY-110-invitation-create-list-revoke-lookup-and-oidc-redemption-api.md#open-questions) —
-  re-inviting an already-pending email, single vs bounded `roleIds` list and email-mismatch refusal code
+  re-inviting an already-pending email and email-mismatch refusal code
 - [STY-111](STY-111-tenant-members-list-role-changes-and-membership-removal-api.md#open-questions) —
   member list projection, self-removal and whether a disabled Admin counts toward the last-admin guard
 - [STY-112](STY-112-editor-invitation-acceptance-and-redemption-flow.md#open-questions) —
   invitation fragment URL path and behaviour when another user is already signed in
 - [STY-113](STY-113-editor-members-and-invitations-management.md#open-questions) —
-  role picker shape (single role vs multi-role checkboxes) and copy-link UX fallback
+  provider selector default when only one sign-in provider is enabled
 - [STY-114](STY-114-six-monthly-member-access-review.md) — Placeholder awaiting core
   members workflow
 - [STY-094](STY-094-ask-for-access-to-a-tenant.md) — Placeholder awaiting STY-110
@@ -76,8 +76,9 @@ Owner answers of 2026-11-25 (EPC-024 / EPC-025 decomposition):
 - Every invitation create, revoke and redeem, and every member role change, membership
   removal and access review confirmation, writes an access-scope `change_set` signed off
   by ADR-015's commit function.
-- Request models with collection fields (such as `roleIds`) bound every collection
-  natively in Pydantic per `apps/api/AGENTS.md` and ADR-020 (_DEF-043 amendments_).
+- Any request model with collection fields bounds every collection natively in Pydantic per
+  `apps/api/AGENTS.md` and ADR-020 (_DEF-043 amendments_). (`STY-103` D2 sets a single
+  `roleId` per membership and invitation in v1.)
 
 ## Stories
 

@@ -122,7 +122,11 @@ definer functions, leaving active and recent records untouched
 
 ## Decisions
 
-_Recorded during grilling._
+- **D1** (owner, 2026-11-26, `STY-103` grilling R1 #2b, #4a, #6a and R2 #6a): `/me` returns
+  each active membership's single role (and effective permissions as UI hints) and each
+  tenant's bilingual `nameEn` and optional `nameCy`. `STY-106` adds `sign_in_transactions`,
+  `sessions` and its auth/purge definer procedures (owned by `roadmaps_auth_definer`, with
+  purge `EXECUTE` granted to `roadmaps_purge`, both bootstrapped in `STY-103`).
 
 ## Out of scope
 

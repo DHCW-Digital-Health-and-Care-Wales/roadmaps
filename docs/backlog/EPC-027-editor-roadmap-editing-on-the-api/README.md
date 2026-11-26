@@ -62,9 +62,9 @@ _Candidate scope, to be grilled and split into stories when this epic is planned
 ## Shared assumptions and contracts
 
 Follows [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)'s
-build-time data-source switch (`VITE_DATA_SOURCE=sheets|api`) and tenant-scoped API calls
-with flat editor routes (`ADR-019` _STY-108 amendments_; `/$tenantSlug/…` editor URLs
-follow in [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)),
+build-time data-source switch (`VITE_DATA_SOURCE=sheets|api`) and tenant-scoped routing
+(`/$tenantSlug/…`, ADR-019 Option 14, `STY-109` D3; multi-tenant switching UX follows in
+[EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)),
 keeping the Sheets adapter unaffected until
 [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md).
 

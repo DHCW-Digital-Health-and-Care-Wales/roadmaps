@@ -29,7 +29,8 @@ roadmap and family screens fail cleanly against a stub repository until
 - [STY-104](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md#open-questions) —
   CLI entrypoints, local link format and hosted Cloud Run out-of-band link mechanism
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —
-  tenant path parameter convention, person-assertion header name and `Origin` config
+  person-assertion header name and `Origin` config (`{tenantSlug}` path parameter settled
+  in `STY-105` D2)
 - [STY-106](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) —
   mock OIDC provider image/implementation, OIDC library choice and `/me` response shape
 - [STY-107](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md#open-questions) —
@@ -102,10 +103,10 @@ Owner answers of 2026-11-25 (EPC-024 decomposition):
    authenticated shell & Account menu, Account page, and session expiry) against
    `product-lead.md`, `tenant-admin.md` and `viewer.md`. `EPC-025`'s UI stories
    (`STY-112`, `STY-113`) each prototype just-in-time after they are grilled, and
-   multi-tenant editor UX (tenant switcher, `/$tenantSlug/…` URLs, joining a second
-   tenant) is deferred to
+   multi-tenant editor UX (tenant switcher, multi-tenant `/` landing/picker, joining a
+   second tenant) is deferred to
    [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
-   while the backend stays multi-tenant from the start.
+   while the backend and `/$tenantSlug/…` URLs stay multi-tenant from the start.
 5. **Unchanged:** Google Sheets remains the default and deployed data source; every
    existing Sheets test and E2E spec keeps passing untouched.
 
@@ -167,7 +168,7 @@ flowchart LR
 ```
 
 - **Start in parallel**: `STY-102` (threat model, Done), `STY-103` (first schema migration
-  - enforcement suite, Proposed), and `CHO-049` (independent DB timeout chore).
+  and enforcement suite, Proposed), and `CHO-049` (independent DB timeout chore).
 - **After `STY-103`**: `STY-093` (seeder) and `STY-105` (authorisation & CSRF framework)
   can run in parallel.
 - **After `STY-102`, `STY-103` and `STY-105`**: `STY-106` lands OIDC sign-in, sessions
@@ -186,8 +187,8 @@ flowchart LR
 
 - Invitations API, member management API and Members & Invitations editor screens:
   [EPC-025](../EPC-025-tenant-members-and-invitations/README.md).
-- Multi-tenant editor UX (tenant switcher, `/$tenantSlug/…` URLs, multi-tenant `/` landing
-  and joining a second tenant in the UI):
+- Multi-tenant editor UX (tenant switcher, multi-tenant `/` landing/picker and joining a
+  second tenant in the UI):
   [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
   (`STY-108` D4).
 - Roadmap, item, list, scratch, draft and publication schema and endpoints:

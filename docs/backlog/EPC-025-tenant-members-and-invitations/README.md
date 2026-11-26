@@ -3,7 +3,7 @@
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 4a, 5a); stories
   start `Needs grilling` / `Placeholder` and become selectable as each is grilled
 - **Progress**: 0 of 6 terminal; next selectable: none (depends on EPC-024's STY-093,
-  STY-102, STY-104, STY-105, STY-106 and STY-109)
+  STY-104, STY-105, STY-106 and STY-109)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -121,7 +121,8 @@ flowchart LR
 ## Out of scope
 
 - Multi-tenant editor UX (joining a second tenant in the UI, tenant switcher and
-  `/$tenantSlug/…` URLs; the API stays multi-tenant from day one):
+  multi-tenant `/` landing/picker; the API and `/$tenantSlug/…` URLs stay multi-tenant
+  from day one):
   [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
   (`STY-108` D4).
 - Roadmap assignments (`assignments:manage` and showing "who leads which roadmap" on the

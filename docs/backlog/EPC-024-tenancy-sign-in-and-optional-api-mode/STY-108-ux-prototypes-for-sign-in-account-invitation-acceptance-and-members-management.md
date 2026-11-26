@@ -9,8 +9,7 @@
 - **Depends on**: STY-107 (hard — runs just-in-time before `STY-109` once `/me`, refusal
   codes and the reshaped `AuthClient` have landed)
 - **Binding ADRs**: ADR-008, ADR-010, ADR-018 §Getting in, §The editor, §STY-108
-  amendments; ADR-019 §What members and assigned leads may do, §Enforcement, §STY-108
-  amendments
+  amendments; ADR-019 §What members and assigned leads may do, §Enforcement
 - **Suggested model**: Opus — app shell and sign-in/account UX design across desktop,
   folded rail and phone (including Welsh 375px width check)
 
@@ -83,12 +82,14 @@ unblocking `STY-109`, `STY-112` and `STY-113`
 - **D3** (owner, 2026-11-26, grilling R2 #2b + R3 #1a): `STY-108` depends on `STY-107`
   (hard) so it runs truly just-in-time right before `STY-109`, once `STY-106` (`/me` and
   refusal codes) and `STY-107` (reshaped `AuthClient` and API mode) have landed.
-- **D4** (owner, 2026-11-26, grilling R2 #5 + R3 #2b + R3 #3b; refines S1–S2; amends
-  ADR-018 and ADR-019): the backend stays multi-tenant from the start (`STY-103`–`STY-106`,
-  `STY-110`, `STY-111`), while the editor UI assumes each member belongs to one tenant
-  (e.g. `dhcw`) with flat routes (`/`, `/families`, `/roadmaps/$roadmapId`) until
-  multi-tenant UX lands. Multi-tenant switching, `/$tenantSlug/…` URLs, multi-tenant `/`
-  landing and joining a second tenant in the UI are deferred to a new placeholder epic,
+- **D4** (owner, 2026-11-26, grilling R2 #5 + R3 #2b + review follow-up #1a, #2a; refines
+  S1–S2; amends ADR-018): the backend stays multi-tenant from the start (`STY-103`–`STY-106`,
+  `STY-110`, `STY-111`, using `/api/v1/tenants/{tenantSlug}/…` per `STY-105` D2) and
+  API-mode editor routes carry `/$tenantSlug/…` from day one (`STY-109` D3, preserving
+  ADR-019 Option 14), while the UI assumes each member belongs to one tenant (e.g. `dhcw`,
+  with `/` redirecting to `/#/$tenantSlug/`). Multi-tenant switching, multi-tenant `/`
+  landing/picker and joining a second tenant in the UI are deferred to a new placeholder
+  epic,
   [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md).
   `STY-108` omits the tenant switcher while leaving clean room for it in the shell and
   Account menu.
@@ -134,8 +135,8 @@ categories and organisations` in the sidebar, without designing any `EPC-025` sc
 - Implementing the React screens (`STY-109`).
 - Just-in-time UX prototypes for Invitation acceptance (`STY-112`) and Members &
   invitations (`STY-113`): done in `EPC-025` right after each story is grilled (D2).
-- Multi-tenant switcher, `/$tenantSlug/…` URLs, multi-tenant `/` landing and joining a
-  second tenant in the UI:
+- Multi-tenant switcher, multi-tenant `/` landing/picker and joining a second tenant in
+  the UI:
   [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
   (D4).
 - Prototyping roadmap scratch/draft/history/Viewer-roadmap screens (`EPC-027`).

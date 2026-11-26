@@ -522,9 +522,10 @@ settled by the owner before those stories are implemented:
   Q3): Out-of-band delivery (never `stdout`/`stderr` outside local mode) is decided
   (`STY-104` D1); choosing between a short-lived operator-only Secret Manager version and
   operator public-key encryption stays open for `STY-104` grilling.
-- **Tenant path parameter and person-assertion header names**
+- **Person-assertion header name**
   ([STY-105](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions)
-  Q1–Q2): Recommended tenant slug in path and `X-Roadmaps-Person-Id` header.
+  Q2): Recommended `X-Roadmaps-Person-Id` header. (Tenant slug in path,
+  `/api/v1/tenants/{tenantSlug}/…`, is owner-confirmed in `STY-105` D2.)
 - **OIDC/JWT library and local mock OIDC server**
   ([STY-106](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions)
   Q1–Q2): Recommended `PyJWT[crypto]` + `httpx` and deterministic in-repo loopback mock

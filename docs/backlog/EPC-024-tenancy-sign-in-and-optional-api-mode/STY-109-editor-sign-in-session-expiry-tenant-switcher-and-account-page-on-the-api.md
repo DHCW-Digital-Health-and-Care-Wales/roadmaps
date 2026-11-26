@@ -1,14 +1,14 @@
 # STY-109: Editor sign-in, session expiry, tenant switcher and account page on the API
 
 - **Status**: Needs grilling — implements the chosen `STY-108` UX for API-mode sign-in,
-  session warning/expiry, single-tenant shell and Account page (multi-tenant switcher and
-  `/$tenantSlug/…` URLs deferred to `EPC-030`, `STY-108` D4)
+  session warning/expiry, tenant-prefixed single-tenant shell (`/$tenantSlug/…`) and
+  Account page (multi-tenant switcher and picker deferred to `EPC-030`, `STY-108` D4)
 - **Type**: Feature
 - **Area**: Features/UI + Routing + Infrastructure + i18n (en + cy) + E2E
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
 - **Depends on**: STY-107 (hard), STY-108 (hard)
 - **Binding ADRs**: ADR-004, ADR-008, ADR-010, ADR-018 §The sign-in transaction,
-  §Sessions, §The editor, §STY-108 amendments; ADR-019 §Enforcement, §STY-108 amendments
+  §Sessions, §The editor, §STY-108 amendments; ADR-019 §Enforcement
 - **Suggested model**: Opus — new routes, session-expiry tab-focus security check,
   bilingual copy and E2E against the API
 
@@ -18,14 +18,15 @@ Delivers the complete sign-in and account experience when the editor runs in API
 (`VITE_DATA_SOURCE=api`), following the designs chosen in `STY-108`. Users sign in via
 the API's OIDC redirect, land on the callback route (which loads `/me`), or see a clear
 "You haven't been invited" / sign-in error / "No organisation access" page in a clean
-header-only shell when refused or holding zero memberships (D4). Once signed in, the
-editor keeps flat routes using the member's active tenant slug from `/me` (D3), the
-account menu shows their name and active organisation while keeping Theme and Edit
-surface (D2, D5; multi-tenant switcher and `/$tenantSlug/…` routes deferred to `EPC-030`),
-the Account page shows their email, sign-in identity, membership and role, and "Sign out
-everywhere", and session expiry warns two minutes before the idle limit ("Stay signed in")
-or opens sign-in in a new tab for absolute expiry / 401, verifying on tab focus that the
-same person signed back in.
+header-only shell when refused or holding zero memberships (D4). Once signed in, API-mode
+tenant routes carry `/$tenantSlug/…` per ADR-019 Option 14 (with `/` redirecting to the
+member's tenant, keeping Sheets mode's flat routes untouched; D3), the account menu shows
+their name and active organisation while keeping Theme and Edit surface (D2, D5;
+multi-tenant switcher and multi-tenant `/` picker deferred to `EPC-030`), the Account
+page shows their email, sign-in identity, membership and role, and "Sign out everywhere",
+and session expiry warns two minutes before the idle limit ("Stay signed in") or opens
+sign-in in a new tab for absolute expiry / 401, verifying on tab focus that the same
+person signed back in.
 
 ## Scope
 
@@ -96,18 +97,22 @@ flow passes unchanged
   carries a single `NOT NULL` role and bilingual tenant `nameEn` / optional `nameCy` (shown
   by active UI language with English fallback).
 - **D2** (owner, 2026-11-26, `STY-108` D4; refines S2): multi-tenant editor UX (the
-  tenant switcher, multi-tenant `/` landing and joining a second tenant in the UI) is
-  deferred to
+  tenant switcher, multi-tenant `/` landing/picker and joining a second tenant in the UI)
+  is deferred to
   [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md).
-  While the backend stays multi-tenant from the start, `STY-109` assumes each member holds
-  one tenant in the UI (e.g. `dhcw`), shows the person's name and active organisation in
-  the shell/Account menu, and omits the tenant switcher (falling back deterministically to
-  the first active membership from `/me` if dev/test data seeds more than one).
-- **D3** (owner, 2026-11-26, `STY-108` D4; settles Q1b; amends ADR-019): keep today's flat
-  editor routes (`/`, `/families`, `/roadmaps/$roadmapId`) alongside the new non-tenant
-  routes (`/sign-in`, `/auth/callback`, `/account`), reading the member's active tenant
-  slug from `/me` for `/api/v1/tenants/{tenantSlug}/…` calls. Prefixing tenant routes
-  under `/$tenantSlug/…` is deferred to `EPC-030`.
+  While the backend and URLs stay multi-tenant from the start, `STY-109` assumes each
+  member holds one tenant in the UI (e.g. `dhcw`), shows the person's name and active
+  organisation in the shell/Account menu, and omits the tenant switcher (`/` redirects
+  deterministically to the first active membership in `STY-106` D2's fixed order if
+  dev/test data seeds more than one).
+- **D3** (owner, 2026-11-26, `STY-108` D4 / review follow-up #1a; settles Q1a): prefix
+  API-mode tenant routes under `/$tenantSlug/…` (e.g. `/#/dhcw/`, `/#/dhcw/families`,
+  `/#/dhcw/roadmaps/$roadmapId`) beside non-tenant routes (`/sign-in`, `/auth/callback`,
+  `/account`), while Sheets mode keeps today's flat routes unchanged. Each tab binds its
+  tenant from the URL per ADR-019 Option 14 and calls `/api/v1/tenants/{tenantSlug}/…`
+  (`STY-105` D2) directly; `/` redirects to `/#/$tenantSlug/` for a signed-in member with
+  an active membership, and if a `/me` refresh shows the tab's URL tenant is no longer an
+  active membership, the tab discards held state and cached tenant queries unsent.
 - **D4** (owner, 2026-11-26, `STY-108` D6; settles Q2a): a signed-in user with zero active
   memberships sees a calm **"No organisation access"** screen with Sign out and a link to
   Account; unauthenticated, refusal and zero-membership screens render in a clean
@@ -118,9 +123,10 @@ flow passes unchanged
 
 ## Out of scope
 
-- Multi-tenant switcher, `/$tenantSlug/…` editor URLs and multi-tenant `/` landing:
+- Multi-tenant switcher, multi-tenant `/` landing/picker and joining a second tenant in
+  the UI:
   [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
-  (D2, D3).
+  (D2).
 - Invitation acceptance route (`STY-112`) and Members & Invitations page (`STY-113`),
   both in EPC-025.
 - Linking/removing Entra sign-in identities on the Account page (`EPC-028`).

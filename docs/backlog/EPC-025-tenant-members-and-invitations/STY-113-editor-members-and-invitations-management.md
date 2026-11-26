@@ -27,12 +27,11 @@ shown in Sheets mode.
 
 Domain port (`TenantAccessRepository` or `MembersRepository`) under
 `apps/editor/src/domain/`, API adapter in `apps/editor/src/infrastructure/roadmaps-api/`
-wired in `composeApp` (API mode only), `apps/editor/src/features/members/`, new flat
-route under `apps/editor/src/routes/` (using the active tenant slug from `/me` until
-`EPC-030` introduces `/$tenantSlug/…`), navigation link in the shell (API mode only),
-English and Welsh copy (`copywriter`), component/page tests and an API-mode Playwright
-E2E covering the full Admin-invites-Product-Lead → Product-Lead-accepts → Admin-manages
-journey.
+wired in `composeApp` (API mode only), `apps/editor/src/features/members/`, new tenant
+route (`/$tenantSlug/members`, matching `STY-109` D3) under `apps/editor/src/routes/`,
+navigation link in the shell (API mode only), English and Welsh copy (`copywriter`),
+component/page tests and an API-mode Playwright E2E covering the full
+Admin-invites-Product-Lead → Product-Lead-accepts → Admin-manages journey.
 
 ## Acceptance criteria
 
@@ -92,8 +91,8 @@ zero axe violations and complete English/Welsh copy
   picker (Admin, Product Lead, or Viewer) rather than multi-role checkboxes.
 - **D2** (owner, 2026-11-26, `STY-108` D2 and D4): Members & Invitations UX is prototyped
   just-in-time right after `STY-113` is grilled (no longer bundled in `STY-108`), using
-  the sidebar utility slot settled in `STY-108` / `STY-109` and a flat route until
-  `EPC-030` adds `/$tenantSlug/…` URLs.
+  the sidebar utility slot and `/$tenantSlug/…` route structure settled in `STY-108` /
+  `STY-109` D3.
 
 ## Out of scope
 

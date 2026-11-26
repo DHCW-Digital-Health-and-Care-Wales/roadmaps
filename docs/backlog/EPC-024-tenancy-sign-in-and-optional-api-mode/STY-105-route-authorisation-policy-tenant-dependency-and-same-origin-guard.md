@@ -84,13 +84,6 @@ test-only probe router until real routes land in `STY-106` and `EPC-025`)
 
 ## Open questions
 
-- **Q1**: Should tenant-scoped routes identify the tenant by **slug** (`/api/v1/tenants/{tenantSlug}/…`) or **UUID** (`/api/v1/tenants/{tenantId}/…`)?
-  - (a) Tenant slug (`/api/v1/tenants/{tenantSlug}/…`) (recommended) — matches readable
-    editor URLs (e.g. `#/dhcw/members`) and lets the editor call tenant routes straight
-    from the URL without an extra lookup, while the dependency resolves slug → `tenant_id`
-    and returns 404 if unknown or non-member.
-  - (b) Tenant UUID (`/api/v1/tenants/{tenantId}/…`) — immune to future tenant slug
-    changes; editor URLs either show UUIDs or map slug ↔ UUID from `/me`.
 - **Q2**: Which request header should carry the person ID the editor believes is signed
   in on state-changing requests (ADR-018 _Sessions_)?
   - (a) `X-Roadmaps-Person-Id` (required on every authenticated state-changing route,
@@ -106,6 +99,11 @@ test-only probe router until real routes land in `STY-106` and `EPC-025`)
   membership (`ended_at IS NOT NULL`, 404), and ended-Admin + active-Viewer resolving to
   Viewer. Tenant checks use the person-keyed policy or explicit `ended_at IS NULL`
   (tenant-keyed RLS returns ended rows); `role_permissions.permission` format `CHECK` enables S2 DB tests.
+- **D2** (owner, 2026-11-26, `STY-108` review follow-up #2a; settles Q1a): tenant-scoped
+  API routes identify the tenant by slug (`/api/v1/tenants/{tenantSlug}/…`), matching
+  `STY-109` D3's `/$tenantSlug/…` editor routes so the editor calls tenant routes directly
+  from the URL while the dependency resolves slug → `tenant_id` and returns 404 for
+  unknown tenants or non-members.
 
 ## Out of scope
 

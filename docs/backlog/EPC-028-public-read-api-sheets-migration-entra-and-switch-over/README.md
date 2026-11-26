@@ -70,8 +70,9 @@ _Candidate scope, to be grilled and split into stories when this epic is planned
 ## Shared assumptions and contracts
 
 Any hosted deployment of the API and the Google Workspace OAuth client or real data wait
-for **Phase 1 (Google Workspace)** sign-off in `docs/analysis/identity-threat-model.md`
-([STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md),
+for **Phase 1 (Google Workspace)** sign-off in
+[docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md)
+([STY-102](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md),
 ADR-018 _EPC-024 amendments_, `STY-102` D4, D8, D10, D11, held by
 [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md)): entered only by
 the owner as `Status: Signed off` with disposition `Approved` or
@@ -83,7 +84,11 @@ addendum)** sign-off recorded by the owner under the same rule after the Entra s
 own accounts, and nothing persisted to a hosted database, or waits for separate cyber
 approval if NHS Wales requires one). Any material change to a signed-off phase's flows
 or controls returns that phase to `Pending` until the owner records it as reviewed or
-not material. The Phase 2 addendum and all Entra/linking PRs follow `STY-102` D7, D9 and
+not material. Deliveries that verify controls marked `Mitigated by design` or
+`Pending Entra spike` in
+[docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md)
+promote those rows with their proof (never editing the owner-only §7 sign-off table).
+The Phase 2 addendum and all Entra/linking PRs follow `STY-102` D7, D9 and
 D12's public-repo hygiene and private-first gap-reporting rules (never publish unfixed
 security gaps in an accepted design or merged/deployed code, product threat/risk
 severity ratings, internal thresholds, reviewer PII or ticket references in tracked
@@ -114,6 +119,7 @@ None.
 
 ## Related
 
+- [Identity threat model](../../analysis/identity-threat-model.md)
 - [ADR-002](../../adr/ADR-002-layered-architecture-and-repository-boundary.md),
   [ADR-007](../../adr/ADR-007-github-pages-deployment.md),
   [ADR-015](../../adr/ADR-015-the-roadmap-database-is-postgresql-tenant-scoped-and-versioned.md),

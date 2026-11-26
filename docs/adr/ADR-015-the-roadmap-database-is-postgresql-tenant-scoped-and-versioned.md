@@ -7,7 +7,9 @@
   technical detail is settled during EPC-022.
 - Date: 2026-11-20 (amended by ADR-018 and ADR-019, 2026-11-21: identities, sessions,
   invitations, definer functions, permissions and platform jobs; by STY-091, 2026-11-24:
-  the roles' shape and `alembic_version`)
+  the roles' shape and `alembic_version`; by STY-102, 2026-11-26: dedicated definer owner
+  roles across the closed list, including redaction, and invitation-create idempotency
+  omitting raw tokens)
 
 ## Context
 
@@ -359,6 +361,25 @@ bullets differ from the text above, they hold; the rest stands.
 - **Row-level security on every table** (_Tenancy_) has one exception, a closed list of
   one: Alembic's `alembic_version`, which holds one revision string and no tenant's
   data, read by the application's role and written only by the owner.
+
+### STY-102 amendments
+
+From the owner's STY-102 review follow-up answers (2026-11-26, STY-102 D13 and D17).
+Where these bullets differ from the text above, they hold; the rest stands.
+
+- **Dedicated definer owner roles across the closed list** (_Tenancy_, _Roles, operation
+  and data protection_): every `SECURITY DEFINER` routine on the closed list is owned by
+  a dedicated no-login definer role owning only its routines, holding minimal grants and
+  no `CREATE` on any database or schema once a migration completes, never by
+  `roadmaps_owner` — `roadmaps_auth_definer` for ADR-018's auth, session, invitation and
+  purge routines; `roadmaps_history_definer` for the change-set commit/sign-off routines
+  and the future redaction procedure (`EPC-026`); and `roadmaps_platform_definer` for
+  ADR-019's platform procedures.
+- **Invitation-create idempotency omits the raw token** (_History_, confirming `STY-110`
+  D1): an idempotent retry of invitation creation with the same key, tenant, person and
+  request hash writes nothing and returns the invitation metadata **without** the raw
+  token, preserving ADR-018's hash-only storage invariant; an Admin whose initial
+  response was lost revokes and reissues.
 
 ## Consequences
 

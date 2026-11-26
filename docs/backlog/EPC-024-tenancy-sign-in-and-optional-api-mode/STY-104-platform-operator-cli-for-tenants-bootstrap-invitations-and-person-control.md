@@ -95,24 +95,25 @@ fields without echoing submitted values
   - (b) Output only the raw token and let operators assemble the URL — harder to use
     locally and more error-prone for operators.
 - **Q3**: On Cloud Run, stdout and stderr are forwarded automatically to Cloud Logging
-  (which EPC-023 exports to a retention-locked bucket for two years), conflicting with
-  ADR-018's rule that logs never carry tokens. How should hosted `create-tenant` and
-  `invite-admin` jobs hand the one-time Admin invitation link to the starting operator?
-  - (a) Deliver the one-time link outside stdout and stderr — either via a short-lived
-    secret readable only by the job's named operator principals (EPC-023 IAM) and
-    destroyed after first read, or encrypted to a recipient public key supplied by the
-    starting operator so only ciphertext is emitted — with a standing test proving no raw
-    token reaches stdout or stderr outside local mode (recommended) — keeps raw Admin
-    invitation tokens out of Cloud Logging and two-year log exports without pretending a
-    Cloud Run job can identify its caller (`EPC-023`).
-  - (b) Print to stdout in hosted jobs too and explicitly record it as an accepted
-    residual risk in ADR-019 (as ADR-018 does for OIDC callback codes), bounded by
-    verified-email match, single use, 7-day expiry and EPC-023's restricted log access —
-    simpler job code, leaves single-use tokens in restricted logs for two years.
+  (exported to a retention-locked bucket for two years), so D1 requires hosted
+  `create-tenant` and `invite-admin` jobs to deliver the one-time Admin invitation link
+  outside stdout and stderr (with a standing no-stdout test outside local mode). Which
+  out-of-band mechanism should hosted jobs use?
+  - (a) A short-lived Secret Manager secret version readable only by the job's named
+    operator principals (`EPC-023` IAM) and destroyed after first read (recommended) —
+    native to Google Cloud IAM and audit logging, no operator keypair management.
+  - (b) Encrypt the one-time link to a recipient public key supplied by the starting
+    operator so only ciphertext is emitted — avoids creating per-invitation secrets,
+    requires operator public-key tooling.
 
 ## Decisions
 
-_Recorded during grilling._
+- **D1** (owner, 2026-11-26, STY-102 review follow-up #3 / `STY-102` D15; narrows S1 and
+  Q3): hosted `create-tenant` and `invite-admin` jobs deliver one-time Admin invitation
+  links out of band — never to `stdout` or `stderr` outside local mode, proven by a
+  standing test — keeping raw tokens out of Cloud Logging and two-year log exports
+  (recorded in ADR-019 _STY-102 amendments_). The exact out-of-band mechanism stays open
+  in Q3 for `STY-104` grilling.
 
 ## Out of scope
 

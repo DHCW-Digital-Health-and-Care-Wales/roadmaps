@@ -4,9 +4,10 @@
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
 - **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-024–EPC-027's API
-  (and recorded DHCW cyber security Phase 1 sign-off on `STY-102` before any hosted API
-  deployment or Google Workspace client, and Phase 2 sign-off before any hosted Entra
-  registration or credential)
+  (and owner-recorded DHCW cyber security Phase 1 sign-off in
+  [docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md) §7
+  before any hosted API deployment or Google Workspace client, and Phase 2 sign-off
+  before any hosted Entra registration or credential)
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
@@ -168,7 +169,7 @@ lives:_
   (STY-100 S4, D15), and trace retention in the hosted backend is this epic's to set.
 - **Platform jobs** (ADR-019): the right to start each limited to named principals,
   granted just in time (Privileged Access Manager, or a two-person IAM grant procedure
-  for two or three operators) rather than standing; Cloud Run's Data Access audit logs
+  for named operators) rather than standing; Cloud Run's Data Access audit logs
   enabled and exported with Admin Activity logs to a retention-locked bucket, so the
   job's execution ID recorded in the platform audit log joins to the principal who
   started it, shown on a real job before go-live; operators granted only the role that
@@ -199,7 +200,8 @@ lives:_
   - **Phase 1 (Google Workspace)**: no hosted deployment of the API in any environment
     (non-production included), and no Google Workspace OAuth client, secret or real data
     (real staff sign-ins store real personal data), may be provisioned or receive traffic
-    until `docs/analysis/identity-threat-model.md` ([STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md))
+    until [docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md)
+    ([STY-102](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md))
     records **Phase 1** as `Status: Signed off` with disposition `Approved` or
     `Approved — conditions met` (open conditions remain `Pending`), the date and the
     `Reviewed revision` commit SHA, entered only by the owner (never an agent); reviewer
@@ -216,6 +218,16 @@ lives:_
   - **Reopen rule**: any material change to a signed-off phase's flows or controls
     returns that phase to `Pending` until the owner records it as reviewed or not
     material.
+  - **Keep threat-model dispositions current**: when an `EPC-023` delivery verifies an
+    infrastructure control marked `Mitigated by design` in
+    [docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md),
+    promote that row to `Mitigated` with its proof (never edit the owner-only §7 sign-off
+    table).
+- **Precondition for hosted platform operator jobs (ADR-019 _STY-102 amendments_,
+  `STY-102` D14)**: no platform operator job runs in an environment holding real data
+  until job-start rights are just-in-time or two-person, the `execution_id` → IAM
+  principal join in Cloud Audit Logs is demonstrated on a real job, and mandatory
+  alerting on every `platform_audit_log` entry is routed.
 
 ## Stories
 
@@ -250,6 +262,7 @@ None.
 
 ## Related
 
+- [Identity threat model](../../analysis/identity-threat-model.md)
 - [Identity and authorisation analysis](../../analysis/identity-and-authorisation.md)
 - [EPC-022](../_archive/EPC-022-monorepo-and-backend-foundation/README.md),
   [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md),

@@ -29,3 +29,8 @@ from EPC-022 when the backend work moved here. See `docs/AGENTS.md`.
   or review discovers such a gap, report it to the owner in chat first before writing it
   to any public surface. (Standard P0–P3 PR review grades for defects fixed within the
   PR's own unmerged diff are unaffected.)
+- **Keep `docs/analysis/identity-threat-model.md` in step**: when a story delivers and
+  tests a control marked `Mitigated by design`, promote that threat row to `Mitigated`
+  with its test citation. Never edit the **Cyber security sign-off** table (owner-only),
+  and alert the owner if a change materially alters a signed-off phase's flows or
+  controls.

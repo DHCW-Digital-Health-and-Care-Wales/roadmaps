@@ -368,7 +368,9 @@ subject)` and `UNIQUE (person_id, issuer)`.
 - **Invitation summaries omit email addresses**: access `change_summaries` on `invitations`
   record neither `token_hash` nor `email`, so the 90-day retention purge (`DELETE` via
   `roadmaps_auth_definer`, exempt from access commit/summary triggers) leaves no unjoined
-  invitee address in immutable history.
+  invitee address in `change_summaries` (`request_hash` construction in `STY-110` and
+  `platform_audit_log` retention for `invite-admin` remain subject to the data protection
+  assessment).
 
 ## Consequences
 

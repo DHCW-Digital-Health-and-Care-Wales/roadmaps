@@ -123,11 +123,10 @@ definer functions, leaving active and recent records untouched
 ## Decisions
 
 - **D1** (owner, 2026-11-26, `STY-103` D3, D5, D7, D14, D15): `/me` returns each active
-  membership's single `NOT NULL` role (and effective permissions as UI hints) and bilingual
-  tenant `nameEn` / optional `nameCy`. `STY-106` adds `sign_in_transactions`, `sessions`
-  and its auth/purge definer procedures (`roadmaps_auth_definer`, purge `EXECUTE` to
-  `roadmaps_purge`), storing the canonical allow-listed issuer in `identities.issuer`
-  (tested with Google's short `accounts.google.com` claim form).
+  membership's single `NOT NULL` role (plus effective permission hints) and bilingual
+  `nameEn` / optional `nameCy`. `STY-106` adds `sign_in_transactions`, `sessions` and its
+  auth/purge definers (`roadmaps_auth_definer`, purge `EXECUTE` to `roadmaps_purge`),
+  storing the canonical allow-listed issuer in `identities.issuer` (tested with `accounts.google.com`).
 
 ## Out of scope
 

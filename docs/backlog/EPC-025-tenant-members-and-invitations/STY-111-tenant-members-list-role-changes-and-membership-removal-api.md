@@ -95,12 +95,11 @@ least one Admin survives and the second operation is refused with a dedicated er
 
 ## Decisions
 
-- **D1** (owner, 2026-11-26, `STY-103` D3, D8, D9, D11, D13): each membership holds a
-  single `NOT NULL role_id` (updates take `roleId`), and ending one sets `ended_at`.
-  Tenant-keyed `memberships` RLS returns ended rows by design (`SoftEndMixin` filters ORM
-  `select(Membership)`, while raw SQL such as the last-admin guard filters `ended_at IS
-NULL` explicitly); `identities` RLS permits active tenant members (`members:manage`
-  enforced in the service), and Admin is identified by `roles.system_key = 'admin'`.
+- **D1** (owner, 2026-11-26, `STY-103` D3, D8, D9, D11, D13): memberships carry one
+  `NOT NULL role_id` and soft-end via `ended_at`. Tenant-keyed `memberships` RLS returns
+  ended rows (`SoftEndMixin` filters ORM selects; raw SQL and the last-admin guard filter
+  `ended_at IS NULL` explicitly, tested against ended Admin rows). `identities` RLS allows
+  active tenant members (`members:manage` in service); Admin is `roles.system_key = 'admin'`.
 
 ## Out of scope
 

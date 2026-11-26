@@ -125,12 +125,10 @@ active invitations untouched
   raw tokens or cached response bodies in PostgreSQL, which would break ADR-018's
   hash-only storage invariant.
 - **D2** (owner, 2026-11-26, `STY-103` D2, D3, D5, D10, D14, D15, D16; settles Q2):
-  `invitations` exists from `STY-103` with a single `NOT NULL role_id`, so create takes
-  `roleId` (refusing `'local_mock'` outside local/test mode) and lookup/redemption carry
-  one role plus bilingual tenant `nameEn` / `nameCy`. Lookup, redemption and 90-day purge
-  definers (`roadmaps_auth_definer`, purge `DELETE` exempt from access triggers;
-  `invitations.email` omitted from `change_summaries`) live here; pending-email uniqueness
-  stays open in Q1.
+  `invitations` exists from `STY-103` (`NOT NULL role_id`), so create takes `roleId`
+  (refusing `'local_mock'` outside local/test) and lookup/redemption carry one role +
+  bilingual `nameEn`/`nameCy`. Lookup, redemption and 90-day purge definers (`DELETE`
+  exempt from access triggers; `email` omitted from `change_summaries`) live here; Q1 stays open.
 
 ## Out of scope
 

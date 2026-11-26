@@ -242,10 +242,10 @@ the database and default `EXECUTE` on functions revoked by `bootstrap.sql`.
 | `roadmaps_purge`            | No-login | None                                             | Scheduled purge job caller role under its own service account; holds `EXECUTE` only on retention purge definer functions (and Google cut-over revocation where scoped)                                                                                                                                                                            |
 
 **Closed list of `SECURITY DEFINER` routines** (each owned by one of the three dedicated
-no-login definer roles above — owning only its routines and holding no `CREATE` on any
-database or schema once migration completes — with pinned `search_path`, `EXECUTE` revoked
-from `PUBLIC`, and never setting SQLSTATE or constraint names from caller data per ADR-018
-_STY-101 amendments_):
+no-login definer roles above — plus `roadmaps_redaction_definer` in `EPC-026` — owning only
+its routines and holding no `CREATE` on any database or schema once migration completes,
+with pinned `search_path`, `EXECUTE` revoked from `PUBLIC`, and never setting SQLSTATE or
+constraint names from caller data per ADR-018 _STY-101 amendments_):
 
 1. **Runtime (`EXECUTE` granted to `roadmaps_app`)**:
    - Sign-in identity lookup by exact `(issuer, subject)` (`roadmaps_auth_definer`)
@@ -258,18 +258,23 @@ _STY-101 amendments_):
      email and name; locks invitation row; re-checks expiry, revocation, inviter
      `members:manage`, tenant and role; creates person/identity/membership/session and
      writes access `change_set` + `platform_audit_log`) (`roadmaps_auth_definer`)
-   - Change-set commit/sign-off routines and access `change_summaries` trigger functions
-     (`roadmaps_history_definer`, ADR-015 _STY-103 amendments_; app-callable commit routine
-     takes no actor argument and derives `'person'` from `app.person_id`)
+   - App-callable change-set open/sign-off routines (`roadmaps_history_definer`, ADR-015
+     _STY-103 amendments_; takes no actor argument and derives `'person'` from
+     `app.person_id`; internal non-person open/sign-off routines are never executable by
+     `roadmaps_app`)
    - Future redaction procedure (`roadmaps_redaction_definer` added in `EPC-026`, ADR-015
      Options 9 & 34 and _STY-103 amendments_: database itself re-verifies `content:redact`
      permission, keeping `roadmaps_history_definer` append-only)
-2. **Retention & cut-over (`EXECUTE` granted only to `roadmaps_purge` / cut-over job role, never `roadmaps_app`)**:
+2. **Database triggers (no `EXECUTE` granted to any caller role)**:
+   - Access `change_summaries` trigger functions (`roadmaps_history_definer`, ADR-015
+     _STY-103 amendments_; fire on DML without caller `EXECUTE` grants, writing only
+     allow-listed non-secret, non-direct-PII fields)
+3. **Retention & cut-over (`EXECUTE` granted only to `roadmaps_purge` / cut-over job role, never `roadmaps_app`)**:
    - Purge sign-in transactions (> 1 day), ended sessions (> 30 days), and spent/expired
      invitations (> 90 days) (`roadmaps_auth_definer`)
    - Revoke all sessions started with a Google identity at Phase 2 cut-over
      (`roadmaps_auth_definer`)
-3. **Platform operations (`EXECUTE` granted only to `roadmaps_platform`, never `roadmaps_app`)**:
+4. **Platform operations (`EXECUTE` granted only to `roadmaps_platform`, never `roadmaps_app`)**:
    - Create tenant (seeds Admin, Product Lead and Viewer roles + first Admin invitation +
      access `change_set` + `platform_audit_log`) (`roadmaps_platform_definer`)
    - Issue replacement Admin invitation (+ access `change_set` + `platform_audit_log`)

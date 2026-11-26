@@ -418,8 +418,9 @@ _STY-102 amendments_), they hold; the rest stands.
 - **Access-scope `change_summaries` and invitation purge** (_History_): derived
   automatically inside PostgreSQL by the summary triggers above on `roles`,
   `role_permissions`, `memberships` and `invitations` from an explicit allow-list of
-  columns that are neither secret nor personal data (excluding `invitations.token_hash`
-  and `invitations.email`). `roadmaps_app` holds no `DELETE` on `invitations`, and
+  columns that are neither secret nor direct personal data (referencing people by
+  `person_id` key as above, and excluding `invitations.token_hash` and
+  `invitations.email`). `roadmaps_app` holds no `DELETE` on `invitations`, and
   `roadmaps_auth_definer`'s 90-day retention purge (`DELETE`) is exempt from the access
   commit-guard and summary triggers.
 

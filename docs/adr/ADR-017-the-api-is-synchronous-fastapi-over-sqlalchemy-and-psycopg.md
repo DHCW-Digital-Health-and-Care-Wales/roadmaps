@@ -4,9 +4,9 @@
   EPC-022 monorepo grilling (2026-11-21). Python 3.15 and PostgreSQL 18 were fixed by
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
   the owner's STY-090 grilling (_STY-090 amendments_), STY-091 grilling (_STY-091
-  STY-091 grilling (_STY-091 amendments_), STY-101 grilling (_STY-101 amendments_),
-  STY-092 grilling (_STY-092 amendments_), CHO-047's delivery question (_CHO-047
-  amendments_) and STY-103 grilling (_STY-103 amendments_).
+  amendments_), STY-101 grilling (_STY-101 amendments_), STY-092 grilling (_STY-092
+  amendments_), CHO-047's delivery question (_CHO-047 amendments_) and STY-103 grilling
+  (_STY-103 amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
   STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
   and the test workers; STY-101: two plain-text refusals, log messages; STY-092:

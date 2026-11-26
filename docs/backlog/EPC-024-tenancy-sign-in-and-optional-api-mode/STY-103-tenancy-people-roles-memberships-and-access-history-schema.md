@@ -137,8 +137,8 @@ platform definer procedures is settled in Q4
 - **D10** (owner, 2026-11-26, grilling R2 #2a + review follow-up #2b, #3a; refines S1/S3;
   amends ADR-015, ADR-018): `tenant_scopes` (`(tenant_id, scope)` PK) holds `'access'`/`'lists'`
   locks and revisions. `SECURITY DEFINER` summary triggers (`roadmaps_history_definer`, added
-  to ADR-015's closed list) derive access `change_summaries` from columns neither secret nor
-  personal data (no `token_hash` or `invitations.email`).
+  to ADR-015's closed list, no caller `EXECUTE`) derive access `change_summaries` from columns
+  neither secret nor direct PII (`person_id` keys kept; no `token_hash` or `invitations.email`).
 - **D11** (owner, 2026-11-26, grilling R2 #1a + review follow-up): `SoftEndMixin` + SQLAlchemy
   `do_orm_execute` / `with_loader_criteria` filters `ended_at IS NULL` on ORM `select(Membership)`
   (opt-out: `.execution_options(include_ended=True)`). Tenant-keyed `memberships` RLS stays

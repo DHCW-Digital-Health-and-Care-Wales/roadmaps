@@ -2,8 +2,8 @@
 
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 2b, 3a, 4a, 5a);
   stories start `Needs grilling` / `Placeholder` and become selectable as each is grilled
-- **Progress**: 0 of 10 terminal; next selectable: none (grill STY-102, STY-103, STY-108
-  first)
+- **Progress**: 0 of 10 terminal; next selectable: STY-102 (grill STY-103 and STY-108
+  next)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -24,8 +24,6 @@ fail cleanly against a stub repository until
 
 ## Owner decisions waiting
 
-- [STY-102](STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md#open-questions) —
-  threat model review format and cyber sign-off recording
 - [STY-103](STY-103-tenancy-people-roles-memberships-and-access-history-schema.md#open-questions) —
   `invitations` timing, multi-role join table, tenant slug rules and definer role split
 - [STY-104](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md#open-questions) —

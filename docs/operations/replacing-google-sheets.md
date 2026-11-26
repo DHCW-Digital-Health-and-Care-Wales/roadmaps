@@ -113,7 +113,7 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
    `expired` on a 401. Then `connect()` posts the sign-in start for the chosen provider and
    navigates to the authorisation address it returns, and the signed-in state comes from a
    "who am I" call. The API keeps the session in an `HttpOnly` cookie, so do not pass a
-   token to `ApiRoadmapRepository`. ADR-018 also requires a state-changing request to name the person the editor believes is signed in. A tab that regains focus re-checks "who am I", and on a different person discards the held form unsent and treats itself as signed out, dropping that session's cached data (_Sessions_ and _The editor_). The session warning (STY-017) and the reconnect flow (STY-057) change shape with the port. Draft ADR-018's threat model (`STY-102`) first; local and development sign-in code may proceed in parallel, while recorded DHCW cyber security sign-off gates any hosted deployment and any real provider client or data (ADR-018 _EPC-024 amendments_). Swap the adapter in the same place.
+   token to `ApiRoadmapRepository`. ADR-018 also requires a state-changing request to name the person the editor believes is signed in. A tab that regains focus re-checks "who am I", and on a different person discards the held form unsent and treats itself as signed out, dropping that session's cached data (_Sessions_ and _The editor_). The session warning (STY-017) and the reconnect flow (STY-057) change shape with the port. Draft ADR-018's threat model (`STY-102`) first; local and development sign-in code may proceed in parallel, while owner-recorded DHCW cyber security sign-off gates any hosted deployment and the Google Workspace client or real data (Phase 1) and any hosted Entra registration, credential or issuer (Phase 2; ADR-018 _EPC-024 amendments_). Swap the adapter in the same place.
 5. **Copy.** Some strings name the spreadsheet or Google Sheets, because that is what
    users must act on today. Search `apps/editor/src/i18n/locales/en.ts` for "spreadsheet" and
    "Google Sheets", and reword them in `en.ts` and `cy.ts`; no component changes.
@@ -122,8 +122,9 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
 7. **Deploy.** The API serves the editor's built files on the same origin as its
    endpoints (one Cloud Run service per environment, ADR-020), so the editor's endpoints send no CORS
    headers and the editor sends no `Authorization` header: the session cookie carries the
-   sign-in (ADR-018). Any hosted API deployment waits for recorded DHCW cyber security
-   sign-off on `STY-102`, and real data additionally waits for the custom domain and its
+   sign-in (ADR-018). Any hosted API deployment and the Google Workspace client wait for
+   owner-recorded DHCW cyber security Phase 1 sign-off on `STY-102` (and hosted Entra
+   waits for Phase 2), and real data additionally waits for the custom domain and its
    load balancer, the edge rate limits and the independent penetration test (ADR-016,
    ADR-018, ADR-020).
    Record the change in an ADR that amends ADR-002, then delete

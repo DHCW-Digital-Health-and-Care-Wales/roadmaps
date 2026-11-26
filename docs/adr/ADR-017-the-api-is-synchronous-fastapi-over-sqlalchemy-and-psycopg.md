@@ -5,13 +5,14 @@
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
   the owner's STY-090 grilling (_STY-090 amendments_), STY-091 grilling (_STY-091
   amendments_), STY-101 grilling (_STY-101 amendments_), STY-092 grilling (_STY-092
-  amendments_) and the owner's answer to CHO-047's delivery question (_CHO-047
-  amendments_).
+  amendments_), CHO-047's delivery question (_CHO-047 amendments_) and STY-103 grilling
+  (_STY-103 amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
   STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
   and the test workers; STY-101: two plain-text refusals, log messages; STY-092:
   camelCase JSON contract, committed OpenAPI and raw TS schemas, import boundary;
-  CHO-047, 2026-11-25: request models forbid extra keys)
+  CHO-047, 2026-11-25: request models forbid extra keys; STY-103, 2026-11-26: eight
+  no-login roles in `bootstrap.sql` and four local password logins)
 
 ## Context
 
@@ -266,6 +267,21 @@ rest of _STY-092 amendments_ stands.
   or query-model story it was to wait for. A key a request model does not declare, a
   field's `snake_case` name among them, is refused with a 422 (`extra_forbidden`),
   whose `loc` never holds that key.
+
+### STY-103 amendments
+
+From the owner's STY-103 grilling (2026-11-26, STY-103 D6 and D7), refining _STY-091
+amendments_; the rest of _STY-091 amendments_ stands.
+
+- **Eight no-login roles in `bootstrap.sql` and four local logins**: `bootstrap.sql`
+  makes `roadmaps_owner`, four mutually exclusive caller roles (`roadmaps_migrator`,
+  `roadmaps_app`, `roadmaps_platform`, `roadmaps_purge`) and three dedicated definer owner
+  roles (`roadmaps_auth_definer`, `roadmaps_history_definer`, `roadmaps_platform_definer`,
+  each held only by `roadmaps_owner` with `SET` and without `INHERIT` beside the
+  non-superuser runner's creator grant, owning routines only in `public`). Each login is a
+  member of exactly one caller role; locally and in CI, `tools/bootstrap_database.py`
+  creates four password logins, one per caller role, and `EPC-023` creates the matching
+  IAM logins where hosted.
 
 ## Consequences
 

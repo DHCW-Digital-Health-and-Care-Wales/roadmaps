@@ -104,11 +104,6 @@ active invitations untouched
     already sent to a colleague.
   - (b) Automatically revoke the older pending invitation and issue a new one — faster
     resend flow, surprises a colleague who clicks the first link.
-- **Q2**: Does the create-invitation request accept a single `roleId` or a bounded
-  `roleIds` list (following ADR-020 _DEF-043 amendments_)?
-  - (a) Bounded `roleIds` list (`Field(min_length=1, max_length=10)`) (recommended) —
-    aligns with ADR-018 ("the roles") and `STY-103` Q2's `membership_roles` join table.
-  - (b) Single `roleId` for now — avoids a collection field until custom roles exist.
 - **Q3**: Should a verified-email mismatch during OIDC redemption return the same
   `invitation.unavailable` code as every other refusal, or a separate
   `invitation.email_mismatch` code (never naming the expected email) so `STY-112` can tell
@@ -129,6 +124,11 @@ active invitations untouched
   revokes and reissues; recorded in ADR-015 _STY-102 amendments_), rather than storing
   raw tokens or cached response bodies in PostgreSQL, which would break ADR-018's
   hash-only storage invariant.
+- **D2** (owner, 2026-11-26, `STY-103` D2, D3, D5, D10, D14, D15, D16; settles Q2):
+  `invitations` exists from `STY-103` (`NOT NULL role_id`), so create takes `roleId`
+  (refusing `'local_mock'` outside local/test) and lookup/redemption carry one role +
+  bilingual `nameEn`/`nameCy`. Lookup, redemption and 90-day purge definers (`DELETE`
+  exempt from access triggers; `email` omitted from `change_summaries`) live here; Q1 stays open.
 
 ## Out of scope
 

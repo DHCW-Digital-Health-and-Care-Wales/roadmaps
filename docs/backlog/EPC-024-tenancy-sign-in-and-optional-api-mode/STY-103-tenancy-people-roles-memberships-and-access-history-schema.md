@@ -1,15 +1,16 @@
 # STY-103: Tenancy, people, roles, memberships and access-history schema
 
-- **Status**: Needs grilling — first schema migration creating `tenants`, identity/access
-  tables, access-scope change sets and ADR-015's database enforcement suite
+- **Status**: Proposed — grilled 2026-11-26; first schema migration creating `tenants`,
+  identity/access tables, access-scope change sets and ADR-015's database enforcement suite
 - **Type**: Feature
 - **Area**: API
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
 - **Depends on**: none (STY-091 is Done)
 - **Binding ADRs**: ADR-015 §Tenancy, §People, access and permissions, §History, §What
-  enforces this, §ADR-018 and ADR-019 amendments, §STY-102 amendments; ADR-017 §Schema
-  conventions, §Migrations; ADR-018 §Records and retention; ADR-019 §The catalogue and
-  the shipped roles, §Enforcement
+  enforces this, §ADR-018 and ADR-019 amendments, §STY-102 amendments, §STY-103
+  amendments; ADR-017 §Schema conventions, §Migrations, §STY-103 amendments; ADR-018
+  §Records and retention, §STY-103 amendments; ADR-019 §The catalogue and the shipped
+  roles, §Enforcement, §STY-103 amendments
 - **Suggested model**: Opus — foundational schema, RLS policies, definer roles, commit
   function and immutability proofs
 
@@ -92,30 +93,6 @@ no objects, is a member of no other role, and holds only `CONNECT`, `USAGE` and 
 on the platform definer procedures (with no direct table write grants); who owns the
 platform definer procedures is settled in Q4
 
-## Open questions
-
-- **Q1**: Should `invitations` be created in `STY-103` alongside `memberships` and
-  `roles`, or deferred to `STY-110`?
-  - (a) Create `invitations` in `STY-103` (recommended) — `STY-104`'s platform CLI
-    ("create tenant and invite its first admin") needs `invitations` immediately, so
-    having it in `STY-103` avoids an extra dependency between `STY-104` and `STY-110`.
-  - (b) Defer `invitations` to `STY-110` — keeps `STY-103` slightly smaller, but forces
-    `STY-104`'s first-admin invitation to wait for `STY-110`.
-- **Q2**: Should a member hold **one role** or **multiple roles** per tenant in the
-  schema?
-  - (a) A `membership_roles` join table supporting one or more roles per membership
-    (recommended) — matches ADR-015 ("with the roles they hold there") and ADR-018 ("the
-    roles" on an invitation), while the first UI can offer a single-role picker if desired
-    without schema rework later.
-  - (b) A single `role_id` column on `memberships` — simpler queries today, requires a
-    migration if a tenant ever adds custom composable roles later.
-- **Q3**: How should `tenants.slug` (the public address / URL identifier) be constrained?
-  - (a) Lowercase ASCII letters, digits and hyphens (`^[a-z0-9]+(?:-[a-z0-9]+)*$`), length
-    2–63, globally unique (e.g. `dhcw`) (recommended) — safe in URL paths and future
-    public-site addresses, matches short-name address style.
-  - (b) UUID-only in editor URLs with an optional separate public slug later — avoids
-    slug renames affecting editor links, less readable URLs.
-
 ## Decisions
 
 - **D1** (owner, 2026-11-26, `STY-102` D13; settles former Q4 and extends S4): every
@@ -127,6 +104,69 @@ platform definer procedures is settled in Q4
   `roadmaps_platform_definer` for ADR-019 platform procedures; ADR-015 _STY-102
   amendments_). S4's checks and integration tests assert that ownership, membership and
   privilege bound across all three definer roles.
+- **D2** (owner, 2026-11-26, grilling R1 #1a): create `invitations` in `STY-103` alongside
+  `memberships` and `roles`, so `STY-104` and `STY-093` have it immediately and access-scope
+  commit triggers cover all access tables from day one.
+- **D3** (owner, 2026-11-26, grilling R1 #2b + review follow-up #1a; overrides S1/S3
+  `membership_roles`; amends ADR-015, ADR-018, ADR-019): `memberships.role_id` and
+  `invitations.role_id` are single `NOT NULL` composite FKs `(tenant_id, role_id)` to
+  `roles` (no join tables in v1). Settles `STY-110` Q2 and `STY-113` Q1; `ADR-019` /
+  `STY-105` test `Viewer` and an ended membership instead of a roleless membership.
+- **D4** (owner, 2026-11-26, grilling R1 #3a): `tenants.slug` is `NOT NULL`, globally unique,
+  lowercase ASCII letters, digits and hyphens (`^[a-z0-9]+(?:-[a-z0-9]+)*$`), length 2–63.
+- **D5** (owner, 2026-11-26, grilling R1 #4a): `tenants` stores bilingual display names
+  (`name_en` required, `name_cy` optional), matching ADR-015's bilingual-column rule.
+- **D6** (owner, 2026-11-26, grilling R1 #5a + review follow-up #3a; refines D1 and S4,
+  resolving S4's former Q4 reference; amends ADR-015): each definer owner role is held only
+  by `roadmaps_owner` (`SET`, no `INHERIT`, beside the non-superuser runner's creator grant);
+  `bootstrap.sql` allows `pg_proc` routines (only) in `public` owned by them. Splits future
+  `EPC-026` redaction onto `roadmaps_redaction_definer` so `roadmaps_history_definer` stays append-only.
+- **D7** (owner, 2026-11-26, grilling R1 #6a; extends S4; amends ADR-015, ADR-017): add
+  `roadmaps_platform` and `roadmaps_purge` caller roles to `bootstrap.sql` (pairwise mutual
+  exclusivity across all four caller roles) and local `roadmaps_platform_login` and
+  `roadmaps_purge_login` in `tools/bootstrap_database.py`.
+- **D8** (owner, 2026-11-26, grilling R1 #7a): soft-end memberships with
+  `ended_at timestamptz NULL` and partial unique `(tenant_id, person_id) WHERE ended_at IS NULL`.
+  `people`'s tenant `SELECT` policy permits active or ended members of `app.tenant_id` so
+  historical change-set attribution stays readable after a member leaves.
+- **D9** (owner, 2026-11-26, grilling R1 #8a; refines S2; amends ADR-015): `identities`
+  `SELECT` allows `person_id = app.person_id` or an active member (`ended_at IS NULL`) in
+  `app.tenant_id` (API enforces `members:manage`). `tenants` `SELECT` allows `id = app.tenant_id`
+  or an active member (`app.person_id`); `roadmaps_app` holds no writes on `tenants`, `people`,
+  `identities` or `platform_audit_log`.
+- **D10** (owner, 2026-11-26, grilling R2 #2a + review follow-up #2b, #3a; refines S1/S3;
+  amends ADR-015, ADR-018): `tenant_scopes` (`(tenant_id, scope)` PK) holds `'access'`/`'lists'`
+  locks and revisions. `SECURITY DEFINER` summary triggers (`roadmaps_history_definer`, added
+  to ADR-015's closed list, no caller `EXECUTE`) derive access `change_summaries` from columns
+  neither secret nor direct PII (`person_id` keys kept; no `token_hash` or `invitations.email`).
+- **D11** (owner, 2026-11-26, grilling R2 #1a + review follow-up): `SoftEndMixin` + SQLAlchemy
+  `do_orm_execute` / `with_loader_criteria` filters `ended_at IS NULL` on ORM `select(Membership)`
+  (opt-out: `.execution_options(include_ended=True)`). Tenant-keyed `memberships` RLS stays
+  `TENANT_POLICY` (so `UPDATE ended_at`, `include_ended=True` and `people` RLS work); RLS enforces
+  `ended_at IS NULL` on person-keyed `memberships`, `tenants` and `identities` policies.
+- **D12** (owner, 2026-11-26, grilling R2 #3a + review follow-up; refines S3): `change_sets`
+  uses `actor_kind` (`'person' | 'platform_job' | 'system'`) + mutually exclusive
+  `actor_person_id`/`actor_ref` and `UNIQUE (tenant_id, idempotency_key)` checking
+  `(actor_kind, actor_person_id, actor_ref, request_hash)`; `invitations` uses matching
+  inviter/revoker columns. App commit routine derives `'person'` from `app.person_id` only.
+- **D13** (owner, 2026-11-26, grilling R2 #4a): `roles` carries nullable `system_key`
+  (`'admin' | 'product_lead' | 'viewer'`, partial-unique per tenant) beside tenant-unique
+  `name`; `role_permissions.permission` uses format `CHECK` (`^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$`),
+  keeping ADR-019's `Permission` enum as the single source of truth for rolling deploys and `STY-105` S2.
+- **D14** (owner, 2026-11-26, grilling R2 #5a + review follow-up): `invitations.provider` checks
+  `('google', 'entra', 'local_mock')` (API/CLI refuses `'local_mock'` outside local/test);
+  `identities.issuer` stores the canonical allow-listed issuer matched by the callback (never
+  raw `accounts.google.com`), with `UNIQUE (issuer, subject)` and `UNIQUE (person_id, issuer)`.
+  Pending-email uniqueness on `invitations` waits for `STY-110` Q1.
+- **D15** (owner, 2026-11-26, grilling R2 #6a): `STY-103` ships only access-scope open/sign-off
+  and summary trigger routines (`roadmaps_history_definer`), SQLAlchemy models and minimal
+  enforcement-suite helpers; platform, auth/session and invitation procedures belong in
+  `STY-104`, `STY-106` and `STY-110`. All SQL `RAISE EXCEPTION` calls use static messages/SQLSTATEs.
+- **D16** (owner, 2026-11-26, review follow-up #2b, #3a; extends S3; amends ADR-015):
+  `roadmaps_app` holds no `INSERT` on `change_sets`/`change_summaries` and no `DELETE` on
+  `invitations`; S3 proves direct inserts, non-person change sets and platform-issued invitations
+  by `roadmaps_app` are refused. `roadmaps_auth_definer`'s 90-day invitation purge (`DELETE`)
+  is exempt from the access commit-guard and summary triggers.
 
 ## Out of scope
 

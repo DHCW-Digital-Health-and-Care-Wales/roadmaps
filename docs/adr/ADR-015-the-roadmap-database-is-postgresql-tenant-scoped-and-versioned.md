@@ -9,7 +9,9 @@
   invitations, definer functions, permissions and platform jobs; by STY-091, 2026-11-24:
   the roles' shape and `alembic_version`; by STY-102, 2026-11-26: dedicated definer owner
   roles across the closed list, including redaction, and invitation-create idempotency
-  omitting raw tokens)
+  omitting raw tokens; by STY-103, 2026-11-26: single `NOT NULL` role per membership in
+  v1, ended-membership and active-member `identities` RLS, caller roles, `SECURITY DEFINER`
+  access summary triggers and `roadmaps_redaction_definer` split)
 
 ## Context
 
@@ -380,6 +382,47 @@ Where these bullets differ from the text above, they hold; the rest stands.
   request hash writes nothing and returns the invitation metadata **without** the raw
   token, preserving ADR-018's hash-only storage invariant; an Admin whose initial
   response was lost revokes and reissues.
+
+### STY-103 amendments
+
+From the owner's STY-103 grilling and review follow-up (2026-11-26, STY-103 D3, D6, D7,
+D8, D9, D10, D11, D12 and D16). Where these bullets differ from the text above (including
+_STY-102 amendments_), they hold; the rest stands.
+
+- **One `NOT NULL` role per membership and invitation in v1** (_People, access and
+  permissions_): `memberships` and `invitations` each carry one `NOT NULL role_id`
+  referencing `roles` rather than a join table; `roles` and `role_permissions` stay
+  normalised so a future migration can introduce a join table if composable custom roles
+  are ever needed.
+- **Ended memberships and shared-table RLS** (_Tenancy_): memberships are soft-ended
+  with `ended_at`. `memberships`'s tenant-keyed policy stays `TENANT_POLICY` (so ending a
+  membership, historical reads and `people`'s ended-member subquery work), while RLS
+  enforces `ended_at IS NULL` on the person-keyed `memberships` `SELECT` policy,
+  `tenants`'s person-keyed `SELECT` policy and `identities`'s tenant `SELECT` policy.
+  `people`'s tenant `SELECT` policy permits active or ended members of `app.tenant_id` so
+  historical change-set attribution stays readable; `identities`'s `SELECT` policy permits
+  `person_id = app.person_id` or an active (`ended_at IS NULL`) member of `app.tenant_id`,
+  letting the API serve ADR-019 Option 9's member emails and last sign-in to
+  `members:manage` holders while isolating other tenants and ended members' live identities.
+- **Caller roles, summary trigger definers and redaction owner** (_Tenancy_, _Roles,
+  operation and data protection_, refining _STY-102 amendments_): `bootstrap.sql` creates
+  the separate `roadmaps_platform` and `roadmaps_purge` no-login caller roles with
+  pairwise mutual exclusivity across all four caller roles. The access `change_summaries`
+  trigger functions are `SECURITY DEFINER`, owned by `roadmaps_history_definer` (pinned
+  `search_path`, `EXECUTE` revoked from `PUBLIC`, added to the closed list);
+  `roadmaps_app` holds no `INSERT` on `change_sets` or `change_summaries`, and its
+  application-callable commit routine takes no actor argument (always recording `'person'`
+  from `app.person_id`). Future `EPC-026` redaction moves to its own dedicated no-login
+  `roadmaps_redaction_definer` role when `EPC-026` lands so `roadmaps_history_definer`
+  stays strictly append-only (zero `UPDATE`/`DELETE` grants on history).
+- **Access-scope `change_summaries` and invitation purge** (_History_): derived
+  automatically inside PostgreSQL by the summary triggers above on `roles`,
+  `role_permissions`, `memberships` and `invitations` from an explicit allow-list of
+  columns that are neither secret nor direct personal data (referencing people by
+  `person_id` key as above, and excluding `invitations.token_hash` and
+  `invitations.email`). `roadmaps_app` holds no `DELETE` on `invitations`, and
+  `roadmaps_auth_definer`'s 90-day retention purge (`DELETE`) is exempt from the access
+  commit-guard and summary triggers.
 
 ## Consequences
 

@@ -111,11 +111,12 @@ lives:_
   backups in a UK location, checked at provisioning (ADR-015); a customer-managed key
   decided with the data protection assessment; Data Access audit logs on; request-log
   access restricted, since callback URLs carry OIDC codes.
-- **The roles and the migration step** (STY-091 D3, D11, D24, D26, D30): EPC-023
-  creates the migration and application logins (IAM principals, as above), never
+- **The roles and the migration step** (STY-091 D3, D11, D24, D26, D30; STY-103 D6, D7):
+  EPC-023 creates the migration, application, platform and purge logins (IAM principals,
+  each in its own no-login caller role), never
   with Cloud SQL's default `cloudsqlsuperuser` role, which `/ready` refuses, and runs
-  STY-091's bootstrap SQL file once to make the roles, their memberships and the
-  database's ownership. Run by Cloud SQL's non-superuser administrator, the file grants
+  `bootstrap.sql` once to make the roles (including the dedicated definer owner roles),
+  their memberships and the database's ownership. Run by Cloud SQL's non-superuser administrator, the file grants
   that administrator the owner role, so its credential is the owner's: who holds it and
   what logs its use are this epic's to name. Each deploy runs `api:migrate`'s command as the
   migration login before the new version takes traffic, while the old one keeps

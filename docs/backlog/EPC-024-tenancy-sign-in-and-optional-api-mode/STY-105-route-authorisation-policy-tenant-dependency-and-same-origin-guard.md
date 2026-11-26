@@ -101,7 +101,11 @@ test-only probe router until real routes land in `STY-106` and `EPC-025`)
 
 ## Decisions
 
-_Recorded during grilling._
+- **D1** (owner, 2026-11-26, `STY-103` D3, D8, D11, D13; amends S5 via ADR-019 _STY-103
+  amendments_): `memberships.role_id` is `NOT NULL`, so S5's matrix tests `Viewer`, ended
+  membership (`ended_at IS NOT NULL`, 404), and ended-Admin + active-Viewer resolving to
+  Viewer. Tenant checks use the person-keyed policy or explicit `ended_at IS NULL`
+  (tenant-keyed RLS returns ended rows); `role_permissions.permission` format `CHECK` enables S2 DB tests.
 
 ## Out of scope
 

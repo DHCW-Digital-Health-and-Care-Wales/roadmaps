@@ -75,17 +75,6 @@ zero axe violations and complete English/Welsh copy
 
 ## Open questions
 
-- **Q1**: In the Invite and Change Role UI, should the first version present a **single
-  role radio/select** (Admin / Product Lead / Viewer) even if the underlying schema
-  supports multiple roles?
-  - (a) Single role choice in the UI (Admin, Product Lead, or Viewer) (recommended) —
-    the three shipped roles are mutually nested in practice (Admin already holds
-    `roadmaps:edit-any` and every non-redundant permission, Product Lead is a strict
-    superset of Viewer), so a single choice prevents confusing combinations like
-    "Admin + Viewer" while keeping multi-role capability in the API/schema for future
-    custom roles.
-  - (b) Multi-role checkboxes — matches the join table literally, exposes meaningless
-    combinations among the three shipped roles.
 - **Q2**: Should the Invite form let the Admin choose the sign-in provider, or default
   silently to the only enabled provider (Google Workspace in production / mock locally)
   until Entra arrives?
@@ -96,7 +85,9 @@ zero axe violations and complete English/Welsh copy
 
 ## Decisions
 
-_Recorded during grilling and from `STY-108` Outcome._
+- **D1** (owner, 2026-11-26, `STY-103` D3; settles Q1): each membership and invitation
+  holds a single `NOT NULL` role in v1, so the Invite and Change Role UI uses a single-role
+  picker (Admin, Product Lead, or Viewer) rather than multi-role checkboxes.
 
 ## Out of scope
 

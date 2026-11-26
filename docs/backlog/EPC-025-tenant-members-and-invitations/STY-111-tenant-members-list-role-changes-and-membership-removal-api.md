@@ -19,7 +19,7 @@ Adds the tenant member and role management endpoints in the API: listing the ten
 shipped roles (so the Admin UI populates role pickers from the API), listing tenant
 members (returning names and roles to every member, and additionally email addresses and
 last sign-in timestamps only to holders of `members:manage`, per ADR-019 Option 9),
-updating a member's role(s), and ending a membership. Every write runs under the tenant's
+updating a member's role, and ending a membership. Every write runs under the tenant's
 access scope lock, records an access change set with idempotency, enforces the last-admin
 guard (refusing to remove or demote the tenant's only Admin), and takes effect on the
 member's very next request.
@@ -95,7 +95,11 @@ least one Admin survives and the second operation is refused with a dedicated er
 
 ## Decisions
 
-_Recorded during grilling._
+- **D1** (owner, 2026-11-26, `STY-103` D3, D8, D9, D11, D13): memberships carry one
+  `NOT NULL role_id` and soft-end via `ended_at`. Tenant-keyed `memberships` RLS returns
+  ended rows (`SoftEndMixin` filters ORM selects; raw SQL and the last-admin guard filter
+  `ended_at IS NULL` explicitly, tested against ended Admin rows). `identities` RLS allows
+  active tenant members (`members:manage` in service); Admin is `roles.system_key = 'admin'`.
 
 ## Out of scope
 

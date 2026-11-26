@@ -5,7 +5,8 @@
   the options chosen are marked ✅.
 - Date: 2026-11-21 (amended by STY-091, 2026-11-24: the one table without row-level
   security; by STY-102, 2026-11-26: detective bounding of operator `invite-admin` and
-  out-of-band hosted job link delivery)
+  out-of-band hosted job link delivery; by STY-103, 2026-11-26: v1 role-by-route matrix
+  with `NOT NULL role_id` and ended membership)
 
 ## Context
 
@@ -177,6 +178,18 @@ From the owner's STY-102 review follow-up answers (2026-11-26, STY-102 D14 and D
   hosted `create-tenant` and `invite-admin` Cloud Run jobs never emit raw Admin
   invitation tokens to `stdout` or `stderr` (proven by a standing test); the exact
   out-of-band delivery mechanism is settled when `STY-104` is grilled.
+
+### STY-103 amendments
+
+From the owner's STY-103 grilling and review follow-up (2026-11-26, STY-103 D3 and D11).
+Where this bullet differs from _Enforcement_ above, it holds; the rest stands.
+
+- **Role-by-route matrix in v1** (_Enforcement_): while v1 enforces
+  `memberships.role_id NOT NULL` (ADR-015 _STY-103 amendments_) and `Viewer` holds zero
+  permissions (baseline read coming from `tenant_member`), the generated role-by-route
+  matrix tests `Admin`, `Product Lead`, `Viewer` (zero-permission role), a member whose
+  membership has ended (`ended_at IS NOT NULL`, refused 404 on tenant routes), a
+  non-member and an anonymous caller in place of a roleless membership row.
 
 ## Consequences
 

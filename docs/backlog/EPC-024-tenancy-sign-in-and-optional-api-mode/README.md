@@ -29,8 +29,7 @@ roadmap and family screens fail cleanly against a stub repository until
 - [STY-104](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md#open-questions) —
   CLI entrypoints, local link format and hosted Cloud Run out-of-band link mechanism
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —
-  person-assertion header name and `Origin` config (`{tenantSlug}` path parameter settled
-  in `STY-105` D2)
+  person-assertion header name (`{tenantSlug}` path parameter settled in `STY-105` D2)
 - [STY-106](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) —
   mock OIDC provider image/implementation, OIDC library choice and `/me` response shape
 - [STY-107](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md#open-questions) —

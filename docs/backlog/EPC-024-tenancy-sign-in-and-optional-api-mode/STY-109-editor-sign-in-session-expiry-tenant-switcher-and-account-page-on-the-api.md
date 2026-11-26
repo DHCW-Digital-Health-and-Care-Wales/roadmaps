@@ -87,9 +87,11 @@ flow passes unchanged
 
 ## Open questions
 
-- **Q3**: Final UI, routing and E2E details (e.g. exact callback/refusal route paths and
-  error-code mapping) to be grilled once `STY-108`'s _Outcome_ settles the chosen shell,
-  sign-in, Account and session-expiry designs.
+- **Q3**: Final UI, routing and E2E details (callback/refusal route paths, error-code
+  mapping, URL-bound tenant display and post-discard redirect, and reserved root paths
+  such as `sign-in`, `auth`, `account`, `invitations` against tenant slugs) to be grilled
+  once `STY-108`'s _Outcome_ settles the chosen shell, sign-in, Account and session-expiry
+  designs.
 
 ## Decisions
 

@@ -123,12 +123,12 @@ active invitations untouched
 
 ## Decisions
 
-- **D1** (agent, 2026-11-25, from Fable 5.2 security review — to confirm when grilling
-  `STY-110`): an idempotent retry of invitation creation returns the invitation metadata
-  without the raw token (narrowing ADR-015's "returns its first result" for this write
-  and recording an ADR-015 amendment if confirmed), rather than storing raw tokens or
-  cached response bodies in PostgreSQL, which would break ADR-018's hash-only storage
-  invariant.
+- **D1** (owner, 2026-11-26, STY-102 review follow-up #5 / `STY-102` D17; proposed by
+  Fable 5.2 security review, 2026-11-25): an idempotent retry of invitation creation
+  returns the invitation metadata without the raw token (rare scenario and the Admin
+  revokes and reissues; recorded in ADR-015 _STY-102 amendments_), rather than storing
+  raw tokens or cached response bodies in PostgreSQL, which would break ADR-018's
+  hash-only storage invariant.
 
 ## Out of scope
 

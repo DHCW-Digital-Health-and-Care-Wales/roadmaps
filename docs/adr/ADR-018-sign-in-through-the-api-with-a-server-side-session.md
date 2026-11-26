@@ -9,7 +9,9 @@
 - Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages;
   amended in EPC-024, 2026-11-25: threat model review gates deployment and real data
   rather than local/dev identity implementation, phased by Google Workspace / Entra and
-  with the Entra spike boundary from STY-102 grilling)
+  with the Entra spike boundary from STY-102 grilling; amended in STY-102 review
+  follow-up, 2026-11-26: Consequences accepted-risk alignment, post-theft cookie replay,
+  and own-device operational assumption)
 
 ## Context
 
@@ -341,13 +343,28 @@ switching the deployed editor stand.
 
   Accepted risk: rework if the review changes the flow.
 
+- **Operational assumption (office devices, not shared clinical workstations)**
+  (`STY-102` D16, owner, 2026-11-26): the editor is an office/backend tool where current
+  evidence assumes each Product Lead, Tenant Admin and Viewer uses their own corporate
+  device rather than shared clinical workstations (revisited if later user research shows
+  shared-device use). Existing timeout, server-scratch, asserted-person and tab-focus
+  controls remain in place as defence-in-depth.
+
 ## Consequences
 
-- **Accepted risks** (owner, 2026-11-21; 2026-11-25): no MFA evidence required on sign-in, for
-  every role; up to 10 hours of access for a leaver whose session is open; no step-up on
-  Google; on a shared desk, the last person's Google account one click away after
-  signing out; rework risk if cyber security review of STY-102 changes local identity
-  implementation built in parallel.
+- **Accepted risks** (owner, 2026-11-21; 2026-11-25; 2026-11-26, `STY-102` D14, D16):
+  no MFA evidence required on sign-in, for every role; up to 10 hours of access for a
+  leaver whose session is open; no step-up on Google; on a shared browser after signing
+  out of Google, the last person's Google account remains one click away behind
+  `prompt=select_account` until Entra; walk-up access on an unlocked device left signed
+  in (including within the 10-minute fresh-session window for `link`); plain replay of a
+  stolen session cookie until the 60-minute idle or 10-hour absolute limit (no IP address
+  or user-agent binding, revocable via "Sign out everywhere" or `disable-person`); OIDC
+  `code` and `state` travelling in callback URL query strings into restricted edge
+  request logs (single-use, PKCE and confidential-client bound); a Google Workspace outage
+  stopping new sign-ins while Google is the sole provider (existing sessions and the
+  public read are unaffected); rework risk if cyber security review of STY-102 changes
+  local identity implementation built in parallel.
 - **ADR-015 is amended** (its _ADR-018 and ADR-019 amendments_):
   - ADR-015 Option 11: an identity is `(issuer, subject)`; only the person attaches one; the
     person (never their last) or a platform operator removes one, never a tenant admin.

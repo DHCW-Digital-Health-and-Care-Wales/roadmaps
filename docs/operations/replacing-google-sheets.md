@@ -123,9 +123,10 @@ options?)` seeds the fake with roadmaps, their items, and how a publish's write
    endpoints (one Cloud Run service per environment, ADR-020), so the editor's endpoints send no CORS
    headers and the editor sends no `Authorization` header: the session cookie carries the
    sign-in (ADR-018). Any hosted API deployment and the Google Workspace client wait for
-   owner-recorded DHCW cyber security Phase 1 sign-off on `STY-102` (and hosted Entra
-   waits for Phase 2), and real data additionally waits for the custom domain and its
-   load balancer, the edge rate limits and the independent penetration test (ADR-016,
-   ADR-018, ADR-020).
+   owner-recorded DHCW cyber security Phase 1 sign-off in the sign-off table of
+   [docs/analysis/identity-threat-model.md](../analysis/identity-threat-model.md) §7 (and
+   hosted Entra waits for Phase 2), and real data additionally waits for the custom
+   domain and its load balancer, the edge rate limits and the independent penetration
+   test (ADR-016, ADR-018, ADR-020).
    Record the change in an ADR that amends ADR-002, then delete
    `apps/editor/src/infrastructure/google-sheets/` once nothing uses it.

@@ -2,7 +2,7 @@
 
 - **Status**: Done — public-safe STRIDE threat model drafted at
   [identity-threat-model.md](../../../analysis/identity-threat-model.md); owner-only
-  Phase 1 and Phase 2 cyber sign-off gates remain Pending
+  Phase 1 and Phase 2 cyber sign-off is tracked in its §7
 - **Type**: Docs
 - **Area**: Docs
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
@@ -140,6 +140,35 @@ mistaken for completed cyber sign-off
   (PR body, Review record, review threads, commit messages and Delivery sections),
   record it in `EPC-024/delivery-notes.md` and `EPC-028`'s contract, and have
   `docs/analysis/identity-threat-model.md` state its own public-safe rules.
+- **D13** (owner, 2026-11-26, STY-102 review follow-up #1; extends `STY-103` R1 #5a):
+  the future redaction procedure (`EPC-026`, ADR-015 Options 9, 34) is also owned by
+  `roadmaps_history_definer` (zero DDL), alongside the commit function,
+  `roadmaps_auth_definer` (ADR-018 auth/purge) and `roadmaps_platform_definer` (ADR-019
+  platform procedures), so every `SECURITY DEFINER` routine on the closed list runs off
+  `roadmaps_owner`. Recorded in ADR-015 _STY-102 amendments_.
+- **D14** (owner, 2026-11-26, STY-102 review follow-up #2): record bounded post-theft
+  session cookie replay (no IP/UA binding; bounded by 60 m idle / 10 h absolute timeout
+  and "Sign out everywhere") as an accepted residual risk in ADR-018 _Consequences_, and
+  record operator `invite-admin` abuse as bounded by detective controls (JIT/two-person
+  IAM, permanent `platform_audit_log` joined to Cloud Audit Logs, tenant access change
+  sets, and mandatory alerting on platform audit entries in `EPC-023`) in ADR-019
+  _STY-102 amendments_, with matching rows in `docs/analysis/identity-threat-model.md`.
+- **D15** (owner, 2026-11-26, STY-102 review follow-up #3; settles `STY-104` Q3
+  direction): hosted `create-tenant` and `invite-admin` Cloud Run jobs deliver one-time
+  Admin invitation links out of band — never to `stdout` or `stderr` outside local mode,
+  proven by a standing test — with the exact out-of-band mechanism chosen when `STY-104`
+  is grilled. Recorded in `STY-104` D1 and ADR-019 _STY-102 amendments_.
+- **D16** (owner, 2026-11-26, STY-102 review follow-up #4): list unlocked-device walk-up,
+  OIDC `code`/`state` in callback URLs, and Phase 1 Google Workspace outage explicitly in
+  ADR-018 _Consequences_ so the ADR and threat-model register match 1-to-1, and record
+  the operational assumption that the editor is an office/backend tool where current
+  evidence assumes each user has their own corporate device rather than shared clinical
+  workstations (revisited if later user research changes that; existing defences stay as
+  defence-in-depth).
+- **D17** (owner, 2026-11-26, STY-102 review follow-up #5; confirms `STY-110` D1): an
+  idempotent retry of invitation creation returns the invitation metadata without the raw
+  token (rare scenario; Admin revokes and reissues), preserving ADR-018's hash-only
+  storage invariant. Recorded in `STY-110` D1 and ADR-015 _STY-102 amendments_.
 
 ## Out of scope
 
@@ -172,14 +201,14 @@ unfixed security gaps in public backlog records).
   & linking** (before any hosted Entra registration, credential or issuer; subject to
   D10's Entra spike boundary).
 - Later identity stories (`STY-103`–`STY-114`, `EPC-023`, `EPC-028`) promote matching
-  threat rows (`TM-01`–`TM-60`) from `Mitigated by design` to `Mitigated` with their test
+  threat rows (`TM-01`–`TM-63`) from `Mitigated by design` to `Mitigated` with their test
   citations when delivered, never edit the owner-only sign-off table, and follow D7/D9/D12
   public-repo hygiene (`EPC-024/delivery-notes.md`).
 
 ### Scenario evidence
 
-| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `docs/analysis/identity-threat-model.md` §1–§3: inline ADR summaries, assets/actors tables, Mermaid architecture and trust-boundary diagram (TB1–TB6), PostgreSQL role & closed `SECURITY DEFINER` privilege table, and three Mermaid sequence/flow diagrams (Flows A–C)                                                                                                                                                      |
-| S2       | `docs/analysis/identity-threat-model.md` §4: 60 STRIDE-by-flow entries (`TM-01`–`TM-60`) across all 7 flows (including Phase 2 Entra/linking and D5 platform operator CLI flows), mapping RFC 9700 / RFC 10017 / OWASP ASVS 5.0 controls, enforcing layers, proofs and public-safe dispositions                                                                                                                               |
-| S3       | `docs/analysis/identity-threat-model.md` §5–§7: ADR-018 accepted residual-risk register (`RR-01`–`RR-08`), three `Pending Entra spike` items with spike boundary, unstarted story design questions, and owner-only two-phase **Cyber security sign-off** table (both `Pending`), linked from `ADR-018`, `EPC-023`, `EPC-024` and `EPC-028`; verified by `pnpm format:check`, `pnpm test:docs` and `docs/AGENTS.md` grep sweep |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `docs/analysis/identity-threat-model.md` §1–§3: inline ADR summaries, assets/actors tables, Mermaid architecture and trust-boundary diagram (TB1–TB6), PostgreSQL role & closed `SECURITY DEFINER` privilege table, and three Mermaid sequence/flow diagrams (Flows A–C)                                                                                                                                    |
+| S2       | `docs/analysis/identity-threat-model.md` §4: 63 STRIDE-by-flow entries (`TM-01`–`TM-63`) across all 7 flows (including Phase 2 Entra/linking and D5 platform operator CLI flows), mapping RFC 9700 / RFC 10017 / OWASP ASVS 5.0 controls, enforcing layers, proofs and public-safe dispositions                                                                                                             |
+| S3       | `docs/analysis/identity-threat-model.md` §5–§7: ADR-018 accepted residual-risk register (`RR-01`–`RR-09`, 1-to-1 with ADR-018 _Consequences_), three `Pending Entra spike` items with spike boundary, unstarted story design questions, and owner-only two-phase **Cyber security sign-off** table, linked from `ADR-018`, `EPC-023`, `EPC-024`, `EPC-028` and `docs/operations/replacing-google-sheets.md` |

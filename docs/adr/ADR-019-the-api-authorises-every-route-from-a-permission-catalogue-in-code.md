@@ -4,7 +4,8 @@
   identity and authorisation grilling (2026-11-21) and their answers to its review;
   the options chosen are marked ✅.
 - Date: 2026-11-21 (amended by STY-091, 2026-11-24: the one table without row-level
-  security)
+  security; by STY-102, 2026-11-26: detective bounding of operator `invite-admin` and
+  out-of-band hosted job link delivery)
 
 ## Context
 
@@ -161,6 +162,21 @@ The analysis behind both is
   that every table has row-level security enabled and forced, with a policy, reads
   ADR-015's closed list of exceptions, which holds only Alembic's `alembic_version`
   (ADR-015 _STY-091 amendments_).
+
+### STY-102 amendments
+
+From the owner's STY-102 review follow-up answers (2026-11-26, STY-102 D14 and D15).
+
+- **Operator `invite-admin` abuse is bounded by detective controls** (_Platform
+  operators_): no database-level preventive gate stops an authorised platform operator
+  from issuing an Admin invitation for a tenant; the control is JIT or two-person IAM for
+  job execution, permanent `platform_audit_log` entries joined by execution ID to Cloud
+  Run Data Access audit logs, tenant access change sets, and mandatory security alerting
+  on every `platform_audit_log` entry (`EPC-023`).
+- **Hosted platform jobs deliver invitation links out of band** (_Platform operators_):
+  hosted `create-tenant` and `invite-admin` Cloud Run jobs never emit raw Admin
+  invitation tokens to `stdout` or `stderr` (proven by a standing test); the exact
+  out-of-band delivery mechanism is settled when `STY-104` is grilled.
 
 ## Consequences
 

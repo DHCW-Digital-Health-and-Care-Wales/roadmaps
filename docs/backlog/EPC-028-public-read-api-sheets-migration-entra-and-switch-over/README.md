@@ -84,7 +84,11 @@ addendum)** sign-off recorded by the owner under the same rule after the Entra s
 own accounts, and nothing persisted to a hosted database, or waits for separate cyber
 approval if NHS Wales requires one). Any material change to a signed-off phase's flows
 or controls returns that phase to `Pending` until the owner records it as reviewed or
-not material. The Phase 2 addendum and all Entra/linking PRs follow `STY-102` D7, D9 and
+not material. Deliveries that verify controls marked `Mitigated by design` or
+`Pending Entra spike` in
+[docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md)
+promote those rows with their proof (never editing the owner-only §7 sign-off table).
+The Phase 2 addendum and all Entra/linking PRs follow `STY-102` D7, D9 and
 D12's public-repo hygiene and private-first gap-reporting rules (never publish unfixed
 security gaps in an accepted design or merged/deployed code, product threat/risk
 severity ratings, internal thresholds, reviewer PII or ticket references in tracked

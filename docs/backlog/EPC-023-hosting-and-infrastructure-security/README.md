@@ -4,9 +4,10 @@
   found while designing identity and authorisation, until the infrastructure epic is
   planned (owner, 2026-11-21)
 - **Progress**: 0 of 0 terminal; next selectable: none; blocked on: EPC-024–EPC-027's API
-  (and recorded DHCW cyber security Phase 1 sign-off on `STY-102` before any hosted API
-  deployment or Google Workspace client, and Phase 2 sign-off before any hosted Entra
-  registration or credential)
+  (and owner-recorded DHCW cyber security Phase 1 sign-off in
+  [docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md) §7
+  before any hosted API deployment or Google Workspace client, and Phase 2 sign-off
+  before any hosted Entra registration or credential)
 - **Binding ADRs**: ADR-015, ADR-016, ADR-017, ADR-018, ADR-019, ADR-020, ADR-007
 
 ## Summary
@@ -217,6 +218,11 @@ lives:_
   - **Reopen rule**: any material change to a signed-off phase's flows or controls
     returns that phase to `Pending` until the owner records it as reviewed or not
     material.
+  - **Keep threat-model dispositions current**: when an `EPC-023` delivery verifies an
+    infrastructure control marked `Mitigated by design` in
+    [docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md),
+    promote that row to `Mitigated` with its proof (never edit the owner-only §7 sign-off
+    table).
 
 ## Stories
 

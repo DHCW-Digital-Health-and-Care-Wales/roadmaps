@@ -4,8 +4,8 @@
   identity and authorisation grilling (2026-11-21) and their answers to its review;
   the options chosen are marked ✅. It supersedes ADR-003 for the API data source;
   ADR-003 stands for the Sheets adapter until the deployed editor switches to the API.
-  Amended by the owner's STY-101 grilling (_STY-101 amendments_) and by the owner's
-  EPC-024 planning decision (_EPC-024 amendments_).
+  Amended by the owner's STY-101 grilling (_STY-101 amendments_), EPC-024 planning and
+  STY-102 grilling and review follow-up (_EPC-024 amendments_).
 - Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages;
   amended in EPC-024, 2026-11-25: threat model review gates deployment and real data
   rather than local/dev identity implementation, phased by Google Workspace / Entra and
@@ -311,10 +311,10 @@ rest of _Records and retention_ stands.
 
 From the owner's EPC-024 planning answers (2026-11-25, Q2; real-identities and hosted
 deployment gate confirmed by owner on PR #327, 2026-11-25) and STY-102 grilling and
-review follow-up (2026-11-25, STY-102 D4, D8, D10, D11). This amends _Assurance_'s
-clause `"reviewed by DHCW's cyber security team before any identity code is built"`;
-writing the threat model first (`STY-102`) and the independent penetration test before
-switching the deployed editor stand.
+review follow-ups (2026-11-25 and 2026-11-26, STY-102 D4, D8, D10, D11, D14, D16). This
+amends _Assurance_'s clause `"reviewed by DHCW's cyber security team before any identity
+code is built"`; writing the threat model first (`STY-102`) and the independent
+penetration test before switching the deployed editor stand.
 
 - **Threat model review gates any hosted deployment and real data, not local/dev
   coding, in two phases**: the threat model of sign-in, sessions, invitations and

@@ -7,9 +7,9 @@
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
 - **Depends on**: none (STY-091 is Done)
 - **Binding ADRs**: ADR-015 §Tenancy, §People, access and permissions, §History, §What
-  enforces this, §ADR-018 and ADR-019 amendments; ADR-017 §Schema conventions,
-  §Migrations; ADR-018 §Records and retention; ADR-019 §The catalogue and the shipped
-  roles, §Enforcement
+  enforces this, §ADR-018 and ADR-019 amendments, §STY-102 amendments; ADR-017 §Schema
+  conventions, §Migrations; ADR-018 §Records and retention; ADR-019 §The catalogue and
+  the shipped roles, §Enforcement
 - **Suggested model**: Opus — foundational schema, RLS policies, definer roles, commit
   function and immutability proofs
 
@@ -115,23 +115,18 @@ platform definer procedures is settled in Q4
     public-site addresses, matches short-name address style.
   - (b) UUID-only in editor URLs with an optional separate public slug later — avoids
     slug renames affecting editor links, less readable URLs.
-- **Q4**: ADR-015's amendment requires a dedicated no-login owner role for ADR-018's
-  functions, without naming the owner of ADR-019's platform procedures. Who should own
-  the platform definer procedures?
-  - (a) A separate dedicated no-login owner role (e.g. `roadmaps_platform_definer`)
-    distinct from `roadmaps_auth_definer` and `roadmaps_owner` (recommended) — keeps
-    anonymous-reachable auth definer privileges isolated from tenant-creation and
-    person-disabling privileges, and keeps DDL rights off both.
-  - (b) One shared dedicated no-login definer role owning both auth and platform routines —
-    one fewer role to bootstrap, wider blast radius if an anonymous-facing routine has a
-    bug.
-  - (c) `roadmaps_owner` for platform procedures while ADR-018's auth routines keep their
-    dedicated role — follows ADR-015 literally, leaves platform procedures running with
-    DDL rights.
 
 ## Decisions
 
-_Recorded during grilling._
+- **D1** (owner, 2026-11-26, `STY-102` D13; settles former Q4 and extends S4): every
+  `SECURITY DEFINER` routine on ADR-015's closed list is owned by a dedicated no-login
+  definer role owning only its routines and holding no `CREATE` on any database or
+  schema once migration completes — never by `roadmaps_owner` (`roadmaps_auth_definer`
+  for ADR-018 auth/purge routines, `roadmaps_history_definer` for the change-set
+  commit/sign-off routines and future `EPC-026` redaction procedure, and
+  `roadmaps_platform_definer` for ADR-019 platform procedures; ADR-015 _STY-102
+  amendments_). S4's checks and integration tests assert that ownership, membership and
+  privilege bound across all three definer roles.
 
 ## Out of scope
 

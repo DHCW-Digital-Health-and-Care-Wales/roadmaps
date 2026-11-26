@@ -24,9 +24,10 @@ fail cleanly against a stub repository until
 ## Owner decisions waiting
 
 - [STY-103](STY-103-tenancy-people-roles-memberships-and-access-history-schema.md#open-questions) —
-  `invitations` timing, multi-role join table, tenant slug rules and definer role split
+  `invitations` timing, multi-role join table and tenant slug rules (definer role split
+  settled in `STY-103` D1 / `STY-102` D13)
 - [STY-104](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md#open-questions) —
-  CLI entrypoints, local link format and hosted Cloud Run link hand-over channel
+  CLI entrypoints, local link format and hosted Cloud Run out-of-band link mechanism
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —
   tenant path parameter convention, person-assertion header name and `Origin` config
 - [STY-106](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) —

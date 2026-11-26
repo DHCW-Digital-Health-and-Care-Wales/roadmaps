@@ -169,7 +169,7 @@ lives:_
   (STY-100 S4, D15), and trace retention in the hosted backend is this epic's to set.
 - **Platform jobs** (ADR-019): the right to start each limited to named principals,
   granted just in time (Privileged Access Manager, or a two-person IAM grant procedure
-  for two or three operators) rather than standing; Cloud Run's Data Access audit logs
+  for named operators) rather than standing; Cloud Run's Data Access audit logs
   enabled and exported with Admin Activity logs to a retention-locked bucket, so the
   job's execution ID recorded in the platform audit log joins to the principal who
   started it, shown on a real job before go-live; operators granted only the role that
@@ -223,6 +223,11 @@ lives:_
     [docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md),
     promote that row to `Mitigated` with its proof (never edit the owner-only §7 sign-off
     table).
+- **Precondition for hosted platform operator jobs (ADR-019 _STY-102 amendments_,
+  `STY-102` D14)**: no platform operator job runs in an environment holding real data
+  until job-start rights are just-in-time or two-person, the `execution_id` → IAM
+  principal join in Cloud Audit Logs is demonstrated on a real job, and mandatory
+  alerting on every `platform_audit_log` entry is routed.
 
 ## Stories
 

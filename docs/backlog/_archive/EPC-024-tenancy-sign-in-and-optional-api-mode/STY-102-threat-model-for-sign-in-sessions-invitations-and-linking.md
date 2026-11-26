@@ -140,12 +140,14 @@ mistaken for completed cyber sign-off
   (PR body, Review record, review threads, commit messages and Delivery sections),
   record it in `EPC-024/delivery-notes.md` and `EPC-028`'s contract, and have
   `docs/analysis/identity-threat-model.md` state its own public-safe rules.
-- **D13** (owner, 2026-11-26, STY-102 review follow-up #1; extends `STY-103` R1 #5a):
-  the future redaction procedure (`EPC-026`, ADR-015 Options 9, 34) is also owned by
-  `roadmaps_history_definer` (zero DDL), alongside the commit function,
-  `roadmaps_auth_definer` (ADR-018 auth/purge) and `roadmaps_platform_definer` (ADR-019
-  platform procedures), so every `SECURITY DEFINER` routine on the closed list runs off
-  `roadmaps_owner`. Recorded in ADR-015 _STY-102 amendments_.
+- **D13** (owner, 2026-11-26, STY-102 review follow-up #1; settles `STY-103` Q4 and
+  extends `STY-103` S4): every `SECURITY DEFINER` routine on ADR-015's closed list —
+  ADR-018 auth/purge (`roadmaps_auth_definer`), change-set commit/sign-off and the
+  future redaction procedure (`roadmaps_history_definer`, `EPC-026`), and ADR-019
+  platform procedures (`roadmaps_platform_definer`) — is owned by a dedicated no-login
+  definer role owning only its routines and holding no `CREATE` on any database or
+  schema once migration completes, rather than `roadmaps_owner`. Recorded in ADR-015
+  _STY-102 amendments_ and `STY-103` D1.
 - **D14** (owner, 2026-11-26, STY-102 review follow-up #2): record bounded post-theft
   session cookie replay (no IP/UA binding; bounded by 60 m idle / 10 h absolute timeout
   and "Sign out everywhere") as an accepted residual risk in ADR-018 _Consequences_, and

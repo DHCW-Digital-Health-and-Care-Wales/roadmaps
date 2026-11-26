@@ -280,10 +280,10 @@ shape it:
 
 ### Assurance
 
-- **A threat model** of sign-in, sessions, invitations and linking is the first identity
-  record: written and reviewed by DHCW's cyber security team before any identity code is
-  built (Option 18). **An independent penetration test** comes before the deployed
-  editor switches to the API.
+- **A threat model** ([identity-threat-model.md](../analysis/identity-threat-model.md)) of
+  sign-in, sessions, invitations and linking is the first identity record: written and
+  reviewed by DHCW's cyber security team before any identity code is built (Option 18).
+  **An independent penetration test** comes before the deployed editor switches to the API.
 
 ### STY-101 amendments
 
@@ -321,11 +321,12 @@ switching the deployed editor stand.
   implementation (EPC-024, EPC-025) may proceed in parallel with DHCW's cyber security
   review. Real staff identities (names and emails returned by DHCW's Google Workspace or
   Entra) count as real personal data regardless of environment.
-  - **Phase 1 (Google Workspace)** sign-off on `docs/analysis/identity-threat-model.md`
-    — recorded only by the owner as `Status: Signed off` with disposition `Approved` or
-    `Approved — conditions met` and the reviewed commit SHA (`Reviewed revision`) —
-    gates **any hosted deployment of the API in any environment** and **the Google
-    Workspace OAuth client, secret or real data** (held in `EPC-023` and `EPC-028`).
+  - **Phase 1 (Google Workspace)** sign-off on
+    [docs/analysis/identity-threat-model.md](../analysis/identity-threat-model.md) —
+    recorded only by the owner as `Status: Signed off` with disposition `Approved` or
+    `Approved — conditions met` and the reviewed commit SHA (`Reviewed revision`) — gates
+    **any hosted deployment of the API in any environment** and **the Google Workspace
+    OAuth client, secret or real data** (held in `EPC-023` and `EPC-028`).
   - **Phase 2 (Entra & linking addendum)** sign-off — recorded by the owner under the
     same rule after the `EPC-028` Entra spike — gates **any Entra app registration with
     a hosted redirect URI, any hosted Entra credential, and any Entra issuer in hosted

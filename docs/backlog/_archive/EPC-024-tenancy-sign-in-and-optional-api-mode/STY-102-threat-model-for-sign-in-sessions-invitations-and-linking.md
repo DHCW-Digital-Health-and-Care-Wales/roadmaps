@@ -1,11 +1,11 @@
 # STY-102: Threat model for sign-in, sessions, invitations and linking
 
-- **Status**: Proposed — grilled 2026-11-25; first identity record per ADR-018; written
-  early so DHCW cyber security can review while local/dev work proceeds (ADR-018
-  _EPC-024 amendments_)
+- **Status**: Done — public-safe STRIDE threat model drafted at
+  [identity-threat-model.md](../../../analysis/identity-threat-model.md); owner-only
+  Phase 1 and Phase 2 cyber sign-off gates remain Pending
 - **Type**: Docs
 - **Area**: Docs
-- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
+- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
 - **Depends on**: none
 - **Binding ADRs**: ADR-015 §Tenancy, §People, access and permissions; ADR-018 §Assurance,
   §EPC-024 amendments; ADR-019 §Platform operators, §Enforcement; ADR-020
@@ -146,3 +146,40 @@ mistaken for completed cyber sign-off
 - Implementing identity code (`STY-106`, `STY-110`) or penetration testing (`EPC-028`).
 - Threat modelling roadmap editing, redaction and public-site caching (revisited in
   EPC-026 and EPC-028).
+
+## Delivery
+
+### Departures
+
+None beyond owner decisions D4, D7, D8, D10, D11 and D12 already recorded above (public
+dispositions limited to five neutral values with no severity/exploitability ratings,
+sanitised owner-only two-phase sign-off table with `Reviewed revision` commit SHA and no
+reviewer PII or internal ticket references, and private-first gap reporting without filing
+unfixed security gaps in public backlog records).
+
+### Contract for dependents
+
+- [docs/analysis/identity-threat-model.md](../../../analysis/identity-threat-model.md) is
+  the canonical public-safe design threat model cited by `ADR-018`, `EPC-023`, `EPC-024`
+  and `EPC-028`.
+- `STY-102` reaching `Done` unblocks local/development implementation of `STY-104`,
+  `STY-106` and `STY-110` (once grilled and their other prerequisites land); it is
+  **never** cyber security sign-off.
+- `EPC-023` and `EPC-028` remain gated on owner-recorded `Status: Signed off` (`Approved`
+  or `Approved — conditions met`, with `Date` and `Reviewed revision`) in section 7 of
+  `docs/analysis/identity-threat-model.md` for **Phase 1: Google Workspace** (before any
+  hosted API deployment or Google Workspace client/secret/real data) and **Phase 2: Entra
+  & linking** (before any hosted Entra registration, credential or issuer; subject to
+  D10's Entra spike boundary).
+- Later identity stories (`STY-103`–`STY-114`, `EPC-023`, `EPC-028`) promote matching
+  threat rows (`TM-01`–`TM-60`) from `Mitigated by design` to `Mitigated` with their test
+  citations when delivered, never edit the owner-only sign-off table, and follow D7/D9/D12
+  public-repo hygiene (`EPC-024/delivery-notes.md`).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `docs/analysis/identity-threat-model.md` §1–§3: inline ADR summaries, assets/actors tables, Mermaid architecture and trust-boundary diagram (TB1–TB6), PostgreSQL role & closed `SECURITY DEFINER` privilege table, and three Mermaid sequence/flow diagrams (Flows A–C)                                                                                                                                                      |
+| S2       | `docs/analysis/identity-threat-model.md` §4: 60 STRIDE-by-flow entries (`TM-01`–`TM-60`) across all 7 flows (including Phase 2 Entra/linking and D5 platform operator CLI flows), mapping RFC 9700 / RFC 10017 / OWASP ASVS 5.0 controls, enforcing layers, proofs and public-safe dispositions                                                                                                                               |
+| S3       | `docs/analysis/identity-threat-model.md` §5–§7: ADR-018 accepted residual-risk register (`RR-01`–`RR-08`), three `Pending Entra spike` items with spike boundary, unstarted story design questions, and owner-only two-phase **Cyber security sign-off** table (both `Pending`), linked from `ADR-018`, `EPC-023`, `EPC-024` and `EPC-028`; verified by `pnpm format:check`, `pnpm test:docs` and `docs/AGENTS.md` grep sweep |

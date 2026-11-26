@@ -199,7 +199,8 @@ lives:_
   - **Phase 1 (Google Workspace)**: no hosted deployment of the API in any environment
     (non-production included), and no Google Workspace OAuth client, secret or real data
     (real staff sign-ins store real personal data), may be provisioned or receive traffic
-    until `docs/analysis/identity-threat-model.md` ([STY-102](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md))
+    until [docs/analysis/identity-threat-model.md](../../analysis/identity-threat-model.md)
+    ([STY-102](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md))
     records **Phase 1** as `Status: Signed off` with disposition `Approved` or
     `Approved — conditions met` (open conditions remain `Pending`), the date and the
     `Reviewed revision` commit SHA, entered only by the owner (never an agent); reviewer
@@ -250,6 +251,7 @@ None.
 
 ## Related
 
+- [Identity threat model](../../analysis/identity-threat-model.md)
 - [Identity and authorisation analysis](../../analysis/identity-and-authorisation.md)
 - [EPC-022](../_archive/EPC-022-monorepo-and-backend-foundation/README.md),
   [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md),

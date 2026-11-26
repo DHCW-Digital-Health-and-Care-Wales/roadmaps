@@ -3,7 +3,7 @@
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 4a, 5a); stories
   start `Needs grilling` / `Placeholder` and become selectable as each is grilled
 - **Progress**: 0 of 6 terminal; next selectable: none (depends on EPC-024's STY-093,
-  STY-102, STY-104, STY-105, STY-106, STY-108 and STY-109)
+  STY-102, STY-104, STY-105, STY-106 and STY-109)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -62,8 +62,11 @@ Owner answers of 2026-11-25 (EPC-024 / EPC-025 decomposition):
    revoking invitations and removing members (with last-admin guard) across API and
    editor first (`STY-110`–`STY-113`), then `STY-114` (six-monthly access review) and
    `STY-094` (ask for access).
-2. **Design settled before UI code** (Q4): `STY-112` and `STY-113` implement the
-   Invitation acceptance and Members & Invitations designs chosen in `STY-108` (EPC-024).
+2. **Just-in-time UX prototypes before each UI story** (Q4; refined 2026-11-26, `STY-108`
+   D2): `STY-112` (Invitation acceptance) and `STY-113` (Members & Invitations) each get a
+   lightweight just-in-time `ux-prototypes` step right after they are grilled (building on
+   the API shell settled in `STY-108` / `STY-109`), rather than prototyping upfront in
+   `STY-108`.
 3. **Unchanged:** Google Sheets mode stays untouched and never shows Members or
    Invitation screens.
 
@@ -86,8 +89,8 @@ Owner answers of 2026-11-25 (EPC-024 / EPC-025 decomposition):
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------------- | ----- |
 | STY-110 | [Invitation create, list, revoke, lookup and OIDC redemption API](STY-110-invitation-create-list-revoke-lookup-and-oidc-redemption-api.md) | API + Infrastructure                                                   | STY-093, STY-102, STY-104, STY-106 |       |
 | STY-111 | [Tenant members list, role changes and membership removal API](STY-111-tenant-members-list-role-changes-and-membership-removal-api.md)     | API + Infrastructure                                                   | STY-105, STY-106                   |       |
-| STY-112 | [Editor invitation acceptance and redemption flow](STY-112-editor-invitation-acceptance-and-redemption-flow.md)                            | Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E | STY-108, STY-109, STY-110          |       |
-| STY-113 | [Editor members and invitations management](STY-113-editor-members-and-invitations-management.md)                                          | Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E | STY-108, STY-109, STY-110, STY-111 |       |
+| STY-112 | [Editor invitation acceptance and redemption flow](STY-112-editor-invitation-acceptance-and-redemption-flow.md)                            | Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E | STY-109, STY-110                   |       |
+| STY-113 | [Editor members and invitations management](STY-113-editor-members-and-invitations-management.md)                                          | Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E | STY-109, STY-110, STY-111          |       |
 | STY-114 | [Six-monthly member access review across the API and editor](STY-114-six-monthly-member-access-review.md)                                  | API + Infrastructure + Features/UI + i18n (en + cy)                    | STY-111, STY-113                   |       |
 | STY-094 | [Ask for access to a tenant](STY-094-ask-for-access-to-a-tenant.md)                                                                        | API                                                                    | STY-110                            |       |
 
@@ -97,9 +100,9 @@ Owner answers of 2026-11-25 (EPC-024 / EPC-025 decomposition):
 flowchart LR
   EPC24A["EPC-024 (STY-093, STY-102, STY-104, STY-106)"] --> STY110["STY-110 Invitations API"]
   EPC24B["EPC-024 (STY-105, STY-106)"] --> STY111["STY-111 Members API"]
-  STY108["STY-108 UX + STY-109 Sign-in UI"] --> STY112["STY-112 Editor invitation accept"]
+  STY109["STY-109 Sign-in & API shell"] --> STY112["STY-112 Editor invitation accept"]
   STY110 --> STY112
-  STY108 --> STY113["STY-113 Editor members & invitations UI"]
+  STY109 --> STY113["STY-113 Editor members & invitations UI"]
   STY110 --> STY113
   STY111 --> STY113
   STY111 --> STY114["STY-114 6-monthly access review"]
@@ -109,13 +112,18 @@ flowchart LR
 
 - Once `STY-106` lands in EPC-024, `STY-111` unblocks immediately; once `STY-093`,
   `STY-102`, `STY-104` and `STY-106` have landed, `STY-110` unblocks as well.
-- Once `STY-108` + `STY-109` + `STY-110` (+ `STY-111`) land, `STY-112` and `STY-113`
-  complete the full vertical slice for Tenant Admins inviting and managing Product Leads.
+- Once `STY-109` + `STY-110` (+ `STY-111`) land, `STY-112` and `STY-113` (each with a
+  just-in-time `ux-prototypes` pass right after grilling, `STY-108` D2) complete the full
+  vertical slice for Tenant Admins inviting and managing Product Leads.
 - `STY-114` and `STY-094` follow after the core lifecycle (or can wait while `EPC-026`
   starts roadmaps & lists).
 
 ## Out of scope
 
+- Multi-tenant editor UX (joining a second tenant in the UI, tenant switcher and
+  `/$tenantSlug/…` URLs; the API stays multi-tenant from day one):
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
+  (`STY-108` D4).
 - Roadmap assignments (`assignments:manage` and showing "who leads which roadmap" on the
   member list): arrives when roadmaps exist in
   [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md) and
@@ -137,7 +145,8 @@ None.
   [ADR-020](../../adr/ADR-020-the-editor-and-the-api-share-one-origin.md)
 - [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md),
   [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md),
-  [EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md)
+  [EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md),
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
 - [Tenant Admin persona](../personas/tenant-admin.md),
   [Product Lead persona](../personas/product-lead.md),
   [Viewer persona](../personas/viewer.md)

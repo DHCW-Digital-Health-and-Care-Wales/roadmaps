@@ -6,7 +6,7 @@
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E
 - **Epic**: [EPC-025-tenant-members-and-invitations](README.md)
-- **Depends on**: STY-108 (hard), STY-109 (hard), STY-110 (hard), STY-111 (hard)
+- **Depends on**: STY-109 (hard), STY-110 (hard), STY-111 (hard)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-018 §Getting in; ADR-019 §What
   members and assigned leads may do, §Keeping access current
 - **Suggested model**: Opus — new feature slice (domain port, API adapter, Admin &
@@ -14,20 +14,22 @@
 
 ## Summary
 
-Delivers the tenant Members & Invitations screen in the editor's API mode, implementing
-the design chosen in `STY-108`. Every member of the tenant can view the member list
-(names and roles). Tenant Admins (`members:manage`) also see each member's email and
-last sign-in date, can invite a new user (e.g. a Product Lead, Viewer or Admin) by email
-and copy the one-time invitation link with plain instructions, view and revoke pending
-invitations, change a member's role, and remove a member (with clear confirmation and
-helpful guidance if the last-admin rule blocks the action). Never shown in Sheets mode.
+Delivers the tenant Members & Invitations screen in the editor's API mode, following a
+just-in-time `ux-prototypes` pass after `STY-113` is grilled (D2). Every member of the
+tenant can view the member list (names and roles). Tenant Admins (`members:manage`) also
+see each member's email and last sign-in date, can invite a new user (e.g. a Product Lead,
+Viewer or Admin) by email and copy the one-time invitation link with plain instructions,
+view and revoke pending invitations, change a member's role, and remove a member (with
+clear confirmation and helpful guidance if the last-admin rule blocks the action). Never
+shown in Sheets mode.
 
 ## Scope
 
 Domain port (`TenantAccessRepository` or `MembersRepository`) under
 `apps/editor/src/domain/`, API adapter in `apps/editor/src/infrastructure/roadmaps-api/`
-wired in `composeApp` (API mode only), `apps/editor/src/features/members/`, new tenant
-route under `apps/editor/src/routes/`, navigation link in the shell (API mode only),
+wired in `composeApp` (API mode only), `apps/editor/src/features/members/`, new flat
+route under `apps/editor/src/routes/` (using the active tenant slug from `/me` until
+`EPC-030` introduces `/$tenantSlug/…`), navigation link in the shell (API mode only),
 English and Welsh copy (`copywriter`), component/page tests and an API-mode Playwright
 E2E covering the full Admin-invites-Product-Lead → Product-Lead-accepts → Admin-manages
 journey.
@@ -88,6 +90,10 @@ zero axe violations and complete English/Welsh copy
 - **D1** (owner, 2026-11-26, `STY-103` D3; settles Q1): each membership and invitation
   holds a single `NOT NULL` role in v1, so the Invite and Change Role UI uses a single-role
   picker (Admin, Product Lead, or Viewer) rather than multi-role checkboxes.
+- **D2** (owner, 2026-11-26, `STY-108` D2 and D4): Members & Invitations UX is prototyped
+  just-in-time right after `STY-113` is grilled (no longer bundled in `STY-108`), using
+  the sidebar utility slot settled in `STY-108` / `STY-109` and a flat route until
+  `EPC-030` adds `/$tenantSlug/…` URLs.
 
 ## Out of scope
 

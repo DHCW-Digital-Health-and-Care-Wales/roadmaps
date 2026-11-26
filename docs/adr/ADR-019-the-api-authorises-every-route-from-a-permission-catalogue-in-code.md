@@ -6,7 +6,8 @@
 - Date: 2026-11-21 (amended by STY-091, 2026-11-24: the one table without row-level
   security; by STY-102, 2026-11-26: detective bounding of operator `invite-admin` and
   out-of-band hosted job link delivery; by STY-103, 2026-11-26: v1 role-by-route matrix
-  with `NOT NULL role_id` and ended membership)
+  with `NOT NULL role_id` and ended membership; by STY-108, 2026-11-26: flat editor URLs
+  during single-tenant DHCW delivery while API requests stay tenant-scoped)
 
 ## Context
 
@@ -190,6 +191,20 @@ Where this bullet differs from _Enforcement_ above, it holds; the rest stands.
   matrix tests `Admin`, `Product Lead`, `Viewer` (zero-permission role), a member whose
   membership has ended (`ended_at IS NOT NULL`, refused 404 on tenant routes), a
   non-member and an anonymous caller in place of a roleless membership row.
+
+### STY-108 amendments
+
+From the owner's STY-108 grilling (2026-11-26, STY-108 D4). Every other clause of
+_Enforcement_ stands.
+
+- **Flat editor URLs during single-tenant DHCW delivery** (_Enforcement_, Option 14):
+  every tenant API request still names its tenant slug from day one
+  (`/api/v1/tenants/{tenantSlug}/…`), checked against the person's membership and bound to
+  the transaction (never held in the server session). In the editor UI, `EPC-024`–
+  `EPC-027` keep flat routes (`/`, `/families`, `/roadmaps/$roadmapId`, `/members`) while
+  members belong to one tenant (reading the active tenant slug from `/me`), deferring
+  `/$tenantSlug/…` editor URLs and multi-tenant switching to
+  [EPC-030](../backlog/EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md).
 
 ## Consequences
 

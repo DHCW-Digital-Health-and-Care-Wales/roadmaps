@@ -106,6 +106,9 @@ rather than crashing or looping
 
 ## Out of scope
 
-- New API-mode screens (Sign-in page, Account page, Tenant switcher, new session-warning
-  flow): `STY-109`.
+- New API-mode screens (Sign-in page, Account page, new session-warning flow): `STY-109`
+  (multi-tenant switcher deferred to
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md),
+  `STY-108` D4; `AuthState` still carries `/me`'s memberships array so the domain boundary
+  stays multi-tenant ready).
 - Implementing real roadmap/list endpoints in `ApiRoadmapRepository`: `EPC-027`.

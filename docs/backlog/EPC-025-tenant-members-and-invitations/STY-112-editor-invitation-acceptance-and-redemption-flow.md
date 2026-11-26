@@ -5,10 +5,10 @@
 - **Type**: Feature
 - **Area**: Domain + Infrastructure + Features/UI + Routing + i18n (en + cy) + E2E
 - **Epic**: [EPC-025-tenant-members-and-invitations](README.md)
-- **Depends on**: STY-108 (hard), STY-109 (hard), STY-110 (hard)
+- **Depends on**: STY-109 (hard), STY-110 (hard)
 - **Binding ADRs**: ADR-002, ADR-004, ADR-008, ADR-010, ADR-018 §Getting in
-- **Suggested model**: Sonnet — well-bounded vertical UI flow following `STY-108`'s chosen
-  prototype and `STY-110`'s contract
+- **Suggested model**: Sonnet — well-bounded vertical UI flow following a just-in-time
+  `ux-prototypes` pass after grilling and `STY-110`'s contract
 
 ## Summary
 
@@ -24,9 +24,9 @@ revoked and mismatched-email states clearly in English and Welsh.
 
 New invitation port/adapter methods in `apps/editor/src/domain/` and
 `apps/editor/src/infrastructure/roadmaps-api/`, invitation acceptance feature and route
-(following `STY-108` Outcome), bilingual copy (`en.ts`, `cy.ts` via `copywriter`), unit
-and component tests, and an API-mode Playwright E2E test redeeming a mock OIDC
-invitation end to end.
+(following a just-in-time `ux-prototypes` pass after grilling, D2), bilingual copy
+(`en.ts`, `cy.ts` via `copywriter`), unit and component tests, and an API-mode Playwright
+E2E test redeeming a mock OIDC invitation end to end.
 
 ## Acceptance criteria
 
@@ -85,8 +85,17 @@ expected email address or token values shown
 - **D1** (owner, 2026-11-26, `STY-103` D3 and D5): invitation preview carries one offered
   role and bilingual tenant `nameEn` / optional `nameCy` (displayed in the active UI
   language with English fallback).
+- **D2** (owner, 2026-11-26, `STY-108` D2 and D4): invitation acceptance UX is prototyped
+  just-in-time right after `STY-112` is grilled (no longer bundled in `STY-108`). Joining
+  a second tenant in the UI is deferred to
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md);
+  for now the UI assumes each member joins one tenant (e.g. DHCW) while the API remains
+  multi-tenant.
 
 ## Out of scope
 
+- Joining a second tenant and multi-tenant landing in the UI:
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
+  (D2).
 - Creating and revoking invitations (`STY-113`).
 - Asking for access without an invitation (`STY-094`).

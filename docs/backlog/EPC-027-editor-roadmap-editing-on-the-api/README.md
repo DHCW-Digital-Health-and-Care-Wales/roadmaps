@@ -63,7 +63,9 @@ _Candidate scope, to be grilled and split into stories when this epic is planned
 
 Follows [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)'s
 build-time data-source switch (`VITE_DATA_SOURCE=sheets|api`) and tenant-scoped routing
-(ADR-019), keeping the Sheets adapter unaffected until
+(`/$tenantSlug/…`, ADR-019 Option 14, `STY-109` D3; multi-tenant switching UX follows in
+[EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)),
+keeping the Sheets adapter unaffected until
 [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md).
 
 ## Stories
@@ -96,7 +98,8 @@ None.
 - [EPC-024](../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md),
   [EPC-025](../EPC-025-tenant-members-and-invitations/README.md),
   [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md),
-  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)
+  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md),
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
 - [Replacing Google Sheets](../../operations/replacing-google-sheets.md)
 - [Product Lead persona](../personas/product-lead.md),
   [Tenant Admin persona](../personas/tenant-admin.md),

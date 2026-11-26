@@ -2,7 +2,8 @@
 
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 2b, 3a, 4a, 5a);
   stories start `Needs grilling` / `Placeholder` and become selectable as each is grilled
-- **Progress**: 1 of 10 terminal; next selectable: STY-103 (grill STY-108 next)
+- **Progress**: 1 of 10 terminal; next selectable: STY-103 (STY-108 grilled, waits on
+  STY-107; grill STY-105, STY-093 or CHO-049 next)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -15,9 +16,11 @@ tables with forced row-level security; the deterministic seeder (`STY-093`) and 
 operator CLI; ADR-019's fail-closed route authorisation and ADR-020's same-origin guard;
 OIDC sign-in (local mock provider + Google Workspace) and opaque PostgreSQL sessions; and
 an optional build-time API mode (`VITE_DATA_SOURCE=api`) in the editor with sign-in,
-session expiry handling, tenant switcher and Account page. Google Sheets stays the
-default deployed mode throughout; in API mode, unimplemented roadmap and family screens
-fail cleanly against a stub repository until
+session expiry handling, single-tenant DHCW shell and Account page (while the backend
+remains multi-tenant from the start and multi-tenant editor UX moves to
+[EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)).
+Google Sheets stays the default deployed mode throughout; in API mode, unimplemented
+roadmap and family screens fail cleanly against a stub repository until
 [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md) and
 [EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md) implement them.
 
@@ -26,17 +29,15 @@ fail cleanly against a stub repository until
 - [STY-104](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md#open-questions) —
   CLI entrypoints, local link format and hosted Cloud Run out-of-band link mechanism
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —
-  tenant path parameter convention, person-assertion header name and `Origin` config
+  person-assertion header name (`{tenantSlug}` path parameter settled in `STY-105` D2)
 - [STY-106](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) —
   mock OIDC provider image/implementation, OIDC library choice and `/me` response shape
 - [STY-107](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md#open-questions) —
   `VITE_DATA_SOURCE` config behaviour, `AuthClient` shape during dual-mode transition and
   stub error copy
-- [STY-108](STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md#open-questions) —
-  UX prototype selection across Sign-in, Account, Invitation acceptance and Members &
-  Invitations screens
 - [STY-109](STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md#open-questions) —
-  tenant URL layout in TanStack Router and uninvited / multi-tenant landing flows
+  final UI, routing and E2E details once `STY-108` settles the chosen shell and page
+  designs (URL layout and zero-memberships flow settled in `STY-108` D4, D6)
 - [STY-093](STY-093-a-deterministic-seeder.md) — Placeholder awaiting acceptance criteria
 - [CHO-049](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md) — Placeholder
   awaiting timeout policy
@@ -95,10 +96,16 @@ Owner answers of 2026-11-25 (EPC-024 decomposition):
    API mode, `ApiRoadmapRepository` rejects unimplemented roadmap/list calls with a
    dedicated "not yet available" `AppError` kind so existing screens show their standard
    error panel cleanly while Account and Members screens work.
-4. **Persona-led UX prototypes before new UI** (F3): `STY-108` prototypes Sign-in,
-   Account, Invitation acceptance and Members & Invitations together against
-   `product-lead.md`, `tenant-admin.md` and `viewer.md` before `STY-109`, `STY-112` and
-   `STY-113` implement them.
+4. **Just-in-time persona-led UX prototypes before each UI story** (F3; refined 2026-11-26,
+   `STY-108` D2–D4): `STY-108` runs just-in-time after `STY-107` to prototype the Sheets →
+   API app shell shift and `STY-109` (Sign-in/refusals/zero-membership, single-tenant
+   authenticated shell & Account menu, Account page, and session expiry) against
+   `product-lead.md`, `tenant-admin.md` and `viewer.md`. `EPC-025`'s UI stories
+   (`STY-112`, `STY-113`) each prototype just-in-time after they are grilled, and
+   multi-tenant editor UX (tenant switcher, multi-tenant `/` landing/picker, joining a
+   second tenant) is deferred to
+   [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
+   while the backend and `/$tenantSlug/…` URLs stay multi-tenant from the start.
 5. **Unchanged:** Google Sheets remains the default and deployed data source; every
    existing Sheets test and E2E spec keeps passing untouched.
 
@@ -139,7 +146,7 @@ coverage, and adding seeder factories to `STY-093` for every new table. See
 | STY-105 | [Route authorisation policy, tenant dependency and same-origin guard](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md)                                          | API                                                           | STY-103                   |       |
 | STY-106 | [OIDC sign-in, server-side sessions, local mock provider and `/me`](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md)                                                  | API + Infrastructure + CI/CD                                  | STY-102, STY-103, STY-105 |       |
 | STY-107 | [Editor optional API mode, reshaped AuthClient and stub roadmap repository](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md)                             | Domain + Infrastructure + Features/UI + i18n (en + cy)        | STY-106                   |       |
-| STY-108 | [UX prototypes for sign-in, account, invitation acceptance and members management](STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md)                 | Docs                                                          | —                         |       |
+| STY-108 | [UX prototypes for sign-in, account, invitation acceptance and members management](STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md)                 | Docs                                                          | STY-107                   |       |
 | STY-109 | [Editor sign-in, session expiry, tenant switcher and account page on the API](STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md)                           | Features/UI + Routing + Infrastructure + i18n (en + cy) + E2E | STY-107, STY-108          |       |
 
 ## Sequencing
@@ -154,15 +161,13 @@ flowchart LR
   STY105 --> STY106
   STY106 --> STY104
   STY106 --> STY107["STY-107 Editor API mode & stub"]
-  STY107 --> STY109["STY-109 Editor sign-in & account UI"]
-  STY108["STY-108 UX prototypes"] --> STY109
+  STY107 --> STY108["STY-108 App shell & STY-109 UX prototypes"]
+  STY108 --> STY109["STY-109 Editor sign-in & account UI"]
   CHO049["CHO-049 DB wait deadline"]
 ```
 
-- **Start in parallel**: `STY-102` (threat model, written first and submitted early to
-  DHCW cyber security), `STY-103` (first schema migration + enforcement suite), `STY-108`
-  (UX prototypes for both EPC-024 and EPC-025), and `CHO-049` (independent DB timeout
-  chore).
+- **Start in parallel**: `STY-102` (threat model, Done), `STY-103` (first schema migration
+  and enforcement suite, Proposed), and `CHO-049` (independent DB timeout chore).
 - **After `STY-103`**: `STY-093` (seeder) and `STY-105` (authorisation & CSRF framework)
   can run in parallel.
 - **After `STY-102`, `STY-103` and `STY-105`**: `STY-106` lands OIDC sign-in, sessions
@@ -172,14 +177,19 @@ flowchart LR
   session revocation directly against real sessions) and `STY-107` (editor API mode +
   stub) run in parallel, and `EPC-025`'s `STY-111` (members API) unblocks; once `STY-104`
   and `STY-093` also land, `STY-110` (invitations API) unblocks.
-- **After `STY-107` and `STY-108`**: `STY-109` delivers the complete API-mode sign-in,
-  session-warning, tenant-switcher and Account experience, unblocking `EPC-025`'s UI
-  stories (`STY-112`, `STY-113`).
+- **After `STY-107`**: `STY-108` runs just-in-time to settle the API app shell and
+  `STY-109` UX prototypes; once its _Outcome_ lands, `STY-109` delivers the API-mode
+  sign-in, session-warning, single-tenant shell and Account experience, unblocking
+  `EPC-025`'s UI stories (`STY-112`, `STY-113`).
 
 ## Out of scope
 
 - Invitations API, member management API and Members & Invitations editor screens:
   [EPC-025](../EPC-025-tenant-members-and-invitations/README.md).
+- Multi-tenant editor UX (tenant switcher, multi-tenant `/` landing/picker and joining a
+  second tenant in the UI):
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
+  (`STY-108` D4).
 - Roadmap, item, list, scratch, draft and publication schema and endpoints:
   [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md).
 - Editor roadmap reading/editing on the API:
@@ -209,7 +219,8 @@ None.
   [EPC-025](../EPC-025-tenant-members-and-invitations/README.md),
   [EPC-026](../EPC-026-roadmaps-lists-and-versioned-api/README.md),
   [EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md),
-  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)
+  [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md),
+  [EPC-030](../EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
 - [Product Lead persona](../personas/product-lead.md),
   [Tenant Admin persona](../personas/tenant-admin.md),
   [Viewer persona](../personas/viewer.md)

@@ -5,15 +5,17 @@
   the options chosen are marked ✅. It supersedes ADR-003 for the API data source;
   ADR-003 stands for the Sheets adapter until the deployed editor switches to the API.
   Amended by the owner's STY-101 grilling (_STY-101 amendments_), EPC-024 planning and
-  STY-102 grilling and review follow-up (_EPC-024 amendments_), and STY-103 grilling and
-  review follow-up (_STY-103 amendments_).
+  STY-102 grilling and review follow-up (_EPC-024 amendments_), STY-103 grilling and
+  review follow-up (_STY-103 amendments_), and STY-108 grilling (_STY-108 amendments_).
 - Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages;
   amended in EPC-024, 2026-11-25: threat model review gates deployment and real data
   rather than local/dev identity implementation, phased by Google Workspace / Entra and
   with the Entra spike boundary from STY-102 grilling; amended in STY-102 review
   follow-up, 2026-11-26: Consequences accepted-risk alignment, post-theft cookie replay,
   and own-device operational assumption; amended in STY-103, 2026-11-26: single `NOT NULL`
-  role per invitation in v1, canonical issuer storage and invitation-summary PII omission)
+  role per invitation in v1, canonical issuer storage and invitation-summary PII omission;
+  amended in STY-108, 2026-11-26: single-tenant editor Account menu in EPC-024 with
+  multi-tenant switcher deferred to EPC-030)
 
 ## Context
 
@@ -371,6 +373,18 @@ subject)` and `UNIQUE (person_id, issuer)`.
   invitee address in `change_summaries` (`request_hash` construction in `STY-110` and
   `platform_audit_log` retention for `invite-admin` remain subject to the data protection
   assessment).
+
+### STY-108 amendments
+
+From the owner's STY-108 grilling (2026-11-26, STY-108 D4). The rest of _The editor_
+stands.
+
+- **Single-tenant editor Account menu until EPC-030**: while Google Workspace admits DHCW
+  accounts only (Option 3) and the database and API remain multi-tenant from the start,
+  `EPC-024` (`STY-108`, `STY-109`) shows the person's name and active organisation in the
+  shell/Account menu (Option 16) and omits the multi-tenant switcher UI until
+  [EPC-030](../backlog/EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
+  adds multi-tenant editor UX.
 
 ## Consequences
 

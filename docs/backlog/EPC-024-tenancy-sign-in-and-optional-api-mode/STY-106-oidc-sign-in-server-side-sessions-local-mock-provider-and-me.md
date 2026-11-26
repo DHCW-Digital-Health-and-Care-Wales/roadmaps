@@ -127,6 +127,11 @@ definer functions, leaving active and recent records untouched
   `nameEn` / optional `nameCy`. `STY-106` adds `sign_in_transactions`, `sessions` and its
   auth/purge definers (`roadmaps_auth_definer`, purge `EXECUTE` to `roadmaps_purge`),
   storing the canonical allow-listed issuer in `identities.issuer` (tested with `accounts.google.com`).
+- **D2** (owner, 2026-11-26, `STY-108` review follow-up #1a): `GET /api/v1/me` returns
+  active memberships in a fixed deterministic order (`memberships.id ASC,
+memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verified by an
+  integration test, so `/` redirection in `STY-109` is deterministic if dev/test data
+  holds more than one membership.
 
 ## Out of scope
 

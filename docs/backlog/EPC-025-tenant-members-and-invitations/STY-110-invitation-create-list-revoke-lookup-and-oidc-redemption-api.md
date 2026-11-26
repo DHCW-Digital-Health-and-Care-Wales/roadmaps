@@ -124,13 +124,13 @@ active invitations untouched
   revokes and reissues; recorded in ADR-015 _STY-102 amendments_), rather than storing
   raw tokens or cached response bodies in PostgreSQL, which would break ADR-018's
   hash-only storage invariant.
-- **D2** (owner, 2026-11-26, `STY-103` grilling R1 #1a, #2b, #4a and R2 #5a, #6a; settles
-  Q2): `invitations` already exists from `STY-103` with a single `role_id` column, so
-  create-invitation takes a single `roleId` (not a `roleIds` list) and lookup/redemption
-  handle one offered role plus the tenant's bilingual `nameEn` / `nameCy`. Lookup,
-  redemption and 90-day purge definer procedures are added here (owned by
-  `roadmaps_auth_definer`, with purge `EXECUTE` granted to `roadmaps_purge`); pending-email
-  uniqueness remains open in Q1.
+- **D2** (owner, 2026-11-26, `STY-103` D2, D3, D5, D10, D14, D15, D16; settles Q2):
+  `invitations` exists from `STY-103` with a single `NOT NULL role_id`, so create takes
+  `roleId` (refusing `'local_mock'` outside local/test mode) and lookup/redemption carry
+  one role plus bilingual tenant `nameEn` / `nameCy`. Lookup, redemption and 90-day purge
+  definers (`roadmaps_auth_definer`, purge `DELETE` exempt from access triggers;
+  `invitations.email` omitted from `change_summaries`) live here; pending-email uniqueness
+  stays open in Q1.
 
 ## Out of scope
 

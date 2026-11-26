@@ -27,7 +27,7 @@ developers and future Cloud Run jobs the one supported way to bootstrap a tenant
 ## Scope
 
 `apps/api/src/roadmaps_api/platform/` (CLI entrypoints + platform service/repositories),
-platform definer procedures (in `STY-103` or an incremental migration), root scripts for
+platform definer procedures (in an incremental migration), root scripts for
 local running, and real-PostgreSQL integration tests running as the platform login role.
 No HTTP routes and no operator web UI.
 
@@ -114,14 +114,12 @@ fields without echoing submitted values
   standing test — keeping raw tokens out of Cloud Logging and two-year log exports
   (recorded in ADR-019 _STY-102 amendments_). The exact out-of-band mechanism stays open
   in Q3 for `STY-104` grilling.
-- **D2** (owner, 2026-11-26, `STY-103` grilling R1 #1a, #4a, #5a, #6a and R2 #4a, #6a):
-  `invitations`, `roadmaps_platform` and `roadmaps_platform_definer` already exist from
-  `STY-103`; `STY-104` adds the platform definer procedures (owned by
-  `roadmaps_platform_definer`, executable by `roadmaps_platform`) in its own incremental
-  migration. `create-tenant` takes bilingual tenant names (`name_en` required, `name_cy`
-  optional), seeds `tenant_scopes` (`'access'`, `'lists'`) and the three shipped roles with
-  `system_key` (`'admin'`, `'product_lead'`, `'viewer'`), and `invite-admin` resolves the
-  shipped Admin role by `system_key = 'admin'`.
+- **D2** (owner, 2026-11-26, `STY-103` D2, D5, D6, D7, D12, D13, D14, D15): `invitations`,
+  `roadmaps_platform` and `roadmaps_platform_definer` exist from `STY-103`; `STY-104` adds
+  its platform definer procedures in an incremental migration, takes bilingual tenant names
+  (`name_en` required, `name_cy` optional), seeds `tenant_scopes` and shipped roles with
+  `system_key`, writes `actor_kind = 'platform_job'` / `actor_ref` and
+  `issued_by_platform_execution_id`, and refuses `'local_mock'` outside local/test mode.
 
 ## Out of scope
 

@@ -77,8 +77,8 @@ Owner answers of 2026-11-25 (EPC-024 / EPC-025 decomposition):
   removal and access review confirmation, writes an access-scope `change_set` signed off
   by ADR-015's commit function.
 - Any request model with collection fields bounds every collection natively in Pydantic per
-  `apps/api/AGENTS.md` and ADR-020 (_DEF-043 amendments_). (`STY-103` D2 sets a single
-  `roleId` per membership and invitation in v1.)
+  `apps/api/AGENTS.md` and ADR-020 (_DEF-043 amendments_). (`STY-103` D3 sets a single
+  `NOT NULL role_id` per membership and invitation in v1.)
 
 ## Stories
 

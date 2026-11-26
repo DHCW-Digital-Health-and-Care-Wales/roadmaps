@@ -5,14 +5,15 @@
   the options chosen are marked ✅. It supersedes ADR-003 for the API data source;
   ADR-003 stands for the Sheets adapter until the deployed editor switches to the API.
   Amended by the owner's STY-101 grilling (_STY-101 amendments_), EPC-024 planning and
-  STY-102 grilling and review follow-up (_EPC-024 amendments_).
+  STY-102 grilling and review follow-up (_EPC-024 amendments_), and STY-103 grilling and
+  review follow-up (_STY-103 amendments_).
 - Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages;
   amended in EPC-024, 2026-11-25: threat model review gates deployment and real data
   rather than local/dev identity implementation, phased by Google Workspace / Entra and
   with the Entra spike boundary from STY-102 grilling; amended in STY-102 review
   follow-up, 2026-11-26: Consequences accepted-risk alignment, post-theft cookie replay,
-  and own-device operational assumption; amended in STY-103, 2026-11-26: single role per
-  invitation in v1)
+  and own-device operational assumption; amended in STY-103, 2026-11-26: single `NOT NULL`
+  role per invitation in v1, canonical issuer storage and invitation-summary PII omission)
 
 ## Context
 
@@ -353,11 +354,21 @@ penetration test before switching the deployed editor stand.
 
 ### STY-103 amendments
 
-From the owner's STY-103 grilling (2026-11-26, STY-103 D3). Where this bullet differs
-from _Getting in_ and _Records and retention_ above, it holds; the rest stands.
+From the owner's STY-103 grilling and review follow-up (2026-11-26, STY-103 D3, D10, D14
+and D16). Where these bullets differ from _Who a person is_, _Getting in_ and _Records and
+retention_ above, they hold; the rest stands.
 
-- **One role per invitation in v1**: an invitation names one `role_id` rather than a
-  list of roles (matching `memberships.role_id` in ADR-015 _STY-103 amendments_).
+- **One `NOT NULL` role per invitation in v1**: an invitation names one `NOT NULL role_id`
+  rather than a list of roles (matching `memberships.role_id` in ADR-015 _STY-103
+  amendments_).
+- **Canonical allow-listed issuer**: `identities.issuer` stores the canonical allow-listed
+  issuer URL matched by the callback (e.g. `https://accounts.google.com`, never the raw
+  `accounts.google.com` short form from a token claim), preserving `UNIQUE (issuer,
+subject)` and `UNIQUE (person_id, issuer)`.
+- **Invitation summaries omit email addresses**: access `change_summaries` on `invitations`
+  record neither `token_hash` nor `email`, so the 90-day retention purge (`DELETE` via
+  `roadmaps_auth_definer`, exempt from access commit/summary triggers) leaves no unjoined
+  invitee address in immutable history.
 
 ## Consequences
 

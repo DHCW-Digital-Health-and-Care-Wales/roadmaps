@@ -101,6 +101,8 @@ rather than crashing or looping
   (`VITE_DATA_SOURCE=sheets|api`, defaulting to `sheets`) plus a stub
   `ApiRoadmapRepository` failing unimplemented calls with a dedicated "not yet available"
   error kind, over feature flags hiding routes or a runtime switch.
+- **D2** (owner, 2026-11-26, `STY-103` D3 and D5): `/me` carries a single `NOT NULL` role
+  per tenant membership and bilingual tenant `nameEn` / optional `nameCy`.
 
 ## Out of scope
 

@@ -82,7 +82,9 @@ expected email address or token values shown
 
 ## Decisions
 
-_Recorded during grilling and from `STY-108` Outcome._
+- **D1** (owner, 2026-11-26, `STY-103` D3 and D5): invitation preview carries one offered
+  role and bilingual tenant `nameEn` / optional `nameCy` (displayed in the active UI
+  language with English fallback).
 
 ## Out of scope
 

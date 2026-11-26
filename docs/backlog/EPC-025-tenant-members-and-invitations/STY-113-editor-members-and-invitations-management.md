@@ -85,8 +85,8 @@ zero axe violations and complete English/Welsh copy
 
 ## Decisions
 
-- **D1** (owner, 2026-11-26, `STY-103` grilling R1 #2b; settles Q1): each membership and
-  invitation holds a single role in v1, so the Invite and Change Role UI uses a single-role
+- **D1** (owner, 2026-11-26, `STY-103` D3; settles Q1): each membership and invitation
+  holds a single `NOT NULL` role in v1, so the Invite and Change Role UI uses a single-role
   picker (Admin, Product Lead, or Viewer) rather than multi-role checkboxes.
 
 ## Out of scope

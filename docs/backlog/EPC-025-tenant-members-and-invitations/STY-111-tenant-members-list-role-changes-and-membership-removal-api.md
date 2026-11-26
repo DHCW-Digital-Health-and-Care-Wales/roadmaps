@@ -19,7 +19,7 @@ Adds the tenant member and role management endpoints in the API: listing the ten
 shipped roles (so the Admin UI populates role pickers from the API), listing tenant
 members (returning names and roles to every member, and additionally email addresses and
 last sign-in timestamps only to holders of `members:manage`, per ADR-019 Option 9),
-updating a member's role(s), and ending a membership. Every write runs under the tenant's
+updating a member's role, and ending a membership. Every write runs under the tenant's
 access scope lock, records an access change set with idempotency, enforces the last-admin
 guard (refusing to remove or demote the tenant's only Admin), and takes effect on the
 member's very next request.
@@ -95,12 +95,12 @@ least one Admin survives and the second operation is refused with a dedicated er
 
 ## Decisions
 
-- **D1** (owner, 2026-11-26, `STY-103` grilling R1 #2b, #7a, #8a and R2 #1a, #4a): each
-  membership holds a single `role_id` (updating a member's role takes a single `roleId`),
-  ending a membership sets `memberships.ended_at` (filtered by default via SQLAlchemy
-  `SoftEndMixin` and PostgreSQL RLS), active members' identity emails and last sign-in are
-  readable under `identities` tenant RLS (with `members:manage` enforced in the service),
-  and the shipped Admin role is identified by `roles.system_key = 'admin'`.
+- **D1** (owner, 2026-11-26, `STY-103` D3, D8, D9, D11, D13): each membership holds a
+  single `NOT NULL role_id` (updates take `roleId`), and ending one sets `ended_at`.
+  Tenant-keyed `memberships` RLS returns ended rows by design (`SoftEndMixin` filters ORM
+  `select(Membership)`, while raw SQL such as the last-admin guard filters `ended_at IS
+NULL` explicitly); `identities` RLS permits active tenant members (`members:manage`
+  enforced in the service), and Admin is identified by `roles.system_key = 'admin'`.
 
 ## Out of scope
 

@@ -111,7 +111,7 @@ lives:_
   backups in a UK location, checked at provisioning (ADR-015); a customer-managed key
   decided with the data protection assessment; Data Access audit logs on; request-log
   access restricted, since callback URLs carry OIDC codes.
-- **The roles and the migration step** (STY-091 D3, D11, D24, D26, D30; STY-103 D5, D6):
+- **The roles and the migration step** (STY-091 D3, D11, D24, D26, D30; STY-103 D6, D7):
   EPC-023 creates the migration, application, platform and purge logins (IAM principals,
   each in its own no-login caller role), never
   with Cloud SQL's default `cloudsqlsuperuser` role, which `/ready` refuses, and runs

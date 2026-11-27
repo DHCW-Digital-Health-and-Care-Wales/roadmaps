@@ -26,6 +26,8 @@ from tools.bootstrap_database import (
     APP_LOGIN,
     LOCAL_PASSWORD,
     MIGRATION_LOGIN,
+    PLATFORM_LOGIN,
+    PURGE_LOGIN,
     libpq_url,
 )
 
@@ -65,6 +67,14 @@ def app_url(database: str) -> str:
 
 def migration_url(database: str) -> str:
     return login_url(MIGRATION_LOGIN, database)
+
+
+def platform_url(database: str) -> str:
+    return login_url(PLATFORM_LOGIN, database)
+
+
+def purge_url(database: str) -> str:
+    return login_url(PURGE_LOGIN, database)
 
 
 @contextmanager
@@ -135,11 +145,15 @@ def empty_tables(connection: psycopg.Connection) -> None:
         (VERSION_TABLE,),
     ).fetchall()
     if tables:
-        connection.execute(
-            sql.SQL("TRUNCATE {} CASCADE").format(
-                sql.SQL(", ").join(sql.Identifier("public", table) for (table,) in tables)
+        # Superuser-only replica mode bypasses immutability BEFORE TRUNCATE triggers
+        # during test teardown without adding any superuser backdoor to production SQL.
+        with connection.transaction():
+            connection.execute("SET LOCAL session_replication_role = 'replica'")
+            connection.execute(
+                sql.SQL("TRUNCATE {} CASCADE").format(
+                    sql.SQL(", ").join(sql.Identifier("public", table) for (table,) in tables)
+                )
             )
-        )
 
 
 def open_admin(database: str) -> psycopg.Connection:

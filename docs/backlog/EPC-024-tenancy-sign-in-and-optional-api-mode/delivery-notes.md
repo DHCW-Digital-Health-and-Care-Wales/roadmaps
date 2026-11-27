@@ -34,3 +34,15 @@ from EPC-022 when the backend work moved here. See `docs/AGENTS.md`.
   with its test citation. Never edit the **Cyber security sign-off** table (owner-only),
   and alert the owner if a change materially alters a signed-off phase's flows or
   controls.
+- **Migrating `SECURITY DEFINER` routines onto a dedicated definer owner role**: create
+  the routine, run `REVOKE ALL … FROM PUBLIC` and `GRANT EXECUTE` (and `CREATE TRIGGER`
+  for trigger functions) as `roadmaps_owner` first, then temporarily `GRANT CREATE ON
+SCHEMA public TO <definer>`, run `ALTER FUNCTION … OWNER TO <definer>`, and `REVOKE
+CREATE ON SCHEMA public FROM <definer>` before commit. If `roadmaps_owner` itself also
+  needs `EXECUTE` on an internal definer routine, grant it after ownership transfer via
+  `SET LOCAL ROLE <definer>` then `SET LOCAL ROLE roadmaps_owner`.
+- **Role-conditional trigger exemptions use `CREATE TRIGGER … WHEN (current_user <> …)`**:
+  inside a `SECURITY DEFINER` trigger function, `current_user` is the trigger owner
+  (`roadmaps_history_definer`), not the statement's caller; put caller-role checks in the
+  trigger's `WHEN` clause (as `invitations` does for `roadmaps_auth_definer`'s purge
+  `DELETE`).

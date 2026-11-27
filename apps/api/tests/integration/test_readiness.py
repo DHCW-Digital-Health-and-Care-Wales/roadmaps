@@ -19,7 +19,7 @@ from roadmaps_api.services import readiness
 from tests import harness
 from tests.harness import holding, without_the_version_table
 from tests.support import Lines, make_settings, serving
-from tools.bootstrap_database import MIGRATION_LOGIN
+from tools.bootstrap_database import MIGRATION_LOGIN, PLATFORM_LOGIN, PURGE_LOGIN
 
 LATEST = latest_revision()
 # Revisions around the code's latest, whatever its number.
@@ -213,8 +213,14 @@ def test_ready_refuses_a_login_that_holds_more_than_the_application_s_role(
     assert warning["cause"] == "readiness.login_unsafe"
 
 
-def test_ready_refuses_the_migration_login(worker_database: str, lines: Lines) -> None:
-    with serving(make_settings(harness.login_url(MIGRATION_LOGIN, worker_database))) as client:
+@pytest.mark.parametrize(
+    "login",
+    [MIGRATION_LOGIN, PLATFORM_LOGIN, PURGE_LOGIN],
+)
+def test_ready_refuses_non_app_caller_logins(
+    worker_database: str, lines: Lines, login: str
+) -> None:
+    with serving(make_settings(harness.login_url(login, worker_database))) as client:
         assert client.get("/ready").status_code == 503
 
     [warning] = warnings_of(lines)

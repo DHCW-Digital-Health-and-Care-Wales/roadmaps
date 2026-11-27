@@ -27,7 +27,13 @@ from psycopg import sql
 from sqlalchemy.engine import make_url
 
 from roadmaps_api.logs import log_config
-from roadmaps_api.roles import APP_ROLE, MIGRATION_ROLE, bootstrap_sql
+from roadmaps_api.roles import (
+    APP_ROLE,
+    MIGRATION_ROLE,
+    PLATFORM_ROLE,
+    PURGE_ROLE,
+    bootstrap_sql,
+)
 from roadmaps_api.settings import ENV, Environment, SettingsError, is_database_url, refuse
 
 logger = logging.getLogger("roadmaps_api.bootstrap")
@@ -39,8 +45,15 @@ LOCAL_ENVIRONMENTS: Final = frozenset({Environment.LOCAL.value, Environment.TEST
 # slot's container alone, reachable only from this machine (apps/api/compose.yaml).
 MIGRATION_LOGIN: Final = "roadmaps_migrator_login"
 APP_LOGIN: Final = "roadmaps_app_login"
+PLATFORM_LOGIN: Final = "roadmaps_platform_login"
+PURGE_LOGIN: Final = "roadmaps_purge_login"
 LOCAL_PASSWORD: Final = "roadmaps"  # noqa: S105 - the local container's, as Compose's own
-LOGINS: Final = {MIGRATION_LOGIN: MIGRATION_ROLE, APP_LOGIN: APP_ROLE}
+LOGINS: Final = {
+    MIGRATION_LOGIN: MIGRATION_ROLE,
+    APP_LOGIN: APP_ROLE,
+    PLATFORM_LOGIN: PLATFORM_ROLE,
+    PURGE_LOGIN: PURGE_ROLE,
+}
 
 
 def admin_url(environ: Mapping[str, str]) -> str:

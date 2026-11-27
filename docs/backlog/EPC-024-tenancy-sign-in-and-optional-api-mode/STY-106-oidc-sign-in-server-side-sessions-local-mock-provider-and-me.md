@@ -6,7 +6,8 @@
 - **Type**: Feature
 - **Area**: API + Infrastructure + CI/CD
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
-- **Depends on**: STY-102 (hard — threat model written first, ADR-018 _EPC-024
+- **Depends on**: STY-093 (hard — exports canonical `local_mock` persona fixture specs
+  from `tools/seed/`), STY-102 (hard — threat model written first, ADR-018 _EPC-024
   amendments_; cyber review runs in parallel and gates hosted deployment), STY-103
   (hard), STY-105 (hard)
 - **Binding ADRs**: ADR-015 §Tenancy, §ADR-018 and ADR-019 amendments; ADR-017 §The
@@ -132,6 +133,12 @@ definer functions, leaving active and recent records untouched
 memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verified by an
   integration test, so `/` redirection in `STY-109` is deterministic if dev/test data
   holds more than one membership.
+- **D3** (owner, 2026-11-27, `STY-093` grilling R2 #4a): `STY-106`'s local mock OIDC
+  provider uses the canonical `local_mock` persona fixture specs (`(issuer, subject)` with
+  `issuer` pinned to a fixed non-HTTPS or loopback URL, email, display name) exported by
+  `STY-093` under `tools/seed/` (importing directly under Q2a, or generating its provider
+  config from them if Q2b is chosen; plus an uninvited persona with no database row) rather
+  than duplicating subjects.
 
 ## Out of scope
 

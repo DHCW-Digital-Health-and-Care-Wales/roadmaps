@@ -119,6 +119,10 @@ fields without echoing submitted values
   `STY-104` adds its platform definers in an incremental migration, takes bilingual `name_en`
   / optional `name_cy`, seeds `tenant_scopes` and `system_key` roles, writes `actor_kind =
 'platform_job'` / `actor_ref` and `issued_by_platform_execution_id`, and refuses `'local_mock'` outside local/test.
+- **D3** (owner, 2026-11-27, `STY-093` grilling R2 #2a): `STY-104` reuses the canonical
+  `Permission` `StrEnum` and immutable `SHIPPED_ROLES` mapping in
+  `apps/api/src/roadmaps_api/authz/permissions.py` (introduced by `STY-093` or `STY-105`)
+  when seeding a new tenant's three shipped roles in `create-tenant`.
 
 ## Out of scope
 

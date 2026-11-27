@@ -260,8 +260,11 @@ constraint names from caller data per ADR-018 _STY-101 amendments_):
      writes access `change_set` + `platform_audit_log`) (`roadmaps_auth_definer`)
    - App-callable change-set open/sign-off routines (`roadmaps_history_definer`, ADR-015
      _STY-103 amendments_; takes no actor argument and derives `'person'` from
-     `app.person_id`; internal non-person open/sign-off routines are never executable by
-     `roadmaps_app`)
+     `app.person_id`; internal non-person open/sign-off routines
+     `open_access_change_set_internal` / `sign_off_access_change_set_internal` explicitly
+     revoke `EXECUTE` from `PUBLIC` and grant `EXECUTE` only to `roadmaps_owner`,
+     `roadmaps_auth_definer` and `roadmaps_platform_definer`, never `roadmaps_app`,
+     `roadmaps_platform` or `roadmaps_purge`)
    - Future redaction procedure (`roadmaps_redaction_definer` added in `EPC-026`, ADR-015
      Options 9 & 34 and _STY-103 amendments_: database itself re-verifies `content:redact`
      permission, keeping `roadmaps_history_definer` append-only)

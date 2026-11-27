@@ -21,12 +21,12 @@ the 7-day `exclude-newer` cooldown.
 
 ## Measurement
 
-At commit `94196e09` (`apps/api/pyproject.toml`, `apps/api/uv.lock`, `starlette.testclient`):
+Repository baseline at commit `94196e09` (`apps/api/pyproject.toml`, `apps/api/uv.lock`, installed `starlette.testclient`) and upstream PyPI resolution observed on 2026-11-27 via `uv pip compile --python-version 3.15` under the 7-day cooldown (actual locked versions to be recorded once `STY-106` delivers them):
 
-| Area                         | Measurement                                                                                                                    | Verdict                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
-| `starlette.testclient` (dev) | `if TYPE_CHECKING: import httpx2 as httpx`; falling back to `httpx` raises `StarletteDeprecationWarning` (error under pytest)  | `httpx2` required in dev dependencies         |
-| `authlib==1.9.10` (runtime)  | `authlib.integrations.httpx_client.OAuth2Client` binds to `httpx` (`0.28.1` + `httpcore` + `certifi`), not `httpx2` (`2.16.2`) | Temporary runtime `httpx` beside dev `httpx2` |
+| Area                                                 | Measurement                                                                                                                     | Verdict                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `starlette.testclient` (repo baseline at `94196e09`) | `if TYPE_CHECKING: import httpx2 as httpx`; falling back to `httpx` raises `StarletteDeprecationWarning` (error under `pytest`) | `httpx2` (`>=2.16`, locked `2.16.2`) required in dev dependencies           |
+| `authlib` upstream (PyPI resolution, 2026-11-27)     | `authlib==1.9.10` (`authlib.integrations.httpx_client.OAuth2Client`) binds to `httpx` (`0.28.1` + `httpcore` + `certifi`)       | Temporary runtime `httpx` beside dev `httpx2` once `STY-106` adds `authlib` |
 
 ## Acceptance criteria
 

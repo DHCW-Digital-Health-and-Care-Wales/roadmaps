@@ -27,7 +27,8 @@ through OIDC sign-in (`purpose=redeem`). Redemption matches the verified email
 case-folded, consumes the token atomically through a dedicated definer function, creates
 the person/identity/membership (or adds the membership to an existing person) and records
 an access change set. Also adds the `roadmaps-purge-invitations` CLI on `STY-106`'s shared
-retention-purge runner (D4) to purge spent/expired invitations after 90 days.
+retention-purge runner (`STY-106` D15; D4 below) to purge spent/expired invitations after
+90 days.
 
 ## Scope
 

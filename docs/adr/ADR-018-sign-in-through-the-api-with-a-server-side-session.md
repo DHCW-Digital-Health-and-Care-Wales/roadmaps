@@ -408,15 +408,18 @@ Compose"` phrasing. Local development and tests run the in-repo Python/FastAPI m
   `POST /api/v1/auth/sign-in` passes `prompt=select_account`, covering explicit sign-out,
   natural session expiry and `"Try a different account"` after `not_invited` without extra
   cookie or request-flag state.
-- **Read-only `person_select` RLS on `roles` and `role_permissions`** (`STY-106` D7):
-  when `app.tenant_id IS NULL`, a signed-in person may read only the `roles` and
-  `role_permissions` rows referenced by their own active memberships (mirroring `tenants`
-  and `memberships` from `STY-103`), keeping `GET /api/v1/me` a single ORM query without
-  adding another `SECURITY DEFINER` routine.
+- **Read-only `person_select` RLS on `roles` and `role_permissions`** (`STY-106` D7; also
+  recorded in ADR-015 _STY-106 amendments_): when `app.tenant_id IS NULL`, a signed-in
+  person may read only the `roles` and `role_permissions` rows referenced by their own
+  active memberships (mirroring `tenants` and `memberships` from `STY-103`), keeping
+  `GET /api/v1/me` a single ORM query without adding another `SECURITY DEFINER` routine.
 - **Separate single-purpose retention purge entrypoints on a shared runner** (`STY-106`
-  D15): each retention table has its own console script (`roadmaps-purge-transactions`,
-  `roadmaps-purge-sessions`, and `roadmaps-purge-invitations` in `STY-110`) sharing a thin
-  common runner module, reading `ROADMAPS_PURGE_DATABASE_URL` under `roadmaps_purge`.
+  D15): each retention table has its own zero-argument console script
+  (`roadmaps-purge-transactions`, `roadmaps-purge-sessions`, and
+  `roadmaps-purge-invitations` in `STY-110`) sharing a thin common runner module, reading
+  `ROADMAPS_PURGE_DATABASE_URL` under `roadmaps_purge` and failing closed on unexpected
+  `ROADMAPS_*` environment variables (with retention windows fixed in the definer
+  functions).
 
 ## Consequences
 

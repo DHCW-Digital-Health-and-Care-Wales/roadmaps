@@ -160,7 +160,13 @@ flow passes unchanged
   passes `prompt=select_account` (so Design 2B's `"Try a different account"` needs no
   extra flag), `/me` carries `identities[].lastSignInAt`/`linkedAt` and
   `session.signedInAt`/`provider`, and `POST /api/v1/auth/extend` returns
-  `{ idleExpiresAt, absoluteExpiresAt }`.
+  `{ idleExpiresAt, absoluteExpiresAt }`. Because `/#/auth/callback?returnTo=…` lives in a
+  client-side hash fragment that any external link can supply directly, the callback route
+  parses `returnTo` as untrusted input with `STY-106` D9's exact relative-path grammar
+  (starting with `"/"`, rejecting `"//"`, `"/\\"`, schemes/hosts, `#`, whitespace or
+  control chars; max 512 chars; falling back to `"/"`), navigates strictly via internal
+  TanStack Router `to` (never `href` or `window.location`), and includes unit tests
+  refusing `https://…`, `//…`, `/\…` and `javascript:`.
 
 ## Out of scope
 

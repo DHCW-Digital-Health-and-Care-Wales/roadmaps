@@ -13,7 +13,8 @@
   v1, ended-membership and active-member `identities` RLS, caller roles, `SECURITY DEFINER`
   access summary triggers and `roadmaps_redaction_definer` split; aligned after STY-103
   delivery, 2026-11-27: active-only `memberships` `UPDATE` policy, unset-tenant guard on
-  person-keyed policies, and the delivered `roadmaps_history_definer` trigger list)
+  person-keyed policies, and the delivered `roadmaps_history_definer` trigger list; by
+  STY-106, 2026-11-27: read-only `person_select` RLS on `roles` and `role_permissions`)
 
 ## Context
 
@@ -432,6 +433,21 @@ updated_at)` and no `INSERT` grant (so an active membership can be ended or have
   `invitations.email`). `roadmaps_app` holds no `DELETE` on `invitations`, and
   `roadmaps_auth_definer`'s 90-day retention purge (`DELETE`) is exempt from the access
   commit-guard and summary triggers.
+
+### STY-106 amendments
+
+From the owner's STY-106 grilling (2026-11-27, STY-106 D7). Where this bullet refines
+_Tenancy_ and _STY-103 amendments_ above, it holds; the rest stands.
+
+- **Read-only `person_select` RLS on `roles` and `role_permissions`** (_Tenancy_): when
+  `app.tenant_id` is unset or empty, `roles` and `role_permissions` gain a narrow
+  `SELECT`-only `person_select` policy matching only rows referenced by an active
+  (`ended_at IS NULL`) membership of `app.person_id` (mirroring the unset-tenant
+  person-keyed `SELECT` policies on `memberships` and `tenants`). When `app.tenant_id` is
+  set, `TENANT_POLICY` remains the sole matching policy so a multi-tenant member inside
+  Tenant A reads none of Tenant B's roles; when both `app.tenant_id` and `app.person_id`
+  are unset, both tables fail closed. `roadmaps_app` retains `SELECT`-only grants on both
+  tables.
 
 ## Consequences
 

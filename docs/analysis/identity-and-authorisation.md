@@ -431,7 +431,8 @@ Where the ADRs depart from the Recommendation above:
   memberships current.
 - **Sign-in hardening added**: a callback per provider bound to its issuer, against
   mix-up; JWKS refetched on an unknown key and failing closed; the mock provider refused
-  on Cloud Run.
+  on Cloud Run (and run as a separate local loopback process rather than a Compose
+  container per ADR-018 _STY-106 amendments_).
 - **The permission catalogue** gains `roadmaps:edit`, `roadmaps:edit-any` and
   `roadmaps:publish`, a Viewer role, and the shipped roles only until a tenant needs to
   edit them; co-leads are Product Leads.

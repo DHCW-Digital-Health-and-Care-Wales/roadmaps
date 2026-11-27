@@ -6,7 +6,9 @@
 - Date: 2026-11-21 (amended by STY-091, 2026-11-24: the one table without row-level
   security; by STY-102, 2026-11-26: detective bounding of operator `invite-admin` and
   out-of-band hosted job link delivery; by STY-103, 2026-11-26: v1 role-by-route matrix
-  with `NOT NULL role_id` and ended membership)
+  with `NOT NULL role_id` and ended membership; by STY-105, 2026-11-27: offline code
+  catalogue check at start-up with per-read fail-closed validation of `role_permissions`
+  under forced RLS)
 
 ## Context
 
@@ -190,6 +192,23 @@ Where this bullet differs from _Enforcement_ above, it holds; the rest stands.
   matrix tests `Admin`, `Product Lead`, `Viewer` (zero-permission role), a member whose
   membership has ended (`ended_at IS NOT NULL`, refused 404 on tenant routes), a
   non-member and an anonymous caller in place of a roleless membership row.
+
+### STY-105 amendments
+
+From the owner's STY-105 grilling (2026-11-27, STY-105 D10 and D11). Where this bullet
+refines _The catalogue and the shipped roles_ and _Enforcement_ above, it holds; the rest
+stands.
+
+- **Offline code check at start-up and per-read fail-closed role validation under forced
+  RLS**: because `create_app` builds without a database connection (`export_openapi.py` and
+  unit tests) and `roadmaps_app` reads `role_permissions` strictly under forced
+  tenant-scoped RLS (no cross-tenant definer), start-up validates code-level
+  `SHIPPED_ROLES` against `Permission` and walks every effective route via FastAPI's
+  `iter_route_contexts` (`verify_app_routes`), while every tenant-scoped request parses
+  each `role_permissions` row on the caller's role through `Permission(raw)`. Any unknown
+  permission name logs an allow-listed `authz.unknown_permission` event (`tenant_id` and
+  `role_id` only) and fails closed with `403 authz.forbidden` on both `tenant_member` and
+  `tenant_permission` routes, isolating a corrupted role row to its own tenant and role.
 
 ## Consequences
 

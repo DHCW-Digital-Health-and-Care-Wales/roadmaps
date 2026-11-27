@@ -1,8 +1,6 @@
 # STY-105: Route authorisation policy, tenant dependency and same-origin guard
 
-- **Status**: Needs grilling — establishes ADR-019's fail-closed route policy
-  enforcement, tenant path dependency and ADR-020's same-origin CSRF guard before domain
-  routes land
+- **Status**: Proposed — grilled (D1–D15); selectable (STY-103 Done)
 - **Type**: Feature
 - **Area**: API + Infrastructure
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
@@ -25,11 +23,15 @@ the generated role-by-route matrix, cross-tenant sweep and permission-literal li
 
 ## Scope
 
-`apps/api/src/roadmaps_api/authz/` (permission enum, policy declarations, custom route
-class, tenant dependency), `apps/api/src/roadmaps_api/middleware.py` (same-origin CSRF
-and content-type check), `errors.py` (new auth/authz/CSRF error codes), OpenAPI +
-`packages/api-types` regeneration and `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`
-mapping, plus the standing enforcement tests in `apps/api/tests/`.
+`apps/api/src/roadmaps_api/authz/` (building on `STY-093`'s `permissions.py`: route policy
+declarations, `PolicyAPIRoute` with same-origin and JSON guards, `verify_app_routes`,
+`get_current_principal` seam, and `TenantContext` tenant dependency), `settings.py` +
+`apps/api/scripts/api.sh` + `apps/api/tools/export_openapi.py` (`ROADMAPS_EDITOR_ORIGIN`),
+`logs.py` (`ALLOWED_EXTRA_FIELDS` additions), `errors.py` (new auth/authz/CSRF/media-type
+error codes), `apps/api/tools/check_permissions.py` (wired into `apps/api/package.json`
+`lint`), OpenAPI + `packages/api-types` regeneration and
+`apps/editor/src/infrastructure/roadmaps-api/api-error.ts` mapping, plus the standing
+enforcement tests in `apps/api/tests/`.
 
 ## Acceptance criteria
 
@@ -84,13 +86,7 @@ test-only probe router until real routes land in `STY-106` and `EPC-025`)
 
 ## Open questions
 
-- **Q2**: Which request header should carry the person ID the editor believes is signed
-  in on state-changing requests (ADR-018 _Sessions_)?
-  - (a) `X-Roadmaps-Person-Id` (required on every authenticated state-changing route,
-    omitted on anonymous sign-in start) (recommended) — explicit, single-purpose, easy to
-    enforce in one middleware/dependency and never collides with standard headers.
-  - (b) A field inside every state-changing JSON body — pollutes every request schema and
-    doesn't work on bodyless `POST`/`DELETE` endpoints (like sign-out or revoke).
+_None — Q1–Q2 and the full design tree were settled in D1–D15._
 
 ## Decisions
 
@@ -120,8 +116,97 @@ test-only probe router until real routes land in `STY-106` and `EPC-025`)
   `same-site` or `cross-site`, so a sibling host on the editor's registrable domain cannot
   keep a session's idle timer alive); S4's standing `GET` test distinguishes same-origin
   session bookkeeping from domain/access writes and proves a `same-site` or `cross-site`
-  `GET` writes nothing at all. When `STY-105` is grilled, its `Origin` allow-list check
-  can also read `ROADMAPS_EDITOR_ORIGIN` (`STY-106` D6).
+  `GET` writes nothing at all.
+- **D5** (owner, 2026-11-27, `STY-105` grilling R1 #1a; settles Q2): the person-assertion
+  header is `X-Roadmaps-Person-Id` (UUID string), required on every authenticated
+  non-`GET`/`HEAD`/`OPTIONS` route (`signed_in`, `tenant_member`, `tenant_permission`) and
+  omitted/ignored on `public` and safe-method routes.
+- **D6** (owner, 2026-11-27, `STY-105` grilling R1 #2a & R2 #2a): same-origin proof and
+  JSON media-type checks run inside `PolicyAPIRoute.get_route_handler` (after routing,
+  before body parsing and handler execution), and person-assertion runs in the route's
+  auth dependency. This preserves RFC 9110 `405` (`Allow: GET`) on `POST /health` and
+  `DELETE /test/echo` and `404` on unknown paths while guaranteeing via D10's startup
+  route check that no state-changing route can bypass `PolicyAPIRoute`; existing
+  `POST /test/*` test helpers send `Sec-Fetch-Site: same-origin` (and
+  `Content-Type: application/json` when exercising body parsing or the 413 body limit).
+- **D7** (owner, 2026-11-27, `STY-105` grilling R1 #3a): introduce the required
+  `ROADMAPS_EDITOR_ORIGIN` setting in `STY-105` (using `STY-106` D6's exact bare-origin
+  `scheme://host[:port]` grammar, requiring `https` and a host in `ROADMAPS_ALLOWED_HOSTS`
+  whenever `ROADMAPS_ENV` is `production`, unset/invalid or any Cloud Run marker is set;
+  defaulted to `http://localhost:${DEV_PORT:-5173}` in `apps/api/scripts/api.sh dev`, set
+  in `tools/export_openapi.py` and test settings). On every non-`GET`/`HEAD`/`OPTIONS`
+  route: if `Sec-Fetch-Site` is present it must equal `same-origin` (never falling back to
+  `Origin` on `cross-site`/`same-site`/`none`), and if `Origin` is also present it must
+  equal `ROADMAPS_EDITOR_ORIGIN`; if `Sec-Fetch-Site` is absent, `Origin` must be present
+  and equal `ROADMAPS_EDITOR_ORIGIN`; duplicate `Sec-Fetch-Site` or `Origin` headers are
+  refused.
+- **D8** (owner, 2026-11-27, `STY-105` grilling R1 #4a & R2 #4a): on non-`GET`/`HEAD`/
+  `OPTIONS` routes, any route declaring a request body parameter requires
+  `Content-Type: application/json` (allowing parameters such as `; charset=utf-8`) upfront
+  before body parsing (closing the HTTP/2 headerless-body edge case); bodyless routes
+  (`POST`/`DELETE` with no body parameter) allow omitted `Content-Type` only when
+  `Content-Length` is absent or `"0"` and `Transfer-Encoding` is absent, and still refuse
+  any non-JSON `Content-Type` (such as `text/plain`, `application/x-www-form-urlencoded`,
+  or `multipart/form-data`) or non-zero/chunked body without `application/json`. FastAPI's
+  native `strict_content_type=True` stays enabled as defence-in-depth.
+- **D9** (owner, 2026-11-27, `STY-105` grilling R1 #5a): add five `ErrorCode`s in
+  `apps/api/src/roadmaps_api/errors.py`, evaluated in fixed order on matched routes
+  (`same-origin → content-type → auth → person-assertion → tenant/permission`),
+  regenerated into OpenAPI / `@roadmaps/api-types`, and mapped in
+  `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`:
+  - `401 auth.unauthenticated` → `unauthenticated` (`retryable: false`)
+  - `403 authz.forbidden` → `forbidden` (`retryable: false`)
+  - `403 request.origin_not_allowed` → `unknown` (`retryable: false`)
+  - `415 request.unsupported_media_type` → `unknown` (`retryable: false`)
+  - `409 auth.person_mismatch` (missing, malformed or disagreeing `X-Roadmaps-Person-Id`
+    on authenticated state-changing routes) → `unauthenticated` (`retryable: false`)
+- **D10** (owner, 2026-11-27, `STY-105` grilling R1 #6a): enforce route policies at both
+  registration and app assembly — every route declares exactly one policy (`public()`,
+  `signed_in()`, `tenant_member()`, or `tenant_permission(Permission.…)`), checked in
+  `PolicyAPIRoute.__init__` (refusing missing, duplicate or invalid policies, and
+  requiring `{tenantSlug}` in the path for `tenant_member`/`tenant_permission`), and
+  `create_app` sets `app.router.route_class = PolicyAPIRoute` and calls
+  `verify_app_routes(app)` via FastAPI's public `fastapi.routing.iter_route_contexts(app.routes)`
+  to refuse any sub-router that omitted `route_class=PolicyAPIRoute`, any unclassified
+  `Mount`/`Route`/`WebSocketRoute`, or any `public` route outside the reviewed
+  `PUBLIC_ROUTES` allow-list (`("GET", "/health")`, `("GET", "/ready")`, plus
+  `("GET", "/api/v1/openapi.json")` when `serves_live_openapi` is true). Test helpers that
+  register `/test/*` routes after `create_app` declare `public()`.
+- **D11** (owner, 2026-11-27, `STY-105` grilling R1 #7a; amends ADR-019): keep
+  `create_app` offline (no DB connection at startup) and stay within forced RLS without
+  adding a cross-tenant definer. Validate code-level `SHIPPED_ROLES` against `Permission`
+  at startup; at runtime, whenever the tenant dependency loads a role's `role_permissions`
+  rows, parse every row through `Permission(raw)` and, if any unknown permission string is
+  present, log an allow-listed `authz.unknown_permission` event (adding `tenant_id` and
+  `role_id` to `ALLOWED_EXTRA_FIELDS` in `logs.py`, never logging the raw unknown string)
+  and fail closed with `403 authz.forbidden` on both `tenant_member` and
+  `tenant_permission` routes.
+- **D12** (owner, 2026-11-27, `STY-105` grilling R2 #8a): the tenant dependency provides a
+  frozen `TenantContext` (`tenant_id`, `tenant_slug`, `person_id`, `role_id`,
+  `permissions`) with a pre-bound `open_session() -> Session` factory configured with
+  `info=session_info(tenant_id=..., person_id=...)`, matching `ReadinessService`'s
+  `sessionmaker` pattern so services own transaction boundaries cleanly under ADR-017
+  _Layering_ and `tools/check_transactions.py`.
+- **D13** (owner, 2026-11-27, `STY-105` grilling R2 #9a): implement S2's permission-literal
+  source check as standalone AST script `apps/api/tools/check_permissions.py` (mirroring
+  `tools/check_transactions.py`), scanning `src/roadmaps_api/` and `tools/` (excluding
+  `src/roadmaps_api/authz/permissions.py` and docstrings) for any code string literal
+  matching a `Permission` catalogue value, wired into `apps/api/package.json`'s `lint`
+  script and unit-tested in `apps/api/tests/test_check_permissions.py`.
+- **D14** (owner, 2026-11-27, `STY-105` grilling R2 #10a): expose one session-authenticator
+  seam dependency `get_current_principal` returning `AuthenticatedPrincipal(person_id,
+session_id)` or raising `401 auth.unauthenticated` (default stub raises `401` in
+  `STY-105`; tests inject principals via FastAPI's native
+  `app.dependency_overrides[get_current_principal]`; `STY-106` wires real cookie-hash
+  session lookup and `people.disabled_at IS NULL` verification once in
+  `get_current_principal`, with no redundant `people` query in the tenant dependency).
+- **D15** (owner, 2026-11-27, `STY-105` grilling R2 #11a): drive S5's standing
+  role-by-route matrix, cross-tenant sweep and S4's read-only `GET` test from a
+  fail-closed route-spec registry walking every effective route on `create_app(...)` (plus
+  a minimal test-only probe router in `STY-105` covering `public`, `signed_in`,
+  `tenant_member`, `tenant_permission(...)` and a tenant write route), failing immediately
+  if any newly added route lacks an entry in the suite's call-spec table (or allow-listed
+  OIDC callback exemption for S4).
 
 ## Out of scope
 

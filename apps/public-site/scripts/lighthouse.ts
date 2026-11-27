@@ -9,6 +9,7 @@ import {
   PUBLIC_SITE_PORTS,
   resolveDevPorts,
 } from "../../../scripts/worktree/dev-ports.ts"
+import { resolveLighthouseEnv } from "./lighthouse-env.ts"
 
 const base = `http://localhost:${String(resolveDevPorts(PUBLIC_SITE_PORTS).preview)}/product-roadmaps/`
 const pages = ["en/", "cy/producta/"]
@@ -16,7 +17,7 @@ const pages = ["en/", "cy/producta/"]
 const { status, error } = spawnSync(
   "lhci",
   ["autorun", ...pages.map((page) => `--collect.url=${base}${page}`)],
-  { stdio: "inherit" },
+  { stdio: "inherit", env: resolveLighthouseEnv(process.env) },
 )
 if (error) throw error
 process.exit(status ?? 1)

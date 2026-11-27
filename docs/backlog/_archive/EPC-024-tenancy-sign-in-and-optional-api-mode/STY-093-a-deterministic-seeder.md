@@ -14,6 +14,7 @@
   §Records and retention; ADR-019 §The catalogue and the shipped roles
 - **Suggested model**: Sonnet — deterministic ORM factories, local-only safety guards and
   reusable seed harness
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/339
 
 ## Summary
 

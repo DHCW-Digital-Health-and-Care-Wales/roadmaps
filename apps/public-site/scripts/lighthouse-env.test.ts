@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { MAX_UNIX_TMPDIR_LENGTH, resolveLighthouseEnv } from "./lighthouse.ts"
+import {
+  MAX_UNIX_TMPDIR_BYTES,
+  resolveLighthouseEnv,
+} from "./lighthouse-env.ts"
 
 const PLAYWRIGHT_CHROME = "/cache/ms-playwright/chromium/chrome"
 const LONG_TMPDIR =
   "/home/user/.runtime/userdata/provider-tmp/abcdef123456/run-xyz"
+// 50 UTF-16 code units, 60 UTF-8 bytes (`ŵ` is 2 UTF-8 bytes) — tests byte vs
+// code-unit measurement against MAX_UNIX_TMPDIR_BYTES.
+const MULTIBYTE_OVER_LIMIT_TMPDIR = `/tmp/${"ŵ".repeat(10)}/${"a".repeat(34)}`
 
 describe("resolveLighthouseEnv", () => {
   it.each([
@@ -46,6 +52,15 @@ describe("resolveLighthouseEnv", () => {
       undefined,
     ],
     [
+      "clears a blank CHROME_PATH when Playwright Chromium is not installed",
+      { CHROME_PATH: "   " },
+      {
+        playwrightChromePath: () => PLAYWRIGHT_CHROME,
+        pathExists: () => false,
+      },
+      undefined,
+    ],
+    [
       "leaves CHROME_PATH unset when Playwright returns no path",
       {},
       {
@@ -60,6 +75,9 @@ describe("resolveLighthouseEnv", () => {
       ...options,
     })
     expect(resolved.CHROME_PATH).toBe(expectedChromePath)
+    if (expectedChromePath === undefined) {
+      expect("CHROME_PATH" in resolved).toBe(false)
+    }
   })
 
   it.each([
@@ -70,16 +88,22 @@ describe("resolveLighthouseEnv", () => {
       "/tmp",
     ],
     [
+      "rewrites a multibyte POSIX TMPDIR exceeding MAX_UNIX_TMPDIR_BYTES in UTF-8 bytes",
+      { TMPDIR: MULTIBYTE_OVER_LIMIT_TMPDIR },
+      { platform: "linux" as const, pathExists: (p: string) => p === "/tmp" },
+      "/tmp",
+    ],
+    [
       "keeps a short POSIX TMPDIR unchanged",
       { TMPDIR: "/var/folders/ab/cdef01234567890123456789012345/T/" },
       { platform: "darwin" as const, pathExists: () => true },
       "/var/folders/ab/cdef01234567890123456789012345/T/",
     ],
     [
-      "keeps a TMPDIR exactly at MAX_UNIX_TMPDIR_LENGTH unchanged",
-      { TMPDIR: "/".padEnd(MAX_UNIX_TMPDIR_LENGTH, "a") },
+      "keeps a TMPDIR exactly at MAX_UNIX_TMPDIR_BYTES unchanged",
+      { TMPDIR: "/".padEnd(MAX_UNIX_TMPDIR_BYTES, "a") },
       { platform: "linux" as const, pathExists: () => true },
-      "/".padEnd(MAX_UNIX_TMPDIR_LENGTH, "a"),
+      "/".padEnd(MAX_UNIX_TMPDIR_BYTES, "a"),
     ],
     [
       "keeps a long POSIX TMPDIR when /tmp does not exist",
@@ -94,6 +118,12 @@ describe("resolveLighthouseEnv", () => {
       LONG_TMPDIR,
     ],
   ])("%s", (_, env, options, expectedTmpdir) => {
+    expect(MULTIBYTE_OVER_LIMIT_TMPDIR.length).toBeLessThanOrEqual(
+      MAX_UNIX_TMPDIR_BYTES,
+    )
+    expect(
+      Buffer.byteLength(MULTIBYTE_OVER_LIMIT_TMPDIR, "utf8"),
+    ).toBeGreaterThan(MAX_UNIX_TMPDIR_BYTES)
     const resolved = resolveLighthouseEnv(env, {
       playwrightChromePath: () => undefined,
       ...options,

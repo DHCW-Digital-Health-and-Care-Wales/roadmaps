@@ -71,8 +71,9 @@ them:
   the Playwright container the editor's E2E job uses
   ([the workflow](../../docs/operations/github-pages-deployment.md#the-workflow)).
 - `pnpm site:lighthouse`: Lighthouse CI with score thresholds and size budgets in
-  [lighthouserc.json](lighthouserc.json). Locally, point `CHROME_PATH` at a Chrome or
-  Chromium binary.
+  [lighthouserc.json](lighthouserc.json). Locally it uses Playwright's Chromium
+  (installed as above) when `CHROME_PATH` is unset; set `CHROME_PATH` to use another
+  Chrome or Chromium binary.
 
 `pnpm site:build` runs `vite build`, then [scripts/prerender.ts](scripts/prerender.ts)
 writes `index.html` for the site root and for each language's landing page and

@@ -63,7 +63,6 @@ apps share.
   The dev server renders in the browser only; to check the prerendered pages, build and
   `pnpm site:preview` with JavaScript off. A parallel worktree has its own ports
   (`pnpm worktree:info`).
-- `pnpm site:lighthouse` locally needs `CHROME_PATH` set to a Chrome or Chromium binary.
 - A change to page structure, links, headings or text fails the ARIA snapshots in
   `apps/public-site/e2e/__snapshots__/`. Regenerate them with
   `pnpm site:test:e2e e2e/structure.spec.ts --update-snapshots=changed`, or `=all` when

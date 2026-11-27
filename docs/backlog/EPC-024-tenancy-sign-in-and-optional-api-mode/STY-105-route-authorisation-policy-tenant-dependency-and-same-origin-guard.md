@@ -104,6 +104,12 @@ test-only probe router until real routes land in `STY-106` and `EPC-025`)
   `STY-109` D3's `/$tenantSlug/…` editor routes so the editor calls tenant routes directly
   from the URL while the dependency resolves slug → `tenant_id` and returns 404 for
   unknown tenants or non-members.
+- **D3** (owner, 2026-11-27, `STY-093` grilling R2 #2a): `STY-093` introduces the small
+  canonical `Permission` `StrEnum` and `SHIPPED_ROLES` mapping in `roadmaps_api` so
+  `tools/seed/` holds zero raw permission literals and `STY-093` can run straight after
+  `STY-103`; `STY-105` builds its route policy, startup role-permission validation and S2
+  permission-literal lint check directly on that catalogue module (or introduces it if
+  `STY-105` runs before `STY-093`).
 
 ## Out of scope
 

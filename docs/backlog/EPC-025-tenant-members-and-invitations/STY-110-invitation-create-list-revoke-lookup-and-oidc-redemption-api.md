@@ -129,6 +129,11 @@ active invitations untouched
   (refusing `'local_mock'` outside local/test) and lookup/redemption carry one role +
   bilingual `nameEn`/`nameCy`. Lookup, redemption and 90-day purge definers (`DELETE`
   exempt from access triggers; `email` omitted from `change_summaries`) live here; Q1 stays open.
+- **D3** (owner, 2026-11-27, `STY-093` grilling R1 #1a, R2 #5a): `STY-093` already seeds
+  baseline pending, revoked and expired `invitations` (hash-only in PostgreSQL,
+  deterministic local raw test token(s) printed to stdout); `STY-110` reuses and extends
+  those factories for any new invitation states or constraints it adds (such as Q1's
+  pending-email rule).
 
 ## Out of scope
 

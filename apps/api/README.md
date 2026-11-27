@@ -13,9 +13,10 @@ Compose, beside the workspace's Node and pnpm. `pnpm worktree:setup`, or
 repository's root:
 
 ```sh
-pnpm api:dev        # the database, its migrations, then the API with reload
+pnpm api:dev        # the database, its migrations, then the API with reload (never auto-seeds)
 pnpm api:db:up      # the database alone, its roles and local logins bootstrapped
 pnpm api:migrate    # the database, then the migrations
+pnpm api:seed       # migrate, truncate and deterministically seed local data (pass --seed <int> to vary)
 pnpm api:db:down    # stop it, keeping its data
 pnpm api:format     # ruff format, and ruff's fixes
 pnpm api:lint       # ruff, import-linter and the transaction check

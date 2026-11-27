@@ -1,10 +1,10 @@
 # STY-093: A deterministic seeder fills a local database, growing with each schema story
 
-- **Status**: Proposed — grilled 2026-11-27; deterministic ORM seeder over `STY-103`'s
-  tenancy/access schema, reusable test factories and canonical `Permission` / `SHIPPED_ROLES`
+- **Status**: Done — deterministic ORM seeder over `STY-103`'s schema, reusable factories
+  and canonical `Permission` / `SHIPPED_ROLES`
 - **Type**: Feature
 - **Area**: API
-- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
+- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
 - **Depends on**: STY-103 (hard, Done; creates `tenants`, `tenant_scopes`, `people`,
   `identities`, `roles`, `role_permissions`, `memberships`, `invitations`, `change_sets`,
   `change_set_signoffs`, `change_summaries`, `platform_audit_log` and access-scope commit
@@ -219,3 +219,73 @@ real RLS policies (DHCW sees DHCW rows and never Cwm Aur-only people or identiti
 - Platform operator CLI commands (`STY-104`, which reuses `SHIPPED_ROLES`).
 - Route authorisation policies, custom `APIRoute` class and permission-literal lint check
   (`STY-105`, which builds on `Permission` and `SHIPPED_ROLES`).
+
+## Delivery
+
+### Departures
+
+- **S2 (`tenant_scopes.updated_at` on the `'access'` row)** (agent): `STY-103`'s
+  `public.open_access_change_set_internal` routine updates `tenant_scopes.updated_at = now()`
+  each time an access change set opens. Rather than overwriting that routine-written commit
+  timestamp post hoc (which would break consistency with `change_sets.created_at`),
+  `tenant_scopes` keeps its real routine-written `updated_at` on `'access'` while
+  `(tenant_id, scope, revision)` and the untouched `'lists'` anchor timestamp match
+  identically across runs, matching S2's treatment of PostgreSQL-generated commit timestamps.
+
+### Contract for dependents
+
+- **Canonical permissions (`apps/api/src/roadmaps_api/authz/permissions.py`, re-exported from
+  `roadmaps_api.authz`)**:
+  - `Permission(StrEnum)` defines ADR-019's ten permission values.
+  - `ShippedRoleKey(StrEnum)` defines `ADMIN = "admin"`, `PRODUCT_LEAD = "product_lead"` and
+    `VIEWER = "viewer"`.
+  - `SHIPPED_ROLES: Mapping[ShippedRoleKey, frozenset[Permission]]` (`MappingProxyType`) and
+    `SHIPPED_ROLE_NAMES: Mapping[ShippedRoleKey, str]` (`MappingProxyType`) are immutable.
+  - `STY-104` reuses `SHIPPED_ROLES` and `SHIPPED_ROLE_NAMES` in `create-tenant`; `STY-105`
+    builds route policies, startup validation and its permission-literal lint check on this
+    module.
+- **Canonical `local_mock` persona specs (`apps/api/tools/seed/personas.py`, re-exported from
+  `tools.seed`)**:
+  - `LOCAL_MOCK_ISSUER = "http://127.0.0.1/local-mock-oidc"` (both non-HTTPS and loopback,
+    independent of worktree port).
+  - `TENANT_SPECS` (`dhcw`, `cwm-aur`), `NAMED_PERSONAS` (8 seeded personas covering two DHCW
+    Admins, DHCW Product Lead, DHCW Viewer, multi-tenant DHCW Product Lead / Cwm Aur Admin,
+    Cwm Aur-only Admin, ended DHCW member and disabled DHCW person) and `UNINVITED_PERSONA`
+    (never seeded into PostgreSQL). `STY-106` imports these directly for its local mock OIDC
+    provider.
+- **Invitation token hashing convention (`tools.seed.deterministic`, `tools.seed.factories`)**:
+  - Raw tokens are 256-bit URL-safe base64 strings (43 ASCII chars without padding);
+    PostgreSQL stores `hashlib.sha256(raw_token.encode("ascii")).digest()` (32 bytes) in
+    `invitations.token_hash`.
+- **Reusable seed factories (`tools.seed`)**:
+  - `create_tenant`, `create_shipped_roles`, `create_person_with_identity`,
+    `create_membership`, `create_invitation`, `system_access_change_set`,
+    `person_access_change_set`, `truncate_public_tables`, `seed_database`, `run_seed`, plus
+    `tools.seed.welsh` (`create_faker`, `welsh_name_parts`, `example_email`).
+  - `EPC-026` stories extend `tools/seed/factories.py`, `tools/seed/welsh.py` and
+    `tools/seed/seeder.py` as new tables land.
+- **CLI**: `pnpm api:seed` (`apps/api/scripts/api.sh seed`) runs `migrate` then
+  `python -m tools.seed` (accepting `--seed <int>`, with or without a leading `--`);
+  `pnpm api:dev` remains `migrate`-only and never auto-seeds.
+
+### Scenario evidence
+
+- **TDD slices**:
+  - Slice 1 (permissions catalogue & dev-only packaging): wrote `tests/test_permissions.py`
+    first (red: `ModuleNotFoundError: roadmaps_api.authz`), then implemented
+    `src/roadmaps_api/authz/` until green.
+  - Slice 2 (deterministic IDs, Welsh helper, persona roster, guards 1–4, CLI): wrote
+    `tests/test_seed.py` first (red: `ModuleNotFoundError: tools.seed`), then implemented
+    `tools/seed/` pure modules until green.
+  - Slice 3 (real PostgreSQL seeding, triggers, determinism, hash-only storage, `PGHOSTADDR`
+    pinning, reusable factories, RLS): wrote `tests/integration/test_seed.py` first (red:
+    `ModuleNotFoundError: tools.seed`), then implemented `tools/seed/factories.py` and
+    `tools/seed/seeder.py` until all 398 tests passed at 100% branch coverage.
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                            |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/integration/test_seed.py` (`test_seed_truncates_manual_edits_populates_all_tables_via_real_triggers_and_preserves_alembic`); observed live `pnpm api:seed`                                                                                                                         |
+| S2       | `apps/api/tests/test_seed.py`, `apps/api/tests/integration/test_seed.py` (`test_repeated_runs_are_deterministic_and_alternate_seed_varies_generated_data`)                                                                                                                                         |
+| S3       | `apps/api/tests/test_seed.py` (`test_summary_lists_personas_and_only_pending_invitation_raw_tokens`), `apps/api/tests/integration/test_seed.py` (`test_invitations_store_only_sha256_hashes_and_cli_prints_summary_without_logging_tokens`)                                                        |
+| S4       | `apps/api/tests/test_seed.py` (`test_safety_guards_refuse_disallowed_environments_without_leaking_values`, `test_pinned_host_refuses_non_loopback_or_query_url_directly`), `apps/api/tests/integration/test_seed.py` (`test_non_superuser_refusal_leaves_data_untouched_and_pghostaddr_is_pinned`) |
+| S5       | `apps/api/tests/test_permissions.py` (`test_faker_is_dev_only_and_never_imported_by_runtime_package`), `apps/api/tests/integration/test_seed.py` (`test_empty_db_tests_are_never_auto_seeded`, `test_seed_factories_are_reusable_directly`, `test_seeded_rows_satisfy_app_rls_isolation`)          |

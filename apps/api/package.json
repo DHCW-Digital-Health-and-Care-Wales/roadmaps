@@ -9,6 +9,7 @@
     "db:up": "scripts/api.sh db-up",
     "db:down": "scripts/api.sh db-down",
     "migrate": "scripts/api.sh migrate",
+    "seed": "scripts/api.sh seed",
     "jaeger": "scripts/api.sh jaeger",
     "jaeger:stop": "scripts/api.sh jaeger-stop",
     "openapi": "uv run --locked python -m tools.export_openapi",

@@ -6,9 +6,10 @@
 #            bootstrap its roles and local logins (tools/bootstrap_database.py)
 #   db-down  stop and remove it, keeping its data volume
 #   migrate  db-up, then the migrations, as the migration login
+#   seed     migrate, then truncate and deterministically seed local data (tools/seed)
 #   dev      migrate, then the API with reload on the slot's API_PORT, as the
 #            application's login, its traces sent to the shared Jaeger if it answers
-#            as the API starts, under the service roadmaps-api-<slot>
+#            as the API starts, under the service roadmaps-api-<slot> (never auto-seeds)
 #   test     db-up, then pytest under coverage against it, locally and in CI
 #   jaeger, jaeger-stop
 #            start or stop the Jaeger every worktree shares (jaeger/compose.yaml),
@@ -81,6 +82,15 @@ case "${1:-}" in
   db-up) db_up ;;
   db-down) compose down ;;
   migrate) migrate ;;
+  seed)
+    shift
+    if [ "${1:-}" = "--" ]; then
+      shift
+    fi
+    migrate
+    ROADMAPS_ENV=local ROADMAPS_ADMIN_DATABASE_URL="$ADMIN_DATABASE_URL" \
+      uv run --locked python -m tools.seed "$@"
+    ;;
   dev)
     migrate
     echo "==> API on http://127.0.0.1:$API_PORT, its database on 127.0.0.1:$DB_PORT" >&2
@@ -112,7 +122,7 @@ case "${1:-}" in
     uv run --locked coverage report
     ;;
   *)
-    echo "usage: $0 {db-up|db-down|migrate|dev|test [pytest args]|jaeger|jaeger-stop}" >&2
+    echo "usage: $0 {db-up|db-down|migrate|seed [--seed <int>]|dev|test [pytest args]|jaeger|jaeger-stop}" >&2
     exit 2
     ;;
 esac

@@ -2,7 +2,7 @@
 
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 2b, 3a, 4a, 5a);
   stories start `Needs grilling` / `Placeholder` and become selectable as each is grilled
-- **Progress**: 2 of 10 terminal; next selectable: STY-093 (STY-108 grilled, waits on
+- **Progress**: 3 of 10 terminal; next selectable: none (STY-108 grilled, waits on
   STY-107; grill STY-105 or CHO-049 next)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
@@ -139,7 +139,7 @@ coverage, and adding seeder factories to `STY-093` for every new table. See
 | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------- | ----- |
 | STY-102 | [Threat model for sign-in, sessions, invitations and linking](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)    | Docs                                                          | —                                  | ✅    |
 | STY-103 | [Tenancy, people, roles, memberships and access-history schema](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-103-tenancy-people-roles-memberships-and-access-history-schema.md) | API                                                           | —                                  | ✅    |
-| STY-093 | [A deterministic seeder](STY-093-a-deterministic-seeder.md)                                                                                                                                      | API                                                           | STY-103                            |       |
+| STY-093 | [A deterministic seeder](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-093-a-deterministic-seeder.md)                                                                            | API                                                           | STY-103                            | ✅    |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                                                     | API                                                           | —                                  |       |
 | STY-104 | [Platform operator CLI for tenants, bootstrap invitations and person control](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md)                             | API                                                           | STY-102, STY-103, STY-106          |       |
 | STY-105 | [Route authorisation policy, tenant dependency and same-origin guard](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md)                                             | API                                                           | STY-103                            |       |
@@ -168,7 +168,7 @@ flowchart LR
 
 - **Start in parallel**: `STY-102` (threat model, Done), `STY-103` (first schema migration
   and enforcement suite, Done), and `CHO-049` (independent DB timeout chore).
-- **After `STY-103`**: `STY-093` (seeder) and `STY-105` (authorisation & CSRF framework)
+- **After `STY-103`**: `STY-093` (seeder, Done) and `STY-105` (authorisation & CSRF framework)
   can run in parallel.
 - **After `STY-093`, `STY-102`, `STY-103` and `STY-105`**: `STY-106` lands OIDC sign-in,
   sessions, `/me` and the local mock provider (importing `STY-093`'s `local_mock` persona

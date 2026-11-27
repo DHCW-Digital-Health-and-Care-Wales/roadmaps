@@ -16,13 +16,15 @@ from typing import Final
 
 import psycopg
 from psycopg import sql
+from sqlalchemy import Connection, create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.orm import Session
 
 from roadmaps_api.database import TENANT_POLICY
 from roadmaps_api.migrate import upgrade
 from roadmaps_api.roles import APP_ROLE, OWNER_ROLE, database_scoped_sql
+from tools._local_db import ADMIN_DATABASE_URL, PUBLIC_TABLES_QUERY, VERSION_TABLE
 from tools.bootstrap_database import (
-    ADMIN_DATABASE_URL,
     APP_LOGIN,
     LOCAL_PASSWORD,
     MIGRATION_LOGIN,
@@ -35,7 +37,6 @@ from tools.bootstrap_database import (
 # tenant-owned tables use (STY-091 D13, D33). Not a migration's: the drift check leaves
 # it out.
 PROBE_TABLE: Final = "harness_probe"
-VERSION_TABLE: Final = "alembic_version"
 # Where a test that needs `/ready` to find no version table moves it (`versions`).
 MOVED_VERSION_TABLE: Final = "alembic_version_moved"
 # A test that leaves a connection holding a lock fails the emptying, not the run.
@@ -82,6 +83,32 @@ def admin(database: str | None = None) -> Generator[psycopg.Connection]:
     """A superuser connection, committing each statement."""
     with psycopg.connect(libpq_url(admin_url(database)), autocommit=True) as connection:
         yield connection
+
+
+@contextmanager
+def admin_connection(database: str) -> Generator[Connection]:
+    """A SQLAlchemy superuser connection with `LOCK_TIMEOUT` set, disposed on exit."""
+    engine = create_engine(admin_url(database), hide_parameters=True)
+    try:
+        with engine.connect() as connection:
+            connection.execute(text(f"SET lock_timeout = '{LOCK_TIMEOUT}'"))
+            connection.commit()
+            yield connection
+    finally:
+        engine.dispose()
+
+
+@contextmanager
+def admin_session(database: str) -> Generator[Session]:
+    """A SQLAlchemy superuser session with `LOCK_TIMEOUT` and `autoflush=False`.
+
+    `autoflush=False` ensures factory tests prove each factory flushes for itself.
+    """
+    with (
+        admin_connection(database) as connection,
+        Session(bind=connection, autoflush=False) as s,
+    ):
+        yield s
 
 
 def unique_name(prefix: str) -> str:
@@ -150,10 +177,7 @@ def build_template(name: str) -> None:
 
 def empty_tables(connection: psycopg.Connection) -> None:
     """Empties every table in `public` but `alembic_version`, so the revision stays."""
-    tables = connection.execute(
-        "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> %s",
-        (VERSION_TABLE,),
-    ).fetchall()
+    tables = connection.execute(PUBLIC_TABLES_QUERY, (VERSION_TABLE,)).fetchall()
     if tables:
         # Superuser-only replica mode bypasses immutability BEFORE TRUNCATE triggers
         # during test teardown without adding any superuser backdoor to production SQL.

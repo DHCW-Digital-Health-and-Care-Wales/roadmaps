@@ -159,7 +159,9 @@ lives:_
   requests, or the production server is configured to. The production image build also
   runs ADR-018's test proving the image refuses any non-HTTPS or loopback issuer and the
   local mock provider whenever `K_SERVICE`, `CLOUD_RUN_JOB` or `CLOUD_RUN_WORKER_POOL`
-  is set (handed over from `STY-106`).
+  is set (handed over from `STY-106`), installs without `[dependency-groups].dev`,
+  excludes `apps/api/tools/`, and verifies `import faker` and `import tools.seed` fail in
+  the built image (handed over from `STY-093`).
 
 ### Operations
 

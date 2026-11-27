@@ -16,6 +16,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "coverage>=7.10",
+  "faker>=40.54.0",
   "httpx2>=2.16",
   "import-linter>=2.17",
   "pytest>=9.2",
@@ -77,6 +78,7 @@ error-on-warning = true
 
 [tool.importlinter]
 root_package = "roadmaps_api"
+include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "A route calls a service, a service a repository, never upwards (ADR-017 Layering)"
@@ -87,6 +89,12 @@ layers = [
   "roadmaps_api.services",
   "roadmaps_api.repositories",
 ]
+
+[[tool.importlinter.contracts]]
+name = "The runtime package never imports dev-only faker or tools (STY-093 S5)"
+type = "forbidden"
+source_modules = ["roadmaps_api"]
+forbidden_modules = ["faker", "tools"]
 
 [tool.alembic]
 # For Alembic's own command line, run from apps/api to draft a revision by autogenerate

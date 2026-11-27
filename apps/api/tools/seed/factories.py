@@ -6,15 +6,15 @@ real open/sign-off routines. Integration tests can import and invoke these helpe
 against a worker database without auto-seeding empty-DB tests.
 """
 
-import hashlib
+import contextlib
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
 from uuid import UUID
 
-from sqlalchemy import Connection, text
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from roadmaps_api.authz import (
@@ -35,9 +35,8 @@ from roadmaps_api.models import (
     TenantScope,
 )
 from roadmaps_api.repositories.access_change_set import AccessChangeSetRepository
+from tools.seed.deterministic import hash_invitation_token, request_hash_for
 from tools.seed.personas import LOCAL_MOCK_ISSUER, TenantSpec
-
-VERSION_TABLE: Final = "alembic_version"
 
 _OPEN_INTERNAL = text(
     "SELECT change_set_id FROM public.open_access_change_set_internal("
@@ -55,6 +54,15 @@ class ChangeSetRequest:
     idempotency_key: str
     request_hash: bytes
     note: str | None = None
+
+    @classmethod
+    def seeded(cls, seed: int, key: str, *, note: str | None = None) -> ChangeSetRequest:
+        """Builds a `ChangeSetRequest` whose `request_hash` is deterministically derived."""
+        return cls(
+            idempotency_key=key,
+            request_hash=request_hash_for(seed, key),
+            note=note,
+        )
 
 
 @dataclass(frozen=True)
@@ -93,27 +101,9 @@ class InvitationInput:
     invitation_id: UUID | None = None
 
 
-def truncate_public_tables(connection: Connection) -> None:
-    """Truncates every `public` table except `alembic_version`, then restores `'origin'` mode."""
-    tables = list(
-        connection.execute(
-            text(
-                "SELECT tablename FROM pg_tables"
-                " WHERE schemaname = 'public' AND tablename <> :version_table"
-                " ORDER BY tablename"
-            ),
-            {"version_table": VERSION_TABLE},
-        ).scalars()
-    )
-    if not tables:
-        return
-    quote = connection.dialect.identifier_preparer.quote
-    targets = ", ".join(f"public.{quote(table)}" for table in tables)
-    # Replica mode is scoped strictly to teardown so immutable history tables can be cleared;
-    # origin mode is restored immediately before any ORM write.
-    connection.execute(text("SET LOCAL session_replication_role = 'replica'"))
-    connection.execute(text(f"TRUNCATE {targets} CASCADE"))
-    connection.execute(text("SET LOCAL session_replication_role = 'origin'"))
+def _clear_local_settings(session: Session) -> None:
+    session.execute(_SET_LOCAL_CONFIG, {"setting": TENANT_SETTING, "value": ""})
+    session.execute(_SET_LOCAL_CONFIG, {"setting": PERSON_SETTING, "value": ""})
 
 
 @contextmanager
@@ -165,9 +155,13 @@ def person_access_change_set(
         yield opened.change_set_id
         session.flush()
         repo.sign_off(opened.change_set_id)
-    finally:
-        session.execute(_SET_LOCAL_CONFIG, {"setting": TENANT_SETTING, "value": ""})
-        session.execute(_SET_LOCAL_CONFIG, {"setting": PERSON_SETTING, "value": ""})
+    except BaseException:
+        # On a database error the transaction is already aborted or pending rollback;
+        # suppressing SQLAlchemyError preserves the original error (and its sqlstate).
+        with contextlib.suppress(SQLAlchemyError):
+            _clear_local_settings(session)
+        raise
+    _clear_local_settings(session)
 
 
 def create_tenant(
@@ -177,7 +171,7 @@ def create_tenant(
     created_at: datetime,
     tenant_id: UUID | None = None,
 ) -> Tenant:
-    """Creates a `Tenant` together with its `'access'` and `'lists'` `TenantScope` rows."""
+    """Creates and flushes a `Tenant` with its `'access'` and `'lists'` `TenantScope` rows."""
     tenant = Tenant(
         slug=spec.slug,
         name_en=spec.name_en,
@@ -198,6 +192,7 @@ def create_tenant(
                 updated_at=created_at,
             )
         )
+    session.flush()
     return tenant
 
 
@@ -211,7 +206,7 @@ def create_shipped_roles(
 ) -> dict[ShippedRoleKey, Role]:
     """Creates the three ADR-019 shipped roles and their permissions inside an open change set."""
     created: dict[ShippedRoleKey, Role] = {}
-    for role_key in (ShippedRoleKey.ADMIN, ShippedRoleKey.PRODUCT_LEAD, ShippedRoleKey.VIEWER):
+    for role_key, permissions in SHIPPED_ROLES.items():
         role = Role(
             tenant_id=tenant_id,
             name=SHIPPED_ROLE_NAMES[role_key],
@@ -223,7 +218,7 @@ def create_shipped_roles(
             role.id = role_id_for(role_key)
         session.add(role)
         session.flush()
-        for permission in sorted(SHIPPED_ROLES[role_key]):
+        for permission in sorted(permissions):
             role_permission = RolePermission(
                 tenant_id=tenant_id,
                 role_id=role.id,
@@ -284,13 +279,12 @@ def create_membership(session: Session, data: MembershipInput) -> Membership:
 
 def create_invitation(session: Session, data: InvitationInput) -> Invitation:
     """Creates a person-issued `Invitation` storing only the SHA-256 hash of `raw_token`."""
-    token_hash = hashlib.sha256(data.raw_token.encode("ascii")).digest()
     invitation = Invitation(
         tenant_id=data.tenant_id,
         email=data.email,
         provider=data.provider,
         role_id=data.role_id,
-        token_hash=token_hash,
+        token_hash=hash_invitation_token(data.raw_token),
         invited_by_kind="person",
         invited_by_person_id=data.invited_by_person_id,
         created_at=data.created_at,

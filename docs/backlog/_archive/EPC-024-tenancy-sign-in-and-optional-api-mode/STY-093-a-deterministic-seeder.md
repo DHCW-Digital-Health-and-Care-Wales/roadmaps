@@ -224,6 +224,12 @@ real RLS policies (DHCW sees DHCW rows and never Cwm Aur-only people or identiti
 
 ### Departures
 
+- **S1, D13 (Cwm Aur sample invitation actor)** (agent): the sample pending invitation in
+  `cwm-aur` is attributed to `cwm_aur_admin` (`actor_kind = 'person'`) rather than
+  `dhcw_admin_primary`, because `dhcw_admin_primary` holds no membership in `cwm-aur` and a
+  tenant's invitation must be issued by an admin of that tenant. All DHCW follow-on admin
+  actions (creating/revoking sample invitations and ending the sample membership) are
+  attributed to `dhcw_admin_primary` as specified.
 - **S2 (`tenant_scopes.updated_at` on the `'access'` row)** (agent): `STY-103`'s
   `public.open_access_change_set_internal` routine updates `tenant_scopes.updated_at = now()`
   each time an access change set opens. Rather than overwriting that routine-written commit
@@ -253,39 +259,34 @@ real RLS policies (DHCW sees DHCW rows and never Cwm Aur-only people or identiti
     Cwm Aur-only Admin, ended DHCW member and disabled DHCW person) and `UNINVITED_PERSONA`
     (never seeded into PostgreSQL). `STY-106` imports these directly for its local mock OIDC
     provider.
-- **Invitation token hashing convention (`tools.seed.deterministic`, `tools.seed.factories`)**:
-  - Raw tokens are 256-bit URL-safe base64 strings (43 ASCII chars without padding);
-    PostgreSQL stores `hashlib.sha256(raw_token.encode("ascii")).digest()` (32 bytes) in
-    `invitations.token_hash`.
-- **Reusable seed factories (`tools.seed`)**:
+- **Seeder invitation token hashing convention (`tools.seed.deterministic`,
+  `tools.seed.factories`)**:
+  - Raw seeded tokens are 256-bit URL-safe base64 strings (43 ASCII chars without padding);
+    `hash_invitation_token` stores `hashlib.sha256(raw_token.encode("ascii")).digest()` (32
+    bytes) in `invitations.token_hash`. Later invitation stories (`STY-104`, `STY-110`) can
+    adopt this encoding or update `hash_invitation_token` in step if grilling chooses another.
+- **Reusable seed factories (`tools.seed`, shared teardown in `tools._local_db`)**:
   - `create_tenant`, `create_shipped_roles`, `create_person_with_identity`,
     `create_membership`, `create_invitation`, `system_access_change_set`,
-    `person_access_change_set`, `truncate_public_tables`, `seed_database`, `run_seed`, plus
-    `tools.seed.welsh` (`create_faker`, `welsh_name_parts`, `example_email`).
+    `person_access_change_set`, `truncate_public_tables`, `seed_database`, `run_seed` (which
+    enforces all five safety guards, accepting optional `environ`), plus `tools.seed.welsh`
+    (`create_faker`, `welsh_name_parts`, `example_email`).
   - `EPC-026` stories extend `tools/seed/factories.py`, `tools/seed/welsh.py` and
     `tools/seed/seeder.py` as new tables land.
+- **Production image exclusion (`EPC-023`)**:
+  - No Dockerfile exists yet; `EPC-023` (_The API's image and server_) owns installing
+    without `[dependency-groups].dev`, excluding `apps/api/tools/`, and verifying in the
+    built image that `import faker` and `import tools.seed` fail.
 - **CLI**: `pnpm api:seed` (`apps/api/scripts/api.sh seed`) runs `migrate` then
   `python -m tools.seed` (accepting `--seed <int>`, with or without a leading `--`);
   `pnpm api:dev` remains `migrate`-only and never auto-seeds.
 
 ### Scenario evidence
 
-- **TDD slices**:
-  - Slice 1 (permissions catalogue & dev-only packaging): wrote `tests/test_permissions.py`
-    first (red: `ModuleNotFoundError: roadmaps_api.authz`), then implemented
-    `src/roadmaps_api/authz/` until green.
-  - Slice 2 (deterministic IDs, Welsh helper, persona roster, guards 1–4, CLI): wrote
-    `tests/test_seed.py` first (red: `ModuleNotFoundError: tools.seed`), then implemented
-    `tools/seed/` pure modules until green.
-  - Slice 3 (real PostgreSQL seeding, triggers, determinism, hash-only storage, `PGHOSTADDR`
-    pinning, reusable factories, RLS): wrote `tests/integration/test_seed.py` first (red:
-    `ModuleNotFoundError: tools.seed`), then implemented `tools/seed/factories.py` and
-    `tools/seed/seeder.py` until all 398 tests passed at 100% branch coverage.
-
-| Scenario | Held by                                                                                                                                                                                                                                                                                            |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| S1       | `apps/api/tests/integration/test_seed.py` (`test_seed_truncates_manual_edits_populates_all_tables_via_real_triggers_and_preserves_alembic`); observed live `pnpm api:seed`                                                                                                                         |
-| S2       | `apps/api/tests/test_seed.py`, `apps/api/tests/integration/test_seed.py` (`test_repeated_runs_are_deterministic_and_alternate_seed_varies_generated_data`)                                                                                                                                         |
-| S3       | `apps/api/tests/test_seed.py` (`test_summary_lists_personas_and_only_pending_invitation_raw_tokens`), `apps/api/tests/integration/test_seed.py` (`test_invitations_store_only_sha256_hashes_and_cli_prints_summary_without_logging_tokens`)                                                        |
-| S4       | `apps/api/tests/test_seed.py` (`test_safety_guards_refuse_disallowed_environments_without_leaking_values`, `test_pinned_host_refuses_non_loopback_or_query_url_directly`), `apps/api/tests/integration/test_seed.py` (`test_non_superuser_refusal_leaves_data_untouched_and_pghostaddr_is_pinned`) |
-| S5       | `apps/api/tests/test_permissions.py` (`test_faker_is_dev_only_and_never_imported_by_runtime_package`), `apps/api/tests/integration/test_seed.py` (`test_empty_db_tests_are_never_auto_seeded`, `test_seed_factories_are_reusable_directly`, `test_seeded_rows_satisfy_app_rls_isolation`)          |
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| S1       | `apps/api/tests/integration/test_seed.py` (`test_seed_truncates_manual_edits_populates_all_tables_via_real_triggers_and_preserves_alembic`); observed live `pnpm api:seed`                                                                                                                                                                                                                                                     |
+| S2       | `apps/api/tests/test_seed.py`, `apps/api/tests/integration/test_seed.py` (`test_repeated_runs_are_deterministic_and_alternate_seed_varies_generated_data`)                                                                                                                                                                                                                                                                     |
+| S3       | `apps/api/tests/test_seed.py` (`test_summary_lists_personas_and_only_pending_invitation_raw_tokens`), `apps/api/tests/integration/test_seed.py` (`test_invitations_store_only_sha256_hashes_and_cli_prints_summary_without_logging_tokens`)                                                                                                                                                                                    |
+| S4       | `apps/api/tests/test_seed.py` (`test_safety_guards_refuse_disallowed_environments_without_leaking_values`, `test_cli_main_refuses_bad_environment_without_leaking_secret`, `test_pinned_host_refuses_non_loopback_or_query_url_directly`), `apps/api/tests/integration/test_seed.py` (`test_non_superuser_refusal_leaves_data_untouched_and_pghostaddr_is_pinned`, `test_run_seed_enforces_env_and_cloud_run_guards_directly`) |
+| S5       | `apps/api/tests/test_permissions.py` (`test_faker_is_dev_only_and_never_imported_by_runtime_package`), `apps/api/tests/integration/test_seed.py` (`test_seed_factories_are_reusable_directly`, `test_seeded_rows_satisfy_app_rls_isolation`, `test_person_access_change_set_preserves_db_errors_and_clears_settings_on_python_error`)                                                                                          |

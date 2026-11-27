@@ -66,9 +66,10 @@ def main(
     # settings=None => messages=False: no admin URL, secret or raw exception message is logged.
     logging.config.dictConfig(log_config())
     args = parse_args(argv)
+    env = os.environ if environ is None else environ
     try:
-        url = validated_admin_url(os.environ if environ is None else environ)
-        result = run_seed(url, seed=args.seed)
+        url = validated_admin_url(env)
+        result = run_seed(url, seed=args.seed, environ=env)
     except SettingsError:
         return 1
     except Exception:

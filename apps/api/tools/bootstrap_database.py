@@ -14,7 +14,6 @@ Cloud SQL login is (STY-091 D3, D30): where the API is hosted, EPC-023 creates t
 and runs the file.
 """
 
-import ipaddress
 import logging
 import logging.config
 import os
@@ -34,12 +33,14 @@ from roadmaps_api.roles import (
     PURGE_ROLE,
     bootstrap_sql,
 )
-from roadmaps_api.settings import ENV, Environment, SettingsError, is_database_url, refuse
+from roadmaps_api.settings import SettingsError, refuse
+from tools._local_db import (
+    ADMIN_DATABASE_URL,
+    SUPERUSER_QUERY,
+    validated_local_admin_url,
+)
 
 logger = logging.getLogger("roadmaps_api.bootstrap")
-
-ADMIN_DATABASE_URL: Final = "ROADMAPS_ADMIN_DATABASE_URL"
-LOCAL_ENVIRONMENTS: Final = frozenset({Environment.LOCAL.value, Environment.TEST.value})
 
 # The local logins and the one role each is a member of. The passwords are for the
 # slot's container alone, reachable only from this machine (apps/api/compose.yaml).
@@ -58,23 +59,7 @@ LOGINS: Final = {
 
 def admin_url(environ: Mapping[str, str]) -> str:
     """The admin URL, or logs and raises `SettingsError` naming each refused setting."""
-    invalid: list[str] = []
-    if environ.get(ENV) not in LOCAL_ENVIRONMENTS:
-        invalid.append(ENV)
-    url = environ.get(ADMIN_DATABASE_URL, "").strip()
-    # No query parameter: libpq would connect by its `host`, `hostaddr` or `service`.
-    if not (is_database_url(url) and not make_url(url).query and _is_loopback(make_url(url).host)):
-        invalid.append(ADMIN_DATABASE_URL)
-    if invalid:
-        refuse(invalid)
-    return url
-
-
-def _is_loopback(host: str | None) -> bool:
-    try:
-        return ipaddress.ip_address(host or "").is_loopback
-    except ValueError:
-        return False
+    return validated_local_admin_url(environ)
 
 
 def libpq_url(url: str) -> str:
@@ -86,9 +71,7 @@ def bootstrap(url: str) -> None:
     """Makes the logins and the roles in the URL's database, or changes nothing."""
     # At the URL's own address, whatever libpq's environment (`PGHOSTADDR`) says.
     with psycopg.connect(libpq_url(url), hostaddr=make_url(url).host) as connection:
-        row = connection.execute(
-            "SELECT rolsuper FROM pg_roles WHERE rolname = current_user"
-        ).fetchone()
+        row = connection.execute(SUPERUSER_QUERY).fetchone()
         if not (row and row[0]):
             refuse([ADMIN_DATABASE_URL])
         for login in LOGINS:

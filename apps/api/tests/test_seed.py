@@ -3,27 +3,24 @@
 import base64
 import hashlib
 import ipaddress
-import re
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import cast
 from urllib.parse import urlsplit
 
 import pytest
-from sqlalchemy import Connection
 
 from roadmaps_api.authz import ShippedRoleKey
 from roadmaps_api.settings import CLOUD_RUN_MARKERS, ENV, SettingsError
 from tests.support import DOWN_DATABASE_URL, Lines
-from tools.bootstrap_database import ADMIN_DATABASE_URL
+from tools._local_db import ADMIN_DATABASE_URL
 from tools.seed.cli import format_summary, main, parse_args
 from tools.seed.deterministic import (
     DEFAULT_SEED,
     derive_invitation_token,
     deterministic_uuidv7,
+    hash_invitation_token,
     request_hash_for,
 )
-from tools.seed.factories import truncate_public_tables
 from tools.seed.guards import pinned_host, validated_admin_url
 from tools.seed.personas import (
     CWM_AUR_SLUG,
@@ -38,7 +35,6 @@ from tools.seed.welsh import create_faker, example_email, welsh_name_parts
 
 SECRET = "SECRET-SEED-VALUE-91e2"  # noqa: S105 - planted, to prove no secret leaks
 LOCAL_URL = f"postgresql+psycopg://roadmaps:{SECRET}@127.0.0.1:5432/roadmaps"
-ISSUER_FORMAT = re.compile(r"^https?://\S+$")
 
 
 def test_deterministic_uuidv7_is_rfc9562_stable_and_time_ordered() -> None:
@@ -59,20 +55,22 @@ def test_deterministic_uuidv7_is_rfc9562_stable_and_time_ordered() -> None:
 
 
 def test_invitation_token_derivation_is_256_bit_deterministic_and_sha256_hashed() -> None:
-    token_a, hash_a = derive_invitation_token(DEFAULT_SEED, "dhcw:pending")
-    token_a_repeat, hash_a_repeat = derive_invitation_token(DEFAULT_SEED, "dhcw:pending")
-    token_other_seed, hash_other_seed = derive_invitation_token(DEFAULT_SEED + 1, "dhcw:pending")
-    token_other_label, _ = derive_invitation_token(DEFAULT_SEED, "dhcw:revoked")
+    token_a = derive_invitation_token(DEFAULT_SEED, "dhcw:pending")
+    token_a_repeat = derive_invitation_token(DEFAULT_SEED, "dhcw:pending")
+    token_other_seed = derive_invitation_token(DEFAULT_SEED + 1, "dhcw:pending")
+    token_other_label = derive_invitation_token(DEFAULT_SEED, "dhcw:revoked")
 
-    assert (token_a, hash_a) == (token_a_repeat, hash_a_repeat)
+    assert token_a == token_a_repeat
     assert token_a != token_other_seed
-    assert hash_a != hash_other_seed
     assert token_a != token_other_label
+
+    hash_a = hash_invitation_token(token_a)
+    assert len(hash_a) == 32
+    assert hash_a == hashlib.sha256(token_a.encode("ascii")).digest()
+    assert hash_a != hash_invitation_token(token_other_seed)
 
     padded = token_a + "=" * (-len(token_a) % 4)
     assert len(base64.urlsafe_b64decode(padded)) == 32
-    assert len(hash_a) == 32
-    assert hash_a == hashlib.sha256(token_a.encode("ascii")).digest()
 
     req_hash = request_hash_for(DEFAULT_SEED, "seed:dhcw:bootstrap")
     assert len(req_hash) == 32
@@ -81,7 +79,6 @@ def test_invitation_token_derivation_is_256_bit_deterministic_and_sha256_hashed(
 
 
 def test_welsh_helper_is_deterministic_per_seed_and_uses_example_domain() -> None:
-    first_batch = [welsh_name_parts(create_faker(DEFAULT_SEED)) for _ in range(1)]
     faker_a = create_faker(DEFAULT_SEED)
     faker_b = create_faker(DEFAULT_SEED)
     faker_c = create_faker(DEFAULT_SEED + 17)
@@ -90,7 +87,6 @@ def test_welsh_helper_is_deterministic_per_seed_and_uses_example_domain() -> Non
     names_b = [welsh_name_parts(faker_b) for _ in range(6)]
     names_c = [welsh_name_parts(faker_c) for _ in range(6)]
 
-    assert names_a[0] == first_batch[0]
     assert names_a == names_b
     assert names_a != names_c
 
@@ -109,7 +105,7 @@ def test_tenants_and_named_persona_roster_match_story_and_adr_018_contracts() ->
 
     # Issuer must be both non-HTTPS and loopback so both ADR-018 guards refuse it outside local.
     parts = urlsplit(LOCAL_MOCK_ISSUER)
-    assert ISSUER_FORMAT.fullmatch(LOCAL_MOCK_ISSUER)
+    assert not any(ch.isspace() for ch in LOCAL_MOCK_ISSUER)
     assert parts.scheme == "http"
     assert parts.hostname is not None
     assert ipaddress.ip_address(parts.hostname).is_loopback
@@ -215,15 +211,21 @@ def test_safety_guards_refuse_disallowed_environments_without_leaking_values(
     with pytest.raises(SettingsError) as raised:
         validated_admin_url(environ)
     assert raised.value.invalid == expected_invalid
-
-    code = main(argv=[], environ=environ)
-    assert code == 1
-
-    log_lines = lines.read()
-    assert len(log_lines) == 2
-    assert all(line["invalid_settings"] == expected_invalid for line in log_lines)
+    [line] = lines.read()
+    assert line["invalid_settings"] == expected_invalid
     assert SECRET not in str(raised.value)
-    assert SECRET not in str(log_lines)
+    assert SECRET not in str(line)
+
+
+def test_cli_main_refuses_bad_environment_without_leaking_secret(lines: Lines) -> None:
+    code = main(
+        argv=[],
+        environ={ENV: "production", "K_SERVICE": SECRET, ADMIN_DATABASE_URL: LOCAL_URL},
+    )
+    assert code == 1
+    [line] = lines.read()
+    assert line["invalid_settings"] == [ENV, "K_SERVICE"]
+    assert SECRET not in str(line)
 
 
 @pytest.mark.parametrize(
@@ -325,21 +327,3 @@ def test_summary_lists_personas_and_only_pending_invitation_raw_tokens() -> None
     assert pending_token in summary
     assert revoked_token not in summary
     assert expired_token not in summary
-
-
-def test_truncate_public_tables_is_a_noop_when_no_tables_exist() -> None:
-    class _EmptyScalars:
-        def scalars(self) -> list[str]:
-            return []
-
-    class _StubConnection:
-        def __init__(self) -> None:
-            self.calls = 0
-
-        def execute(self, *_args: object, **_kwargs: object) -> _EmptyScalars:
-            self.calls += 1
-            return _EmptyScalars()
-
-    stub = _StubConnection()
-    truncate_public_tables(cast("Connection", stub))
-    assert stub.calls == 1

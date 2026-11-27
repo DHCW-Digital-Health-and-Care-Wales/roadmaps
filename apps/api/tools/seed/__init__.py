@@ -1,6 +1,13 @@
 """Dev-only deterministic seeder, reusable factories and `local_mock` persona specs (`STY-093`)."""
 
-from tools.seed.deterministic import ANCHOR_TIME, DEFAULT_SEED, deterministic_uuidv7
+from tools._local_db import truncate_public_tables
+from tools.seed.deterministic import (
+    ANCHOR_TIME,
+    DEFAULT_SEED,
+    derive_invitation_token,
+    deterministic_uuidv7,
+    hash_invitation_token,
+)
 from tools.seed.factories import (
     ChangeSetRequest,
     InvitationInput,
@@ -13,7 +20,6 @@ from tools.seed.factories import (
     create_tenant,
     person_access_change_set,
     system_access_change_set,
-    truncate_public_tables,
 )
 from tools.seed.personas import (
     CWM_AUR_SLUG,
@@ -58,7 +64,9 @@ __all__ = [
     "create_person_with_identity",
     "create_shipped_roles",
     "create_tenant",
+    "derive_invitation_token",
     "deterministic_uuidv7",
+    "hash_invitation_token",
     "person_access_change_set",
     "run_seed",
     "seed_database",

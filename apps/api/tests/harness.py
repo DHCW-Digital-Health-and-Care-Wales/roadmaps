@@ -21,6 +21,7 @@ from sqlalchemy.engine import make_url
 from roadmaps_api.database import TENANT_POLICY
 from roadmaps_api.migrate import upgrade
 from roadmaps_api.roles import APP_ROLE, OWNER_ROLE, database_scoped_sql
+from tools._local_db import PUBLIC_TABLES_QUERY, VERSION_TABLE
 from tools.bootstrap_database import (
     ADMIN_DATABASE_URL,
     APP_LOGIN,
@@ -35,7 +36,6 @@ from tools.bootstrap_database import (
 # tenant-owned tables use (STY-091 D13, D33). Not a migration's: the drift check leaves
 # it out.
 PROBE_TABLE: Final = "harness_probe"
-VERSION_TABLE: Final = "alembic_version"
 # Where a test that needs `/ready` to find no version table moves it (`versions`).
 MOVED_VERSION_TABLE: Final = "alembic_version_moved"
 # A test that leaves a connection holding a lock fails the emptying, not the run.
@@ -150,10 +150,7 @@ def build_template(name: str) -> None:
 
 def empty_tables(connection: psycopg.Connection) -> None:
     """Empties every table in `public` but `alembic_version`, so the revision stays."""
-    tables = connection.execute(
-        "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> %s",
-        (VERSION_TABLE,),
-    ).fetchall()
+    tables = connection.execute(PUBLIC_TABLES_QUERY, (VERSION_TABLE,)).fetchall()
     if tables:
         # Superuser-only replica mode bypasses immutability BEFORE TRUNCATE triggers
         # during test teardown without adding any superuser backdoor to production SQL.
@@ -164,6 +161,7 @@ def empty_tables(connection: psycopg.Connection) -> None:
                     sql.SQL(", ").join(sql.Identifier("public", table) for (table,) in tables)
                 )
             )
+            connection.execute("SET LOCAL session_replication_role = 'origin'")
 
 
 def open_admin(database: str) -> psycopg.Connection:

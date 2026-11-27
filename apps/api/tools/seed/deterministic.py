@@ -23,12 +23,15 @@ def deterministic_uuidv7(namespace: str, timestamp: datetime) -> UUID:
     return UUID(int=value)
 
 
-def derive_invitation_token(seed: int, label: str) -> tuple[str, bytes]:
-    """Returns `(raw_token, sha256_hash)` for a deterministic 256-bit invitation token."""
+def derive_invitation_token(seed: int, label: str) -> str:
+    """Returns a deterministic 256-bit URL-safe base64 invitation token string."""
     token_bytes = hashlib.sha256(f"roadmaps-seed:{seed}:invitation:{label}".encode()).digest()
-    raw_token = base64.urlsafe_b64encode(token_bytes).rstrip(b"=").decode("ascii")
-    token_hash = hashlib.sha256(raw_token.encode("ascii")).digest()
-    return raw_token, token_hash
+    return base64.urlsafe_b64encode(token_bytes).rstrip(b"=").decode("ascii")
+
+
+def hash_invitation_token(raw_token: str) -> bytes:
+    """Returns the 32-byte SHA-256 hash stored in `invitations.token_hash` for `raw_token`."""
+    return hashlib.sha256(raw_token.encode("ascii")).digest()
 
 
 def request_hash_for(seed: int, key: str) -> bytes:

@@ -117,7 +117,7 @@ Every API story inherits ADR-017's layering, error envelope, camelCase wire mode
 regeneration (`apps/api/openapi.json` + `packages/api-types`), mapping every new
 `ErrorCode` in `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`, upgrade-only
 backwards-compatible migrations with explicit `roadmaps_app` grants, 100% branch
-coverage, and adding seeder factories to `STY-093` for every new table. See
+coverage, and adding seeder factories under `apps/api/tools/seed/` for every new table. See
 [delivery-notes.md](delivery-notes.md).
 
 ### Dual-mode editor contract

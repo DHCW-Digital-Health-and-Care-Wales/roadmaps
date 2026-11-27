@@ -18,10 +18,9 @@ role-permission validation, a custom `APIRoute` class that refuses to start if a
 lacks a declared policy (`public`, `signed_in`, `tenant_member`, or
 `tenant_permission(Permission.…)`), the reviewed public-route allow-list, the tenant
 dependency (returning 404 for non-members or unknown tenants and binding `app.tenant_id`
-
-- `app.person_id`), ADR-018's person-assertion check on state-changing requests,
-  ADR-020's same-origin and `application/json` guard, and the generated role-by-route
-  matrix, cross-tenant sweep and permission-literal lint tests.
+and `app.person_id`), ADR-018's person-assertion check on state-changing requests,
+ADR-020's same-origin and `application/json` guard, and the generated role-by-route
+matrix, cross-tenant sweep and permission-literal lint tests.
 
 ## Scope
 
@@ -137,20 +136,21 @@ _None — Q1–Q2 and the full design tree were settled in D1–D15._
   `Content-Type: application/json` when exercising body parsing or the 413 body limit).
 - **D7** (owner, 2026-11-27, `STY-105` grilling R1 #3a): introduce the required
   `ROADMAPS_EDITOR_ORIGIN` setting in `STY-105` (`scheme://host[:port]` bare origin with
-  no path, query, fragment, userinfo or wildcard — tested per case in `test_settings.py`;
-  requiring `https` and a host in `ROADMAPS_ALLOWED_HOSTS` whenever `ROADMAPS_ENV` is
-  `production`, unset/invalid or any Cloud Run marker `K_SERVICE`, `CLOUD_RUN_JOB`,
-  `CLOUD_RUN_WORKER_POOL` is set). Teach `apps/api/scripts/api.sh` to read `DEV_PORT` from
-  `.env.worktree` via `worktree_value DEV_PORT` (falling back to `5173` only outside a
-  worktree, mirroring `API_PORT`/`DB_PORT`) and export
-  `ROADMAPS_EDITOR_ORIGIN="http://localhost:$DEV_PORT"` in `api.sh dev` (verified by a
-  check that a worktree's `DEV_PORT` reaches the setting), and set `editor_origin` in
-  `tools/export_openapi.py` and test settings. On every non-`GET`/`HEAD`/`OPTIONS` route:
-  if `Sec-Fetch-Site` is present it must equal `same-origin` (never falling back to
-  `Origin` on `cross-site`/`same-site`/`none`), and if `Origin` is also present it must
-  equal `ROADMAPS_EDITOR_ORIGIN`; if `Sec-Fetch-Site` is absent, `Origin` must be present
-  and equal `ROADMAPS_EDITOR_ORIGIN`; duplicate `Sec-Fetch-Site` or `Origin` headers are
-  refused.
+  no path, query, fragment, userinfo or wildcard — tested per case in `test_settings.py`,
+  stored in canonical form with lowercase scheme/host, no default `:80`/`:443` port and
+  no trailing slash for exact string matching; requiring `https` and a host in
+  `ROADMAPS_ALLOWED_HOSTS` whenever `ROADMAPS_ENV` is `production`, unset/invalid or any
+  Cloud Run marker `K_SERVICE`, `CLOUD_RUN_JOB`, `CLOUD_RUN_WORKER_POOL` is set). Teach
+  `apps/api/scripts/api.sh` to read `DEV_PORT` from `.env.worktree` via
+  `worktree_value DEV_PORT` (falling back to `5173` only outside a worktree, mirroring
+  `API_PORT`/`DB_PORT`) and export `ROADMAPS_EDITOR_ORIGIN="http://localhost:$DEV_PORT"`
+  in `api.sh dev` (verified by a check that a worktree's `DEV_PORT` reaches the setting),
+  and set `editor_origin` in `tools/export_openapi.py` and test settings. On every
+  non-`GET`/`HEAD`/`OPTIONS` route: if `Sec-Fetch-Site` is present it must equal
+  `same-origin` (never falling back to `Origin` on `cross-site`/`same-site`/`none`), and
+  if `Origin` is also present it must equal `ROADMAPS_EDITOR_ORIGIN`; if `Sec-Fetch-Site`
+  is absent, `Origin` must be present and equal `ROADMAPS_EDITOR_ORIGIN`; duplicate
+  `Sec-Fetch-Site` or `Origin` headers are refused.
 - **D8** (owner, 2026-11-27, `STY-105` grilling R1 #4a & R2 #4a): on non-`GET`/`HEAD`/
   `OPTIONS` routes, any route declaring a request body parameter requires
   `Content-Type: application/json` (allowing parameters such as `; charset=utf-8`) upfront
@@ -171,32 +171,42 @@ _None — Q1–Q2 and the full design tree were settled in D1–D15._
   - `409 auth.person_mismatch` (missing, malformed or disagreeing `X-Roadmaps-Person-Id`
     on authenticated state-changing routes) → `unauthenticated` (`retryable: false`)
 
-  Because FastAPI's `get_request_handler` reads and JSON-decodes declared bodies before
-  `solve_dependencies` runs auth dependencies (bounded by the 1 MiB body limit with zero
-  session or tenant state leakage), matched routes evaluate in fixed order:
-  `same-origin (403) → content-type (415) → body read / JSON decode (413 / 400 / 422 json_invalid) → auth (401) → person-assertion (409) → tenant/permission (404 / 403) → Pydantic body validation (422)`.
-  S5's anonymous matrix sends well-formed JSON bodies on body routes so it proves `401`.
+  Starlette's `RequestBodyLimitMiddleware` answers any declared `Content-Length` above
+  `max_body_bytes` with plain-text `413` ahead of every route refusal (replacing even a
+  403/415 response). Otherwise, because FastAPI's `get_request_handler` reads and
+  JSON-decodes declared bodies before `solve_dependencies` runs auth dependencies (bounded
+  by the 1 MiB body limit with zero session or tenant state leakage), matched routes
+  evaluate in fixed order:
+  `same-origin (403) → content-type (415) → streamed body read / JSON decode (413 / 400 / 422 json_invalid) → auth (401) → person-assertion (409) → tenant/permission (404 / 403) → Pydantic body validation (422)`.
+  Auth/person-assertion and tenant dependencies read `X-Roadmaps-Person-Id` from
+  `request.headers` and `tenantSlug` from `request.path_params` directly (never validated
+  `Header()`/`Path()` parameters) so missing/malformed values do not bypass `401`/`409`/
+  `404` with `422`. S5's anonymous matrix sends well-formed JSON bodies on body routes so
+  it proves `401`.
 
-- **D10** (owner, 2026-11-27, `STY-105` grilling R1 #6a): enforce route policies at both
-  registration and app assembly:
+- **D10** (owner, 2026-11-27, `STY-105` grilling R1 #6a): enforce route policies
+  default-deny at both registration and app assembly:
   - Every API route declares exactly one policy (`public()`, `signed_in()`,
     `tenant_member()`, or `tenant_permission(Permission.…)`), checked in
     `PolicyAPIRoute.__init__` (refusing missing, duplicate or invalid policies).
   - `create_app` sets `app.router.route_class = PolicyAPIRoute` and calls
     `verify_app_routes(app)`, inspecting both `fastapi.routing.iter_route_contexts(app.routes)`
-    and low-priority/frontend routes (`app.router._iter_low_priority_routes()`, tested in
-    S1 by registering `app.frontend(...)` and a nested router's `frontend(...)` and
-    proving startup raises).
-  - `verify_app_routes(app)` checks `{tenantSlug}` against each route's effective
+    and `app.router._iter_low_priority_routes()`.
+  - `verify_app_routes(app)` is strictly default-deny: a route passes **only** as either
+    (1) a `PolicyAPIRoute` with a non-empty method set subset of
+    `{"GET", "POST", "PUT", "PATCH", "DELETE"}` (refusing `methods=[]`, `HEAD`, `OPTIONS`,
+    and any other method), checking `{tenantSlug}` against effective
     `RouteContext.path_format` (supporting include-time prefixes such as
-    `include_router(..., prefix="/tenants/{tenantSlug}")`), refuses any `PolicyAPIRoute`
-    declaring `HEAD` or `OPTIONS` (closing safe-method exemptions outside `GET`), refuses
-    any sub-router that omitted `route_class=PolicyAPIRoute`, refuses any low-priority or
-    frontend route, `Mount`, or `WebSocketRoute`, and admits a plain Starlette `Route`
-    only when every one of its methods and its path appear in the reviewed `PUBLIC_ROUTES`
-    allow-list — specifically `("GET", "/health")`, `("GET", "/ready")`, plus FastAPI's
-    local `/api/v1/openapi.json` (`("GET", "/api/v1/openapi.json")` and
-    `("HEAD", "/api/v1/openapi.json")`) when `serves_live_openapi` is true. Test helpers
+    `include_router(..., prefix="/tenants/{tenantSlug}")`) and checking `public()` routes
+    against `PUBLIC_ROUTES`; or (2) a plain Starlette `Route` with a non-`None`,
+    non-empty method set whose every `(method, path)` appears in `PUBLIC_ROUTES` —
+    specifically `("GET", "/health")`, `("GET", "/ready")`, plus FastAPI's local
+    `/api/v1/openapi.json` (`GET` and `HEAD`) when `serves_live_openapi` is true. Every
+    other route object (`Mount`, `Host`, `WebSocketRoute`, plain `APIRoute`, unknown
+    classes) is refused regardless of class, and `_iter_low_priority_routes()` must be
+    empty (refusing every `frontend()` route). S1 tests register `app.frontend(...)`, a
+    nested router's `frontend(...)`, `app.host(...)`, `methods=[]` on a `PolicyAPIRoute`,
+    and a plain `Route` with `methods=None`, proving startup raises for each. Test helpers
     that register `/test/*` routes after `create_app` declare `public()`.
 - **D11** (owner, 2026-11-27, `STY-105` grilling R1 #7a; amends ADR-019): keep
   `create_app` offline (no DB connection at startup) and stay within forced RLS without

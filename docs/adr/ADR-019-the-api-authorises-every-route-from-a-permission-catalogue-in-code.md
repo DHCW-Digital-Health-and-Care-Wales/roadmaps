@@ -212,11 +212,14 @@ the rest stands.
   code `Permission` catalogue one release before any migration or write inserts it into
   `role_permissions`, and leaves `role_permissions` one release before leaving code, so an
   earlier revision serving during a rolling deploy never rejects valid roles.
-- **Complete start-up route verification and standalone permission-literal lint**:
+- **Default-deny start-up route verification and standalone permission-literal lint**:
   `verify_app_routes` runs in `create_app` over both `iter_route_contexts(app.routes)` and
-  FastAPI's low-priority/frontend routes (`_iter_low_priority_routes()`, refusing any
-  unclassified `frontend()` route, `Mount`, `Route`, `WebSocketRoute` or `HEAD`/`OPTIONS`
-  API route), checking `{tenantSlug}` on effective route paths; raw permission string
+  `_iter_low_priority_routes()`, admitting only a `PolicyAPIRoute` with a non-empty method
+  set within `{GET, POST, PUT, PATCH, DELETE}` (with `{tenantSlug}` verified on effective
+  `path_format` and `public()` checked against `PUBLIC_ROUTES`) or a plain Starlette
+  `Route` with a non-`None`, non-empty method set whose every `(method, path)` is in
+  `PUBLIC_ROUTES`; every other route object (including `Mount`, `Host`, `WebSocketRoute`
+  and any `frontend()`/low-priority route) is refused at start-up. Raw permission string
   literals outside `authz/permissions.py` are refused by `apps/api/tools/check_permissions.py`
   (wired into `pnpm api:lint` and unit-tested in `tests/test_check_permissions.py`).
 

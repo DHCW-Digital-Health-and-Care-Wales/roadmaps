@@ -46,6 +46,8 @@ class AccessFixture:
     role_a: uuid.UUID
     role_a_viewer: uuid.UUID
     perm_a: uuid.UUID
+    membership_a1: uuid.UUID
+    membership_a_ended: uuid.UUID
 
 
 @pytest.fixture
@@ -75,7 +77,8 @@ def access_env(
         person_b1 = one_uuid(
             worker_admin, "INSERT INTO people (display_name) VALUES ('Beth') RETURNING id"
         )
-        # Seed fixed v1 roles via internal change set (revision 1), matching create-tenant.
+        # Seed fixed v1 roles and initial memberships via internal change set (revision 1),
+        # matching create-tenant + invitation redemption (roadmaps_app never INSERTs memberships).
         seed_change_set_a = one_uuid(
             worker_admin,
             "SELECT change_set_id FROM open_access_change_set_internal("
@@ -100,6 +103,18 @@ def access_env(
             " VALUES (%s, %s, 'members:manage') RETURNING id",
             (tenant_a, role_a),
         )
+        membership_a1 = one_uuid(
+            worker_admin,
+            "INSERT INTO memberships (tenant_id, person_id, role_id)"
+            " VALUES (%s, %s, %s) RETURNING id",
+            (tenant_a, person_a1, role_a),
+        )
+        membership_a_ended = one_uuid(
+            worker_admin,
+            "INSERT INTO memberships (tenant_id, person_id, role_id, ended_at)"
+            " VALUES (%s, %s, %s, now() - interval '1 day') RETURNING id",
+            (tenant_a, person_a2, role_a_viewer),
+        )
         worker_admin.execute(
             "SELECT sign_off_access_change_set_internal(%s, %s)",
             (tenant_a, seed_change_set_a),
@@ -114,12 +129,14 @@ def access_env(
         role_a=role_a,
         role_a_viewer=role_a_viewer,
         perm_a=perm_a,
+        membership_a1=membership_a1,
+        membership_a_ended=membership_a_ended,
     )
 
 
 def _create_initial_access_records(
     sessions: sessionmaker[Session], access_env: AccessFixture, batch_ref: uuid.UUID
-) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
+) -> tuple[uuid.UUID, uuid.UUID]:
     expires_at = datetime.now(UTC) + timedelta(days=7)
     with sessions(
         info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
@@ -133,11 +150,10 @@ def _create_initial_access_records(
         )
         assert (opened.revision, opened.is_replay) == (2, False)
 
-        membership = Membership(
-            tenant_id=access_env.tenant_a,
-            person_id=access_env.person_a1,
-            role_id=access_env.role_a,
-        )
+        loaded_membership = session.get(Membership, access_env.membership_a1)
+        assert loaded_membership is not None
+        loaded_membership.role_id = access_env.role_a_viewer
+
         invitation = Invitation(
             tenant_id=access_env.tenant_a,
             email=PLANTED_EMAIL,
@@ -148,11 +164,11 @@ def _create_initial_access_records(
             invited_by_person_id=access_env.person_a1,
             expires_at=expires_at,
         )
-        session.add_all([membership, invitation])
+        session.add(invitation)
         session.flush()
         repo.sign_off(opened.change_set_id)
         session.commit()
-        return opened.change_set_id, membership.id, invitation.id
+        return opened.change_set_id, invitation.id
 
 
 def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
@@ -161,9 +177,7 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
     worker_admin: psycopg.Connection,
 ) -> None:
     batch_ref = uuid.uuid4()
-    cs_id, membership_id, invitation_id = _create_initial_access_records(
-        sessions, access_env, batch_ref
-    )
+    cs_id, invitation_id = _create_initial_access_records(sessions, access_env, batch_ref)
 
     with sessions(
         info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
@@ -193,11 +207,12 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
         assert {(s.entity_type, s.action) for s in seed_summaries} == {
             ("role", "added"),
             ("role_permission", "added"),
+            ("membership", "added"),
         }
 
         summaries = repo.summaries_for(cs_id)
         assert {(s.entity_type, s.action) for s in summaries} == {
-            ("membership", "added"),
+            ("membership", "changed"),
             ("invitation", "added"),
         }
         inv_summary = next(s for s in summaries if s.entity_type == "invitation")
@@ -212,7 +227,7 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
         assert (opened2.revision, opened2.is_replay) == (3, False)
 
         now = datetime.now(UTC)
-        loaded_membership = session.get(Membership, membership_id)
+        loaded_membership = session.get(Membership, access_env.membership_a1)
         loaded_invitation = session.get(Invitation, invitation_id)
         assert loaded_membership is not None
         assert loaded_invitation is not None
@@ -274,28 +289,32 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
 def test_two_change_sets_in_one_transaction_commit(
     sessions: sessionmaker[Session], access_env: AccessFixture
 ) -> None:
+    expires_at = datetime.now(UTC) + timedelta(days=7)
     with sessions(
         info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
 
         cs1 = repo.open(idempotency_key="multi-1", request_hash=HASH_ONE)
-        membership_1 = Membership(
-            tenant_id=access_env.tenant_a,
-            person_id=access_env.person_a1,
-            role_id=access_env.role_a,
-        )
-        session.add(membership_1)
+        loaded_membership = session.get(Membership, access_env.membership_a1)
+        assert loaded_membership is not None
+        loaded_membership.role_id = access_env.role_a_viewer
         session.flush()
         repo.sign_off(cs1.change_set_id)
 
         cs2 = repo.open(idempotency_key="multi-2", request_hash=HASH_TWO)
-        membership_2 = Membership(
-            tenant_id=access_env.tenant_a,
-            person_id=access_env.person_a2,
-            role_id=access_env.role_a_viewer,
+        session.add(
+            Invitation(
+                tenant_id=access_env.tenant_a,
+                email="second-cs@example.org",
+                provider="google",
+                role_id=access_env.role_a_viewer,
+                token_hash=b"\x71" * 32,
+                invited_by_kind="person",
+                invited_by_person_id=access_env.person_a1,
+                expires_at=expires_at,
+            )
         )
-        session.add(membership_2)
         session.flush()
         repo.sign_off(cs2.change_set_id)
 
@@ -319,15 +338,8 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
         )
         with pytest.raises(ProgrammingError) as exc_info:
             session.execute(
-                text(
-                    "INSERT INTO public.memberships (tenant_id, person_id, role_id)"
-                    " VALUES (:t, :p, :r)"
-                ),
-                {
-                    "t": access_env.tenant_a,
-                    "p": access_env.person_a1,
-                    "r": access_env.role_a,
-                },
+                text("UPDATE public.memberships SET role_id = :r WHERE id = :id"),
+                {"r": access_env.role_a_viewer, "id": access_env.membership_a1},
             )
         assert isinstance(exc_info.value.orig, psycopg.errors.RaiseException)
         session.rollback()
@@ -338,13 +350,9 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         repo.open(idempotency_key="unsigned-1", request_hash=HASH_ONE)
-        session.add(
-            Membership(
-                tenant_id=access_env.tenant_a,
-                person_id=access_env.person_a1,
-                role_id=access_env.role_a,
-            )
-        )
+        loaded_membership = session.get(Membership, access_env.membership_a1)
+        assert loaded_membership is not None
+        loaded_membership.role_id = access_env.role_a_viewer
         session.flush()  # succeeds during tx; deferred trigger refuses at COMMIT
         with pytest.raises(ProgrammingError) as commit_exc:
             session.commit()
@@ -371,27 +379,16 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         cs = repo.open(idempotency_key="post-sign-off", request_hash=HASH_ONE)
-        session.add(
-            Membership(
-                tenant_id=access_env.tenant_a,
-                person_id=access_env.person_a1,
-                role_id=access_env.role_a,
-            )
-        )
+        loaded_membership = session.get(Membership, access_env.membership_a1)
+        assert loaded_membership is not None
+        loaded_membership.role_id = access_env.role_a_viewer
         session.flush()
         repo.sign_off(cs.change_set_id)
 
         with pytest.raises(ProgrammingError) as after_exc, session.begin_nested():
             session.execute(
-                text(
-                    "INSERT INTO public.memberships (tenant_id, person_id, role_id)"
-                    " VALUES (:t, :p, :r)"
-                ),
-                {
-                    "t": access_env.tenant_a,
-                    "p": access_env.person_a2,
-                    "r": access_env.role_a,
-                },
+                text("UPDATE public.memberships SET ended_at = now() WHERE id = :id"),
+                {"id": access_env.membership_a1},
             )
         assert isinstance(after_exc.value.orig, psycopg.errors.RaiseException)
         assert after_exc.value.orig.diag.message_primary == (
@@ -433,19 +430,15 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
 def test_idempotency_replay_conflict_and_retry_after_refusal(
     sessions: sessionmaker[Session], access_env: AccessFixture
 ) -> None:
-    # First app write commits with revision 2 (revision 1 seeded roles).
+    # First app write commits with revision 2 (revision 1 seeded roles & memberships).
     with sessions(
         info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         first = repo.open(idempotency_key="idem-1", request_hash=HASH_ONE)
-        session.add(
-            Membership(
-                tenant_id=access_env.tenant_a,
-                person_id=access_env.person_a1,
-                role_id=access_env.role_a_viewer,
-            )
-        )
+        loaded_membership = session.get(Membership, access_env.membership_a1)
+        assert loaded_membership is not None
+        loaded_membership.role_id = access_env.role_a_viewer
         session.flush()
         repo.sign_off(first.change_set_id)
         session.commit()
@@ -792,7 +785,7 @@ def test_invitation_update_guards_against_null_revoker_retargeting_and_terminal_
         opened = repo.open(idempotency_key="inv-guards", request_hash=HASH_TWO)
 
         # revoked_at set with revoked_by_kind = NULL must be refused (CHECK + RLS WITH CHECK).
-        with pytest.raises((IntegrityError, ProgrammingError)), session.begin_nested():
+        with pytest.raises((IntegrityError, ProgrammingError)) as rev_exc, session.begin_nested():
             session.execute(
                 text(
                     "UPDATE public.invitations SET revoked_at = now(),"
@@ -800,6 +793,75 @@ def test_invitation_update_guards_against_null_revoker_retargeting_and_terminal_
                 ),
                 {"p": access_env.person_a1, "id": pending_id},
             )
+        assert isinstance(
+            rev_exc.value.orig,
+            (psycopg.errors.CheckViolation, psycopg.errors.InsufficientPrivilege),
+        )
+
+        # roadmaps_app cannot INSERT invitations with server-controlled or terminal columns,
+        # or with an expiry beyond 7 days.
+        with pytest.raises(ProgrammingError) as created_exc, session.begin_nested():
+            session.execute(
+                text(
+                    "INSERT INTO public.invitations"
+                    " (tenant_id, email, provider, role_id, token_hash,"
+                    "  invited_by_kind, invited_by_person_id, created_at, expires_at)"
+                    " VALUES (:t, 'backdated@example.org', 'google', :r, :h,"
+                    "  'person', :p, now() + interval '1 year', now() + interval '1 year 1 day')"
+                ),
+                {
+                    "t": access_env.tenant_a,
+                    "r": access_env.role_a,
+                    "h": b"\x98" * 32,
+                    "p": access_env.person_a1,
+                },
+            )
+        assert isinstance(created_exc.value.orig, psycopg.errors.InsufficientPrivilege)
+
+        with pytest.raises(IntegrityError) as lifetime_exc, session.begin_nested():
+            session.execute(
+                text(
+                    "INSERT INTO public.invitations"
+                    " (tenant_id, email, provider, role_id, token_hash,"
+                    "  invited_by_kind, invited_by_person_id, expires_at)"
+                    " VALUES (:t, 'long@example.org', 'google', :r, :h,"
+                    "  'person', :p, now() + interval '30 days')"
+                ),
+                {
+                    "t": access_env.tenant_a,
+                    "r": access_env.role_a,
+                    "h": b"\x97" * 32,
+                    "p": access_env.person_a1,
+                },
+            )
+        assert isinstance(lifetime_exc.value.orig, psycopg.errors.CheckViolation)
+
+        # roadmaps_app cannot INSERT memberships, re-point person_id, or un-end an ended row.
+        for bad_membership in (
+            ("INSERT INTO public.memberships (tenant_id, person_id, role_id) VALUES (:t, :p2, :r)"),
+            "UPDATE public.memberships SET person_id = :p2 WHERE id = :m",
+        ):
+            with pytest.raises(ProgrammingError) as mem_exc, session.begin_nested():
+                session.execute(
+                    text(bad_membership),
+                    {
+                        "t": access_env.tenant_a,
+                        "p2": access_env.person_b1,
+                        "r": access_env.role_a,
+                        "m": access_env.membership_a1,
+                    },
+                )
+            assert isinstance(mem_exc.value.orig, psycopg.errors.InsufficientPrivilege)
+
+        assert (
+            session.connection()
+            .execute(
+                text("UPDATE public.memberships SET ended_at = NULL WHERE id = :id"),
+                {"id": access_env.membership_a_ended},
+            )
+            .rowcount
+            == 0
+        )
 
         # roadmaps_app cannot UPDATE non-revocation columns on invitations.
         for bad_update in (

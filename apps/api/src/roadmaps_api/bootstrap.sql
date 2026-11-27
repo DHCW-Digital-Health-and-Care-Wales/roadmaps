@@ -35,27 +35,12 @@ DECLARE
         'roadmaps_history_definer',
         'roadmaps_platform_definer'
     ];
-    inert_roles CONSTANT text[] := ARRAY[
-        'roadmaps_app',
-        'roadmaps_platform',
-        'roadmaps_purge',
-        'roadmaps_auth_definer',
-        'roadmaps_history_definer',
-        'roadmaps_platform_definer'
-    ];
+    definer_role_oids regrole[];
+    inert_roles CONSTANT text[] := array_remove(caller_roles, 'roadmaps_migrator') || definer_roles;
 BEGIN
     SELECT * INTO runner FROM pg_roles WHERE rolname = current_user;
 
-    FOREACH role_name IN ARRAY ARRAY[
-        'roadmaps_owner',
-        'roadmaps_migrator',
-        'roadmaps_app',
-        'roadmaps_platform',
-        'roadmaps_purge',
-        'roadmaps_auth_definer',
-        'roadmaps_history_definer',
-        'roadmaps_platform_definer'
-    ] LOOP
+    FOREACH role_name IN ARRAY (ARRAY['roadmaps_owner'] || caller_roles || definer_roles) LOOP
         IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = role_name) THEN
             EXECUTE format('CREATE ROLE %I NOLOGIN', role_name);
         ELSIF NOT runner.rolsuper AND NOT EXISTS (
@@ -142,16 +127,13 @@ BEGIN
     END LOOP;
 
     -- The owner and migration roles hold nothing the file did not grant them.
+    SELECT array_agg(name::regrole) INTO definer_role_oids FROM unnest(definer_roles) AS name;
     SELECT string_agg(format('%s holds %s', member::regrole, roleid::regrole), ', ')
     INTO found
     FROM pg_auth_members
     WHERE (
             member = 'roadmaps_owner'::regrole
-            AND roleid <> ALL (ARRAY[
-                'roadmaps_auth_definer'::regrole,
-                'roadmaps_history_definer'::regrole,
-                'roadmaps_platform_definer'::regrole
-            ])
+            AND roleid <> ALL (definer_role_oids)
         )
         OR (member = 'roadmaps_migrator'::regrole AND roleid <> 'roadmaps_owner'::regrole);
     IF found IS NOT NULL THEN

@@ -66,16 +66,38 @@ EXPECTED_APP_PRIVILEGES: dict[str, frozenset[str]] = {
     "tenant_scopes": frozenset({"SELECT"}),
     "roles": frozenset({"SELECT"}),
     "role_permissions": frozenset({"SELECT"}),
-    "memberships": frozenset({"SELECT", "INSERT", "UPDATE"}),
-    "invitations": frozenset({"SELECT", "INSERT"}),
+    "memberships": frozenset({"SELECT"}),
+    "invitations": frozenset({"SELECT"}),
     "change_sets": frozenset({"SELECT"}),
     "change_summaries": frozenset({"SELECT"}),
     "change_set_signoffs": frozenset(),
 }
 
-EXPECTED_APP_INVITATION_UPDATE_COLUMNS = frozenset(
-    {"revoked_at", "revoked_by_kind", "revoked_by_person_id", "updated_at"}
-)
+EXPECTED_APP_COLUMN_WRITE_PRIVILEGES: dict[tuple[str, str], frozenset[str]] = {
+    ("memberships", "UPDATE"): frozenset({"role_id", "ended_at", "updated_at"}),
+    ("invitations", "INSERT"): frozenset(
+        {
+            "tenant_id",
+            "email",
+            "provider",
+            "role_id",
+            "token_hash",
+            "invited_by_kind",
+            "invited_by_person_id",
+            "issued_by_platform_execution_id",
+            "expires_at",
+            "revoked_at",
+            "revoked_by_kind",
+            "revoked_by_person_id",
+            "revoked_by_platform_execution_id",
+            "redeemed_at",
+            "redeemed_by_person_id",
+        }
+    ),
+    ("invitations", "UPDATE"): frozenset(
+        {"revoked_at", "revoked_by_kind", "revoked_by_person_id", "updated_at"}
+    ),
+}
 
 EXPECTED_HISTORY_DEFINER_PRIVILEGES: dict[str, frozenset[str]] = {
     "tenant_scopes": frozenset({"SELECT", "UPDATE"}),
@@ -113,14 +135,15 @@ INTERNAL_DEFINER_ROUTINES = frozenset(
     }
 )
 
-TRIGGER_ROUTINES = frozenset(
+DEFINER_TRIGGER_ROUTINES = frozenset(
     {
         "guard_access_working_write()",
         "record_access_change_summary()",
         "verify_change_set_signed_off()",
-        "forbid_immutable_history_mutation()",
     }
 )
+
+INVOKER_TRIGGER_ROUTINES = frozenset({"forbid_immutable_history_mutation()"})
 
 
 def _table_privileges(connection: psycopg.Connection, role: str) -> dict[str, frozenset[str]]:
@@ -248,6 +271,41 @@ def test_every_table_except_alembic_version_has_forced_rls_and_a_policy(
         assert policy_count >= 1, f"{table} has no RLS policy"
 
 
+def _assert_public_routines(worker_admin: psycopg.Connection) -> set[int]:
+    """Asserts routine ownership, DEFINER/INVOKER mode, search_path and EXECUTE grants."""
+    routine_rows = worker_admin.execute(
+        "SELECT oid, oid::regprocedure::text, proowner::regrole::text, prosecdef, proconfig,"
+        " coalesce(ARRAY(SELECT CASE WHEN g.grantee = 0 THEN 'PUBLIC'"
+        "   ELSE g.grantee::regrole::text END"
+        "   FROM aclexplode(coalesce(proacl, acldefault('f', proowner))) AS g"
+        "   WHERE g.privilege_type = 'EXECUTE' AND g.grantee <> proowner), ARRAY[]::text[])"
+        " FROM pg_proc WHERE pronamespace = 'public'::regnamespace"
+        " ORDER BY 2"
+    ).fetchall()
+    expected_definer_routines = (
+        APP_CALLABLE_ROUTINES | INTERNAL_DEFINER_ROUTINES | DEFINER_TRIGGER_ROUTINES
+    )
+    assert {name for _oid, name, *_ in routine_rows} == (
+        expected_definer_routines | INVOKER_TRIGGER_ROUTINES
+    )
+    for _oid, name, owner, secdef, config, grantees in routine_rows:
+        assert config == ["search_path=pg_catalog, public, pg_temp"], f"{name} config={config}"
+        grantee_set = set(grantees)
+        assert "PUBLIC" not in grantee_set
+        if name in INVOKER_TRIGGER_ROUTINES:
+            assert (owner, secdef, grantee_set) == (OWNER_ROLE, False, set())
+            continue
+        assert owner == HISTORY_DEFINER_ROLE, f"{name} owned by {owner}"
+        assert secdef is True, f"{name} is not SECURITY DEFINER"
+        if name in APP_CALLABLE_ROUTINES:
+            assert grantee_set == {APP_ROLE}
+        elif name in INTERNAL_DEFINER_ROUTINES:
+            assert grantee_set == {OWNER_ROLE, AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE}
+        else:
+            assert grantee_set == set(), f"trigger {name} granted EXECUTE to {grantee_set}"
+    return {oid for oid, name, *_ in routine_rows if name in expected_definer_routines}
+
+
 def test_exact_privileges_and_definer_bounds_after_migration(
     worker_admin: psycopg.Connection,
 ) -> None:
@@ -259,17 +317,20 @@ def test_exact_privileges_and_definer_bounds_after_migration(
         assert "REFERENCES" not in actual
         assert "TRIGGER" not in actual
 
-    # invitations UPDATE for roadmaps_app is restricted to revocation columns only.
-    inv_update_cols = {
-        col
-        for (col,) in worker_admin.execute(
-            "SELECT column_name FROM information_schema.column_privileges"
-            " WHERE table_schema = 'public' AND table_name = 'invitations'"
-            " AND grantee = %s AND privilege_type = 'UPDATE'",
-            (APP_ROLE,),
-        ).fetchall()
-    }
-    assert inv_update_cols == EXPECTED_APP_INVITATION_UPDATE_COLUMNS
+    # Every non-SELECT column privilege for roadmaps_app across all public tables.
+    col_write_rows = worker_admin.execute(
+        "SELECT table_name, privilege_type, column_name"
+        " FROM information_schema.column_privileges"
+        " WHERE table_schema = 'public' AND table_name <> %s"
+        " AND grantee = %s AND privilege_type <> 'SELECT'",
+        (harness.PROBE_TABLE, APP_ROLE),
+    ).fetchall()
+    actual_col_writes: dict[tuple[str, str], set[str]] = {}
+    for table_name, priv_type, col_name in col_write_rows:
+        actual_col_writes.setdefault((table_name, priv_type), set()).add(col_name)
+    assert {
+        key: frozenset(cols) for key, cols in actual_col_writes.items()
+    } == EXPECTED_APP_COLUMN_WRITE_PRIVILEGES
 
     # roadmaps_history_definer is strictly append-only on history (D6, D16).
     hist_privs = _table_privileges(worker_admin, HISTORY_DEFINER_ROLE)
@@ -279,31 +340,7 @@ def test_exact_privileges_and_definer_bounds_after_migration(
     for role in (AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE, PLATFORM_ROLE, PURGE_ROLE):
         assert _table_privileges(worker_admin, role) == {}, f"{role} has unexpected table grants"
 
-    # All routines in public: exact ownership, SECURITY DEFINER, pinned search_path, grants.
-    routine_rows = worker_admin.execute(
-        "SELECT oid, oid::regprocedure::text, proowner::regrole::text, prosecdef, proconfig,"
-        " coalesce(ARRAY(SELECT CASE WHEN g.grantee = 0 THEN 'PUBLIC'"
-        "   ELSE g.grantee::regrole::text END"
-        "   FROM aclexplode(coalesce(proacl, acldefault('f', proowner))) AS g"
-        "   WHERE g.privilege_type = 'EXECUTE' AND g.grantee <> proowner), ARRAY[]::text[])"
-        " FROM pg_proc WHERE pronamespace = 'public'::regnamespace"
-        " ORDER BY 2"
-    ).fetchall()
-    expected_routines = APP_CALLABLE_ROUTINES | INTERNAL_DEFINER_ROUTINES | TRIGGER_ROUTINES
-    assert {name for _oid, name, *_ in routine_rows} == expected_routines
-    expected_routine_oids = {oid for oid, *_ in routine_rows}
-    for _oid, name, owner, secdef, config, grantees in routine_rows:
-        assert owner == HISTORY_DEFINER_ROLE, f"{name} owned by {owner}"
-        assert secdef is True, f"{name} is not SECURITY DEFINER"
-        assert config == ["search_path=pg_catalog, public, pg_temp"], f"{name} config={config}"
-        grantee_set = set(grantees)
-        assert "PUBLIC" not in grantee_set
-        if name in APP_CALLABLE_ROUTINES:
-            assert grantee_set == {APP_ROLE}
-        elif name in INTERNAL_DEFINER_ROUTINES:
-            assert grantee_set == {OWNER_ROLE, AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE}
-        else:
-            assert grantee_set == set(), f"trigger {name} granted EXECUTE to {grantee_set}"
+    expected_history_definer_oids = _assert_public_routines(worker_admin)
 
     # S4: verify exact object ownership via pg_shdepend across all object types in this
     # database plus cluster-wide shared objects (excluding pg_default_acl rules created by
@@ -321,7 +358,7 @@ def test_exact_privileges_and_definer_bounds_after_migration(
 
     hist_owned = worker_admin.execute(owned_query, (HISTORY_DEFINER_ROLE,)).fetchall()
     assert {cls for cls, _oid in hist_owned} == {"pg_proc"}
-    assert {oid for _cls, oid in hist_owned} == expected_routine_oids
+    assert {oid for _cls, oid in hist_owned} == expected_history_definer_oids
 
     for role in (*DEFINER_ROLES, *CALLER_ROLES):
         has_db_create = worker_admin.execute(
@@ -396,34 +433,32 @@ class InvalidInsert:
 def _seed_tenant_person_role(
     connection: psycopg.Connection,
 ) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
-    tenant_id = connection.execute(
-        "INSERT INTO tenants (slug, name_en, name_cy) VALUES ('dhcw', 'DHCW', 'IGCD') RETURNING id"
-    ).fetchone()
-    assert tenant_id is not None
-    person_id = connection.execute(
-        "INSERT INTO people (display_name) VALUES ('Aled Jones') RETURNING id"
-    ).fetchone()
-    assert person_id is not None
+    tenant_id = harness.one_uuid(
+        connection,
+        "INSERT INTO tenants (slug, name_en, name_cy) VALUES ('dhcw', 'DHCW', 'IGCD') RETURNING id",
+    )
+    person_id = harness.one_uuid(
+        connection,
+        "INSERT INTO people (display_name) VALUES ('Aled Jones') RETURNING id",
+    )
     connection.execute(
         "INSERT INTO tenant_scopes (tenant_id, scope) VALUES (%s, 'access'), (%s, 'lists')",
-        (tenant_id[0], tenant_id[0]),
+        (tenant_id, tenant_id),
     )
-    cs_id = connection.execute(
+    cs_id = harness.one_uuid(
+        connection,
         "SELECT change_set_id FROM open_access_change_set_internal("
         " %s, 'migration', 'system', NULL, 'test-seed', 'seed-role', %s, NULL, NULL)",
-        (tenant_id[0], b"\x01" * 32),
-    ).fetchone()
-    assert cs_id is not None
-    role_id = connection.execute(
+        (tenant_id, b"\x01" * 32),
+    )
+    role_id = harness.one_uuid(
+        connection,
         "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, 'Admin', 'admin')"
         " RETURNING id",
-        (tenant_id[0],),
-    ).fetchone()
-    assert role_id is not None
-    connection.execute(
-        "SELECT sign_off_access_change_set_internal(%s, %s)", (tenant_id[0], cs_id[0])
+        (tenant_id,),
     )
-    return tenant_id[0], person_id[0], role_id[0]
+    connection.execute("SELECT sign_off_access_change_set_internal(%s, %s)", (tenant_id, cs_id))
+    return tenant_id, person_id, role_id
 
 
 def test_check_constraints_reject_invalid_values(
@@ -539,6 +574,13 @@ def test_check_constraints_reject_invalid_values(
             " VALUES (%(t)s, 'access', 'access_change', 'system', 'test', 0, 2, 'bad-rev', %(h)s)",
             {"t": tenant_id, "h": b"\x06" * 32},
         ),
+        "invitation exceeds 7-day max lifetime": InvalidInsert(
+            "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
+            " invited_by_kind, invited_by_person_id, expires_at)"
+            " VALUES (%(t)s, 'a@example.org', 'google', %(r)s, %(h)s, 'person', %(p)s,"
+            " now() + interval '8 days')",
+            {"t": tenant_id, "r": role_id, "h": b"\x0b" * 32, "p": person_id},
+        ),
         "change_sets roadmap scope without scope_id": InvalidInsert(
             "INSERT INTO change_sets (tenant_id, scope, scope_id, kind, actor_kind, actor_ref,"
             " base_revision, revision, idempotency_key, request_hash)"
@@ -547,12 +589,13 @@ def test_check_constraints_reject_invalid_values(
         ),
     }
 
-    for case in invalid_cases.values():
+    for case_name, case in invalid_cases.items():
         with (
             worker_admin.transaction(force_rollback=True),
-            pytest.raises(psycopg.errors.CheckViolation),
+            pytest.raises(psycopg.errors.CheckViolation) as exc_info,
         ):
             worker_admin.execute(case.statement.encode(), case.params)
+        assert exc_info.value.diag.constraint_name is not None, case_name
 
 
 def test_partial_unique_indexes_allow_ended_rejoin_and_custom_roles_while_enforcing_uniqueness(
@@ -564,12 +607,12 @@ def test_partial_unique_indexes_allow_ended_rejoin_and_custom_roles_while_enforc
 
     # D13: duplicate system_key per tenant fails; multiple NULL system_key custom roles succeed.
     with worker_admin.transaction(force_rollback=True):
-        cs_id = worker_admin.execute(
+        harness.one_uuid(
+            worker_admin,
             "SELECT change_set_id FROM open_access_change_set_internal("
             " %s, 'migration', 'system', NULL, 'test', 'uniq-roles', %s, NULL, NULL)",
             (tenant_id, b"\x08" * 32),
-        ).fetchone()
-        assert cs_id is not None
+        )
         worker_admin.execute(
             "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, 'Custom 1', NULL),"
             " (%s, 'Custom 2', NULL)",
@@ -583,12 +626,12 @@ def test_partial_unique_indexes_allow_ended_rejoin_and_custom_roles_while_enforc
 
     # D8: two active memberships for one (tenant, person) fail; ended + active succeeds.
     with worker_admin.transaction(force_rollback=True):
-        cs_id = worker_admin.execute(
+        harness.one_uuid(
+            worker_admin,
             "SELECT change_set_id FROM open_access_change_set_internal("
             " %s, 'migration', 'system', NULL, 'test', 'uniq-members', %s, NULL, NULL)",
             (tenant_id, b"\x09" * 32),
-        ).fetchone()
-        assert cs_id is not None
+        )
         worker_admin.execute(
             "INSERT INTO memberships (tenant_id, person_id, role_id, ended_at)"
             " VALUES (%s, %s, %s, now() - interval '1 day')",

@@ -361,6 +361,10 @@ def _create_tenant_access_tables() -> None:
             name="ck_invitations_not_revoked_and_redeemed",
         ),
         sa.CheckConstraint("expires_at > created_at", name="ck_invitations_expires_after_created"),
+        sa.CheckConstraint(
+            "expires_at <= created_at + interval '7 days 5 minutes'",
+            name="ck_invitations_max_lifetime",
+        ),
     )
     op.create_index(
         "ix_invitations_tenant_id_expires_at", "invitations", ["tenant_id", "expires_at"]
@@ -607,8 +611,17 @@ def _enable_rls_and_policies() -> None:
         )
 
     op.execute(
-        f"CREATE POLICY tenant ON public.memberships"
-        f" FOR ALL USING ({TENANT_POLICY}) WITH CHECK ({TENANT_POLICY})"
+        f"CREATE POLICY tenant_select ON public.memberships FOR SELECT USING ({TENANT_POLICY})"
+    )
+    op.execute(f"""
+        CREATE POLICY app_update ON public.memberships
+        FOR UPDATE TO roadmaps_app
+        USING ({TENANT_POLICY} AND ended_at IS NULL)
+        WITH CHECK ({TENANT_POLICY})
+    """)
+    op.execute(
+        f"CREATE POLICY owner_all ON public.memberships FOR ALL TO roadmaps_owner"
+        f" USING ({TENANT_POLICY}) WITH CHECK ({TENANT_POLICY})"
     )
     op.execute("""
         CREATE POLICY person_select ON public.memberships
@@ -678,10 +691,17 @@ def _grant_table_privileges() -> None:
     op.execute(
         "GRANT SELECT ON public.tenants, public.people, public.identities,"
         " public.tenant_scopes, public.roles, public.role_permissions,"
+        " public.memberships, public.invitations,"
         " public.change_sets, public.change_summaries TO roadmaps_app"
     )
-    op.execute("GRANT SELECT, INSERT, UPDATE ON public.memberships TO roadmaps_app")
-    op.execute("GRANT SELECT, INSERT ON public.invitations TO roadmaps_app")
+    op.execute("GRANT UPDATE (role_id, ended_at, updated_at) ON public.memberships TO roadmaps_app")
+    op.execute(
+        "GRANT INSERT (tenant_id, email, provider, role_id, token_hash,"
+        " invited_by_kind, invited_by_person_id, issued_by_platform_execution_id, expires_at,"
+        " revoked_at, revoked_by_kind, revoked_by_person_id, revoked_by_platform_execution_id,"
+        " redeemed_at, redeemed_by_person_id)"
+        " ON public.invitations TO roadmaps_app"
+    )
     op.execute(
         "GRANT UPDATE (revoked_at, revoked_by_kind, revoked_by_person_id, updated_at)"
         " ON public.invitations TO roadmaps_app"
@@ -963,7 +983,8 @@ def _create_history_definer_routines_and_triggers() -> None:
                     USING ERRCODE = 'P0001';
             END IF;
 
-            PERFORM public.sign_off_access_change_set_internal(v_tenant_id, p_change_set_id);
+            INSERT INTO public.change_set_signoffs (tenant_id, change_set_id, signed_off_xid)
+            VALUES (v_tenant_id, p_change_set_id, v_xid);
         END;
         $fn$;
     """)
@@ -1164,7 +1185,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         CREATE FUNCTION public.forbid_immutable_history_mutation()
         RETURNS trigger
         LANGUAGE plpgsql
-        SECURITY DEFINER
+        SECURITY INVOKER
         SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         BEGIN
@@ -1173,7 +1194,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         $fn$;
     """)
 
-    routines = (
+    definer_routines = (
         (
             "public.open_access_change_set_internal"
             "(uuid, text, text, uuid, text, text, bytea, text, uuid)"
@@ -1184,9 +1205,8 @@ def _create_history_definer_routines_and_triggers() -> None:
         "public.guard_access_working_write()",
         "public.record_access_change_summary()",
         "public.verify_change_set_signed_off()",
-        "public.forbid_immutable_history_mutation()",
     )
-    for routine in routines:
+    for routine in (*definer_routines, "public.forbid_immutable_history_mutation()"):
         op.execute(f"REVOKE ALL ON FUNCTION {routine} FROM PUBLIC")
 
     op.execute(
@@ -1262,10 +1282,12 @@ def _create_history_definer_routines_and_triggers() -> None:
             " FOR EACH STATEMENT EXECUTE FUNCTION public.forbid_immutable_history_mutation()"
         )
 
-    # Transfer routine ownership to roadmaps_history_definer and immediately revoke temporary
-    # schema CREATE so no definer role holds CREATE once migration completes (STY-103 S4, D1).
+    # Transfer SECURITY DEFINER routine ownership to roadmaps_history_definer and immediately
+    # revoke temporary schema CREATE so no definer role holds CREATE once migration completes
+    # (STY-103 S4, D1). forbid_immutable_history_mutation() is SECURITY INVOKER and stays
+    # owned by roadmaps_owner.
     op.execute("GRANT CREATE ON SCHEMA public TO roadmaps_history_definer")
-    for routine in routines:
+    for routine in definer_routines:
         op.execute(f"ALTER FUNCTION {routine} OWNER TO roadmaps_history_definer")
     op.execute("REVOKE CREATE ON SCHEMA public FROM roadmaps_history_definer")
 

@@ -247,13 +247,17 @@ def test_unset_tenant_and_person_reads_and_writes_zero_rows(
         with pytest.raises(ProgrammingError) as insert_exc, session.begin_nested():
             session.execute(
                 text(
-                    "INSERT INTO public.memberships (tenant_id, person_id, role_id)"
-                    " VALUES (:t, :p, :r)"
+                    "INSERT INTO public.invitations"
+                    " (tenant_id, email, provider, role_id, token_hash,"
+                    "  invited_by_kind, invited_by_person_id, expires_at)"
+                    " VALUES (:t, 'unset@example.org', 'google', :r, :h,"
+                    "  'person', :p, now() + interval '7 days')"
                 ),
                 {
                     "t": two_tenants.tenant_a,
-                    "p": two_tenants.person_b_active,
                     "r": two_tenants.role_a,
+                    "h": b"\x77" * 32,
+                    "p": two_tenants.person_a_active,
                 },
             )
         assert isinstance(insert_exc.value.orig, psycopg.errors.InsufficientPrivilege)
@@ -322,13 +326,17 @@ def test_tenant_a_isolates_tenant_b_rows_people_and_identities(
         with pytest.raises(ProgrammingError) as exc_info, session.begin_nested():
             session.execute(
                 text(
-                    "INSERT INTO public.memberships (tenant_id, person_id, role_id)"
-                    " VALUES (:t, :p, :r)"
+                    "INSERT INTO public.invitations"
+                    " (tenant_id, email, provider, role_id, token_hash,"
+                    "  invited_by_kind, invited_by_person_id, expires_at)"
+                    " VALUES (:t, 'cross@example.org', 'google', :r, :h,"
+                    "  'person', :p, now() + interval '7 days')"
                 ),
                 {
                     "t": two_tenants.tenant_b,
-                    "p": two_tenants.person_a_active,
                     "r": two_tenants.role_b,
+                    "h": b"\x78" * 32,
+                    "p": two_tenants.person_ab,
                 },
             )
         assert isinstance(exc_info.value.orig, psycopg.errors.InsufficientPrivilege)

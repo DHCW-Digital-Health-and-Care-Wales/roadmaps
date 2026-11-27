@@ -200,15 +200,19 @@ change_set_id)` PK, forced RLS, zero `roadmaps_app` grants, `SELECT`/`INSERT` on
   omits a `WHERE tenant_id` filter.
 - `forbid_immutable_history_mutation()` runs `BEFORE UPDATE OR DELETE OR TRUNCATE FOR EACH
 STATEMENT` on `change_sets`, `change_summaries`, `change_set_signoffs` and
-  `platform_audit_log`, failing immediately even when RLS hides rows; the superuser test
-  harness (`tests/harness.py:empty_tables`) uses `SET LOCAL session_replication_role =
-'replica'` inside a transaction for between-test teardown without adding any superuser
-  exemption to production SQL.
+  `platform_audit_log` as `SECURITY INVOKER` (owned by `roadmaps_owner`, since it only
+  raises), failing immediately even when RLS hides rows; the superuser test harness
+  (`tests/harness.py:empty_tables`) uses `SET LOCAL session_replication_role = 'replica'`
+  inside a transaction for between-test teardown without adding any superuser exemption to
+  production SQL.
 - `roadmaps_app` receives `SELECT` only on fixed v1 `roles` and `role_permissions`
-  (ADR-019 Option 3; platform and migration paths write them) and column-scoped
-  `UPDATE (revoked_at, revoked_by_kind, revoked_by_person_id, updated_at)` on
-  `invitations`, with RLS `USING` excluding already-revoked or redeemed rows so
-  `roadmaps_app` can only revoke pending person-issued invitations.
+  (ADR-019 Option 3; platform and migration paths write them), no `INSERT` and
+  column-scoped `UPDATE (role_id, ended_at, updated_at)` on active `memberships` only
+  (ADR-018: invitation redemption via `roadmaps_auth_definer` is the only runtime path
+  that creates memberships), and column-scoped `INSERT` (excluding `id`, `created_at` and
+  `updated_at`; RLS `app_insert` and `CHECK` constraints enforce `NULL` terminal/platform
+  columns) plus column-scoped revocation `UPDATE` on pending person-issued `invitations`
+  (bounded by `ck_invitations_max_lifetime` at `7 days 5 minutes`).
 - Every function created in `0002` pins `SET search_path = pg_catalog, public, pg_temp`
   (with `pg_temp` last, preventing unqualified-object shadowing).
 
@@ -226,17 +230,18 @@ STATEMENT` on `change_sets`, `change_summaries`, `change_set_signoffs` and
   `invitations`, `change_sets`, `change_summaries`, `change_set_signoffs`.
 - **Soft-ended memberships (`database.py:create_sessions`)**: ORM selects on `SoftEndMixin`
   automatically filter `ended_at IS NULL`; pass `.execution_options(include_ended=True)`
-  to include ended rows. Tenant-keyed RLS on `memberships` stays `TENANT_POLICY`, so raw
-  SQL and the last-admin guard (`STY-111`) must filter `ended_at IS NULL` explicitly.
+  to include ended rows. Tenant-keyed `SELECT` RLS on `memberships` stays `TENANT_POLICY`,
+  so raw SQL and the last-admin guard (`STY-111`) must filter `ended_at IS NULL` explicitly.
 - **Access change sets (`repositories/access_change_set.py`)**: services running as
   `roadmaps_app` call `AccessChangeSetRepository(session, tenant_id).open(...)` before
-  mutating `memberships` or `invitations` (`roles` and `role_permissions` are `SELECT`-only
-  for `roadmaps_app` in v1; `invitations` `UPDATE` is column-scoped to revocation fields
-  on pending person-issued rows), and `.sign_off(id)` before committing. Internal
-  non-person/platform/redemption definers (`STY-104`, `STY-110`, future migrations) call
-  `open_access_change_set_internal(...)` and `sign_off_access_change_set_internal(...)`
-  (executable only by `roadmaps_owner`, `roadmaps_auth_definer` and
-  `roadmaps_platform_definer`).
+  updating active `memberships` (`role_id`/`ended_at`/`updated_at`) or inserting/revoking
+  person-issued `invitations` (`roles` and `role_permissions` are `SELECT`-only for
+  `roadmaps_app` in v1; memberships are inserted only via `roadmaps_auth_definer`
+  redemption in `STY-110` or owner/internal paths), and `.sign_off(id)` before committing.
+  Internal non-person/platform/redemption definers (`STY-104`, `STY-110`, future
+  migrations) call `open_access_change_set_internal(...)` and
+  `sign_off_access_change_set_internal(...)` (executable only by `roadmaps_owner`,
+  `roadmaps_auth_definer` and `roadmaps_platform_definer`).
 - **`platform_audit_log`**: `action` checks `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$` and
   `target_type` checks `^[a-z][a-z0-9_]*$`; `STY-104` and `STY-106` add role-scoped
   `INSERT` grants and RLS policies for `roadmaps_platform_definer` / `roadmaps_auth_definer`.

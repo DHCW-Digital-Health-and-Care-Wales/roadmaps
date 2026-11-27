@@ -388,6 +388,10 @@ class Invitation(Base):
             name="not_revoked_and_redeemed",
         ),
         CheckConstraint("expires_at > created_at", name="expires_after_created"),
+        CheckConstraint(
+            "expires_at <= created_at + interval '7 days 5 minutes'",
+            name="max_lifetime",
+        ),
         Index("ix_invitations_tenant_id_expires_at", "tenant_id", "expires_at"),
     )
 

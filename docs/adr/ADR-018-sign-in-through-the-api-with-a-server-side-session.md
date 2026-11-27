@@ -410,8 +410,9 @@ Compose"` phrasing. Local development and tests run the in-repo Python/FastAPI m
   cookie or request-flag state.
 - **Read-only `person_select` RLS on `roles` and `role_permissions`** (`STY-106` D7; also
   recorded in ADR-015 _STY-106 amendments_): when `app.tenant_id IS NULL`, a signed-in
-  person may read only the `roles` and `role_permissions` rows referenced by their own
-  active memberships (mirroring `tenants` and `memberships` from `STY-103`), keeping
+  person may read only the `roles` referenced by their own active memberships and the
+  `role_permissions` belonging to those roles (mirroring `tenants` and `memberships` from
+  `STY-103`), keeping
   `GET /api/v1/me` a single ORM query without adding another `SECURITY DEFINER` routine.
 - **Separate single-purpose retention purge entrypoints on a shared runner** (`STY-106`
   D15): each retention table has its own zero-argument console script

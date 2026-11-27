@@ -441,9 +441,10 @@ _Tenancy_ and _STY-103 amendments_ above, it holds; the rest stands.
 
 - **Read-only `person_select` RLS on `roles` and `role_permissions`** (_Tenancy_): when
   `app.tenant_id` is unset or empty, `roles` and `role_permissions` gain a narrow
-  `SELECT`-only `person_select` policy matching only rows referenced by an active
-  (`ended_at IS NULL`) membership of `app.person_id` (mirroring the unset-tenant
-  person-keyed `SELECT` policies on `memberships` and `tenants`). When `app.tenant_id` is
+  `SELECT`-only `person_select` policy matching only `roles` referenced by an active
+  (`ended_at IS NULL`) membership of `app.person_id` and `role_permissions` belonging to
+  those roles (mirroring the unset-tenant person-keyed `SELECT` policies on `memberships`
+  and `tenants`). When `app.tenant_id` is
   set, `TENANT_POLICY` remains the sole matching policy so a multi-tenant member inside
   Tenant A reads none of Tenant B's roles; when both `app.tenant_id` and `app.person_id`
   are unset, both tables fail closed. `roadmaps_app` retains `SELECT`-only grants on both

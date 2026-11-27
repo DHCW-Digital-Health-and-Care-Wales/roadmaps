@@ -129,7 +129,9 @@ memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verifi
   no database row) rather than duplicating subjects.
 - **D4** (owner, 2026-11-27, `STY-106` grilling R2 #1a; settles Q1): Use `authlib` +
   `httpx` in `apps/api`'s runtime dependencies (`OAuth2Client` with PKCE `S256`, `joserfc`
-  for `RS256` JWT/JWS verification, and `CodeIDToken` claim validation), keeping `httpx2`
+  for `RS256` JWT/JWS verification, and `CodeIDToken` claim validation — passing explicit
+  `aud` options and covering a wrong-`aud` + matching-`azp` case in S1's refused-claim
+  tests), keeping `httpx2`
   in dev dependencies for Starlette's `TestClient`; add a thin cached JWKS fetcher that
   retains stale keys across provider outages with a rate-limited refetch on unknown `kid`,
   plus Google `hd` and `email_verified=true` checks. Ban `jose`, `python-jose` and
@@ -163,8 +165,9 @@ memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verifi
   `STY-104` for local invitation links and `STY-105` for `Origin` matching).
 - **D7** (owner, 2026-11-27, `STY-106` grilling R2 #3a; amends ADR-015 & ADR-018): Add
   narrow read-only `person_select` RLS policies on `roles` and `role_permissions` (active
-  only when `app.tenant_id IS NULL`, matching rows referenced by an active membership of
-  `app.person_id`, mirroring `tenants` and `memberships`), and update
+  only when `app.tenant_id IS NULL`, matching `roles` referenced by an active membership
+  of `app.person_id` and `role_permissions` belonging to those roles, mirroring `tenants`
+  and `memberships`), and update
   `apps/api/tests/integration/test_rls_isolation.py` to prove a person sees only their own
   active memberships' roles and permissions, a multi-tenant member with Tenant A set reads
   none of Tenant B's roles, and an unset `app.person_id` reads none. Keeps
@@ -207,10 +210,12 @@ memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verifi
   reviewed `public` allow-list (with callback exempt from same-origin CSRF per
   ADR-018/ADR-020).
 - **D12** (owner, 2026-11-27, `STY-106` grilling R1 #9a): Every authenticated request
-  (including `GET /api/v1/me`) slides `idle_expires_at = LEAST(now() + interval '60
-minutes', absolute_expires_at)` and updates `last_activity_at` at most once per minute
-  (when `now() - last_activity_at >= interval '1 minute'`, reconciled with `STY-105` S4's
-  read-only `GET` check in `STY-105` D4). `POST /api/v1/auth/extend` slides
+  (including same-origin `GET /api/v1/me`) slides `idle_expires_at = LEAST(now() +
+interval '60 minutes', absolute_expires_at)` and updates `last_activity_at` at most once
+  per minute (when `now() - last_activity_at >= interval '1 minute'`, and on a `GET` only
+  when `Sec-Fetch-Site` is `same-origin` or absent — never `same-site` or `cross-site` —
+  reconciled with `STY-105` S4's read-only `GET` check in `STY-105` D4).
+  `POST /api/v1/auth/extend` slides
   `idle_expires_at` immediately (bypassing the 1-minute throttle, still capped at
   `absolute_expires_at`) and returns `{ idleExpiresAt, absoluteExpiresAt }`.
 - **D13** (owner, 2026-11-27, `STY-106` grilling R2 #6a; settles Q3 `/me` contract):

@@ -6,7 +6,8 @@
   ADR-003 stands for the Sheets adapter until the deployed editor switches to the API.
   Amended by the owner's STY-101 grilling (_STY-101 amendments_), EPC-024 planning and
   STY-102 grilling and review follow-up (_EPC-024 amendments_), STY-103 grilling and
-  review follow-up (_STY-103 amendments_), and STY-108 grilling (_STY-108 amendments_).
+  review follow-up (_STY-103 amendments_), STY-108 grilling (_STY-108 amendments_), and
+  STY-106 grilling (_STY-106 amendments_).
 - Date: 2026-11-21 (amended in STY-101: the log allow-list's codes, local messages;
   amended in EPC-024, 2026-11-25: threat model review gates deployment and real data
   rather than local/dev identity implementation, phased by Google Workspace / Entra and
@@ -15,7 +16,10 @@
   and own-device operational assumption; amended in STY-103, 2026-11-26: single `NOT NULL`
   role per invitation in v1, canonical issuer storage and invitation-summary PII omission;
   amended in STY-108, 2026-11-26: single-tenant editor Account menu in EPC-024 with
-  multi-tenant switcher deferred to EPC-030)
+  multi-tenant switcher deferred to EPC-030; amended in STY-106, 2026-11-27: local mock
+  OIDC as a separate loopback process, always sending `prompt=select_account` on Google
+  sign-in start, separate retention purge entrypoints on a shared runner, and read-only
+  `person_select` RLS on `roles`/`role_permissions`)
 
 ## Context
 
@@ -385,6 +389,34 @@ stands.
   shell/Account menu (Option 16) and omits the multi-tenant switcher UI until
   [EPC-030](../backlog/EPC-030-multi-tenant-organisation-switching-and-onboarding-ux/README.md)
   adds multi-tenant editor UX.
+
+### STY-106 amendments
+
+From the owner's STY-106 grilling (2026-11-27, STY-106 D5, D7, D10 and D15). Where these
+bullets refine _The API runs the sign-in_, _Sessions_ or _Records and retention_ above,
+they hold; the rest stands.
+
+- **Local mock OIDC runs as a separate loopback process, not a Compose container**
+  (`STY-106` D5): amends _The API runs the sign-in_'s `"against the mock provider in
+Compose"` phrasing. Local development and tests run the in-repo Python/FastAPI mock
+  under `apps/api/tools/mock_oidc/` on `127.0.0.1:${OIDC_PORT}` via `apps/api/scripts/api.sh`
+  (and on an ephemeral loopback port per pytest worker), preserving the exact same OIDC
+  HTTP/JWKS code path with zero dev-only bypass route in the API, excluded from the
+  production image (`EPC-023`) and refused outside `local`/`test` or on Cloud Run.
+- **Always send `prompt=select_account` on Google sign-in start** (`STY-106` D10): refines
+  _Sessions_' post-sign-out Google account-picker rule — every Google
+  `POST /api/v1/auth/sign-in` passes `prompt=select_account`, covering explicit sign-out,
+  natural session expiry and `"Try a different account"` after `not_invited` without extra
+  cookie or request-flag state.
+- **Read-only `person_select` RLS on `roles` and `role_permissions`** (`STY-106` D7):
+  when `app.tenant_id IS NULL`, a signed-in person may read only the `roles` and
+  `role_permissions` rows referenced by their own active memberships (mirroring `tenants`
+  and `memberships` from `STY-103`), keeping `GET /api/v1/me` a single ORM query without
+  adding another `SECURITY DEFINER` routine.
+- **Separate single-purpose retention purge entrypoints on a shared runner** (`STY-106`
+  D15): each retention table has its own console script (`roadmaps-purge-transactions`,
+  `roadmaps-purge-sessions`, and `roadmaps-purge-invitations` in `STY-110`) sharing a thin
+  common runner module, reading `ROADMAPS_PURGE_DATABASE_URL` under `roadmaps_purge`.
 
 ## Consequences
 

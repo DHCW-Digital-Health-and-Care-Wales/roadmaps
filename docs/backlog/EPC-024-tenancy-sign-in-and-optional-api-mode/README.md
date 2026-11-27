@@ -3,7 +3,8 @@
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 2b, 3a, 4a, 5a);
   stories start `Needs grilling` / `Placeholder` and become selectable as each is grilled
 - **Progress**: 4 of 10 terminal; next selectable: none (`STY-108` Done ahead of `STY-107`
-  per `STY-108` D10; grill STY-105, STY-106 or CHO-049 next)
+  per `STY-108` D10; `STY-106` grilled and waiting on `STY-105`; grill `STY-105` or
+  `CHO-049` next)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -30,9 +31,6 @@ roadmap and family screens fail cleanly against a stub repository until
   CLI entrypoints, local link format and hosted Cloud Run out-of-band link mechanism
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —
   person-assertion header name (`{tenantSlug}` path parameter settled in `STY-105` D2)
-- [STY-106](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) —
-  mock OIDC provider image/implementation, OIDC library choice, refusal codes,
-  `lastSignInAt` and `prompt=select_account` for "Try a different account"
 - [STY-107](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md#open-questions) —
   `VITE_DATA_SOURCE` config behaviour, `AuthClient` shape during dual-mode transition and
   stub error copy

@@ -123,6 +123,10 @@ fields without echoing submitted values
   `Permission` `StrEnum` and immutable `SHIPPED_ROLES` mapping in
   `apps/api/src/roadmaps_api/authz/permissions.py` (introduced by `STY-093` or `STY-105`)
   when seeding a new tenant's three shipped roles in `create-tenant`.
+- **D4** (owner, 2026-11-27, `STY-106` grilling R1 #3a / `STY-106` D6): `STY-106` introduces
+  the required `ROADMAPS_EDITOR_ORIGIN` setting (HTTPS outside `local`/`test`; defaulting
+  locally to `http://localhost:${DEV_PORT}`), which `STY-104` Q2 can reuse for local
+  invitation link formatting.
 
 ## Out of scope
 

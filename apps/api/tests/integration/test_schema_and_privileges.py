@@ -13,6 +13,7 @@ import pytest
 from roadmaps_api.roles import (
     APP_ROLE,
     AUTH_DEFINER_ROLE,
+    CALLER_ROLES,
     DEFINER_ROLES,
     HISTORY_DEFINER_ROLE,
     OWNER_ROLE,
@@ -21,6 +22,7 @@ from roadmaps_api.roles import (
     PURGE_ROLE,
 )
 from tests import harness
+from tools.bootstrap_database import libpq_url
 
 EXPECTED_TABLES = frozenset(
     {
@@ -62,14 +64,18 @@ EXPECTED_APP_PRIVILEGES: dict[str, frozenset[str]] = {
     "identities": frozenset({"SELECT"}),
     "platform_audit_log": frozenset(),
     "tenant_scopes": frozenset({"SELECT"}),
-    "roles": frozenset({"SELECT", "INSERT", "UPDATE", "DELETE"}),
-    "role_permissions": frozenset({"SELECT", "INSERT", "UPDATE", "DELETE"}),
+    "roles": frozenset({"SELECT"}),
+    "role_permissions": frozenset({"SELECT"}),
     "memberships": frozenset({"SELECT", "INSERT", "UPDATE"}),
-    "invitations": frozenset({"SELECT", "INSERT", "UPDATE"}),
+    "invitations": frozenset({"SELECT", "INSERT"}),
     "change_sets": frozenset({"SELECT"}),
     "change_summaries": frozenset({"SELECT"}),
     "change_set_signoffs": frozenset(),
 }
+
+EXPECTED_APP_INVITATION_UPDATE_COLUMNS = frozenset(
+    {"revoked_at", "revoked_by_kind", "revoked_by_person_id", "updated_at"}
+)
 
 EXPECTED_HISTORY_DEFINER_PRIVILEGES: dict[str, frozenset[str]] = {
     "tenant_scopes": frozenset({"SELECT", "UPDATE"}),
@@ -253,6 +259,18 @@ def test_exact_privileges_and_definer_bounds_after_migration(
         assert "REFERENCES" not in actual
         assert "TRIGGER" not in actual
 
+    # invitations UPDATE for roadmaps_app is restricted to revocation columns only.
+    inv_update_cols = {
+        col
+        for (col,) in worker_admin.execute(
+            "SELECT column_name FROM information_schema.column_privileges"
+            " WHERE table_schema = 'public' AND table_name = 'invitations'"
+            " AND grantee = %s AND privilege_type = 'UPDATE'",
+            (APP_ROLE,),
+        ).fetchall()
+    }
+    assert inv_update_cols == EXPECTED_APP_INVITATION_UPDATE_COLUMNS
+
     # roadmaps_history_definer is strictly append-only on history (D6, D16).
     hist_privs = _table_privileges(worker_admin, HISTORY_DEFINER_ROLE)
     assert hist_privs == EXPECTED_HISTORY_DEFINER_PRIVILEGES
@@ -263,20 +281,21 @@ def test_exact_privileges_and_definer_bounds_after_migration(
 
     # All routines in public: exact ownership, SECURITY DEFINER, pinned search_path, grants.
     routine_rows = worker_admin.execute(
-        "SELECT oid::regprocedure::text, proowner::regrole::text, prosecdef, proconfig,"
+        "SELECT oid, oid::regprocedure::text, proowner::regrole::text, prosecdef, proconfig,"
         " coalesce(ARRAY(SELECT CASE WHEN g.grantee = 0 THEN 'PUBLIC'"
         "   ELSE g.grantee::regrole::text END"
         "   FROM aclexplode(coalesce(proacl, acldefault('f', proowner))) AS g"
         "   WHERE g.privilege_type = 'EXECUTE' AND g.grantee <> proowner), ARRAY[]::text[])"
         " FROM pg_proc WHERE pronamespace = 'public'::regnamespace"
-        " ORDER BY 1"
+        " ORDER BY 2"
     ).fetchall()
     expected_routines = APP_CALLABLE_ROUTINES | INTERNAL_DEFINER_ROUTINES | TRIGGER_ROUTINES
-    assert {name for name, *_ in routine_rows} == expected_routines
-    for name, owner, secdef, config, grantees in routine_rows:
+    assert {name for _oid, name, *_ in routine_rows} == expected_routines
+    expected_routine_oids = {oid for oid, *_ in routine_rows}
+    for _oid, name, owner, secdef, config, grantees in routine_rows:
         assert owner == HISTORY_DEFINER_ROLE, f"{name} owned by {owner}"
         assert secdef is True, f"{name} is not SECURITY DEFINER"
-        assert config == ["search_path=pg_catalog, public"], f"{name} config={config}"
+        assert config == ["search_path=pg_catalog, public, pg_temp"], f"{name} config={config}"
         grantee_set = set(grantees)
         assert "PUBLIC" not in grantee_set
         if name in APP_CALLABLE_ROUTINES:
@@ -286,23 +305,54 @@ def test_exact_privileges_and_definer_bounds_after_migration(
         else:
             assert grantee_set == set(), f"trigger {name} granted EXECUTE to {grantee_set}"
 
-    # S4: no definer or non-owner caller role owns non-routine objects or holds CREATE.
-    for role in (*DEFINER_ROLES, APP_ROLE, PLATFORM_ROLE, PURGE_ROLE):
-        non_routine_owned = worker_admin.execute(
-            "SELECT relname FROM pg_class WHERE relowner = %s::regrole",
-            (role,),
-        ).fetchall()
-        assert non_routine_owned == [], f"{role} owns relations {non_routine_owned}"
+    # S4: verify exact object ownership via pg_shdepend across all object types in this
+    # database plus cluster-wide shared objects (excluding pg_default_acl rules created by
+    # bootstrap.sql), no CREATE on any database or schema, and exact role-scoped RLS policies.
+    owned_query = (
+        "SELECT classid::regclass::text, objid FROM pg_shdepend"
+        " WHERE refclassid = 'pg_authid'::regclass AND deptype = 'o'"
+        " AND classid <> 'pg_default_acl'::regclass"
+        " AND dbid IN (0, (SELECT oid FROM pg_database WHERE datname = current_database()))"
+        " AND refobjid = %s::regrole"
+    )
+    for role in (*CALLER_ROLES, AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE):
+        owned_objects = worker_admin.execute(owned_query, (role,)).fetchall()
+        assert owned_objects == [], f"{role} owns objects {owned_objects}"
+
+    hist_owned = worker_admin.execute(owned_query, (HISTORY_DEFINER_ROLE,)).fetchall()
+    assert {cls for cls, _oid in hist_owned} == {"pg_proc"}
+    assert {oid for _cls, oid in hist_owned} == expected_routine_oids
+
+    for role in (*DEFINER_ROLES, *CALLER_ROLES):
         has_db_create = worker_admin.execute(
-            "SELECT has_database_privilege(%s, current_database(), 'CREATE')",
+            "SELECT bool_or(has_database_privilege(%s, oid, 'CREATE')) FROM pg_database",
             (role,),
         ).fetchone()
-        assert has_db_create == (False,), f"{role} holds CREATE on database"
+        assert has_db_create == (False,), f"{role} holds CREATE on a database"
         has_schema_create = worker_admin.execute(
             "SELECT bool_or(has_schema_privilege(%s, oid, 'CREATE')) FROM pg_namespace",
             (role,),
         ).fetchone()
         assert has_schema_create == (False,), f"{role} holds CREATE on a schema"
+
+    # Exact role-scoped RLS policies for the three definer roles.
+    definer_policies = worker_admin.execute(
+        "SELECT role_name, tablename, cmd"
+        " FROM pg_policies, LATERAL unnest(roles) AS role_name"
+        " WHERE schemaname = 'public' AND role_name = ANY(%s)"
+        " ORDER BY 1, 2, 3",
+        (list(DEFINER_ROLES),),
+    ).fetchall()
+    assert definer_policies == [
+        (HISTORY_DEFINER_ROLE, "change_set_signoffs", "INSERT"),
+        (HISTORY_DEFINER_ROLE, "change_set_signoffs", "SELECT"),
+        (HISTORY_DEFINER_ROLE, "change_sets", "INSERT"),
+        (HISTORY_DEFINER_ROLE, "change_sets", "SELECT"),
+        (HISTORY_DEFINER_ROLE, "change_summaries", "INSERT"),
+        (HISTORY_DEFINER_ROLE, "change_summaries", "SELECT"),
+        (HISTORY_DEFINER_ROLE, "tenant_scopes", "SELECT"),
+        (HISTORY_DEFINER_ROLE, "tenant_scopes", "UPDATE"),
+    ]
 
     # S4: platform and purge roles hold CONNECT + USAGE and zero table write grants.
     for role in (PLATFORM_ROLE, PURGE_ROLE):
@@ -320,7 +370,7 @@ def test_platform_and_purge_logins_have_no_direct_table_or_app_routine_access(
     worker_database: str,
 ) -> None:
     for url in (harness.platform_url(worker_database), harness.purge_url(worker_database)):
-        with psycopg.connect(url.replace("+psycopg", "")) as conn:
+        with psycopg.connect(libpq_url(url)) as conn:
             for stmt in (
                 "SELECT 1 FROM public.tenants",
                 "SELECT 1 FROM public.roles",
@@ -414,7 +464,7 @@ def test_check_constraints_reject_invalid_values(
         ),
         "raw non-URL Google issuer (D14)": InvalidInsert(
             "INSERT INTO identities (person_id, issuer, subject, email)"
-            " VALUES (%(p)s, 'accounts.google.com', 'sub-1', 'a@dhcw.nhs.uk')",
+            " VALUES (%(p)s, 'accounts.google.com', 'sub-1', 'a@example.org')",
             {"p": person_id},
         ),
         "invalid role system_key": InvalidInsert(
@@ -429,37 +479,45 @@ def test_check_constraints_reject_invalid_values(
         "unknown invitation provider": InvalidInsert(
             "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
             " invited_by_kind, invited_by_person_id, expires_at)"
-            " VALUES (%(t)s, 'a@b.uk', 'github', %(r)s, %(h)s, 'person', %(p)s,"
+            " VALUES (%(t)s, 'a@example.org', 'github', %(r)s, %(h)s, 'person', %(p)s,"
             " now() + interval '7 days')",
             {"t": tenant_id, "r": role_id, "h": b"\x02" * 32, "p": person_id},
         ),
         "short invitation token_hash": InvalidInsert(
             "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
             " invited_by_kind, invited_by_person_id, expires_at)"
-            " VALUES (%(t)s, 'a@b.uk', 'google', %(r)s, %(h)s, 'person', %(p)s,"
+            " VALUES (%(t)s, 'a@example.org', 'google', %(r)s, %(h)s, 'person', %(p)s,"
             " now() + interval '7 days')",
             {"t": tenant_id, "r": role_id, "h": b"\x02" * 16, "p": person_id},
         ),
         "person invitation with platform execution id": InvalidInsert(
             "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
             " invited_by_kind, invited_by_person_id, issued_by_platform_execution_id, expires_at)"
-            " VALUES (%(t)s, 'a@b.uk', 'google', %(r)s, %(h)s, 'person', %(p)s, 'exec-1',"
+            " VALUES (%(t)s, 'a@example.org', 'google', %(r)s, %(h)s, 'person', %(p)s, 'exec-1',"
             " now() + interval '7 days')",
             {"t": tenant_id, "r": role_id, "h": b"\x03" * 32, "p": person_id},
         ),
         "platform invitation without execution id": InvalidInsert(
             "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
             " invited_by_kind, expires_at)"
-            " VALUES (%(t)s, 'a@b.uk', 'google', %(r)s, %(h)s, 'platform_job',"
+            " VALUES (%(t)s, 'a@example.org', 'google', %(r)s, %(h)s, 'platform_job',"
             " now() + interval '7 days')",
             {"t": tenant_id, "r": role_id, "h": b"\x04" * 32},
+        ),
+        "revoked invitation with NULL revoked_by_kind (3VL guard)": InvalidInsert(
+            "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
+            " invited_by_kind, invited_by_person_id, expires_at,"
+            " revoked_at, revoked_by_kind, revoked_by_person_id)"
+            " VALUES (%(t)s, 'a@example.org', 'google', %(r)s, %(h)s, 'person', %(p)s,"
+            " now() + interval '7 days', now(), NULL, %(p)s)",
+            {"t": tenant_id, "r": role_id, "h": b"\x0a" * 32, "p": person_id},
         ),
         "invitation both revoked and redeemed": InvalidInsert(
             "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
             " invited_by_kind, invited_by_person_id, expires_at,"
             " revoked_at, revoked_by_kind, revoked_by_person_id,"
             " redeemed_at, redeemed_by_person_id)"
-            " VALUES (%(t)s, 'a@b.uk', 'google', %(r)s, %(h)s, 'person', %(p)s,"
+            " VALUES (%(t)s, 'a@example.org', 'google', %(r)s, %(h)s, 'person', %(p)s,"
             " now() + interval '7 days', now(), 'person', %(p)s, now(), %(p)s)",
             {"t": tenant_id, "r": role_id, "h": b"\x05" * 32, "p": person_id},
         ),

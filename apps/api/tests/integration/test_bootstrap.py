@@ -388,6 +388,15 @@ REFUSALS = {
         after="CREATE ROLE {p}_login LOGIN; GRANT {p}_platform, {p}_purge TO {p}_login",
         message="{p}_login is a member of both {p}_platform and {p}_purge",
     ),
+    "a role reaching two caller roles through an intermediate group": Refusal(
+        superuser=True,
+        before=None,
+        after=(
+            "CREATE ROLE {p}_group NOLOGIN; CREATE ROLE {p}_login LOGIN;"
+            " GRANT {p}_platform TO {p}_group; GRANT {p}_app, {p}_group TO {p}_login"
+        ),
+        message="{p}_login is a member of both {p}_app and {p}_platform",
+    ),
     "a definer role with a member it did not grant": Refusal(
         superuser=True,
         before=None,

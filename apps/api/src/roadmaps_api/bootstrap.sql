@@ -166,8 +166,15 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- Pairwise mutual exclusivity across all four caller roles.
+    -- Pairwise mutual exclusivity across all four caller roles (direct or transitive).
     SELECT array_agg(name::regrole) INTO caller_role_oids FROM unnest(caller_roles) AS name;
+    WITH RECURSIVE held (member, roleid) AS (
+        SELECT member, roleid FROM pg_auth_members
+        UNION
+        SELECT parent.member, child.roleid
+        FROM pg_auth_members AS parent
+        JOIN held AS child ON child.member = parent.roleid
+    )
     SELECT string_agg(
         format('%s is a member of both %s and %s', member_name, first_role, second_role),
         ', '
@@ -177,8 +184,8 @@ BEGIN
             first_m.member::regrole::text AS member_name,
             first_m.roleid::regrole::text AS first_role,
             second_m.roleid::regrole::text AS second_role
-        FROM pg_auth_members AS first_m
-        JOIN pg_auth_members AS second_m ON second_m.member = first_m.member
+        FROM held AS first_m
+        JOIN held AS second_m ON second_m.member = first_m.member
         WHERE first_m.roleid = ANY (caller_role_oids)
             AND second_m.roleid = ANY (caller_role_oids)
             AND first_m.roleid::regrole::text < second_m.roleid::regrole::text

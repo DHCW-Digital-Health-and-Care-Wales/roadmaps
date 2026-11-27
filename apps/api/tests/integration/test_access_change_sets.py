@@ -8,32 +8,30 @@ writing, and `roadmaps_auth_definer`'s invitation purge delete is exempt.
 
 import hashlib
 import uuid
-from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 import psycopg
 import pytest
 from psycopg import sql
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import text
 from sqlalchemy.exc import DataError, IntegrityError, ProgrammingError
 from sqlalchemy.orm import Session, sessionmaker
 
-from roadmaps_api.database import create_sessions, session_info
+from roadmaps_api.database import session_info
 from roadmaps_api.models import (
     ChangeSet,
     Invitation,
     Membership,
-    Role,
-    RolePermission,
     TenantScope,
 )
 from roadmaps_api.repositories.access_change_set import AccessChangeSetRepository
 from roadmaps_api.roles import AUTH_DEFINER_ROLE, OWNER_ROLE
+from tests.harness import one_uuid
 
 HASH_ONE = hashlib.sha256(b"payload-1").digest()
 HASH_TWO = hashlib.sha256(b"payload-2").digest()
-PLANTED_EMAIL = "planted-sensitive-email@dhcw.nhs.uk"
+PLANTED_EMAIL = "planted-sensitive-email@example.org"
 PLANTED_TOKEN_HASH = hashlib.sha256(b"planted-raw-invitation-token").digest()
 
 
@@ -44,18 +42,10 @@ class AccessFixture:
     person_a1: uuid.UUID
     person_a2: uuid.UUID
     person_b1: uuid.UUID
-
-
-@pytest.fixture
-def engine(database_url: str) -> Iterator[Engine]:
-    engine = create_engine(database_url, pool_size=1, max_overflow=0)
-    yield engine
-    engine.dispose()
-
-
-@pytest.fixture
-def sessions(engine: Engine) -> sessionmaker[Session]:
-    return create_sessions(engine)
+    seed_change_set_a: uuid.UUID
+    role_a: uuid.UUID
+    role_a_viewer: uuid.UUID
+    perm_a: uuid.UUID
 
 
 @pytest.fixture
@@ -64,11 +54,11 @@ def access_env(
     worker_admin: psycopg.Connection,
 ) -> AccessFixture:
     with worker_admin.transaction():
-        tenant_a = _one_uuid(
+        tenant_a = one_uuid(
             worker_admin,
             "INSERT INTO tenants (slug, name_en) VALUES ('alpha', 'Alpha') RETURNING id",
         )
-        tenant_b = _one_uuid(
+        tenant_b = one_uuid(
             worker_admin, "INSERT INTO tenants (slug, name_en) VALUES ('beta', 'Beta') RETURNING id"
         )
         for tenant in (tenant_a, tenant_b):
@@ -76,14 +66,43 @@ def access_env(
                 "INSERT INTO tenant_scopes (tenant_id, scope) VALUES (%s, 'access'), (%s, 'lists')",
                 (tenant, tenant),
             )
-        person_a1 = _one_uuid(
+        person_a1 = one_uuid(
             worker_admin, "INSERT INTO people (display_name) VALUES ('Alice') RETURNING id"
         )
-        person_a2 = _one_uuid(
+        person_a2 = one_uuid(
             worker_admin, "INSERT INTO people (display_name) VALUES ('Aled') RETURNING id"
         )
-        person_b1 = _one_uuid(
+        person_b1 = one_uuid(
             worker_admin, "INSERT INTO people (display_name) VALUES ('Beth') RETURNING id"
+        )
+        # Seed fixed v1 roles via internal change set (revision 1), matching create-tenant.
+        seed_change_set_a = one_uuid(
+            worker_admin,
+            "SELECT change_set_id FROM open_access_change_set_internal("
+            " %s, 'migration', 'system', NULL, 'seed', 'seed-roles-a', %s, NULL, NULL)",
+            (tenant_a, HASH_ONE),
+        )
+        role_a = one_uuid(
+            worker_admin,
+            "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, 'Admin', 'admin')"
+            " RETURNING id",
+            (tenant_a,),
+        )
+        role_a_viewer = one_uuid(
+            worker_admin,
+            "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, 'Viewer', 'viewer')"
+            " RETURNING id",
+            (tenant_a,),
+        )
+        perm_a = one_uuid(
+            worker_admin,
+            "INSERT INTO role_permissions (tenant_id, role_id, permission)"
+            " VALUES (%s, %s, 'members:manage') RETURNING id",
+            (tenant_a, role_a),
+        )
+        worker_admin.execute(
+            "SELECT sign_off_access_change_set_internal(%s, %s)",
+            (tenant_a, seed_change_set_a),
         )
     return AccessFixture(
         tenant_a=tenant_a,
@@ -91,21 +110,16 @@ def access_env(
         person_a1=person_a1,
         person_a2=person_a2,
         person_b1=person_b1,
+        seed_change_set_a=seed_change_set_a,
+        role_a=role_a,
+        role_a_viewer=role_a_viewer,
+        perm_a=perm_a,
     )
-
-
-def _one_uuid(
-    connection: psycopg.Connection, query: str, params: tuple[object, ...] = ()
-) -> uuid.UUID:
-    row = connection.execute(query.encode(), params).fetchone()
-    assert row is not None
-    assert isinstance(row[0], uuid.UUID)
-    return row[0]
 
 
 def _create_initial_access_records(
     sessions: sessionmaker[Session], access_env: AccessFixture, batch_ref: uuid.UUID
-) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID]:
+) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
     expires_at = datetime.now(UTC) + timedelta(days=7)
     with sessions(
         info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
@@ -117,41 +131,37 @@ def _create_initial_access_records(
             note="Initial access setup",
             batch_ref=batch_ref,
         )
-        assert (opened.revision, opened.is_replay) == (1, False)
+        assert (opened.revision, opened.is_replay) == (2, False)
 
-        role = Role(tenant_id=access_env.tenant_a, name="Admin", system_key="admin")
-        session.add(role)
-        session.flush()
-
-        perm = RolePermission(
-            tenant_id=access_env.tenant_a, role_id=role.id, permission="members:manage"
-        )
         membership = Membership(
-            tenant_id=access_env.tenant_a, person_id=access_env.person_a1, role_id=role.id
+            tenant_id=access_env.tenant_a,
+            person_id=access_env.person_a1,
+            role_id=access_env.role_a,
         )
         invitation = Invitation(
             tenant_id=access_env.tenant_a,
             email=PLANTED_EMAIL,
             provider="google",
-            role_id=role.id,
+            role_id=access_env.role_a,
             token_hash=PLANTED_TOKEN_HASH,
             invited_by_kind="person",
             invited_by_person_id=access_env.person_a1,
             expires_at=expires_at,
         )
-        session.add_all([perm, membership, invitation])
+        session.add_all([membership, invitation])
         session.flush()
         repo.sign_off(opened.change_set_id)
         session.commit()
-        return opened.change_set_id, role.id, perm.id, membership.id, invitation.id
+        return opened.change_set_id, membership.id, invitation.id
 
 
 def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
     sessions: sessionmaker[Session],
     access_env: AccessFixture,
+    worker_admin: psycopg.Connection,
 ) -> None:
     batch_ref = uuid.uuid4()
-    cs_id, role_id, perm_id, membership_id, invitation_id = _create_initial_access_records(
+    cs_id, membership_id, invitation_id = _create_initial_access_records(
         sessions, access_env, batch_ref
     )
 
@@ -160,7 +170,7 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
     ) as session:
         scope = session.get(TenantScope, (access_env.tenant_a, "access"))
         assert scope is not None
-        assert scope.revision == 1
+        assert scope.revision == 2
 
         cs = session.get(ChangeSet, cs_id)
         assert cs is not None
@@ -172,17 +182,21 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
             None,
         )
         assert (cs.base_revision, cs.revision, cs.note, cs.batch_ref) == (
-            0,
             1,
+            2,
             "Initial access setup",
             batch_ref,
         )
 
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
-        summaries = repo.summaries_for(cs_id)
-        assert {(s.entity_type, s.action) for s in summaries} == {
+        seed_summaries = repo.summaries_for(access_env.seed_change_set_a)
+        assert {(s.entity_type, s.action) for s in seed_summaries} == {
             ("role", "added"),
             ("role_permission", "added"),
+        }
+
+        summaries = repo.summaries_for(cs_id)
+        assert {(s.entity_type, s.action) for s in summaries} == {
             ("membership", "added"),
             ("invitation", "added"),
         }
@@ -193,23 +207,20 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
         assert inv_summary.new_value["provider"] == "google"
         assert inv_summary.new_value["invited_by_person_id"] == str(access_env.person_a1)
 
-        # Second change set: UPDATE (soft-end membership, revoke invitation) & DELETE permission.
+        # Next change set: UPDATE (soft-end membership, revoke invitation).
         opened2 = repo.open(idempotency_key="cs-update-2", request_hash=HASH_TWO)
-        assert (opened2.revision, opened2.is_replay) == (2, False)
+        assert (opened2.revision, opened2.is_replay) == (3, False)
 
         now = datetime.now(UTC)
         loaded_membership = session.get(Membership, membership_id)
         loaded_invitation = session.get(Invitation, invitation_id)
-        loaded_perm = session.get(RolePermission, perm_id)
         assert loaded_membership is not None
         assert loaded_invitation is not None
-        assert loaded_perm is not None
 
         loaded_membership.ended_at = now
         loaded_invitation.revoked_at = now
         loaded_invitation.revoked_by_kind = "person"
         loaded_invitation.revoked_by_person_id = access_env.person_a1
-        session.delete(loaded_perm)
         session.flush()
         repo.sign_off(opened2.change_set_id)
         session.commit()
@@ -221,7 +232,6 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
             ("invitation", "changed", "revoked_at"),
             ("invitation", "changed", "revoked_by_kind"),
             ("invitation", "changed", "revoked_by_person_id"),
-            ("role_permission", "removed", None),
         } <= changed_fields
 
         # D10: scan EVERY change_summaries row as text — neither email nor token_hash appears.
@@ -234,7 +244,31 @@ def test_open_write_sign_off_commits_change_set_and_sanitised_summaries(
         combined = "\n".join(raw_rows)
         assert PLANTED_EMAIL not in combined
         assert PLANTED_TOKEN_HASH.hex() not in combined
-        assert str(role_id) in combined
+        assert str(access_env.role_a) in combined
+
+    # Internal path DELETE on role_permissions also records a 'removed' summary.
+    with worker_admin.transaction():
+        del_cs = one_uuid(
+            worker_admin,
+            "SELECT change_set_id FROM open_access_change_set_internal("
+            " %s, 'migration', 'system', NULL, 'mig', 'del-perm', %s, NULL, NULL)",
+            (access_env.tenant_a, HASH_TWO),
+        )
+        worker_admin.execute(
+            "DELETE FROM public.role_permissions WHERE id = %s", (access_env.perm_a,)
+        )
+        worker_admin.execute(
+            "SELECT sign_off_access_change_set_internal(%s, %s)", (access_env.tenant_a, del_cs)
+        )
+    with sessions(
+        info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
+    ) as session:
+        del_summaries = AccessChangeSetRepository(session, access_env.tenant_a).summaries_for(
+            del_cs
+        )
+        assert {(s.entity_type, s.action, s.field) for s in del_summaries} == {
+            ("role_permission", "removed", None)
+        }
 
 
 def test_two_change_sets_in_one_transaction_commit(
@@ -246,21 +280,27 @@ def test_two_change_sets_in_one_transaction_commit(
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
 
         cs1 = repo.open(idempotency_key="multi-1", request_hash=HASH_ONE)
-        role = Role(tenant_id=access_env.tenant_a, name="Product Lead", system_key="product_lead")
-        session.add(role)
+        membership_1 = Membership(
+            tenant_id=access_env.tenant_a,
+            person_id=access_env.person_a1,
+            role_id=access_env.role_a,
+        )
+        session.add(membership_1)
         session.flush()
         repo.sign_off(cs1.change_set_id)
 
         cs2 = repo.open(idempotency_key="multi-2", request_hash=HASH_TWO)
-        membership = Membership(
-            tenant_id=access_env.tenant_a, person_id=access_env.person_a1, role_id=role.id
+        membership_2 = Membership(
+            tenant_id=access_env.tenant_a,
+            person_id=access_env.person_a2,
+            role_id=access_env.role_a_viewer,
         )
-        session.add(membership)
+        session.add(membership_2)
         session.flush()
         repo.sign_off(cs2.change_set_id)
 
         session.commit()
-        assert (cs1.revision, cs2.revision) == (1, 2)
+        assert (cs1.revision, cs2.revision) == (2, 3)
         assert len(repo.summaries_for(cs1.change_set_id)) == 1
         assert len(repo.summaries_for(cs2.change_set_id)) == 1
 
@@ -279,8 +319,15 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
         )
         with pytest.raises(ProgrammingError) as exc_info:
             session.execute(
-                text("INSERT INTO public.roles (tenant_id, name) VALUES (:t, 'Unopened')"),
-                {"t": access_env.tenant_a},
+                text(
+                    "INSERT INTO public.memberships (tenant_id, person_id, role_id)"
+                    " VALUES (:t, :p, :r)"
+                ),
+                {
+                    "t": access_env.tenant_a,
+                    "p": access_env.person_a1,
+                    "r": access_env.role_a,
+                },
             )
         assert isinstance(exc_info.value.orig, psycopg.errors.RaiseException)
         session.rollback()
@@ -291,7 +338,13 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         repo.open(idempotency_key="unsigned-1", request_hash=HASH_ONE)
-        session.add(Role(tenant_id=access_env.tenant_a, name="Unsigned"))
+        session.add(
+            Membership(
+                tenant_id=access_env.tenant_a,
+                person_id=access_env.person_a1,
+                role_id=access_env.role_a,
+            )
+        )
         session.flush()  # succeeds during tx; deferred trigger refuses at COMMIT
         with pytest.raises(ProgrammingError) as commit_exc:
             session.commit()
@@ -318,14 +371,27 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         cs = repo.open(idempotency_key="post-sign-off", request_hash=HASH_ONE)
-        session.add(Role(tenant_id=access_env.tenant_a, name="Before SignOff"))
+        session.add(
+            Membership(
+                tenant_id=access_env.tenant_a,
+                person_id=access_env.person_a1,
+                role_id=access_env.role_a,
+            )
+        )
         session.flush()
         repo.sign_off(cs.change_set_id)
 
         with pytest.raises(ProgrammingError) as after_exc, session.begin_nested():
             session.execute(
-                text("INSERT INTO public.roles (tenant_id, name) VALUES (:t, 'After SignOff')"),
-                {"t": access_env.tenant_a},
+                text(
+                    "INSERT INTO public.memberships (tenant_id, person_id, role_id)"
+                    " VALUES (:t, :p, :r)"
+                ),
+                {
+                    "t": access_env.tenant_a,
+                    "p": access_env.person_a2,
+                    "r": access_env.role_a,
+                },
             )
         assert isinstance(after_exc.value.orig, psycopg.errors.RaiseException)
         assert after_exc.value.orig.diag.message_primary == (
@@ -367,13 +433,19 @@ def test_triggers_refuse_unopened_unsigned_post_sign_off_and_out_of_scope_writes
 def test_idempotency_replay_conflict_and_retry_after_refusal(
     sessions: sessionmaker[Session], access_env: AccessFixture
 ) -> None:
-    # First write commits with revision 1.
+    # First app write commits with revision 2 (revision 1 seeded roles).
     with sessions(
         info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         first = repo.open(idempotency_key="idem-1", request_hash=HASH_ONE)
-        session.add(Role(tenant_id=access_env.tenant_a, name="Viewer", system_key="viewer"))
+        session.add(
+            Membership(
+                tenant_id=access_env.tenant_a,
+                person_id=access_env.person_a1,
+                role_id=access_env.role_a_viewer,
+            )
+        )
         session.flush()
         repo.sign_off(first.change_set_id)
         session.commit()
@@ -385,11 +457,11 @@ def test_idempotency_replay_conflict_and_retry_after_refusal(
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         replay = repo.open(idempotency_key="idem-1", request_hash=HASH_ONE)
         assert replay == first.__class__(
-            change_set_id=first.change_set_id, revision=1, is_replay=True
+            change_set_id=first.change_set_id, revision=2, is_replay=True
         )
         scope = session.get(TenantScope, (access_env.tenant_a, "access"))
         assert scope is not None
-        assert scope.revision == 1
+        assert scope.revision == 2
         session.commit()
 
     # Same key with another request hash is refused.
@@ -435,7 +507,7 @@ def test_idempotency_replay_conflict_and_retry_after_refusal(
     ) as session:
         repo = AccessChangeSetRepository(session, access_env.tenant_a)
         retried = repo.open(idempotency_key="retry-after-fail", request_hash=HASH_TWO)
-        assert (retried.revision, retried.is_replay) == (2, False)
+        assert (retried.revision, retried.is_replay) == (3, False)
         repo.sign_off(retried.change_set_id)
         session.commit()
 
@@ -445,28 +517,22 @@ def test_history_audit_immutability_and_app_refusals(
     access_env: AccessFixture,
     worker_admin: psycopg.Connection,
 ) -> None:
-    # Create one role & one platform-issued invitation via internal path for mutation tests.
+    # Create one platform-issued invitation via internal path for mutation tests.
     expires_at = datetime.now(UTC) + timedelta(days=7)
     with worker_admin.transaction():
-        cs_id = _one_uuid(
+        cs_id = one_uuid(
             worker_admin,
             "SELECT change_set_id FROM open_access_change_set_internal("
             " %s, 'migration', 'system', NULL, 'seed', 'seed-immut', %s, NULL, NULL)",
             (access_env.tenant_a, HASH_ONE),
         )
-        role_id = _one_uuid(
-            worker_admin,
-            "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, 'Admin', 'admin')"
-            " RETURNING id",
-            (access_env.tenant_a,),
-        )
-        platform_inv_id = _one_uuid(
+        platform_inv_id = one_uuid(
             worker_admin,
             "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
             " invited_by_kind, issued_by_platform_execution_id, expires_at)"
-            " VALUES (%s, 'first-admin@dhcw.nhs.uk', 'google', %s, %s, 'platform_job',"
+            " VALUES (%s, 'first-admin@example.org', 'google', %s, %s, 'platform_job',"
             " 'exec-1', %s) RETURNING id",
-            (access_env.tenant_a, role_id, b"\xcc" * 32, expires_at),
+            (access_env.tenant_a, access_env.role_a, b"\xcc" * 32, expires_at),
         )
         worker_admin.execute(
             "SELECT sign_off_access_change_set_internal(%s, %s)", (access_env.tenant_a, cs_id)
@@ -516,7 +582,12 @@ def test_history_audit_immutability_and_app_refusals(
             with pytest.raises(ProgrammingError) as exc_info, session.begin_nested():
                 session.execute(
                     text(statement),
-                    {"t": access_env.tenant_a, "cs": cs_id, "r": role_id, "h": HASH_TWO},
+                    {
+                        "t": access_env.tenant_a,
+                        "cs": cs_id,
+                        "r": access_env.role_a,
+                        "h": HASH_TWO,
+                    },
                 )
             assert isinstance(exc_info.value.orig, psycopg.errors.InsufficientPrivilege), statement
 
@@ -529,10 +600,15 @@ def test_history_audit_immutability_and_app_refusals(
                     "INSERT INTO public.invitations"
                     " (tenant_id, email, provider, role_id, token_hash,"
                     "  invited_by_kind, issued_by_platform_execution_id, expires_at)"
-                    " VALUES (:t, 'x@dhcw.nhs.uk', 'google', :r, :h,"
+                    " VALUES (:t, 'x@example.org', 'google', :r, :h,"
                     "  'platform_job', 'exec-forged', :exp)"
                 ),
-                {"t": access_env.tenant_a, "r": role_id, "h": b"\xdd" * 32, "exp": expires_at},
+                {
+                    "t": access_env.tenant_a,
+                    "r": access_env.role_a,
+                    "h": b"\xdd" * 32,
+                    "exp": expires_at,
+                },
             )
         assert isinstance(plat_exc.value.orig, psycopg.errors.InsufficientPrivilege)
 
@@ -587,24 +663,24 @@ def test_auth_definer_invitation_purge_delete_is_exempt_from_access_triggers(
 ) -> None:
     expires_at = datetime.now(UTC) + timedelta(days=7)
     with worker_admin.transaction():
-        cs_id = _one_uuid(
+        cs_id = one_uuid(
             worker_admin,
             "SELECT change_set_id FROM open_access_change_set_internal("
             " %s, 'migration', 'system', NULL, 'seed', 'seed-purge', %s, NULL, NULL)",
             (access_env.tenant_a, HASH_ONE),
         )
-        role_id = _one_uuid(
-            worker_admin,
-            "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, 'Viewer', 'viewer')"
-            " RETURNING id",
-            (access_env.tenant_a,),
-        )
-        inv_id = _one_uuid(
+        inv_id = one_uuid(
             worker_admin,
             "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
             " invited_by_kind, invited_by_person_id, expires_at)"
-            " VALUES (%s, 'old@dhcw.nhs.uk', 'google', %s, %s, 'person', %s, %s) RETURNING id",
-            (access_env.tenant_a, role_id, b"\xee" * 32, access_env.person_a1, expires_at),
+            " VALUES (%s, 'old@example.org', 'google', %s, %s, 'person', %s, %s) RETURNING id",
+            (
+                access_env.tenant_a,
+                access_env.role_a_viewer,
+                b"\xee" * 32,
+                access_env.person_a1,
+                expires_at,
+            ),
         )
         worker_admin.execute(
             "SELECT sign_off_access_change_set_internal(%s, %s)", (access_env.tenant_a, cs_id)
@@ -645,6 +721,127 @@ def test_auth_definer_invitation_purge_delete_is_exempt_from_access_triggers(
         ).fetchone()
         assert deleted == 1
         assert after_summaries == before_summaries
+
+
+def test_invitation_update_guards_against_null_revoker_retargeting_and_terminal_edits(
+    sessions: sessionmaker[Session],
+    access_env: AccessFixture,
+    worker_admin: psycopg.Connection,
+) -> None:
+    expires_at = datetime.now(UTC) + timedelta(days=7)
+    with worker_admin.transaction():
+        cs_id = one_uuid(
+            worker_admin,
+            "SELECT change_set_id FROM open_access_change_set_internal("
+            " %s, 'migration', 'system', NULL, 'seed', 'seed-inv-guards', %s, NULL, NULL)",
+            (access_env.tenant_a, HASH_ONE),
+        )
+        pending_id = one_uuid(
+            worker_admin,
+            "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
+            " invited_by_kind, invited_by_person_id, expires_at)"
+            " VALUES (%s, 'pending@example.org', 'google', %s, %s, 'person', %s, %s) RETURNING id",
+            (
+                access_env.tenant_a,
+                access_env.role_a,
+                b"\x51" * 32,
+                access_env.person_a1,
+                expires_at,
+            ),
+        )
+        revoked_id = one_uuid(
+            worker_admin,
+            "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
+            " invited_by_kind, invited_by_person_id, expires_at,"
+            " revoked_at, revoked_by_kind, revoked_by_person_id)"
+            " VALUES (%s, 'revoked@example.org', 'google', %s, %s, 'person', %s, %s,"
+            " now(), 'person', %s) RETURNING id",
+            (
+                access_env.tenant_a,
+                access_env.role_a,
+                b"\x52" * 32,
+                access_env.person_a1,
+                expires_at,
+                access_env.person_a1,
+            ),
+        )
+        redeemed_id = one_uuid(
+            worker_admin,
+            "INSERT INTO invitations (tenant_id, email, provider, role_id, token_hash,"
+            " invited_by_kind, invited_by_person_id, expires_at,"
+            " redeemed_at, redeemed_by_person_id)"
+            " VALUES (%s, 'redeemed@example.org', 'google', %s, %s, 'person', %s, %s,"
+            " now(), %s) RETURNING id",
+            (
+                access_env.tenant_a,
+                access_env.role_a,
+                b"\x53" * 32,
+                access_env.person_a1,
+                expires_at,
+                access_env.person_a2,
+            ),
+        )
+        worker_admin.execute(
+            "SELECT sign_off_access_change_set_internal(%s, %s)", (access_env.tenant_a, cs_id)
+        )
+
+    with sessions(
+        info=session_info(tenant_id=access_env.tenant_a, person_id=access_env.person_a1)
+    ) as session:
+        repo = AccessChangeSetRepository(session, access_env.tenant_a)
+        opened = repo.open(idempotency_key="inv-guards", request_hash=HASH_TWO)
+
+        # revoked_at set with revoked_by_kind = NULL must be refused (CHECK + RLS WITH CHECK).
+        with pytest.raises((IntegrityError, ProgrammingError)), session.begin_nested():
+            session.execute(
+                text(
+                    "UPDATE public.invitations SET revoked_at = now(),"
+                    " revoked_by_person_id = :p, revoked_by_kind = NULL WHERE id = :id"
+                ),
+                {"p": access_env.person_a1, "id": pending_id},
+            )
+
+        # roadmaps_app cannot UPDATE non-revocation columns on invitations.
+        for bad_update in (
+            "UPDATE public.invitations SET email = 'other@example.org' WHERE id = :id",
+            "UPDATE public.invitations SET token_hash = :h WHERE id = :id",
+            "UPDATE public.invitations SET expires_at = now() + interval '30 days' WHERE id = :id",
+            "UPDATE public.invitations SET invited_by_person_id = :p WHERE id = :id",
+        ):
+            with pytest.raises(ProgrammingError) as col_exc, session.begin_nested():
+                session.execute(
+                    text(bad_update),
+                    {"id": pending_id, "h": b"\x99" * 32, "p": access_env.person_a2},
+                )
+            assert isinstance(col_exc.value.orig, psycopg.errors.InsufficientPrivilege), bad_update
+
+        # roadmaps_app cannot un-revoke or overwrite terminal (revoked or redeemed) invitations.
+        assert (
+            session.connection()
+            .execute(
+                text(
+                    "UPDATE public.invitations SET revoked_at = NULL,"
+                    " revoked_by_kind = NULL, revoked_by_person_id = NULL WHERE id = :id"
+                ),
+                {"id": revoked_id},
+            )
+            .rowcount
+            == 0
+        )
+        assert (
+            session.connection()
+            .execute(
+                text(
+                    "UPDATE public.invitations SET revoked_at = now(),"
+                    " revoked_by_kind = 'person', revoked_by_person_id = :p WHERE id = :id"
+                ),
+                {"p": access_env.person_a1, "id": redeemed_id},
+            )
+            .rowcount
+            == 0
+        )
+        repo.sign_off(opened.change_set_id)
+        session.rollback()
 
 
 def test_static_exception_messages_contain_no_caller_data(

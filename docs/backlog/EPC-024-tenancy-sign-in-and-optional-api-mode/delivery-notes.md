@@ -42,7 +42,7 @@ CREATE ON SCHEMA public FROM <definer>` before commit. If `roadmaps_owner` itsel
   needs `EXECUTE` on an internal definer routine, grant it after ownership transfer via
   `SET LOCAL ROLE <definer>` then `SET LOCAL ROLE roadmaps_owner`.
 - **Role-conditional trigger exemptions use `CREATE TRIGGER … WHEN (current_user <> …)`**:
-  inside a `SECURITY DEFINER` trigger function, `current_user` is the trigger owner
-  (`roadmaps_history_definer`), not the statement's caller; put caller-role checks in the
-  trigger's `WHEN` clause (as `invitations` does for `roadmaps_auth_definer`'s purge
-  `DELETE`).
+  inside a `SECURITY DEFINER` trigger function, `current_user` is the trigger function's
+  owner (`roadmaps_history_definer`), not the statement's caller; put caller-role checks
+  in the trigger's `WHEN` clause (as `invitations` does for `roadmaps_auth_definer`'s
+  purge `DELETE`).

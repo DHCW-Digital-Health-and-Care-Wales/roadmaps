@@ -143,9 +143,10 @@ class PlatformAuditLog(Base):
         CheckConstraint("action ~ '^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$'", name="action_format"),
         CheckConstraint("actor_kind IN ('person', 'platform_job', 'system')", name="actor_kind"),
         CheckConstraint(
-            "(actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
+            "((actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
             " OR (actor_kind IN ('platform_job', 'system')"
-            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> '')",
+            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> ''))"
+            " IS TRUE",
             name="actor_exclusive",
         ),
         CheckConstraint("target_type ~ '^[a-z][a-z0-9_]*$'", name="target_type_format"),
@@ -354,11 +355,11 @@ class Invitation(Base):
         CheckConstraint("octet_length(token_hash) = 32", name="token_hash_sha256"),
         CheckConstraint("invited_by_kind IN ('person', 'platform_job')", name="invited_by_kind"),
         CheckConstraint(
-            "(invited_by_kind = 'person' AND invited_by_person_id IS NOT NULL"
+            "((invited_by_kind = 'person' AND invited_by_person_id IS NOT NULL"
             " AND issued_by_platform_execution_id IS NULL)"
             " OR (invited_by_kind = 'platform_job' AND invited_by_person_id IS NULL"
             " AND issued_by_platform_execution_id IS NOT NULL"
-            " AND btrim(issued_by_platform_execution_id) <> '')",
+            " AND btrim(issued_by_platform_execution_id) <> '')) IS TRUE",
             name="inviter_exclusive",
         ),
         CheckConstraint(
@@ -366,18 +367,20 @@ class Invitation(Base):
             name="revoked_by_kind",
         ),
         CheckConstraint(
-            "(revoked_at IS NULL AND revoked_by_kind IS NULL"
+            "((revoked_at IS NULL AND revoked_by_kind IS NULL"
             " AND revoked_by_person_id IS NULL AND revoked_by_platform_execution_id IS NULL)"
-            " OR (revoked_at IS NOT NULL AND revoked_by_kind = 'person'"
+            " OR (revoked_at IS NOT NULL AND revoked_by_kind IS NOT NULL"
+            " AND revoked_by_kind = 'person'"
             " AND revoked_by_person_id IS NOT NULL AND revoked_by_platform_execution_id IS NULL)"
-            " OR (revoked_at IS NOT NULL AND revoked_by_kind = 'platform_job'"
+            " OR (revoked_at IS NOT NULL AND revoked_by_kind IS NOT NULL"
+            " AND revoked_by_kind = 'platform_job'"
             " AND revoked_by_person_id IS NULL AND revoked_by_platform_execution_id IS NOT NULL"
-            " AND btrim(revoked_by_platform_execution_id) <> '')",
+            " AND btrim(revoked_by_platform_execution_id) <> '')) IS TRUE",
             name="revoker_exclusive",
         ),
         CheckConstraint(
-            "(redeemed_at IS NULL AND redeemed_by_person_id IS NULL)"
-            " OR (redeemed_at IS NOT NULL AND redeemed_by_person_id IS NOT NULL)",
+            "((redeemed_at IS NULL AND redeemed_by_person_id IS NULL)"
+            " OR (redeemed_at IS NOT NULL AND redeemed_by_person_id IS NOT NULL)) IS TRUE",
             name="redemption_pair",
         ),
         CheckConstraint(
@@ -451,8 +454,8 @@ class ChangeSet(Base):
         ),
         CheckConstraint("scope IN ('access', 'lists', 'roadmap')", name="scope"),
         CheckConstraint(
-            "(scope IN ('access', 'lists') AND scope_id IS NULL)"
-            " OR (scope = 'roadmap' AND scope_id IS NOT NULL)",
+            "((scope IN ('access', 'lists') AND scope_id IS NULL)"
+            " OR (scope = 'roadmap' AND scope_id IS NOT NULL)) IS TRUE",
             name="scope_id_matches_scope",
         ),
         CheckConstraint(
@@ -462,9 +465,10 @@ class ChangeSet(Base):
         ),
         CheckConstraint("actor_kind IN ('person', 'platform_job', 'system')", name="actor_kind"),
         CheckConstraint(
-            "(actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
+            "((actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
             " OR (actor_kind IN ('platform_job', 'system')"
-            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> '')",
+            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> ''))"
+            " IS TRUE",
             name="actor_exclusive",
         ),
         CheckConstraint("base_revision >= 0", name="base_revision_non_negative"),
@@ -527,10 +531,10 @@ class ChangeSummary(Base):
         CheckConstraint("entity_type ~ '^[a-z][a-z0-9_]*$'", name="entity_type_format"),
         CheckConstraint("action IN ('added', 'changed', 'removed')", name="action"),
         CheckConstraint(
-            "(action = 'added' AND field IS NULL AND old_value IS NULL AND new_value IS NOT NULL)"
+            "((action = 'added' AND field IS NULL AND old_value IS NULL AND new_value IS NOT NULL)"
             " OR (action = 'removed' AND field IS NULL"
             " AND old_value IS NOT NULL AND new_value IS NULL)"
-            " OR (action = 'changed' AND field IS NOT NULL AND btrim(field) <> '')",
+            " OR (action = 'changed' AND field IS NOT NULL AND btrim(field) <> '')) IS TRUE",
             name="action_payload",
         ),
         Index("ix_change_summaries_tenant_id_change_set_id", "tenant_id", "change_set_id"),

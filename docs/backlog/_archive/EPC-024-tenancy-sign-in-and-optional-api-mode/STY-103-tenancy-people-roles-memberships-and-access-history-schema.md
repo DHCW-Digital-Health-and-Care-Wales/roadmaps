@@ -204,6 +204,13 @@ STATEMENT` on `change_sets`, `change_summaries`, `change_set_signoffs` and
   harness (`tests/harness.py:empty_tables`) uses `SET LOCAL session_replication_role =
 'replica'` inside a transaction for between-test teardown without adding any superuser
   exemption to production SQL.
+- `roadmaps_app` receives `SELECT` only on fixed v1 `roles` and `role_permissions`
+  (ADR-019 Option 3; platform and migration paths write them) and column-scoped
+  `UPDATE (revoked_at, revoked_by_kind, revoked_by_person_id, updated_at)` on
+  `invitations`, with RLS `USING` excluding already-revoked or redeemed rows so
+  `roadmaps_app` can only revoke pending person-issued invitations.
+- Every function created in `0002` pins `SET search_path = pg_catalog, public, pg_temp`
+  (with `pg_temp` last, preventing unqualified-object shadowing).
 
 ### Contract for dependents
 
@@ -223,11 +230,13 @@ STATEMENT` on `change_sets`, `change_summaries`, `change_set_signoffs` and
   SQL and the last-admin guard (`STY-111`) must filter `ended_at IS NULL` explicitly.
 - **Access change sets (`repositories/access_change_set.py`)**: services running as
   `roadmaps_app` call `AccessChangeSetRepository(session, tenant_id).open(...)` before
-  mutating `roles`, `role_permissions`, `memberships` or `invitations`, and `.sign_off(id)`
-  before committing. Internal non-person/platform/redemption definers (`STY-104`,
-  `STY-110`, future migrations) call `open_access_change_set_internal(...)` and
-  `sign_off_access_change_set_internal(...)` (executable only by `roadmaps_owner`,
-  `roadmaps_auth_definer` and `roadmaps_platform_definer`).
+  mutating `memberships` or `invitations` (`roles` and `role_permissions` are `SELECT`-only
+  for `roadmaps_app` in v1; `invitations` `UPDATE` is column-scoped to revocation fields
+  on pending person-issued rows), and `.sign_off(id)` before committing. Internal
+  non-person/platform/redemption definers (`STY-104`, `STY-110`, future migrations) call
+  `open_access_change_set_internal(...)` and `sign_off_access_change_set_internal(...)`
+  (executable only by `roadmaps_owner`, `roadmaps_auth_definer` and
+  `roadmaps_platform_definer`).
 - **`platform_audit_log`**: `action` checks `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$` and
   `target_type` checks `^[a-z][a-z0-9_]*$`; `STY-104` and `STY-106` add role-scoped
   `INSERT` grants and RLS policies for `roadmaps_platform_definer` / `roadmaps_auth_definer`.
@@ -236,20 +245,23 @@ STATEMENT` on `change_sets`, `change_summaries`, `change_set_signoffs` and
   triggers via trigger `WHEN` clauses; `STY-110` adds the `DELETE` grant, policy and
   purge definer routine.
 - **Threat model**: `TM-56` in `docs/analysis/identity-threat-model.md` promoted to
-  `Mitigated`.
+  `Mitigated`, and `TM-54` updated to reflect the eight-role split.
 
 ### Scenario evidence
 
-- **TDD red/green slices**:
-  - Slice 1 (S4 roles & bootstrap): `test_bootstrap.py` and `test_readiness.py` updated
-    first -> 18 failed, 63 passed -> implemented `bootstrap.sql` & `bootstrap_database.py`
-    -> 336 passed, 100% branch coverage.
-  - Slice 2 (S1–S3 schema, RLS, access change sets): `test_schema_and_privileges.py`
-    written first -> 4/4 failed (`tenants` missing, missing tables/privileges) -> implemented
-    `models.py`, `database.py`, `repositories/access_change_set.py`,
-    `0002_tenancy_and_access_schema.py`, plus `test_rls_isolation.py` and
-    `test_access_change_sets.py` -> full API suite green with 100% statement and branch
-    coverage.
+- **TDD slices**:
+  - Slice 1 (S4 roles & bootstrap): updated `test_bootstrap.py` and `test_readiness.py`
+    first to fail on the missing roles and logins, then implemented `bootstrap.sql`,
+    `roles.py` and `tools/bootstrap_database.py` until green.
+  - Slice 2 (S1–S3 schema, RLS, access change sets): wrote `test_schema_and_privileges.py`
+    first to fail on the missing tables and privileges, then implemented `models.py`,
+    `database.py`, `repositories/access_change_set.py` and
+    `0002_tenancy_and_access_schema.py`, followed by `test_rls_isolation.py` and
+    `test_access_change_sets.py`.
+  - Slice 3 (review hardening): added regressions for NULL `revoked_by_kind` on revoked
+    invitations, transitive caller-role overlap, `SELECT`-only `roles`/`role_permissions`,
+    and column-scoped/pending-only `invitations` `UPDATE` before tightening `0002`,
+    `models.py` and `bootstrap.sql`.
 
 | Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

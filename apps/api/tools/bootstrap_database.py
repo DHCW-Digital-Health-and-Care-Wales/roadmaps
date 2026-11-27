@@ -1,12 +1,12 @@
-"""Bootstraps the slot's local database: two password logins, then the roles' file.
+"""Bootstraps the slot's local database: four password logins, then the roles' file.
 
 `scripts/api.sh` runs it (`pnpm api:db:up`, and so `api:dev`, `api:migrate` and
 `api:test`), as `python -m tools.bootstrap_database`, with `ROADMAPS_ENV` and
 `ROADMAPS_ADMIN_DATABASE_URL`, Compose's superuser. In one transaction it creates the
-migration and application logins, with fixed local passwords, runs
-`roadmaps_api/bootstrap.sql`, then makes each login a member of exactly one of
-the migration and application roles. A second run changes nothing, so an existing
-volume is brought up to date in place.
+migration, application, platform and purge logins, with fixed local passwords, runs
+`roadmaps_api/bootstrap.sql`, then makes each login a member of exactly one of the four
+caller roles. A second run changes nothing, so an existing volume is brought up to date in
+place.
 
 It refuses, naming the setting and never its value, unless `ROADMAPS_ENV` is local or
 test, the admin URL's host is a loopback address and its login is a superuser, which no

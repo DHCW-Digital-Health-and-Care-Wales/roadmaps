@@ -88,6 +88,16 @@ def unique_name(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
 
 
+def one_uuid(
+    connection: psycopg.Connection, query: str, params: tuple[object, ...] = ()
+) -> uuid.UUID:
+    """Runs a SQL query returning one UUID column and asserts its type."""
+    row = connection.execute(query.encode(), params).fetchone()
+    assert row is not None
+    assert isinstance(row[0], uuid.UUID)
+    return row[0]
+
+
 def create_database(name: str, template: str | None = None) -> None:
     """A database owned by the owner role, with the bootstrap's database-scoped part."""
     statement = sql.SQL("CREATE DATABASE {} OWNER {}").format(

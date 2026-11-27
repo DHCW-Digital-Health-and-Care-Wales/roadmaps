@@ -5,15 +5,14 @@ earlier one left on it, connected as the application's login.
 """
 
 import uuid
-from collections.abc import Iterator
 
 import psycopg
 import pytest
-from sqlalchemy import Connection, Engine, TextClause, create_engine, event, text
+from sqlalchemy import Connection, Engine, TextClause, event, text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session, sessionmaker
 
-from roadmaps_api.database import create_sessions, session_info
+from roadmaps_api.database import session_info
 from tests.harness import PROBE_TABLE
 
 TENANT = uuid.uuid4()
@@ -23,18 +22,6 @@ SETTINGS = text(
     "SELECT current_setting('app.tenant_id', true), current_setting('app.person_id', true)"
 )
 EMPTY = (None, "")
-
-
-@pytest.fixture
-def engine(database_url: str) -> Iterator[Engine]:
-    engine = create_engine(database_url, pool_size=1, max_overflow=0)
-    yield engine
-    engine.dispose()
-
-
-@pytest.fixture
-def sessions(engine: Engine) -> sessionmaker[Session]:
-    return create_sessions(engine)
 
 
 SCOPES = {

@@ -26,9 +26,6 @@ UUIDV7 = sa.text("uuidv7()")
 NOW = sa.text("now()")
 EMPTY_JSON = sa.text("'{}'::jsonb")
 CURRENT_XID = sa.text("pg_current_xact_id()::text")
-PERSON_SETTING_UUID = "NULLIF(current_setting('app.person_id', true), '')::uuid"
-TENANT_SETTING_UUID = "NULLIF(current_setting('app.tenant_id', true), '')::uuid"
-TENANT_SETTING_EMPTY = "NULLIF(current_setting('app.tenant_id', true), '') IS NULL"
 
 
 def _create_shared_tables() -> None:
@@ -121,9 +118,10 @@ def _create_shared_tables() -> None:
             name="ck_platform_audit_log_actor_kind",
         ),
         sa.CheckConstraint(
-            "(actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
+            "((actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
             " OR (actor_kind IN ('platform_job', 'system')"
-            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> '')",
+            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> ''))"
+            " IS TRUE",
             name="ck_platform_audit_log_actor_exclusive",
         ),
         sa.CheckConstraint(
@@ -330,11 +328,11 @@ def _create_tenant_access_tables() -> None:
             "invited_by_kind IN ('person', 'platform_job')", name="ck_invitations_invited_by_kind"
         ),
         sa.CheckConstraint(
-            "(invited_by_kind = 'person' AND invited_by_person_id IS NOT NULL"
+            "((invited_by_kind = 'person' AND invited_by_person_id IS NOT NULL"
             " AND issued_by_platform_execution_id IS NULL)"
             " OR (invited_by_kind = 'platform_job' AND invited_by_person_id IS NULL"
             " AND issued_by_platform_execution_id IS NOT NULL"
-            " AND btrim(issued_by_platform_execution_id) <> '')",
+            " AND btrim(issued_by_platform_execution_id) <> '')) IS TRUE",
             name="ck_invitations_inviter_exclusive",
         ),
         sa.CheckConstraint(
@@ -342,18 +340,20 @@ def _create_tenant_access_tables() -> None:
             name="ck_invitations_revoked_by_kind",
         ),
         sa.CheckConstraint(
-            "(revoked_at IS NULL AND revoked_by_kind IS NULL"
+            "((revoked_at IS NULL AND revoked_by_kind IS NULL"
             " AND revoked_by_person_id IS NULL AND revoked_by_platform_execution_id IS NULL)"
-            " OR (revoked_at IS NOT NULL AND revoked_by_kind = 'person'"
+            " OR (revoked_at IS NOT NULL AND revoked_by_kind IS NOT NULL"
+            " AND revoked_by_kind = 'person'"
             " AND revoked_by_person_id IS NOT NULL AND revoked_by_platform_execution_id IS NULL)"
-            " OR (revoked_at IS NOT NULL AND revoked_by_kind = 'platform_job'"
+            " OR (revoked_at IS NOT NULL AND revoked_by_kind IS NOT NULL"
+            " AND revoked_by_kind = 'platform_job'"
             " AND revoked_by_person_id IS NULL AND revoked_by_platform_execution_id IS NOT NULL"
-            " AND btrim(revoked_by_platform_execution_id) <> '')",
+            " AND btrim(revoked_by_platform_execution_id) <> '')) IS TRUE",
             name="ck_invitations_revoker_exclusive",
         ),
         sa.CheckConstraint(
-            "(redeemed_at IS NULL AND redeemed_by_person_id IS NULL)"
-            " OR (redeemed_at IS NOT NULL AND redeemed_by_person_id IS NOT NULL)",
+            "((redeemed_at IS NULL AND redeemed_by_person_id IS NULL)"
+            " OR (redeemed_at IS NOT NULL AND redeemed_by_person_id IS NOT NULL)) IS TRUE",
             name="ck_invitations_redemption_pair",
         ),
         sa.CheckConstraint(
@@ -405,8 +405,8 @@ def _create_history_tables() -> None:
         ),
         sa.CheckConstraint("scope IN ('access', 'lists', 'roadmap')", name="ck_change_sets_scope"),
         sa.CheckConstraint(
-            "(scope IN ('access', 'lists') AND scope_id IS NULL)"
-            " OR (scope = 'roadmap' AND scope_id IS NOT NULL)",
+            "((scope IN ('access', 'lists') AND scope_id IS NULL)"
+            " OR (scope = 'roadmap' AND scope_id IS NOT NULL)) IS TRUE",
             name="ck_change_sets_scope_id_matches_scope",
         ),
         sa.CheckConstraint(
@@ -418,9 +418,10 @@ def _create_history_tables() -> None:
             "actor_kind IN ('person', 'platform_job', 'system')", name="ck_change_sets_actor_kind"
         ),
         sa.CheckConstraint(
-            "(actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
+            "((actor_kind = 'person' AND actor_person_id IS NOT NULL AND actor_ref IS NULL)"
             " OR (actor_kind IN ('platform_job', 'system')"
-            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> '')",
+            " AND actor_person_id IS NULL AND actor_ref IS NOT NULL AND btrim(actor_ref) <> ''))"
+            " IS TRUE",
             name="ck_change_sets_actor_exclusive",
         ),
         sa.CheckConstraint("base_revision >= 0", name="ck_change_sets_base_revision_non_negative"),
@@ -475,10 +476,10 @@ def _create_history_tables() -> None:
             "action IN ('added', 'changed', 'removed')", name="ck_change_summaries_action"
         ),
         sa.CheckConstraint(
-            "(action = 'added' AND field IS NULL AND old_value IS NULL AND new_value IS NOT NULL)"
+            "((action = 'added' AND field IS NULL AND old_value IS NULL AND new_value IS NOT NULL)"
             " OR (action = 'removed' AND field IS NULL"
             " AND old_value IS NOT NULL AND new_value IS NULL)"
-            " OR (action = 'changed' AND field IS NOT NULL AND btrim(field) <> '')",
+            " OR (action = 'changed' AND field IS NOT NULL AND btrim(field) <> '')) IS TRUE",
             name="ck_change_summaries_action_payload",
         ),
     )
@@ -609,11 +610,11 @@ def _enable_rls_and_policies() -> None:
         f"CREATE POLICY tenant ON public.memberships"
         f" FOR ALL USING ({TENANT_POLICY}) WITH CHECK ({TENANT_POLICY})"
     )
-    op.execute(f"""
+    op.execute("""
         CREATE POLICY person_select ON public.memberships
         FOR SELECT USING (
-            {TENANT_SETTING_EMPTY}
-            AND person_id = {PERSON_SETTING_UUID}
+            NULLIF(current_setting('app.tenant_id', true), '') IS NULL
+            AND person_id = NULLIF(current_setting('app.person_id', true), '')::uuid
             AND ended_at IS NULL
         )
     """)
@@ -627,7 +628,7 @@ def _enable_rls_and_policies() -> None:
         WITH CHECK (
             {TENANT_POLICY}
             AND invited_by_kind = 'person'
-            AND invited_by_person_id = {PERSON_SETTING_UUID}
+            AND invited_by_person_id = NULLIF(current_setting('app.person_id', true), '')::uuid
             AND revoked_at IS NULL
             AND revoked_by_kind IS NULL
             AND redeemed_at IS NULL
@@ -637,19 +638,20 @@ def _enable_rls_and_policies() -> None:
     op.execute(f"""
         CREATE POLICY app_update ON public.invitations
         FOR UPDATE TO roadmaps_app
-        USING ({TENANT_POLICY} AND invited_by_kind = 'person')
+        USING (
+            {TENANT_POLICY}
+            AND invited_by_kind = 'person'
+            AND revoked_at IS NULL
+            AND redeemed_at IS NULL
+        )
         WITH CHECK (
             {TENANT_POLICY}
             AND invited_by_kind = 'person'
             AND redeemed_at IS NULL
             AND redeemed_by_person_id IS NULL
-            AND (
-                revoked_by_kind IS NULL
-                OR (
-                    revoked_by_kind = 'person'
-                    AND revoked_by_person_id = {PERSON_SETTING_UUID}
-                )
-            )
+            AND revoked_at IS NOT NULL
+            AND revoked_by_kind = 'person'
+            AND revoked_by_person_id = NULLIF(current_setting('app.person_id', true), '')::uuid
         )
     """)
     op.execute(
@@ -675,14 +677,14 @@ def _enable_rls_and_policies() -> None:
 def _grant_table_privileges() -> None:
     op.execute(
         "GRANT SELECT ON public.tenants, public.people, public.identities,"
-        " public.tenant_scopes, public.change_sets, public.change_summaries TO roadmaps_app"
+        " public.tenant_scopes, public.roles, public.role_permissions,"
+        " public.change_sets, public.change_summaries TO roadmaps_app"
     )
+    op.execute("GRANT SELECT, INSERT, UPDATE ON public.memberships TO roadmaps_app")
+    op.execute("GRANT SELECT, INSERT ON public.invitations TO roadmaps_app")
     op.execute(
-        "GRANT SELECT, INSERT, UPDATE, DELETE ON public.roles, public.role_permissions"
-        " TO roadmaps_app"
-    )
-    op.execute(
-        "GRANT SELECT, INSERT, UPDATE ON public.memberships, public.invitations TO roadmaps_app"
+        "GRANT UPDATE (revoked_at, revoked_by_kind, revoked_by_person_id, updated_at)"
+        " ON public.invitations TO roadmaps_app"
     )
     op.execute("GRANT SELECT, UPDATE ON public.tenant_scopes TO roadmaps_history_definer")
     op.execute(
@@ -707,7 +709,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS TABLE (change_set_id uuid, revision bigint, is_replay boolean)
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         DECLARE
             v_xid text := pg_current_xact_id()::text;
@@ -851,7 +853,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS TABLE (change_set_id uuid, revision bigint, is_replay boolean)
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         DECLARE
             v_tenant_id uuid := NULLIF(current_setting('app.tenant_id', true), '')::uuid;
@@ -888,7 +890,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS void
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         DECLARE
             v_xid text := pg_current_xact_id()::text;
@@ -925,7 +927,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS void
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         DECLARE
             v_tenant_id uuid := NULLIF(current_setting('app.tenant_id', true), '')::uuid;
@@ -971,7 +973,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS trigger
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         DECLARE
             v_xid text := pg_current_xact_id()::text;
@@ -1029,7 +1031,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS trigger
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         DECLARE
             v_xid text := pg_current_xact_id()::text;
@@ -1142,7 +1144,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS trigger
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         BEGIN
             IF NOT EXISTS (
@@ -1163,7 +1165,7 @@ def _create_history_definer_routines_and_triggers() -> None:
         RETURNS trigger
         LANGUAGE plpgsql
         SECURITY DEFINER
-        SET search_path = pg_catalog, public
+        SET search_path = pg_catalog, public, pg_temp
         AS $fn$
         BEGIN
             RAISE EXCEPTION 'history and audit records are immutable' USING ERRCODE = 'P0001';
@@ -1195,11 +1197,11 @@ def _create_history_definer_routines_and_triggers() -> None:
     op.execute(
         "GRANT EXECUTE ON FUNCTION public.open_access_change_set_internal"
         "(uuid, text, text, uuid, text, text, bytea, text, uuid)"
-        " TO roadmaps_owner, roadmaps_auth_definer, roadmaps_platform_definer"
+        " TO roadmaps_auth_definer, roadmaps_platform_definer"
     )
     op.execute(
         "GRANT EXECUTE ON FUNCTION public.sign_off_access_change_set_internal(uuid, uuid)"
-        " TO roadmaps_owner, roadmaps_auth_definer, roadmaps_platform_definer"
+        " TO roadmaps_auth_definer, roadmaps_platform_definer"
     )
 
     # Attach access-scope guard and summary triggers while roadmaps_owner still owns the

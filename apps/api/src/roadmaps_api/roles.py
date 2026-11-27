@@ -23,7 +23,6 @@ PLATFORM_DEFINER_ROLE: Final = "roadmaps_platform_definer"
 
 CALLER_ROLES: Final = (MIGRATION_ROLE, APP_ROLE, PLATFORM_ROLE, PURGE_ROLE)
 DEFINER_ROLES: Final = (AUTH_DEFINER_ROLE, HISTORY_DEFINER_ROLE, PLATFORM_DEFINER_ROLE)
-ALL_ROLES: Final = (OWNER_ROLE, *CALLER_ROLES, *DEFINER_ROLES)
 # Roles Cloud SQL gives an IAM login, which `/ready` admits beside the application's
 # while they hold no attribute and own nothing (STY-091 D34).
 CLOUD_SQL_IAM_ROLES: Final = ("cloudsqliamuser", "cloudsqliamserviceaccount")

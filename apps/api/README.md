@@ -92,16 +92,20 @@ route, a model or an error code, run `pnpm api:contract` and commit what it writ
 ## The database
 
 [ADR-015](../../docs/adr/ADR-015-the-roadmap-database-is-postgresql-tenant-scoped-and-versioned.md)'s
-three no-login roles hold every grant: `roadmaps_owner` owns the database, and so schema
-`public` and every object in it; `roadmaps_migrator` may switch to the owner, without
-inheriting it; `roadmaps_app` is the application's. Each login is a member of exactly
-one of the last two. [`src/roadmaps_api/bootstrap.sql`](src/roadmaps_api/bootstrap.sql)
+eight no-login roles hold every grant: `roadmaps_owner` owns the database, schema `public`
+and every table, view and sequence; four mutually exclusive caller roles hold runtime
+grants (`roadmaps_migrator`, which switches to the owner without inheriting it;
+`roadmaps_app` for the API; `roadmaps_platform` for platform operator jobs; and
+`roadmaps_purge` for retention purge jobs); and three dedicated definer owner roles
+(`roadmaps_auth_definer`, `roadmaps_history_definer`, `roadmaps_platform_definer`) own
+only their reviewed `SECURITY DEFINER` routines in `public`. Each login is a member of
+exactly one caller role. [`src/roadmaps_api/bootstrap.sql`](src/roadmaps_api/bootstrap.sql)
 makes them and holds no credential: locally `pnpm api:db:up` runs it, after creating the
-logins `roadmaps_migrator_login` and `roadmaps_app_login` (password `roadmaps`), and
-where the API is hosted [EPC-023](../../docs/backlog/EPC-023-hosting-and-infrastructure-security/README.md)
-does, after creating its own. A non-superuser runner, as Cloud SQL's administrator is,
-is granted the owner role with `SET` and without `INHERIT`, so its credential is the
-owner's.
+four logins `roadmaps_migrator_login`, `roadmaps_app_login`, `roadmaps_platform_login` and
+`roadmaps_purge_login` (password `roadmaps`), and where the API is hosted
+[EPC-023](../../docs/backlog/EPC-023-hosting-and-infrastructure-security/README.md) does,
+after creating its own. A non-superuser runner, as Cloud SQL's administrator is, is
+granted the owner role with `SET` and without `INHERIT`, so its credential is the owner's.
 
 Migrations are Alembic revisions in `src/roadmaps_api/migrations/versions/`, numbered
 `0001_<slug>` in one line. They upgrade only, run as their own step as the migration

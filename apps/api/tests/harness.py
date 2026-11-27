@@ -26,6 +26,8 @@ from tools.bootstrap_database import (
     APP_LOGIN,
     LOCAL_PASSWORD,
     MIGRATION_LOGIN,
+    PLATFORM_LOGIN,
+    PURGE_LOGIN,
     libpq_url,
 )
 
@@ -67,6 +69,14 @@ def migration_url(database: str) -> str:
     return login_url(MIGRATION_LOGIN, database)
 
 
+def platform_url(database: str) -> str:
+    return login_url(PLATFORM_LOGIN, database)
+
+
+def purge_url(database: str) -> str:
+    return login_url(PURGE_LOGIN, database)
+
+
 @contextmanager
 def admin(database: str | None = None) -> Generator[psycopg.Connection]:
     """A superuser connection, committing each statement."""
@@ -76,6 +86,16 @@ def admin(database: str | None = None) -> Generator[psycopg.Connection]:
 
 def unique_name(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:12]}"
+
+
+def one_uuid(
+    connection: psycopg.Connection, query: str, params: tuple[object, ...] = ()
+) -> uuid.UUID:
+    """Runs a SQL query returning one UUID column and asserts its type."""
+    row = connection.execute(query.encode(), params).fetchone()
+    assert row is not None
+    assert isinstance(row[0], uuid.UUID)
+    return row[0]
 
 
 def create_database(name: str, template: str | None = None) -> None:
@@ -135,11 +155,15 @@ def empty_tables(connection: psycopg.Connection) -> None:
         (VERSION_TABLE,),
     ).fetchall()
     if tables:
-        connection.execute(
-            sql.SQL("TRUNCATE {} CASCADE").format(
-                sql.SQL(", ").join(sql.Identifier("public", table) for (table,) in tables)
+        # Superuser-only replica mode bypasses immutability BEFORE TRUNCATE triggers
+        # during test teardown without adding any superuser backdoor to production SQL.
+        with connection.transaction():
+            connection.execute("SET LOCAL session_replication_role = 'replica'")
+            connection.execute(
+                sql.SQL("TRUNCATE {} CASCADE").format(
+                    sql.SQL(", ").join(sql.Identifier("public", table) for (table,) in tables)
+                )
             )
-        )
 
 
 def open_admin(database: str) -> psycopg.Connection:

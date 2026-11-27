@@ -1,10 +1,12 @@
 # STY-103: Tenancy, people, roles, memberships and access-history schema
 
-- **Status**: Proposed — grilled 2026-11-26; first schema migration creating `tenants`,
-  identity/access tables, access-scope change sets and ADR-015's database enforcement suite
+- **Status**: Done — eight no-login roles in `bootstrap.sql` (four local logins),
+  migration `0002_tenancy_and_access_schema`, SQLAlchemy models with `SoftEndMixin`,
+  `AccessChangeSetRepository`, and PostgreSQL 18 RLS, immutability and commit-guard
+  enforcement suite
 - **Type**: Feature
 - **Area**: API
-- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
+- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
 - **Depends on**: none (STY-091 is Done)
 - **Binding ADRs**: ADR-015 §Tenancy, §People, access and permissions, §History, §What
   enforces this, §ADR-018 and ADR-019 amendments, §STY-102 amendments, §STY-103
@@ -13,6 +15,7 @@
   roles, §Enforcement, §STY-103 amendments
 - **Suggested model**: Opus — foundational schema, RLS policies, definer roles, commit
   function and immutability proofs
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/336
 
 ## Summary
 
@@ -174,3 +177,101 @@ platform definer procedures is settled in Q4
 - Roadmaps, items, lists, scratches, snapshots for roadmaps/lists and publications
   (`EPC-026`).
 - Deterministic fake data seeding (`STY-093`, which immediately follows this story).
+
+## Delivery
+
+### Departures
+
+- Added internal append-only sign-off ledger table `change_set_signoffs` (`(tenant_id,
+change_set_id)` PK, forced RLS, zero `roadmaps_app` grants, `SELECT`/`INSERT` only for
+  `roadmaps_history_definer`) so `roadmaps_history_definer` remains strictly append-only
+  (zero `UPDATE`/`DELETE` grants on history, D6) while tracking sign-off in a row only it
+  writes without trusting any `set_config` setting (ADR-015 _History_ and _What enforces
+  this_).
+- Added `opened_xid` on `change_sets` and `signed_off_xid` on `change_set_signoffs` as
+  `text` storing `pg_current_xact_id()::text` so SQLAlchemy/Alembic metadata reflection
+  produces zero `SAWarning`s under `filterwarnings = ["error"]`.
+- `guard_access_working_write()` runs as an `AFTER` immediate trigger (ordered before
+  `record_access_change_summary()` via `01`/`02` trigger prefixes) so `CHECK` constraints
+  and RLS `WITH CHECK` policies evaluate first, while still refusing unopened,
+  post-sign-off and out-of-scope writes immediately during the statement.
+- Person-keyed `SELECT` policies on `memberships` and `tenants` also require
+  `NULLIF(current_setting('app.tenant_id', true), '') IS NULL` so a multi-tenant person
+  acting inside Tenant A never sees Tenant B's membership or tenant rows even if a query
+  omits a `WHERE tenant_id` filter.
+- `forbid_immutable_history_mutation()` runs `BEFORE UPDATE OR DELETE OR TRUNCATE FOR EACH
+STATEMENT` on `change_sets`, `change_summaries`, `change_set_signoffs` and
+  `platform_audit_log` as `SECURITY INVOKER` (owned by `roadmaps_owner`, since it only
+  raises), failing immediately even when RLS hides rows; the superuser test harness
+  (`tests/harness.py:empty_tables`) uses `SET LOCAL session_replication_role = 'replica'`
+  inside a transaction for between-test teardown without adding any superuser exemption to
+  production SQL.
+- `roadmaps_app` receives `SELECT` only on fixed v1 `roles` and `role_permissions`
+  (ADR-019 Option 3; platform and migration paths write them), no `INSERT` and
+  column-scoped `UPDATE (role_id, ended_at, updated_at)` on active `memberships` only
+  (ADR-018: invitation redemption via `roadmaps_auth_definer` is the only runtime path
+  that creates memberships), and column-scoped `INSERT` (excluding `id`, `created_at` and
+  `updated_at`; RLS `app_insert` and `CHECK` constraints enforce `NULL` terminal/platform
+  columns) plus column-scoped revocation `UPDATE` on pending person-issued `invitations`
+  (bounded by `ck_invitations_max_lifetime` at `7 days 5 minutes`).
+- Every function created in `0002` pins `SET search_path = pg_catalog, public, pg_temp`
+  (with `pg_temp` last, preventing unqualified-object shadowing).
+
+### Contract for dependents
+
+- **Roles (`apps/api/src/roadmaps_api/roles.py`, `bootstrap.sql`, `tools/bootstrap_database.py`)**:
+  eight no-login roles (`roadmaps_owner`, caller roles `roadmaps_migrator`, `roadmaps_app`,
+  `roadmaps_platform`, `roadmaps_purge`, and definer owner roles `roadmaps_auth_definer`,
+  `roadmaps_history_definer`, `roadmaps_platform_definer`) and four local password logins
+  (`roadmaps_migrator_login`, `roadmaps_app_login`, `roadmaps_platform_login`,
+  `roadmaps_purge_login`).
+- **Schema (`0002_tenancy_and_access_schema`, `apps/api/src/roadmaps_api/models.py`)**:
+  shared tables `tenants`, `people`, `identities`, `platform_audit_log`; tenant-owned
+  tables `tenant_scopes`, `roles`, `role_permissions`, `memberships` (`SoftEndMixin`),
+  `invitations`, `change_sets`, `change_summaries`, `change_set_signoffs`.
+- **Soft-ended memberships (`database.py:create_sessions`)**: ORM selects on `SoftEndMixin`
+  automatically filter `ended_at IS NULL`; pass `.execution_options(include_ended=True)`
+  to include ended rows. Tenant-keyed `SELECT` RLS on `memberships` stays `TENANT_POLICY`,
+  so raw SQL and the last-admin guard (`STY-111`) must filter `ended_at IS NULL` explicitly.
+- **Access change sets (`repositories/access_change_set.py`)**: services running as
+  `roadmaps_app` call `AccessChangeSetRepository(session, tenant_id).open(...)` before
+  updating active `memberships` (`role_id`/`ended_at`/`updated_at`) or inserting/revoking
+  person-issued `invitations` (`roles` and `role_permissions` are `SELECT`-only for
+  `roadmaps_app` in v1; memberships are inserted only via `roadmaps_auth_definer`
+  redemption in `STY-110` or owner/internal paths), and `.sign_off(id)` before committing.
+  Internal non-person/platform/redemption definers (`STY-104`, `STY-110`, future
+  migrations) call `open_access_change_set_internal(...)` and
+  `sign_off_access_change_set_internal(...)` (executable only by `roadmaps_owner`,
+  `roadmaps_auth_definer` and `roadmaps_platform_definer`).
+- **`platform_audit_log`**: `action` checks `^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$` and
+  `target_type` checks `^[a-z][a-z0-9_]*$`; `STY-104` and `STY-106` add role-scoped
+  `INSERT` grants and RLS policies for `roadmaps_platform_definer` / `roadmaps_auth_definer`.
+- **Invitation 90-day purge (`STY-110`)**: `DELETE` on `invitations` running with
+  `current_user = 'roadmaps_auth_definer'` bypasses access commit-guard and summary
+  triggers via trigger `WHEN` clauses; `STY-110` adds the `DELETE` grant, policy and
+  purge definer routine.
+- **Threat model**: `TM-56` in `docs/analysis/identity-threat-model.md` promoted to
+  `Mitigated`, and `TM-54` updated to reflect the eight-role split.
+
+### Scenario evidence
+
+- **TDD slices**:
+  - Slice 1 (S4 roles & bootstrap): updated `test_bootstrap.py` and `test_readiness.py`
+    first to fail on the missing roles and logins, then implemented `bootstrap.sql`,
+    `roles.py` and `tools/bootstrap_database.py` until green.
+  - Slice 2 (S1–S3 schema, RLS, access change sets): wrote `test_schema_and_privileges.py`
+    first to fail on the missing tables and privileges, then implemented `models.py`,
+    `database.py`, `repositories/access_change_set.py` and
+    `0002_tenancy_and_access_schema.py`, followed by `test_rls_isolation.py` and
+    `test_access_change_sets.py`.
+  - Slice 3 (review hardening): added regressions for NULL `revoked_by_kind` on revoked
+    invitations, transitive caller-role overlap, `SELECT`-only `roles`/`role_permissions`,
+    and column-scoped/pending-only `invitations` `UPDATE` before tightening `0002`,
+    `models.py` and `bootstrap.sql`.
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/integration/test_schema_and_privileges.py`, `apps/api/tests/integration/test_migrations.py` (`compare_metadata` & `alembic check` zero drift, no `PUBLIC` routine `EXECUTE`)                                                                                                                                                                                                                                  |
+| S2       | `apps/api/tests/integration/test_rls_isolation.py`, `apps/api/tests/integration/test_tenancy.py` (unset fail-closed, cross-tenant A/B including multi-tenant user, `people`/`identities` rules, `SoftEndMixin`, `pool_size=1` no-leak)                                                                                                                                                                                        |
+| S3       | `apps/api/tests/integration/test_access_change_sets.py` (open/sign-off, two change sets in one tx, unopened/unsigned-at-commit/post-sign-off/out-of-scope refusals, idempotency replay/conflict/retry, immutability for `roadmaps_app` and `roadmaps_owner`, allow-listed summaries omitting `email`/`token_hash`, non-person & platform-invitation refusals, `roadmaps_auth_definer` purge exemption, static SQL exceptions) |
+| S4       | `apps/api/tests/integration/test_bootstrap.py` (superuser & Cloud SQL non-superuser runner, 8 roles, 4 local logins, pairwise caller exclusivity, definer ownership & no-`CREATE` bounds), `apps/api/tests/integration/test_readiness.py` (refuses migrator/platform/purge logins), `apps/api/tests/integration/test_schema_and_privileges.py` (post-migration definer/caller bounds and live platform/purge login denials)   |

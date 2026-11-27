@@ -19,7 +19,17 @@ import psycopg
 import pytest
 from psycopg import sql
 
-from roadmaps_api.roles import APP_ROLE, MIGRATION_ROLE, OWNER_ROLE, bootstrap_sql
+from roadmaps_api.roles import (
+    APP_ROLE,
+    AUTH_DEFINER_ROLE,
+    HISTORY_DEFINER_ROLE,
+    MIGRATION_ROLE,
+    OWNER_ROLE,
+    PLATFORM_DEFINER_ROLE,
+    PLATFORM_ROLE,
+    PURGE_ROLE,
+    bootstrap_sql,
+)
 from roadmaps_api.settings import SettingsError
 from tests import harness
 from tests.support import DOWN_DATABASE_URL, Lines
@@ -29,6 +39,8 @@ from tools.bootstrap_database import (
     APP_LOGIN,
     LOGINS,
     MIGRATION_LOGIN,
+    PLATFORM_LOGIN,
+    PURGE_LOGIN,
     admin_url,
     libpq_url,
 )
@@ -58,16 +70,61 @@ class Throwaway:
         return f"{self.prefix}_app"
 
     @property
+    def platform(self) -> str:
+        return f"{self.prefix}_platform"
+
+    @property
+    def purge(self) -> str:
+        return f"{self.prefix}_purge"
+
+    @property
+    def auth_definer(self) -> str:
+        return f"{self.prefix}_auth_definer"
+
+    @property
+    def history_definer(self) -> str:
+        return f"{self.prefix}_history_definer"
+
+    @property
+    def platform_definer(self) -> str:
+        return f"{self.prefix}_platform_definer"
+
+    @property
+    def definers(self) -> tuple[str, ...]:
+        return (self.auth_definer, self.history_definer, self.platform_definer)
+
+    @property
+    def all_roles(self) -> tuple[str, ...]:
+        return (
+            self.owner,
+            self.migrator,
+            self.app,
+            self.platform,
+            self.purge,
+            *self.definers,
+        )
+
+    @property
     def runner(self) -> str:
         return f"{self.prefix}_admin"
 
     def sql(self) -> str:
-        return (
-            bootstrap_sql()
-            .replace(OWNER_ROLE, self.owner)
-            .replace(MIGRATION_ROLE, self.migrator)
-            .replace(APP_ROLE, self.app)
+        # Replace longer names first so `roadmaps_platform_definer` is not partially
+        # rewritten by `roadmaps_platform`.
+        replacements = (
+            (PLATFORM_DEFINER_ROLE, self.platform_definer),
+            (HISTORY_DEFINER_ROLE, self.history_definer),
+            (AUTH_DEFINER_ROLE, self.auth_definer),
+            (MIGRATION_ROLE, self.migrator),
+            (PLATFORM_ROLE, self.platform),
+            (OWNER_ROLE, self.owner),
+            (PURGE_ROLE, self.purge),
+            (APP_ROLE, self.app),
         )
+        script = bootstrap_sql()
+        for source, target in replacements:
+            script = script.replace(source, target)
+        return script
 
     def run(self) -> None:
         """Runs the file as the runner, in one transaction."""
@@ -77,7 +134,11 @@ class Throwaway:
     def admin(self, statement: str) -> None:
         """Runs a superuser's statement on the throwaway database, `{p}` its prefix."""
         with harness.admin(self.database) as connection:
-            connection.execute(statement.replace("{p}", self.prefix).encode())
+            connection.execute(
+                statement.replace("{p}", self.prefix)
+                .replace("{database}", sql.Identifier(self.database).as_string(connection))
+                .encode()
+            )
 
     def state(self) -> dict[str, Any]:
         """What the file sets, read as the superuser."""
@@ -158,7 +219,7 @@ def test_the_file_makes_the_roles_and_a_second_run_changes_nothing(*, superuser:
 
         assert boot.state() == first
     roles = {name: attributes for name, *attributes in first["roles"]}
-    for role in (boot.owner, boot.migrator, boot.app):
+    for role in boot.all_roles:
         assert roles[role] == [False] * 6, f"{role} logs in or has an attribute"
     grants = [
         (member, admin, inherit, set_)
@@ -172,13 +233,60 @@ def test_the_file_makes_the_roles_and_a_second_run_changes_nothing(*, superuser:
         {boot.migrator} if superuser else {boot.migrator, boot.runner}
     )
     assert all(not inherit for _member, _admin, inherit, _set in grants)
-    assert not [row for row in first["memberships"] if row[1] == boot.app]
+    for definer in boot.definers:
+        definer_grants = [
+            (member, admin, inherit, set_)
+            for role, member, _grantor, admin, inherit, set_ in first["memberships"]
+            if role == definer
+        ]
+        assert (boot.owner, False, False, True) in definer_grants
+        assert {grant[0] for grant in definer_grants} == (
+            {boot.owner} if superuser else {boot.owner, boot.runner}
+        )
+        assert all(not inherit for _member, _admin, inherit, _set in definer_grants)
+    for inert in (boot.app, boot.platform, boot.purge, *boot.definers):
+        assert not [row for row in first["memberships"] if row[1] == inert]
     owner, acl = first["database"]
     assert owner == boot.owner
     # PUBLIC keeps CONNECT and loses TEMPORARY.
     assert f"=c/{boot.owner}" in acl
-    assert [(role, kind) for role, kind, _acl in first["defaults"]] == [(boot.owner, "f")]
-    assert not any(entry.startswith("=") for entry in first["defaults"][0][2])
+    assert [(role, kind) for role, kind, _acl in first["defaults"]] == sorted(
+        [(role, "f") for role in (boot.owner, *boot.definers)]
+    )
+    assert all(
+        not any(entry.startswith("=") for entry in acl_entries)
+        for _role, _kind, acl_entries in first["defaults"]
+    )
+
+
+@pytest.mark.parametrize("superuser", RUNNERS.values(), ids=RUNNERS)
+def test_the_file_allows_routines_owned_by_definer_roles_in_public(*, superuser: bool) -> None:
+    with throwaway(superuser=superuser) as boot:
+        boot.run()
+        with harness.admin(boot.database) as connection:
+            for definer in boot.definers:
+                fn_name = f"{definer}_fn"
+                connection.execute(
+                    sql.SQL("GRANT CREATE ON SCHEMA public TO {d}").format(
+                        d=sql.Identifier(definer)
+                    )
+                )
+                connection.execute(
+                    sql.SQL(
+                        "CREATE FUNCTION public.{fn}() RETURNS int LANGUAGE sql AS 'SELECT 1'"
+                    ).format(fn=sql.Identifier(fn_name))
+                )
+                connection.execute(
+                    sql.SQL("ALTER FUNCTION public.{fn}() OWNER TO {d}").format(
+                        fn=sql.Identifier(fn_name), d=sql.Identifier(definer)
+                    )
+                )
+                connection.execute(
+                    sql.SQL("REVOKE CREATE ON SCHEMA public FROM {d}").format(
+                        d=sql.Identifier(definer)
+                    )
+                )
+        boot.run()
 
 
 @pytest.mark.parametrize("superuser", RUNNERS.values(), ids=RUNNERS)
@@ -266,7 +374,83 @@ REFUSALS = {
         superuser=True,
         before=None,
         after="CREATE ROLE {p}_login LOGIN; GRANT {p}_migrator, {p}_app TO {p}_login",
-        message="{p}_login is a member of both {p}_migrator and {p}_app",
+        message="{p}_login is a member of both {p}_app and {p}_migrator",
+    ),
+    "a role in both the application and platform caller roles": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_login LOGIN; GRANT {p}_app, {p}_platform TO {p}_login",
+        message="{p}_login is a member of both {p}_app and {p}_platform",
+    ),
+    "a role in both the platform and purge caller roles": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_login LOGIN; GRANT {p}_platform, {p}_purge TO {p}_login",
+        message="{p}_login is a member of both {p}_platform and {p}_purge",
+    ),
+    "a role reaching two caller roles through an intermediate group": Refusal(
+        superuser=True,
+        before=None,
+        after=(
+            "CREATE ROLE {p}_group NOLOGIN; CREATE ROLE {p}_login LOGIN;"
+            " GRANT {p}_platform TO {p}_group; GRANT {p}_app, {p}_group TO {p}_login"
+        ),
+        message="{p}_login is a member of both {p}_app and {p}_platform",
+    ),
+    "a definer role with a member it did not grant": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_extra; GRANT {p}_auth_definer TO {p}_extra",
+        message="{p}_auth_definer has a member it did not grant: {p}_extra (granted by roadmaps)",
+    ),
+    "a definer role held by the owner with INHERIT": Refusal(
+        superuser=False,
+        before=None,
+        after="GRANT {p}_history_definer TO {p}_owner WITH INHERIT TRUE",
+        message=(
+            "{p}_history_definer has a member it did not grant: {p}_owner (granted by roadmaps)"
+        ),
+    ),
+    "a definer role a member of another role": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_extra; GRANT {p}_extra TO {p}_platform_definer",
+        message="{p}_platform_definer is a member of {p}_extra",
+    ),
+    "the platform caller role a member of another role": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_extra; GRANT {p}_extra TO {p}_platform",
+        message="{p}_platform is a member of {p}_extra",
+    ),
+    "the purge caller role a member of another role": Refusal(
+        superuser=True,
+        before=None,
+        after="CREATE ROLE {p}_extra; GRANT {p}_extra TO {p}_purge",
+        message="{p}_purge is a member of {p}_extra",
+    ),
+    "a non-routine object in public owned by a definer role": Refusal(
+        superuser=True,
+        before=None,
+        after=(
+            "CREATE TABLE public.planted (); ALTER TABLE public.planted OWNER TO {p}_auth_definer"
+        ),
+        message=(
+            "schema public holds objects of another role: "
+            "relation planted (owned by {p}_auth_definer)"
+        ),
+    ),
+    "a definer role holding CREATE on schema public": Refusal(
+        superuser=True,
+        before=None,
+        after="GRANT CREATE ON SCHEMA public TO {p}_history_definer",
+        message="{p}_history_definer holds CREATE on schema public",
+    ),
+    "a definer role holding CREATE on the database": Refusal(
+        superuser=True,
+        before=None,
+        after="GRANT CREATE ON DATABASE {database} TO {p}_platform_definer",
+        message="{p}_platform_definer holds CREATE on database",
     ),
 }
 
@@ -326,7 +510,7 @@ def run_runner(environment: dict[str, str]) -> subprocess.CompletedProcess[str]:
 
 
 @pytest.mark.usefixtures("shared_roles")
-def test_the_runner_makes_two_logins_each_in_one_role_and_a_second_run_changes_nothing(
+def test_the_runner_makes_four_logins_each_in_one_role_and_a_second_run_changes_nothing(
     bootstrapped_database: str,
 ) -> None:
     environment = {
@@ -343,6 +527,8 @@ def test_the_runner_makes_two_logins_each_in_one_role_and_a_second_run_changes_n
     assert after_first == [
         (APP_LOGIN, True, False, False, False, False, False, [APP_ROLE]),
         (MIGRATION_LOGIN, True, False, False, False, False, False, [MIGRATION_ROLE]),
+        (PLATFORM_LOGIN, True, False, False, False, False, False, [PLATFORM_ROLE]),
+        (PURGE_LOGIN, True, False, False, False, False, False, [PURGE_ROLE]),
     ]
     with harness.admin(bootstrapped_database) as connection:
         owner = connection.execute(

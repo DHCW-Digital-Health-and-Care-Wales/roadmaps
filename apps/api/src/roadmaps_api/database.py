@@ -9,7 +9,15 @@ from uuid import UUID
 
 from fastapi import Depends, Request
 from sqlalchemy import Connection, Engine, create_engine, event, text
-from sqlalchemy.orm import Session, SessionTransaction, sessionmaker
+from sqlalchemy.orm import (
+    ORMExecuteState,
+    Session,
+    SessionTransaction,
+    sessionmaker,
+    with_loader_criteria,
+)
+
+from roadmaps_api.models import SoftEndMixin
 
 # About two seconds for each wait a query can meet: a pooled connection, a new
 # connection (libpq's floor) and, for the readiness check, the query itself.
@@ -43,10 +51,30 @@ def create_database_engine(url: str) -> Engine:
 
 
 def create_sessions(engine: Engine) -> sessionmaker[Session]:
-    """Sessions whose every transaction carries the tenant and person each is given."""
+    """Sessions carrying per-transaction tenant/person settings and soft-end filtering."""
     sessions = sessionmaker(engine)
     event.listen(sessions, "after_begin", _apply_tenant_and_person)
+    event.listen(sessions, "do_orm_execute", _filter_soft_ended)
     return sessions
+
+
+def _filter_soft_ended(execute_state: ORMExecuteState) -> None:
+    """Filters `ended_at IS NULL` on ORM selects of `SoftEndMixin` models (STY-103 D11).
+
+    Callers that need ended rows pass `.execution_options(include_ended=True)`.
+    """
+    if (
+        execute_state.is_select
+        and not execute_state.is_column_load
+        and not execute_state.execution_options.get("include_ended", False)
+    ):
+        execute_state.statement = execute_state.statement.options(
+            with_loader_criteria(
+                SoftEndMixin,
+                lambda cls: cls.ended_at.is_(None),
+                include_aliases=True,
+            )
+        )
 
 
 def session_info(

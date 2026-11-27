@@ -2,9 +2,25 @@ from collections.abc import Iterator
 
 import psycopg
 import pytest
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
+from roadmaps_api.database import create_sessions
 from roadmaps_api.migrations import latest_revision
 from tests.harness import MOVED_VERSION_TABLE
+
+
+@pytest.fixture
+def engine(database_url: str) -> Iterator[Engine]:
+    """Single-connection pool so pooled transactions meet any leaked session state."""
+    engine = create_engine(database_url, pool_size=1, max_overflow=0)
+    yield engine
+    engine.dispose()
+
+
+@pytest.fixture
+def sessions(engine: Engine) -> sessionmaker[Session]:
+    return create_sessions(engine)
 
 
 @pytest.fixture

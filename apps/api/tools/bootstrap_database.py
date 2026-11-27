@@ -1,12 +1,12 @@
-"""Bootstraps the slot's local database: two password logins, then the roles' file.
+"""Bootstraps the slot's local database: four password logins, then the roles' file.
 
 `scripts/api.sh` runs it (`pnpm api:db:up`, and so `api:dev`, `api:migrate` and
 `api:test`), as `python -m tools.bootstrap_database`, with `ROADMAPS_ENV` and
 `ROADMAPS_ADMIN_DATABASE_URL`, Compose's superuser. In one transaction it creates the
-migration and application logins, with fixed local passwords, runs
-`roadmaps_api/bootstrap.sql`, then makes each login a member of exactly one of
-the migration and application roles. A second run changes nothing, so an existing
-volume is brought up to date in place.
+migration, application, platform and purge logins, with fixed local passwords, runs
+`roadmaps_api/bootstrap.sql`, then makes each login a member of exactly one of the four
+caller roles. A second run changes nothing, so an existing volume is brought up to date in
+place.
 
 It refuses, naming the setting and never its value, unless `ROADMAPS_ENV` is local or
 test, the admin URL's host is a loopback address and its login is a superuser, which no
@@ -27,7 +27,13 @@ from psycopg import sql
 from sqlalchemy.engine import make_url
 
 from roadmaps_api.logs import log_config
-from roadmaps_api.roles import APP_ROLE, MIGRATION_ROLE, bootstrap_sql
+from roadmaps_api.roles import (
+    APP_ROLE,
+    MIGRATION_ROLE,
+    PLATFORM_ROLE,
+    PURGE_ROLE,
+    bootstrap_sql,
+)
 from roadmaps_api.settings import ENV, Environment, SettingsError, is_database_url, refuse
 
 logger = logging.getLogger("roadmaps_api.bootstrap")
@@ -39,8 +45,15 @@ LOCAL_ENVIRONMENTS: Final = frozenset({Environment.LOCAL.value, Environment.TEST
 # slot's container alone, reachable only from this machine (apps/api/compose.yaml).
 MIGRATION_LOGIN: Final = "roadmaps_migrator_login"
 APP_LOGIN: Final = "roadmaps_app_login"
+PLATFORM_LOGIN: Final = "roadmaps_platform_login"
+PURGE_LOGIN: Final = "roadmaps_purge_login"
 LOCAL_PASSWORD: Final = "roadmaps"  # noqa: S105 - the local container's, as Compose's own
-LOGINS: Final = {MIGRATION_LOGIN: MIGRATION_ROLE, APP_LOGIN: APP_ROLE}
+LOGINS: Final = {
+    MIGRATION_LOGIN: MIGRATION_ROLE,
+    APP_LOGIN: APP_ROLE,
+    PLATFORM_LOGIN: PLATFORM_ROLE,
+    PURGE_LOGIN: PURGE_ROLE,
+}
 
 
 def admin_url(environ: Mapping[str, str]) -> str:

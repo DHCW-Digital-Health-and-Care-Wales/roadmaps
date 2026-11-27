@@ -5,10 +5,10 @@
 - **Type**: Feature
 - **Area**: API
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
-- **Depends on**: STY-103 (hard; creates `tenants`, `tenant_scopes`, `people`,
+- **Depends on**: STY-103 (hard, Done; creates `tenants`, `tenant_scopes`, `people`,
   `identities`, `roles`, `role_permissions`, `memberships`, `invitations`, `change_sets`,
-  `change_summaries`, `platform_audit_log` and access-scope commit routines; STY-091 is
-  Done)
+  `change_set_signoffs`, `change_summaries`, `platform_audit_log` and access-scope commit
+  routines; STY-091 is Done)
 - **Binding ADRs**: ADR-015 §Tenancy, §People, access and permissions, §History,
   §STY-103 amendments; ADR-017 §Operation, §STY-091 amendments; ADR-018 §Getting in,
   §Records and retention; ADR-019 §The catalogue and the shipped roles
@@ -48,7 +48,11 @@ seeded, or carrying manual local edits)
 **When** a developer runs `pnpm api:seed` (or `uv run --locked python -m tools.seed` with
 `ROADMAPS_ENV=local` and a loopback `ROADMAPS_ADMIN_DATABASE_URL`)
 **Then** `pnpm api:seed` runs `migrate` first, truncates every `public` table except
-`alembic_version`, and seeds in one transaction using `STY-103`'s SQLAlchemy ORM models:
+`alembic_version` (using `SET LOCAL session_replication_role = 'replica'` for the
+`TRUNCATE … CASCADE` teardown step only, matching `tests/harness.py:empty_tables` to clear
+immutable history tables, then immediately resetting
+`SET LOCAL session_replication_role = 'origin'` before any write), and seeds in the same
+transaction using `STY-103`'s SQLAlchemy ORM models:
 
 - two bilingual tenants — DHCW (`dhcw`, _Digital Health and Care Wales_ / _Iechyd a Gofal
   Digidol Cymru_) and a fictional second Welsh health organisation (`cwm-aur`, _Cwm Aur
@@ -70,12 +74,14 @@ seeded, or carrying manual local edits)
   and RFC 2606 `.example` email domains
 
 **And** every tenant-owned write (`roles`, `role_permissions`, `memberships`,
-`invitations`) runs through `STY-103`'s real access open/sign-off commit routines with all
-triggers active (never `session_replication_role = 'replica'`), recording bootstrap writes
-as `actor_kind = 'system'` (`actor_ref = 'seed'`), follow-on admin actions (creating and
-revoking sample invitations, ending a membership) as `actor_kind = 'person'` attributed to
-the primary DHCW Admin via `app.person_id`, and matching `'seed'` entries in
-`platform_audit_log`
+`invitations`) runs under `session_replication_role = 'origin'` with all triggers active
+through `STY-103`'s real access open/sign-off commit routines — recording bootstrap writes
+as `actor_kind = 'system'` (`actor_ref = 'seed'`) via
+`public.open_access_change_set_internal` / `public.sign_off_access_change_set_internal`,
+follow-on admin actions (creating and revoking sample invitations, ending a membership) as
+`actor_kind = 'person'` attributed to the primary DHCW Admin via `app.person_id` and
+`public.open_access_change_set` / `public.sign_off_access_change_set`, and matching
+`'seed'` entries in `platform_audit_log`
 **And** `pnpm api:dev` remains `migrate`-only and never auto-seeds
 
 ### S2: Repeated runs are deterministic with stable UUIDv7 IDs and anchor timestamps
@@ -87,12 +93,13 @@ defaulting to `datetime.now(UTC)`)
 `tenant_scopes`, `people`, `identities`, `roles`, `role_permissions`, `memberships`,
 `invitations`, `platform_audit_log`) — identical content, deterministic UUIDv7 primary
 keys and deterministic anchor timestamps for historical rows, while live-pending
-invitations set `expires_at` relative to `now` (+7 days) so they remain unexpired on any
-run date — and trigger-/routine-written `change_sets` and `change_summaries` match
+invitations set `created_at` and `expires_at` relative to `now` (`now` and `now + 7 days`,
+satisfying `ck_invitations_max_lifetime`) so they remain unexpired on any run date — and
+trigger-/routine-written `change_sets`, `change_set_signoffs` and `change_summaries` match
 deterministically on all domain columns (`tenant_id`, `scope`, `kind`, `revision`,
 `actor_kind`, `actor_person_id`/`actor_ref`, `idempotency_key`, `request_hash`, and
-summary target/field/old/new values), excluding PostgreSQL-generated surrogate IDs and
-commit timestamps
+summary target/field/old/new values), excluding PostgreSQL-generated surrogate IDs,
+transaction IDs and commit timestamps
 **And** running with a different `--seed <int>` varies Faker-generated members and derived
 invitation tokens while preserving the fixed named tenant and persona contracts
 
@@ -152,14 +159,18 @@ real RLS policies (DHCW sees DHCW rows and never Cwm Aur-only people or identiti
   writing every tenant-owned table through `STY-103`'s real access open/sign-off routines
   with all triggers active, over bypassing triggers with `session_replication_role`.
 - **D4** (owner, 2026-11-27, grilling R1 #3a): truncate-and-reseed all `public` tables
-  except `alembic_version` by default in one transaction, over refusing without `--reset`
-  or upserting around immutable history.
+  except `alembic_version` by default in one transaction (using
+  `SET LOCAL session_replication_role = 'replica'` only for `TRUNCATE … CASCADE` around
+  `STY-103`'s `forbid_immutable_history_mutation` trigger, then resetting to `'origin'`
+  before seeding), over refusing without `--reset` or upserting around immutable history.
 - **D5** (owner, 2026-11-27, grilling R1 #4a): deterministic content, deterministic UUIDv7
   IDs and deterministic anchor timestamps for ORM-written historical rows, with
-  relative-to-now expiry (+7 days) only on live-pending invitations plus optional
-  `--seed <int>` (PostgreSQL-generated `change_sets`/`change_summaries` surrogate IDs and
-  commit timestamps stay native to `STY-103`'s `SECURITY DEFINER` routines and triggers),
-  over a fully frozen clock (far-future expiries) or DB-generated IDs on all tables.
+  relative-to-now timestamps (`created_at = now`, `expires_at = now + 7 days` per
+  `ck_invitations_max_lifetime`) only on live-pending invitations plus optional
+  `--seed <int>` (PostgreSQL-generated `change_sets`/`change_set_signoffs`/
+  `change_summaries` surrogate IDs, transaction IDs and commit timestamps stay native to
+  `STY-103`'s `SECURITY DEFINER` routines and triggers), over a fully frozen clock
+  (far-future expiries) or DB-generated IDs on all tables.
 - **D6** (owner, 2026-11-27, grilling R1 #5a): place the seeder in `apps/api/tools/seed/`
   with `faker` in `[dependency-groups].dev` (out of `src/roadmaps_api/` and the production
   image, importable by `apps/api/tests/`), over stdlib-only pools or runtime packaging.
@@ -189,9 +200,11 @@ real RLS policies (DHCW sees DHCW rows and never Cwm Aur-only people or identiti
   structured logs), and print a concise local summary (personas + pending invitation raw
   token(s)) to stdout.
 - **D13** (owner, 2026-11-27, grilling R2 #6a): record bootstrap writes as
-  `actor_kind = 'system'` (`actor_ref = 'seed'`) and follow-on admin actions (inviting,
-  revoking, ending a membership) as `actor_kind = 'person'` via the primary DHCW Admin's
-  `app.person_id`, with `'seed'` entries in `platform_audit_log` (`STY-103` D17).
+  `actor_kind = 'system'` (`actor_ref = 'seed'`) via `STY-103`'s
+  `open_access_change_set_internal` / `sign_off_access_change_set_internal`, and follow-on
+  admin actions (inviting, revoking, ending a membership) as `actor_kind = 'person'` via
+  the primary DHCW Admin's `app.person_id` and `open_access_change_set` /
+  `sign_off_access_change_set`, with `'seed'` entries in `platform_audit_log`.
 - **D14** (owner, 2026-11-27, grilling R2 #7a): fail closed on all five safety guards
   (`ROADMAPS_ENV in {"local", "test"}`, no Cloud Run markers, valid URL without query
   params, loopback IP host, `rolsuper` verified on the `hostaddr`-pinned ORM engine itself)

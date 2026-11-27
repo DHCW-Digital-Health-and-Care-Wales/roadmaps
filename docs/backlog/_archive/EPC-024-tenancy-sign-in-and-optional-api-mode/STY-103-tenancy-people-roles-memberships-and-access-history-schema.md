@@ -15,6 +15,7 @@
   roles, §Enforcement, §STY-103 amendments
 - **Suggested model**: Opus — foundational schema, RLS policies, definer roles, commit
   function and immutability proofs
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/336
 
 ## Summary
 

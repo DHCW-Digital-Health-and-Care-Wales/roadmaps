@@ -103,6 +103,14 @@ rather than crashing or looping
   error kind, over feature flags hiding routes or a runtime switch.
 - **D2** (owner, 2026-11-26, `STY-103` D3 and D5): `/me` carries a single `NOT NULL` role
   per tenant membership and bilingual tenant `nameEn` / optional `nameCy`.
+- **D3** (owner, 2026-11-27, `STY-106` D9, D11–D13): `ApiAuthClient` consumes `STY-106`'s
+  pinned contracts — `GET /api/v1/me` (`personId`, `displayName`, `identities` with
+  `id`/`provider`/`email`/`lastSignInAt`/`linkedAt`, `memberships` with `tenantId`/
+  `tenantSlug`/`nameEn`/`nameCy`/`role`/`permissions` in deterministic order, and `session`
+  with `idleExpiresAt`/`absoluteExpiresAt`/`signedInAt`/`provider`), `POST /api/v1/auth/extend`
+  returning `{ idleExpiresAt, absoluteExpiresAt }`, and `POST /api/v1/auth/sign-out` under
+  `signed_in` policy (sending `STY-105`'s person-assertion header and treating 401 as
+  signed out locally).
 
 ## Out of scope
 

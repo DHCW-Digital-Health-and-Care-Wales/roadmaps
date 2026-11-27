@@ -26,14 +26,15 @@ operator CLI) can preview who invited them to which tenant and redeem the invita
 through OIDC sign-in (`purpose=redeem`). Redemption matches the verified email
 case-folded, consumes the token atomically through a dedicated definer function, creates
 the person/identity/membership (or adds the membership to an existing person) and records
-an access change set. Also extends the retention purge CLI to purge spent/expired
-invitations after 90 days.
+an access change set. Also adds the `roadmaps-purge-invitations` CLI on `STY-106`'s shared
+retention-purge runner (`STY-106` D15; D4 below) to purge spent/expired invitations after
+90 days.
 
 ## Scope
 
 API routes, services, repositories and definer functions for invitation lookup (by token
 hash), atomic redemption (`purpose=redeem` in OIDC start + callback), tenant-admin
-create/list/revoke, retention purge CLI extension, seeder factories (`STY-093`), OpenAPI
+create/list/revoke, `roadmaps-purge-invitations` CLI on `STY-106`'s shared runner, seeder factories (`STY-093`), OpenAPI
 and `packages/api-types` regeneration, and `api-error.ts` mappings. No editor screens
 yet (`STY-112`, `STY-113`).
 
@@ -134,6 +135,11 @@ active invitations untouched
   deterministic local raw test token(s) printed to stdout); `STY-110` reuses and extends
   those factories for any new invitation states or constraints it adds (such as Q1's
   pending-email rule).
+- **D4** (owner, 2026-11-27, `STY-106` D14–D15): `STY-106` creates `sign_in_transactions`
+  with `purpose = 'redeem'` and `invitation_id` columns/constraints already in place, so
+  `STY-110` wires `purpose=redeem` without altering `sign_in_transactions`. For S4,
+  `STY-110` adds a dedicated `roadmaps-purge-invitations` console script sharing `STY-106`'s
+  thin retention-purge runner module (under `ROADMAPS_PURGE_DATABASE_URL` / `roadmaps_purge`).
 
 ## Out of scope
 

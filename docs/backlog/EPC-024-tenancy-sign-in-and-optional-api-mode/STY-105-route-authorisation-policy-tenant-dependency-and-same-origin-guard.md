@@ -111,6 +111,17 @@ test-only probe router until real routes land in `STY-106` and `EPC-025`)
   route policy, startup role-permission validation and S2 permission-literal lint check
   (scanning `src/roadmaps_api/` and `tools/`) directly on that catalogue module (or
   introduces it if `STY-105` runs before `STY-093`).
+- **D4** (owner, 2026-11-27, `STY-106` D6 & D12; refines S4): S4's read-only `GET`
+  guarantee (no state-changing `GET` other than the OIDC callback) forbids domain and
+  access writes while permitting authenticated session-activity bookkeeping
+  (`sessions.last_activity_at` and `sessions.idle_expires_at` updated at most once per
+  minute via `roadmaps_auth_definer`, ADR-018 / `STY-106` D12) **only** when a `GET` does
+  not arrive from a cross-origin site (`Sec-Fetch-Site` is `same-origin` or absent, never
+  `same-site` or `cross-site`, so a sibling host on the editor's registrable domain cannot
+  keep a session's idle timer alive); S4's standing `GET` test distinguishes same-origin
+  session bookkeeping from domain/access writes and proves a `same-site` or `cross-site`
+  `GET` writes nothing at all. When `STY-105` is grilled, its `Origin` allow-list check
+  can also read `ROADMAPS_EDITOR_ORIGIN` (`STY-106` D6).
 
 ## Out of scope
 

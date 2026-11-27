@@ -89,11 +89,11 @@ flow passes unchanged
 
 ## Open questions
 
-- **Q3**: Final UI, routing and E2E details (callback/refusal route paths, error-code
-  mapping, URL-bound tenant display and URL-tenant-removed discard notice copy, and
-  reserved root paths such as `sign-in`, `auth`, `account`, `invitations` against tenant
-  slugs) to be grilled against `STY-108`'s settled designs (D6) and `STY-106`/`STY-107`'s
-  contracts.
+- **Q3**: Final UI, routing and E2E details (UI copy/mapping for `STY-106` D9's five
+  callback refusal codes, URL-bound tenant display and URL-tenant-removed discard notice
+  copy, and reserved root paths such as `sign-in`, `auth`, `account`, `invitations`
+  against tenant slugs) to be grilled against `STY-108`'s settled designs (D6) and
+  `STY-106`/`STY-107`'s contracts.
 - **Q4** (from `STY-108` _Decisions needed_ #7): What happens when a user clicks **Sign
   out** or **Sign out everywhere** while holding pending edits (before `EPC-027` server
   scratch exists)?
@@ -152,6 +152,21 @@ flow passes unchanged
   Entra linking, and one-line role permissions summary), and **4A** (2-minute idle
   warning, 2-minute pre-absolute-limit warning, post-expiry / 401 new-tab re-sign-in, and
   destructive red notice on cross-person edit discard).
+- **D7** (owner, 2026-11-27, `STY-106` D9–D13): `STY-106` pins the callback redirect
+  routes and auth contracts consumed here — success redirects to `/#/auth/callback`
+  (with `?returnTo=<encoded relative path>` when non-root), refusals redirect to
+  `/#/sign-in?error=<code>` with five closed codes (`not_invited`, `person_disabled`,
+  `entra_required`, `sign_in_cancelled`, `sign_in_failed`), Google sign-in start always
+  passes `prompt=select_account` (so Design 2B's `"Try a different account"` needs no
+  extra flag), `/me` carries `identities[].lastSignInAt`/`linkedAt` and
+  `session.signedInAt`/`provider`, and `POST /api/v1/auth/extend` returns
+  `{ idleExpiresAt, absoluteExpiresAt }`. Because `/#/auth/callback?returnTo=…` lives in a
+  client-side hash fragment that any external link can supply directly, the callback route
+  parses `returnTo` as untrusted input with `STY-106` D9's exact relative-path grammar
+  (starting with `"/"`, rejecting `"//"`, `"/\\"`, schemes/hosts, `#`, whitespace or
+  control chars; max 512 chars; falling back to `"/"`), navigates strictly via internal
+  TanStack Router `to` (never `href` or `window.location`), and includes unit tests
+  refusing `https://…`, `//…`, `/\…` and `javascript:`.
 
 ## Out of scope
 

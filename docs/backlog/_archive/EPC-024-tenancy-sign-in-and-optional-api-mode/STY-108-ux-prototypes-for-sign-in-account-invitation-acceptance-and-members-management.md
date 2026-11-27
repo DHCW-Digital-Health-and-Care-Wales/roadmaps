@@ -12,7 +12,6 @@
   amendments; ADR-019 §What members and assigned leads may do, §Enforcement
 - **Suggested model**: Opus — app shell and sign-in/account UX design across desktop,
   folded rail and phone (including Welsh 375px width check)
-- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/334
 
 ## Summary
 
@@ -143,9 +142,11 @@ categories and organisations` for `STY-113`), Journey 2 **Design 2B** (centred
   `not_invited`/`person_disabled` and inline `AuthNotice` for `sign_in_failed`), Journey 3
   **Design 3B** (stacked DHCW section cards inside the full authenticated shell for
   active-org members, with per-identity email in `Sign-in methods` and one-line role
-  summary), and Journey 4 as recommended (**Design 4A**). Recorded in `api-sign-in-and-account-ux-analysis.md`
-  (_Outcome_) and `STY-109` D6; remaining undrawn sub-decisions (#7–#8 sign-out pending
-  edits and new-tab return UX; #11 `STY-106`/`STY-107` wire names and
+  summary), and Journey 4 as recommended (**Design 4A**). Recorded in
+  `api-sign-in-and-account-ux-analysis.md` (_Outcome_), `STY-109` D6, and `STY-113` D3;
+  omitting `Members` in `STY-109` (#9a) follows Journey 1's recommendation ("when
+  `STY-113` ships") and `STY-109` Out of scope. Remaining undrawn sub-decisions (#7–#8
+  sign-out pending edits and new-tab return UX; #11 `STY-106`/`STY-107` wire names and
   `prompt=select_account`) carried into `STY-109` (`Q4`–`Q5`) and `STY-106` (`Q3`)
   grilling.
 
@@ -202,4 +203,4 @@ organisations` in the sidebar and phone navigation drawer (omitted in `STY-109`)
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | S1       | `docs/analysis/api-sign-in-and-account-ux-analysis/api-sign-in-and-account-ux-prototypes.html` (8 designs across 4 journeys, 25 desktop 1280px + phone 375px artboards including 3 Welsh 375px checks and 3 open phone navigation drawers); observed run of `check-page.mjs` passed (phone scroll width 375px, 0 errors) and every artboard screenshot inspected |
 | S2       | `docs/analysis/api-sign-in-and-account-ux-analysis.md` (Journeys 1–3, _Outcome_) and frames `d1`–`d7` (open sidebar, 64px folded rail, 375px phone en/cy, header-only unauth/refusal/zero-membership shell, future `Members` slot beside Families)                                                                                                               |
-| S3       | `docs/analysis/api-sign-in-and-account-ux-analysis.md` (_Outcome_), `STY-108` D11, `STY-109` D6 & `Q4`–`Q5`, and `STY-106` `Q3`                                                                                                                                                                                                                                  |
+| S3       | `docs/analysis/api-sign-in-and-account-ux-analysis.md` (_Outcome_), `STY-108` D11, `STY-109` D6 & `Q4`–`Q5`, `STY-113` D3, and `STY-106` `Q3`                                                                                                                                                                                                                    |

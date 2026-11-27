@@ -93,6 +93,10 @@ zero axe violations and complete English/Welsh copy
   just-in-time right after `STY-113` is grilled (no longer bundled in `STY-108`), using
   the sidebar utility slot and `/$tenantSlug/…` route structure settled in `STY-108` /
   `STY-109` D3.
+- **D3** (owner, 2026-11-27, `STY-108` D11 /
+  [Outcome](../../analysis/api-sign-in-and-account-ux-analysis.md#outcome)): **Members**
+  sits directly beneath `Families, categories and organisations` in the sidebar and phone
+  navigation drawer (Design 1A, omitted in `STY-109` and added here).
 
 ## Out of scope
 

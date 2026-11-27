@@ -120,13 +120,20 @@ definer functions, leaving active and recent records untouched
   - (b) A third-party mock OIDC container image (e.g. `dex` or `mock-oauth2-server`) —
     less code to maintain, adds an external container image and trickier claim/rollover
     scripting.
-- **Q3** (from `STY-108` _Decisions needed_ #11): Exact refusal query codes
-  (`not_invited`, `person_disabled`, `sign_in_failed`), whether `/me` identities include
-  `lastSignInAt` (shown in `STY-108` Design 3B and `STY-109` S3), and whether
-  `POST /api/v1/auth/sign-in` always passes `prompt=select_account` to Google or accepts
-  an explicit account-picker parameter so `"Try a different account"` on the `not_invited`
-  screen (`STY-108` Design 2B) does not silently loop the same uninvited Google account
-  (S1/S3 currently specify `prompt=select_account` only after `sign-out`).
+- **Q3** (from `STY-108` _Decisions needed_ #11): How should `POST /api/v1/auth/sign-in`
+  support **"Try a different account"** on the `not_invited` refusal screen (`STY-108`
+  Design 2B), and what are the exact refusal query codes (`not_invited`,
+  `person_disabled`, `sign_in_failed`) and `/me` identity `lastSignInAt` field contract
+  (`STY-108` Design 3B, `STY-109` S3)?
+  - (a) Accept an optional account-picker flag (or always pass `prompt=select_account` to
+    Google on sign-in), pin the three refusal query codes (`not_invited`,
+    `person_disabled`, `sign_in_failed`), and include `lastSignInAt` on `/me` identities
+    (recommended) — prevents `"Try a different account"` from silently looping the same
+    uninvited Google account (S1/S3 currently specify `prompt=select_account` only after
+    `sign-out`) and matches Design 2B/3B.
+  - (b) Keep `prompt=select_account` strictly post-sign-out and omit `lastSignInAt` from
+    `/me` — narrower initial API contract, requiring `STY-109` to adapt `"Try a different
+account"` and omit last sign-in time on Account.
 
 ## Decisions
 

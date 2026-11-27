@@ -25,9 +25,10 @@ the root, unversioned (ADR-017's amendments).
 
 - The API connects as a login of `roadmaps_app`, the application's role; migrations
   connect as a login of `roadmaps_migrator`, which switches to `roadmaps_owner`, the
-  owner of every object. `apps/api/src/roadmaps_api/bootstrap.sql` makes the three
-  roles; locally `apps/api/tools/bootstrap_database.py` runs it, and the hosting
-  infrastructure runs it where the API is hosted.
+  owner of schema objects except `SECURITY DEFINER` routines (owned by dedicated definer
+  roles, ADR-015). `apps/api/src/roadmaps_api/bootstrap.sql` makes the database roles;
+  locally `apps/api/tools/bootstrap_database.py` runs it, and the hosting infrastructure
+  runs it where the API is hosted.
 - A schema change is a revision in `apps/api/src/roadmaps_api/migrations/versions/`,
   numbered next in the line (`NNNN_<slug>.py`, its revision ID the file's name), drafted
   by autogenerate and finished by hand (`[tool.alembic]` in `apps/api/pyproject.toml`).

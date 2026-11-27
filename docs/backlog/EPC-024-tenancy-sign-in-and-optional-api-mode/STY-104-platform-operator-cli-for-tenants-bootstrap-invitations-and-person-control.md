@@ -126,8 +126,9 @@ fields without echoing submitted values
 - **D4** (owner, 2026-11-27, `STY-106` grilling R1 #3a / `STY-106` D6; introduced in
   `STY-105` D7): `STY-105` introduces the required bare-origin `ROADMAPS_EDITOR_ORIGIN`
   setting (`https` required whenever `ROADMAPS_ENV` is `production`, unset/invalid or any
-  Cloud Run marker is set; defaulting locally to `http://localhost:${DEV_PORT:-5173}`),
-  which `STY-104` Q2 can reuse for local invitation link formatting.
+  Cloud Run marker is set; `apps/api/scripts/api.sh dev` reads `DEV_PORT` from
+  `.env.worktree` with a `5173` fallback outside a worktree), which `STY-104` Q2 can reuse
+  for local invitation link formatting.
 
 ## Out of scope
 

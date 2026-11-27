@@ -112,11 +112,15 @@ rather than crashing or looping
   `signed_in` policy (sending `X-Roadmaps-Person-Id` per `STY-105` D5 and treating 401 as
   signed out locally).
 - **D4** (owner, 2026-11-27, `STY-105` D5, D8 & D9): authenticated state-changing calls
-  send `X-Roadmaps-Person-Id` (omitted on `public` routes like `POST /api/v1/auth/sign-in`
-  and `GET` calls) and `Content-Type: application/json` whenever a JSON body is sent;
-  missing, malformed or disagreeing person assertions return `409 auth.person_mismatch`
-  (mapped to `unauthenticated` in `api-error.ts`, allowing `infrastructure/roadmaps-api/`
-  to distinguish a person-switch conflict cleanly).
+  send `X-Roadmaps-Person-Id` (omitted on anonymous `public` calls like
+  `POST /api/v1/auth/sign-in` for `sign-in`/`redeem` and on `GET` calls; Phase 2 `link`
+  start in `EPC-028` keeps person assertion per `STY-105` D5) and
+  `Content-Type: application/json` whenever a JSON body is sent; missing, malformed or
+  disagreeing person assertions return `409 auth.person_mismatch`, mapped in
+  `api-error.ts` to `AppError(kind: "unauthenticated", retryable: false, status: 409)`
+  (same `kind` as `401`, distinguishable inside `infrastructure/roadmaps-api/` by
+  `status === 409` or `code === "auth.person_mismatch"` unless `STY-107`/`STY-109`
+  grilling introduces a dedicated `AppErrorKind`).
 
 ## Out of scope
 

@@ -195,20 +195,30 @@ Where this bullet differs from _Enforcement_ above, it holds; the rest stands.
 
 ### STY-105 amendments
 
-From the owner's STY-105 grilling (2026-11-27, STY-105 D10 and D11). Where this bullet
-refines _The catalogue and the shipped roles_ and _Enforcement_ above, it holds; the rest
-stands.
+From the owner's STY-105 grilling (2026-11-27, STY-105 D10, D11 and D13). Where these
+bullets refine _The catalogue and the shipped roles_ and _Enforcement_ above, they hold;
+the rest stands.
 
 - **Offline code check at start-up and per-read fail-closed role validation under forced
   RLS**: because `create_app` builds without a database connection (`export_openapi.py` and
   unit tests) and `roadmaps_app` reads `role_permissions` strictly under forced
   tenant-scoped RLS (no cross-tenant definer), start-up validates code-level
-  `SHIPPED_ROLES` against `Permission` and walks every effective route via FastAPI's
-  `iter_route_contexts` (`verify_app_routes`), while every tenant-scoped request parses
-  each `role_permissions` row on the caller's role through `Permission(raw)`. Any unknown
+  `SHIPPED_ROLES` against `Permission`, while every tenant-scoped request parses each
+  `role_permissions` row on the caller's role through `Permission(raw)`. Any unknown
   permission name logs an allow-listed `authz.unknown_permission` event (`tenant_id` and
-  `role_id` only) and fails closed with `403 authz.forbidden` on both `tenant_member` and
-  `tenant_permission` routes, isolating a corrupted role row to its own tenant and role.
+  `role_id` only; alerted in `EPC-023`) and fails closed with `403 authz.forbidden` on
+  both `tenant_member` and `tenant_permission` routes, isolating a corrupted role row to
+  its own tenant and role. **Deploy ordering consequence**: a new permission enters the
+  code `Permission` catalogue one release before any migration or write inserts it into
+  `role_permissions`, and leaves `role_permissions` one release before leaving code, so an
+  earlier revision serving during a rolling deploy never rejects valid roles.
+- **Complete start-up route verification and standalone permission-literal lint**:
+  `verify_app_routes` runs in `create_app` over both `iter_route_contexts(app.routes)` and
+  FastAPI's low-priority/frontend routes (`_iter_low_priority_routes()`, refusing any
+  unclassified `frontend()` route, `Mount`, `Route`, `WebSocketRoute` or `HEAD`/`OPTIONS`
+  API route), checking `{tenantSlug}` on effective route paths; raw permission string
+  literals outside `authz/permissions.py` are refused by `apps/api/tools/check_permissions.py`
+  (wired into `pnpm api:lint` and unit-tested in `tests/test_check_permissions.py`).
 
 ## Consequences
 

@@ -13,13 +13,15 @@
 ## Summary
 
 Installs the authorisation and CSRF enforcement machinery that every API endpoint relies
-on: ADR-019's typed `Permission` enumeration and startup role-permission validation, a
-custom `APIRoute` class that refuses to start if any route lacks a declared policy
-(`public`, `signed_in`, `tenant_member`, or `tenant_permission(Permission.…)`), the
-reviewed public-route allow-list, the tenant dependency (returning 404 for non-members or
-unknown tenants and binding `app.tenant_id` + `app.person_id`), ADR-018's person-assertion
-check on state-changing requests, ADR-020's same-origin and `application/json` guard, and
-the generated role-by-route matrix, cross-tenant sweep and permission-literal lint tests.
+on: ADR-019's typed `Permission` enumeration with code-level startup and per-read
+role-permission validation, a custom `APIRoute` class that refuses to start if any route
+lacks a declared policy (`public`, `signed_in`, `tenant_member`, or
+`tenant_permission(Permission.…)`), the reviewed public-route allow-list, the tenant
+dependency (returning 404 for non-members or unknown tenants and binding `app.tenant_id`
+
+- `app.person_id`), ADR-018's person-assertion check on state-changing requests,
+  ADR-020's same-origin and `application/json` guard, and the generated role-by-route
+  matrix, cross-tenant sweep and permission-literal lint tests.
 
 ## Scope
 
@@ -120,22 +122,31 @@ _None — Q1–Q2 and the full design tree were settled in D1–D15._
 - **D5** (owner, 2026-11-27, `STY-105` grilling R1 #1a; settles Q2): the person-assertion
   header is `X-Roadmaps-Person-Id` (UUID string), required on every authenticated
   non-`GET`/`HEAD`/`OPTIONS` route (`signed_in`, `tenant_member`, `tenant_permission`) and
-  omitted/ignored on `public` and safe-method routes.
+  omitted/ignored on anonymous `public` calls (such as `POST /api/v1/auth/sign-in` for
+  `purpose="sign-in"` or `"redeem"`) and safe-method routes. When Phase 2 identity linking
+  (`EPC-028`) arrives, link start either uses its own `signed_in` route or explicitly
+  enforces `X-Roadmaps-Person-Id` against the active session (refusing mismatches with
+  `409 auth.person_mismatch`), preserving Flow C in `identity-threat-model.md`.
 - **D6** (owner, 2026-11-27, `STY-105` grilling R1 #2a & R2 #2a): same-origin proof and
   JSON media-type checks run inside `PolicyAPIRoute.get_route_handler` (after routing,
   before body parsing and handler execution), and person-assertion runs in the route's
-  auth dependency. This preserves RFC 9110 `405` (`Allow: GET`) on `POST /health` and
-  `DELETE /test/echo` and `404` on unknown paths while guaranteeing via D10's startup
-  route check that no state-changing route can bypass `PolicyAPIRoute`; existing
-  `POST /test/*` test helpers send `Sec-Fetch-Site: same-origin` (and
+  auth dependency. This preserves RFC 9110 `405` (`Allow: GET` on `POST /health`,
+  `Allow: POST` on `DELETE /test/echo`) and `404` on unknown paths while guaranteeing via
+  D10's startup route check that no state-changing route can bypass `PolicyAPIRoute`;
+  existing `POST /test/*` test helpers send `Sec-Fetch-Site: same-origin` (and
   `Content-Type: application/json` when exercising body parsing or the 413 body limit).
 - **D7** (owner, 2026-11-27, `STY-105` grilling R1 #3a): introduce the required
-  `ROADMAPS_EDITOR_ORIGIN` setting in `STY-105` (using `STY-106` D6's exact bare-origin
-  `scheme://host[:port]` grammar, requiring `https` and a host in `ROADMAPS_ALLOWED_HOSTS`
-  whenever `ROADMAPS_ENV` is `production`, unset/invalid or any Cloud Run marker is set;
-  defaulted to `http://localhost:${DEV_PORT:-5173}` in `apps/api/scripts/api.sh dev`, set
-  in `tools/export_openapi.py` and test settings). On every non-`GET`/`HEAD`/`OPTIONS`
-  route: if `Sec-Fetch-Site` is present it must equal `same-origin` (never falling back to
+  `ROADMAPS_EDITOR_ORIGIN` setting in `STY-105` (`scheme://host[:port]` bare origin with
+  no path, query, fragment, userinfo or wildcard — tested per case in `test_settings.py`;
+  requiring `https` and a host in `ROADMAPS_ALLOWED_HOSTS` whenever `ROADMAPS_ENV` is
+  `production`, unset/invalid or any Cloud Run marker `K_SERVICE`, `CLOUD_RUN_JOB`,
+  `CLOUD_RUN_WORKER_POOL` is set). Teach `apps/api/scripts/api.sh` to read `DEV_PORT` from
+  `.env.worktree` via `worktree_value DEV_PORT` (falling back to `5173` only outside a
+  worktree, mirroring `API_PORT`/`DB_PORT`) and export
+  `ROADMAPS_EDITOR_ORIGIN="http://localhost:$DEV_PORT"` in `api.sh dev` (verified by a
+  check that a worktree's `DEV_PORT` reaches the setting), and set `editor_origin` in
+  `tools/export_openapi.py` and test settings. On every non-`GET`/`HEAD`/`OPTIONS` route:
+  if `Sec-Fetch-Site` is present it must equal `same-origin` (never falling back to
   `Origin` on `cross-site`/`same-site`/`none`), and if `Origin` is also present it must
   equal `ROADMAPS_EDITOR_ORIGIN`; if `Sec-Fetch-Site` is absent, `Origin` must be present
   and equal `ROADMAPS_EDITOR_ORIGIN`; duplicate `Sec-Fetch-Site` or `Origin` headers are
@@ -143,44 +154,62 @@ _None — Q1–Q2 and the full design tree were settled in D1–D15._
 - **D8** (owner, 2026-11-27, `STY-105` grilling R1 #4a & R2 #4a): on non-`GET`/`HEAD`/
   `OPTIONS` routes, any route declaring a request body parameter requires
   `Content-Type: application/json` (allowing parameters such as `; charset=utf-8`) upfront
-  before body parsing (closing the HTTP/2 headerless-body edge case); bodyless routes
-  (`POST`/`DELETE` with no body parameter) allow omitted `Content-Type` only when
-  `Content-Length` is absent or `"0"` and `Transfer-Encoding` is absent, and still refuse
-  any non-JSON `Content-Type` (such as `text/plain`, `application/x-www-form-urlencoded`,
-  or `multipart/form-data`) or non-zero/chunked body without `application/json`. FastAPI's
-  native `strict_content_type=True` stays enabled as defence-in-depth.
+  before body parsing, preventing any unlabelled body from reaching body parsing on routes
+  expecting JSON; bodyless routes (`POST`/`DELETE` with no body parameter) allow omitted
+  `Content-Type` only when `Content-Length` is absent or `"0"` and `Transfer-Encoding` is
+  absent, and still refuse any non-JSON `Content-Type` (such as `text/plain`,
+  `application/x-www-form-urlencoded`, or `multipart/form-data`) or non-zero/chunked body
+  without `application/json`. FastAPI's native `strict_content_type=True` stays enabled as
+  defence-in-depth.
 - **D9** (owner, 2026-11-27, `STY-105` grilling R1 #5a): add five `ErrorCode`s in
-  `apps/api/src/roadmaps_api/errors.py`, evaluated in fixed order on matched routes
-  (`same-origin → content-type → auth → person-assertion → tenant/permission`),
-  regenerated into OpenAPI / `@roadmaps/api-types`, and mapped in
-  `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`:
+  `apps/api/src/roadmaps_api/errors.py`, regenerated into OpenAPI / `@roadmaps/api-types`,
+  and mapped in `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`:
   - `401 auth.unauthenticated` → `unauthenticated` (`retryable: false`)
   - `403 authz.forbidden` → `forbidden` (`retryable: false`)
   - `403 request.origin_not_allowed` → `unknown` (`retryable: false`)
   - `415 request.unsupported_media_type` → `unknown` (`retryable: false`)
   - `409 auth.person_mismatch` (missing, malformed or disagreeing `X-Roadmaps-Person-Id`
     on authenticated state-changing routes) → `unauthenticated` (`retryable: false`)
+
+  Because FastAPI's `get_request_handler` reads and JSON-decodes declared bodies before
+  `solve_dependencies` runs auth dependencies (bounded by the 1 MiB body limit with zero
+  session or tenant state leakage), matched routes evaluate in fixed order:
+  `same-origin (403) → content-type (415) → body read / JSON decode (413 / 400 / 422 json_invalid) → auth (401) → person-assertion (409) → tenant/permission (404 / 403) → Pydantic body validation (422)`.
+  S5's anonymous matrix sends well-formed JSON bodies on body routes so it proves `401`.
+
 - **D10** (owner, 2026-11-27, `STY-105` grilling R1 #6a): enforce route policies at both
-  registration and app assembly — every route declares exactly one policy (`public()`,
-  `signed_in()`, `tenant_member()`, or `tenant_permission(Permission.…)`), checked in
-  `PolicyAPIRoute.__init__` (refusing missing, duplicate or invalid policies, and
-  requiring `{tenantSlug}` in the path for `tenant_member`/`tenant_permission`), and
-  `create_app` sets `app.router.route_class = PolicyAPIRoute` and calls
-  `verify_app_routes(app)` via FastAPI's public `fastapi.routing.iter_route_contexts(app.routes)`
-  to refuse any sub-router that omitted `route_class=PolicyAPIRoute`, any unclassified
-  `Mount`/`Route`/`WebSocketRoute`, or any `public` route outside the reviewed
-  `PUBLIC_ROUTES` allow-list (`("GET", "/health")`, `("GET", "/ready")`, plus
-  `("GET", "/api/v1/openapi.json")` when `serves_live_openapi` is true). Test helpers that
-  register `/test/*` routes after `create_app` declare `public()`.
+  registration and app assembly:
+  - Every API route declares exactly one policy (`public()`, `signed_in()`,
+    `tenant_member()`, or `tenant_permission(Permission.…)`), checked in
+    `PolicyAPIRoute.__init__` (refusing missing, duplicate or invalid policies).
+  - `create_app` sets `app.router.route_class = PolicyAPIRoute` and calls
+    `verify_app_routes(app)`, inspecting both `fastapi.routing.iter_route_contexts(app.routes)`
+    and low-priority/frontend routes (`app.router._iter_low_priority_routes()`, tested in
+    S1 by registering `app.frontend(...)` and a nested router's `frontend(...)` and
+    proving startup raises).
+  - `verify_app_routes(app)` checks `{tenantSlug}` against each route's effective
+    `RouteContext.path_format` (supporting include-time prefixes such as
+    `include_router(..., prefix="/tenants/{tenantSlug}")`), refuses any `PolicyAPIRoute`
+    declaring `HEAD` or `OPTIONS` (closing safe-method exemptions outside `GET`), refuses
+    any sub-router that omitted `route_class=PolicyAPIRoute`, refuses any low-priority or
+    frontend route, `Mount`, or `WebSocketRoute`, and admits a plain Starlette `Route`
+    only when every one of its methods and its path appear in the reviewed `PUBLIC_ROUTES`
+    allow-list — specifically `("GET", "/health")`, `("GET", "/ready")`, plus FastAPI's
+    local `/api/v1/openapi.json` (`("GET", "/api/v1/openapi.json")` and
+    `("HEAD", "/api/v1/openapi.json")`) when `serves_live_openapi` is true. Test helpers
+    that register `/test/*` routes after `create_app` declare `public()`.
 - **D11** (owner, 2026-11-27, `STY-105` grilling R1 #7a; amends ADR-019): keep
   `create_app` offline (no DB connection at startup) and stay within forced RLS without
   adding a cross-tenant definer. Validate code-level `SHIPPED_ROLES` against `Permission`
   at startup; at runtime, whenever the tenant dependency loads a role's `role_permissions`
   rows, parse every row through `Permission(raw)` and, if any unknown permission string is
   present, log an allow-listed `authz.unknown_permission` event (adding `tenant_id` and
-  `role_id` to `ALLOWED_EXTRA_FIELDS` in `logs.py`, never logging the raw unknown string)
-  and fail closed with `403 authz.forbidden` on both `tenant_member` and
-  `tenant_permission` routes.
+  `role_id` to `ALLOWED_EXTRA_FIELDS` in `logs.py`, never logging the raw unknown string;
+  alerting target for `EPC-023`) and fail closed with `403 authz.forbidden` on both
+  `tenant_member` and `tenant_permission` routes. Deploy ordering consequence (recorded in
+  ADR-019): a permission enters the code catalogue one release before any migration writes
+  it into `role_permissions`, and leaves `role_permissions` one release before leaving
+  code.
 - **D12** (owner, 2026-11-27, `STY-105` grilling R2 #8a): the tenant dependency provides a
   frozen `TenantContext` (`tenant_id`, `tenant_slug`, `person_id`, `role_id`,
   `permissions`) with a pre-bound `open_session() -> Session` factory configured with

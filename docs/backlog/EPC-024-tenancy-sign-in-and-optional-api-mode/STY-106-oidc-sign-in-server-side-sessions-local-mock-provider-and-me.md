@@ -154,15 +154,16 @@ memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verifi
   `tools/mock_oidc/`.
 - **D6** (owner, 2026-11-27, `STY-106` grilling R1 #3a; introduced ahead in `STY-105` D7):
   Reuse the required `ROADMAPS_EDITOR_ORIGIN` setting introduced in `STY-105` D7 (bare
-  origin `scheme://host[:port]` with no path, query, fragment, userinfo or wildcard;
-  requiring `https` and a host in `ROADMAPS_ALLOWED_HOSTS` whenever `ROADMAPS_ENV` is
-  `production`, unset or invalid, or any Cloud Run marker `K_SERVICE`, `CLOUD_RUN_JOB`,
-  `CLOUD_RUN_WORKER_POOL` is set; future `EPC-028` public-only mode serves no session
-  routes and exempts it; `scripts/api.sh dev` defaults it to
-  `http://localhost:${DEV_PORT:-5173}`, and preview/E2E passes `PREVIEW_PORT`) to build
-  OIDC `redirect_uri`, post-callback redirects and local `__Host-` cookie port suffixes
-  without reading `Host` or `X-Forwarded-Host` (also reusable by `STY-104` for local
-  invitation links).
+  origin `scheme://host[:port]` with no path, query, fragment, userinfo or wildcard,
+  tested per case in `test_settings.py`; requiring `https` and a host in
+  `ROADMAPS_ALLOWED_HOSTS` whenever `ROADMAPS_ENV` is `production`, unset or invalid, or
+  any Cloud Run marker `K_SERVICE`, `CLOUD_RUN_JOB`, `CLOUD_RUN_WORKER_POOL` is set;
+  future `EPC-028` public-only mode serves no session routes and exempts it;
+  `scripts/api.sh dev` reads `DEV_PORT` from `.env.worktree` via `worktree_value DEV_PORT`
+  with `5173` fallback outside a worktree and exports `http://localhost:$DEV_PORT`, and
+  preview/E2E passes `PREVIEW_PORT`) to build OIDC `redirect_uri`, post-callback redirects
+  and local `__Host-` cookie port suffixes without reading `Host` or `X-Forwarded-Host`
+  (also reusable by `STY-104` for local invitation links).
 - **D7** (owner, 2026-11-27, `STY-106` grilling R2 #3a; amends ADR-015 & ADR-018): Add
   narrow read-only `person_select` RLS policies on `roles` and `role_permissions` (active
   only when `app.tenant_id IS NULL`, matching `roles` referenced by an active membership

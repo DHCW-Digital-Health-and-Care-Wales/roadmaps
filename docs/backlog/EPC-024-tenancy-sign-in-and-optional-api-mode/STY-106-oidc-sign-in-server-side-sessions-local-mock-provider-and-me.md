@@ -20,7 +20,7 @@ Implements server-side OpenID Connect sign-in and session management in the API.
 functions and read-only `person_select` RLS on `roles`/`role_permissions` (D7), an in-repo
 loopback mock OIDC provider under `apps/api/tools/mock_oidc/` (strictly refused whenever
 `K_SERVICE`, `CLOUD_RUN_JOB`, `CLOUD_RUN_WORKER_POOL` or non-local settings apply; D5),
-DHCW Google Workspace OIDC client using `authlib` + `httpx` (`hd` and `email_verified`
+DHCW Google Workspace OIDC client using `authlib` + `requests` (`hd` and `email_verified`
 checked, full JWKS validation and key rollover; D4), `POST /api/v1/auth/sign-in`,
 provider-specific callback `GET`, `GET /api/v1/me`, `POST /api/v1/auth/extend`,
 `POST /api/v1/auth/sign-out`, `POST /api/v1/auth/sign-out-all`, structured security events,
@@ -35,7 +35,7 @@ Alembic migration for `sign_in_transactions` and `sessions` + definer functions 
 loopback mock OIDC server wired into `apps/api/scripts/api.sh` and
 `scripts/worktree/worktree.sh`; `apps/api/tools/seed/factories.py` factories for
 `sign_in_transactions` and `sessions`; `apps/api/src/roadmaps_api/identity/` (only module
-allowed by import-linter to import `authlib`/`joserfc`/`httpx`, with `jose`/`python-jose`
+allowed by import-linter to import `authlib`/`joserfc`/`requests`, with `jose`/`python-jose`
 and deprecated `authlib.jose` banned by ruff); auth routes, session service (only module
 writing sessions), retention purge CLIs
 sharing a thin runner module; OpenAPI and `packages/api-types` regeneration;
@@ -127,19 +127,20 @@ memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verifi
   `issuer` pinned to a fixed non-HTTPS or loopback URL, email, display name) exported by
   `STY-093` under `tools/seed/` (imported directly under D5, plus `UNINVITED_PERSONA` with
   no database row) rather than duplicating subjects.
-- **D4** (owner, 2026-11-27, `STY-106` grilling R2 #1a; settles Q1): Use `authlib` +
-  `httpx` in `apps/api`'s runtime dependencies (`OAuth2Client` with PKCE `S256`, `joserfc`
-  for `RS256` JWT/JWS verification, and `CodeIDToken` claim validation — passing explicit
-  `aud` options and covering a wrong-`aud` + matching-`azp` case in S1's refused-claim
-  tests), keeping `httpx2`
-  in dev dependencies for Starlette's `TestClient`; add a thin cached JWKS fetcher that
-  retains stale keys across provider outages with a rate-limited refetch on unknown `kid`,
-  plus Google `hd` and `email_verified=true` checks. Ban `jose`, `python-jose` and
-  deprecated `authlib.jose` in ruff, and confine `authlib`/`joserfc`/`httpx` to
-  `roadmaps_api.identity` and session writes to the session service via `import-linter`.
-  Revisiting consolidation onto `httpx2` once `authlib` supports it is tracked in
-  [CHO-055](../chores/CHO-055-revisit-consolidating-httpx-onto-httpx2-once-authlib-supports-it.md)
-  (target revisit: January 2027).
+- **D4** (owner, 2026-11-27, `STY-106` grilling R2 #1a & review follow-up; settles Q1): Use
+  `authlib` + `requests` in `apps/api`'s runtime dependencies (`requests` is already locked
+  via `opentelemetry-exporter-otlp-proto-http`, adding zero new HTTP packages; using
+  synchronous `authlib.integrations.requests_client.OAuth2Session` with PKCE `S256`,
+  `joserfc` for `RS256` JWT/JWS verification, `CodeIDToken` claim validation — passing
+  explicit `aud` options and covering a wrong-`aud` + matching-`azp` case in S1's
+  refused-claim tests — explicit `timeout=(connect, read)` and `allow_redirects=False` on
+  every discovery, JWKS and `fetch_token` call, and a `requests.adapters.BaseAdapter` in
+  unit tests for mocked Google transports), keeping `httpx2` in dev dependencies for
+  Starlette's `TestClient`; add a thin cached JWKS fetcher that retains stale keys across
+  provider outages with a rate-limited refetch on unknown `kid`, plus Google `hd` and
+  `email_verified=true` checks. Ban `jose`, `python-jose` and deprecated `authlib.jose` in
+  ruff, and confine `authlib`/`joserfc`/`requests` to `roadmaps_api.identity` and session
+  writes to the session service via `import-linter`.
 - **D5** (owner, 2026-11-27, `STY-106` grilling R2 #2a & #5a; settles Q2; amends ADR-018):
   Implement the local mock OIDC provider as an in-repo Python/FastAPI service under
   `apps/api/tools/mock_oidc/` importing `LOCAL_MOCK_ISSUER`, `NAMED_PERSONAS` and

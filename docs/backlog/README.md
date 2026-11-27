@@ -113,7 +113,6 @@ moves to `_archive/`, where its row here still points.
 | [CHO-052](chores/CHO-052-upgrade-typescript-to-7-and-remove-dependabot-ignore.md)                                | Upgrade TypeScript to 7 and remove the Dependabot major-version ignore                                                              | Proposed       |
 | [CHO-053](_archive/chores/CHO-053-a-422-trims-only-the-forbidden-key-without-walking-internals.md)               | A 422 trims only the forbidden key without walking FastAPI or Pydantic internals (EPC-022)                                          | Done           |
 | [CHO-054](chores/CHO-054-align-api-guide-422-rule-with-adr-020.md)                                               | Align `apps/api/AGENTS.md`'s refusal rule with ADR-020's 422 `loc` rule (after CHO-053 and DEF-040)                                 | Proposed       |
-| [CHO-055](chores/CHO-055-revisit-consolidating-httpx-onto-httpx2-once-authlib-supports-it.md)                    | Revisit consolidating runtime `httpx` onto `httpx2` once `authlib` supports `httpx2` (target revisit: January 2027, after STY-106)  | Proposed       |
 
 Live chores sit in `chores/`; list each here as `CHO-<nnn>` with its Status token.
 

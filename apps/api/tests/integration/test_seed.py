@@ -477,12 +477,38 @@ def _bootstrap_factory_tenant(
 
 
 @pytest.mark.usefixtures("database_url")
-def test_person_access_change_set_preserves_db_errors_and_restores_settings_on_error(
+def test_person_access_change_set_preserves_db_errors_and_restores_settings(
     worker_database: str,
 ) -> None:
     with harness.admin_session(worker_database) as admin_session:
         tenant, person, roles = _bootstrap_factory_tenant(admin_session, slug="err-tenant")
         admin_session.commit()
+
+        # Prior transaction settings are restored after a normal exit.
+        admin_session.execute(
+            text("SELECT set_config(:setting, :value, true)"),
+            {"setting": TENANT_SETTING, "value": "prior-tenant"},
+        )
+        admin_session.execute(
+            text("SELECT set_config(:setting, :value, true)"),
+            {"setting": PERSON_SETTING, "value": "prior-person"},
+        )
+        with person_access_change_set(
+            admin_session,
+            tenant.id,
+            person.id,
+            ChangeSetRequest.seeded(DEFAULT_SEED, "ok:normal-exit"),
+        ):
+            pass
+        assert (
+            admin_session.execute(
+                text("SELECT current_setting(:setting, true)"), {"setting": TENANT_SETTING}
+            ).scalar(),
+            admin_session.execute(
+                text("SELECT current_setting(:setting, true)"), {"setting": PERSON_SETTING}
+            ).scalar(),
+        ) == ("prior-tenant", "prior-person")
+        admin_session.rollback()
 
         # Prior transaction settings are restored after a non-DB error inside the block.
         admin_session.execute(

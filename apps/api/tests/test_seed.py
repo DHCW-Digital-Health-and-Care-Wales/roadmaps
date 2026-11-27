@@ -164,7 +164,7 @@ def test_seed_guard_wiring_rejects_cloud_run_markers_and_accepts_loopback(lines:
     assert pinned_host(LOCAL_URL) == "127.0.0.1"
 
     with pytest.raises(SettingsError) as raised:
-        validated_admin_url({ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL, "K_SERVICE": ""})
+        validated_admin_url({ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL, "K_SERVICE": "api"})
     assert raised.value.invalid == ["K_SERVICE"]
     [line] = lines.read()
     assert line["invalid_settings"] == ["K_SERVICE"]

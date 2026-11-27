@@ -416,7 +416,7 @@ def _seed_cwm_aur_admin_actions(
         ChangeSetRequest.seeded(
             ctx.seed,
             "seed:cwm-aur:invitations",
-            note="Seed Cwm Aur sample invitation",
+            note="Seed Cwm Aur sample invitation and end any ended sample memberships",
         ),
     ):
         _row, summary = _create_spec_invitation(ctx, cwm_aur, cwm_aur_roles, cwm_aur_admin, spec)

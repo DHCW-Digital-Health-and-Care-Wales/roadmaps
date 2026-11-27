@@ -13,6 +13,10 @@ BAD_LOCAL_RUNS: dict[str, tuple[dict[str, str], list[str]]] = {
     "unset ROADMAPS_ENV": ({ADMIN_DATABASE_URL: LOCAL_URL}, [ENV]),
     "production ROADMAPS_ENV": ({ENV: "production", ADMIN_DATABASE_URL: LOCAL_URL}, [ENV]),
     "unknown ROADMAPS_ENV": ({ENV: SECRET, ADMIN_DATABASE_URL: LOCAL_URL}, [ENV]),
+    "bad ROADMAPS_ENV and bad admin URL": (
+        {ENV: "production", ADMIN_DATABASE_URL: LOCAL_URL.replace("127.0.0.1", "db.example")},
+        [ENV, ADMIN_DATABASE_URL],
+    ),
     "missing admin URL": ({ENV: "local"}, [ADMIN_DATABASE_URL]),
     "wrong driver scheme": (
         {ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL.replace("+psycopg", "")},
@@ -78,11 +82,13 @@ def test_validated_local_admin_url_accepts_loopback_ips_in_local_and_test(
 
 
 @pytest.mark.parametrize("marker", [*CLOUD_RUN_MARKERS])
+@pytest.mark.parametrize("value", [SECRET, ""], ids=["non-empty", "empty"])
 def test_reject_cloud_run_flag_refuses_every_cloud_run_marker(
     lines: Lines,
     marker: str,
+    value: str,
 ) -> None:
-    environ = {ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL, marker: SECRET}
+    environ = {ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL, marker: value}
     with pytest.raises(SettingsError) as raised:
         validated_local_admin_url(environ, reject_cloud_run=True)
     assert raised.value.invalid == [marker]

@@ -99,11 +99,14 @@ def admin_connection(database: str) -> Generator[Connection]:
 
 
 @contextmanager
-def admin_session(database: str, *, autoflush: bool = False) -> Generator[Session]:
-    """A SQLAlchemy superuser session with `LOCK_TIMEOUT` set, for factory-based setup."""
+def admin_session(database: str) -> Generator[Session]:
+    """A SQLAlchemy superuser session with `LOCK_TIMEOUT` and `autoflush=False`.
+
+    `autoflush=False` ensures factory tests prove each factory flushes for itself.
+    """
     with (
         admin_connection(database) as connection,
-        Session(bind=connection, autoflush=autoflush) as s,
+        Session(bind=connection, autoflush=False) as s,
     ):
         yield s
 

@@ -1,16 +1,17 @@
 # Code review lenses: API
 
 Diff-inspection lenses for `apps/api/` (applied in `../SKILL.md`'s working order).
-Baseline rules live in `apps/api/AGENTS.md` and `ADR-017`–`ADR-020`; focus here on
+Baseline rules live in `apps/api/AGENTS.md`, `ADR-015` and `ADR-017`–`ADR-020`; focus here on
 failure modes CI cannot catch.
 
-- **Migrations, grants, RLS and SQL `CHECK` logic.** For every migration touching
-  tables, policies or routines, check that multi-branch `CHECK` constraints cannot
-  evaluate to `NULL` under SQL three-valued logic (wrap composite predicates in
-  `IS TRUE`), that `UPDATE` RLS `USING` clauses exclude terminal states, that
-  `roadmaps_app` holds only the exact table and column grants its routes need, and that
-  every `SECURITY DEFINER` routine pins `search_path` with `pg_temp` last and revokes
-  `PUBLIC` `EXECUTE`.
+- **Migrations, grants, RLS and SQL `CHECK` logic.** For migrations touching tables,
+  policies or routines (`apps/api/AGENTS.md`, _The database_), check that multi-branch
+  `CHECK` constraints cannot evaluate to `NULL` under SQL three-valued logic (wrap
+  composite predicates in `IS TRUE`), that application `UPDATE` RLS `USING` clauses
+  enforce domain terminal-state guards without blocking intentional owner/definer paths,
+  that `roadmaps_app` holds only the exact table and column grants its routes need, and
+  that each `SECURITY DEFINER` routine is owned by its dedicated definer role (never
+  `roadmaps_owner`) with a pinned `search_path` ending in `pg_temp`.
 - **Transaction error paths.** Trace exceptions inside services for partial
   commits or leaked sessions, and check routes/repositories for renamed session
   helpers that bypass `apps/api/tools/check_transactions.py`.

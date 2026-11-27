@@ -88,12 +88,6 @@ describe("resolveLighthouseEnv", () => {
       "/tmp",
     ],
     [
-      "rewrites a multibyte POSIX TMPDIR exceeding MAX_UNIX_TMPDIR_BYTES in UTF-8 bytes",
-      { TMPDIR: MULTIBYTE_OVER_LIMIT_TMPDIR },
-      { platform: "linux" as const, pathExists: (p: string) => p === "/tmp" },
-      "/tmp",
-    ],
-    [
       "keeps a short POSIX TMPDIR unchanged",
       { TMPDIR: "/var/folders/ab/cdef01234567890123456789012345/T/" },
       { platform: "darwin" as const, pathExists: () => true },
@@ -118,17 +112,29 @@ describe("resolveLighthouseEnv", () => {
       LONG_TMPDIR,
     ],
   ])("%s", (_, env, options, expectedTmpdir) => {
+    const resolved = resolveLighthouseEnv(env, {
+      playwrightChromePath: () => undefined,
+      ...options,
+    })
+    expect(resolved.TMPDIR).toBe(expectedTmpdir)
+  })
+
+  it("rewrites a multibyte POSIX TMPDIR exceeding MAX_UNIX_TMPDIR_BYTES in UTF-8 bytes", () => {
     expect(MULTIBYTE_OVER_LIMIT_TMPDIR.length).toBeLessThanOrEqual(
       MAX_UNIX_TMPDIR_BYTES,
     )
     expect(
       Buffer.byteLength(MULTIBYTE_OVER_LIMIT_TMPDIR, "utf8"),
     ).toBeGreaterThan(MAX_UNIX_TMPDIR_BYTES)
-    const resolved = resolveLighthouseEnv(env, {
-      playwrightChromePath: () => undefined,
-      ...options,
-    })
-    expect(resolved.TMPDIR).toBe(expectedTmpdir)
+    const resolved = resolveLighthouseEnv(
+      { TMPDIR: MULTIBYTE_OVER_LIMIT_TMPDIR },
+      {
+        platform: "linux",
+        playwrightChromePath: () => undefined,
+        pathExists: (p: string) => p === "/tmp",
+      },
+    )
+    expect(resolved.TMPDIR).toBe("/tmp")
   })
 
   it("does not mutate the caller's environment object", () => {

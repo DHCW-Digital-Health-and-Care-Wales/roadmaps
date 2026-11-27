@@ -18,6 +18,7 @@ function defaultPlaywrightChromePath(): string | undefined {
   try {
     return chromium.executablePath()
   } catch {
+    // Playwright throws on platforms where it has no browser; leave lhci to find Chrome itself.
     return undefined
   }
 }

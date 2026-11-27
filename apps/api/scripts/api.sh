@@ -46,8 +46,8 @@ else
   SERVICE_NAME=roadmaps-api
 fi
 
-# Compose's superuser, taken only by the bootstrap and the test harness, and the two
-# logins the bootstrap makes, with the fixed local passwords of
+# Compose's superuser, taken only by the bootstrap, the local seeder and the test harness,
+# and the logins the bootstrap makes, with the fixed local passwords of
 # tools/bootstrap_database.py.
 DB_ADDRESS="127.0.0.1:$DB_PORT/roadmaps"
 ADMIN_DATABASE_URL="postgresql+psycopg://roadmaps:roadmaps@$DB_ADDRESS"

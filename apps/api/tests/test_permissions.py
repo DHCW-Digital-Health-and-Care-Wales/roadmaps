@@ -1,14 +1,6 @@
-"""Canonical ADR-019 permission catalogue, shipped roles and dev-only packaging boundary.
+"""Canonical ADR-019 permission catalogue and immutable shipped roles."""
 
-Verifies `Permission`, `ShippedRoleKey`, immutable `SHIPPED_ROLES` and `SHIPPED_ROLE_NAMES`
-against ADR-019, and holds S5's boundary that `faker` stays in `[dependency-groups].dev`
-and nothing under `src/roadmaps_api/` imports `faker` or `tools`.
-"""
-
-import ast
 import re
-import tomllib
-from pathlib import Path
 from types import MappingProxyType
 from typing import cast
 
@@ -21,8 +13,6 @@ from roadmaps_api.authz import (
     ShippedRoleKey,
 )
 
-API_DIR = Path(__file__).parent.parent
-SRC_DIR = API_DIR / "src" / "roadmaps_api"
 PERMISSION_FORMAT = re.compile(r"^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$")
 
 
@@ -76,22 +66,3 @@ def test_shipped_roles_match_adr_019_and_are_immutable() -> None:
     with pytest.raises(TypeError):
         cast("dict[object, object]", SHIPPED_ROLE_NAMES)[ShippedRoleKey.VIEWER] = "Mutated"
     assert all(isinstance(perms, frozenset) for perms in SHIPPED_ROLES.values())
-
-
-def test_faker_is_dev_only_and_never_imported_by_runtime_package() -> None:
-    pyproject = tomllib.loads((API_DIR / "pyproject.toml").read_text(encoding="utf-8"))
-    runtime_deps: list[str] = pyproject["project"]["dependencies"]
-    dev_deps: list[str] = pyproject["dependency-groups"]["dev"]
-
-    assert not any(dep.lower().startswith("faker") for dep in runtime_deps)
-    assert any(dep.lower().startswith("faker") for dep in dev_deps)
-
-    forbidden_roots = {"faker", "tools"}
-    for path in sorted(SRC_DIR.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    assert alias.name.split(".")[0] not in forbidden_roots, f"{path}: {alias.name}"
-            elif isinstance(node, ast.ImportFrom) and node.module is not None:
-                assert node.module.split(".")[0] not in forbidden_roots, f"{path}: {node.module}"

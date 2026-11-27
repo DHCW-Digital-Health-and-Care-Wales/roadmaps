@@ -16,14 +16,15 @@ from typing import Final
 
 import psycopg
 from psycopg import sql
+from sqlalchemy import Connection, create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.orm import Session
 
 from roadmaps_api.database import TENANT_POLICY
 from roadmaps_api.migrate import upgrade
 from roadmaps_api.roles import APP_ROLE, OWNER_ROLE, database_scoped_sql
-from tools._local_db import PUBLIC_TABLES_QUERY, VERSION_TABLE
+from tools._local_db import ADMIN_DATABASE_URL, PUBLIC_TABLES_QUERY, VERSION_TABLE
 from tools.bootstrap_database import (
-    ADMIN_DATABASE_URL,
     APP_LOGIN,
     LOCAL_PASSWORD,
     MIGRATION_LOGIN,
@@ -82,6 +83,29 @@ def admin(database: str | None = None) -> Generator[psycopg.Connection]:
     """A superuser connection, committing each statement."""
     with psycopg.connect(libpq_url(admin_url(database)), autocommit=True) as connection:
         yield connection
+
+
+@contextmanager
+def admin_connection(database: str) -> Generator[Connection]:
+    """A SQLAlchemy superuser connection with `LOCK_TIMEOUT` set, disposed on exit."""
+    engine = create_engine(admin_url(database), hide_parameters=True)
+    try:
+        with engine.connect() as connection:
+            connection.execute(text(f"SET lock_timeout = '{LOCK_TIMEOUT}'"))
+            connection.commit()
+            yield connection
+    finally:
+        engine.dispose()
+
+
+@contextmanager
+def admin_session(database: str, *, autoflush: bool = False) -> Generator[Session]:
+    """A SQLAlchemy superuser session with `LOCK_TIMEOUT` set, for factory-based setup."""
+    with (
+        admin_connection(database) as connection,
+        Session(bind=connection, autoflush=autoflush) as s,
+    ):
+        yield s
 
 
 def unique_name(prefix: str) -> str:
@@ -161,7 +185,6 @@ def empty_tables(connection: psycopg.Connection) -> None:
                     sql.SQL(", ").join(sql.Identifier("public", table) for (table,) in tables)
                 )
             )
-            connection.execute("SET LOCAL session_replication_role = 'origin'")
 
 
 def open_admin(database: str) -> psycopg.Connection:

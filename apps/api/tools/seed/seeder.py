@@ -45,6 +45,8 @@ from tools.seed.personas import (
 )
 from tools.seed.welsh import create_faker, example_email, welsh_name_parts
 
+INVITATION_LIFETIME: Final = timedelta(days=7)
+
 # Extra Faker-generated members per tenant: (tenant_slug, email_domain, role_key).
 _GENERATED_MEMBER_SLOTS: Final[tuple[tuple[str, str, ShippedRoleKey], ...]] = (
     (DHCW_SLUG, "dhcw.example", ShippedRoleKey.PRODUCT_LEAD),
@@ -131,7 +133,6 @@ class _SeedContext:
     now: datetime
     tenants: dict[str, Tenant]
     named_people: dict[str, Person]
-    disabled_at_by_key: dict[str, datetime]
     generated_members: list[_GeneratedMember]
 
 
@@ -148,14 +149,11 @@ def _seed_tenants(session: Session) -> dict[str, Tenant]:
     return tenants
 
 
-def _seed_named_personas(session: Session) -> tuple[dict[str, Person], dict[str, datetime]]:
+def _seed_named_personas(session: Session) -> dict[str, Person]:
     people: dict[str, Person] = {}
-    disabled_at_by_key: dict[str, datetime] = {}
     for index, spec in enumerate(NAMED_PERSONAS):
         created_at = ANCHOR_TIME + timedelta(minutes=10 + index)
         disabled_at = created_at + timedelta(days=3) if spec.disabled else None
-        if disabled_at is not None:
-            disabled_at_by_key[spec.key] = disabled_at
         last_sign_in_at = None if spec.disabled else created_at + timedelta(hours=1)
         person, _identity = create_person_with_identity(
             session,
@@ -172,7 +170,7 @@ def _seed_named_personas(session: Session) -> tuple[dict[str, Person], dict[str,
             ),
         )
         people[spec.key] = person
-    return people, disabled_at_by_key
+    return people
 
 
 def _seed_generated_members(session: Session, *, seed: int) -> list[_GeneratedMember]:
@@ -302,6 +300,18 @@ def _create_spec_invitation(
     return invitation, seeded
 
 
+def _end_tenant_memberships(
+    tenant_slug: str,
+    memberships: dict[str, Membership],
+    ended_at: datetime,
+) -> None:
+    for persona_spec in NAMED_PERSONAS:
+        if tenant_slug in persona_spec.ended_in_tenants:
+            ended_membership = memberships[persona_spec.key]
+            ended_membership.ended_at = ended_at
+            ended_membership.updated_at = ended_at
+
+
 def _seed_dhcw_admin_actions(
     ctx: _SeedContext,
     dhcw_roles: dict[ShippedRoleKey, Role],
@@ -320,7 +330,7 @@ def _seed_dhcw_admin_actions(
             role_key=ShippedRoleKey.PRODUCT_LEAD,
             status="pending",
             created_at=ctx.now,
-            expires_at=ctx.now + timedelta(days=7),
+            expires_at=ctx.now + INVITATION_LIFETIME,
             id_anchor=pending_anchor,
         ),
         _InvitationSpec(
@@ -329,7 +339,7 @@ def _seed_dhcw_admin_actions(
             role_key=ShippedRoleKey.VIEWER,
             status="revoked",
             created_at=revoked_created,
-            expires_at=revoked_created + timedelta(days=7),
+            expires_at=revoked_created + INVITATION_LIFETIME,
             id_anchor=revoked_created,
         ),
         _InvitationSpec(
@@ -338,12 +348,12 @@ def _seed_dhcw_admin_actions(
             role_key=ShippedRoleKey.PRODUCT_LEAD,
             status="expired",
             created_at=expired_created,
-            expires_at=expired_created + timedelta(days=7),
+            expires_at=expired_created + INVITATION_LIFETIME,
             id_anchor=expired_created,
         ),
     )
 
-    rows_by_status: dict[str, Invitation] = {}
+    created_invitations: list[tuple[_InvitationSpec, Invitation]] = []
     seeded: list[SeededInvitation] = []
     with person_access_change_set(
         ctx.session,
@@ -357,7 +367,7 @@ def _seed_dhcw_admin_actions(
     ):
         for spec in specs:
             row, summary = _create_spec_invitation(ctx, dhcw, dhcw_roles, dhcw_admin, spec)
-            rows_by_status[spec.status] = row
+            created_invitations.append((spec, row))
             seeded.append(summary)
 
     action_ts = revoked_created + timedelta(hours=2)
@@ -371,16 +381,13 @@ def _seed_dhcw_admin_actions(
             note="Revoke sample invitation and end sample membership",
         ),
     ):
-        revoked_inv = rows_by_status["revoked"]
-        revoked_inv.revoked_at = action_ts
-        revoked_inv.updated_at = action_ts
-        revoked_inv.revoked_by_kind = "person"
-        revoked_inv.revoked_by_person_id = dhcw_admin.id
-        for persona_spec in NAMED_PERSONAS:
-            if DHCW_SLUG in persona_spec.ended_in_tenants:
-                ended_membership = dhcw_memberships[persona_spec.key]
-                ended_membership.ended_at = action_ts
-                ended_membership.updated_at = action_ts
+        for spec, invitation in created_invitations:
+            if spec.status == "revoked":
+                invitation.revoked_at = action_ts
+                invitation.updated_at = action_ts
+                invitation.revoked_by_kind = "person"
+                invitation.revoked_by_person_id = dhcw_admin.id
+        _end_tenant_memberships(DHCW_SLUG, dhcw_memberships, action_ts)
 
     return seeded
 
@@ -388,17 +395,19 @@ def _seed_dhcw_admin_actions(
 def _seed_cwm_aur_admin_actions(
     ctx: _SeedContext,
     cwm_aur_roles: dict[ShippedRoleKey, Role],
+    cwm_aur_memberships: dict[str, Membership],
 ) -> SeededInvitation:
     cwm_aur = ctx.tenants[CWM_AUR_SLUG]
     cwm_aur_admin = ctx.named_people["cwm_aur_admin"]
+    action_ts = ANCHOR_TIME + timedelta(hours=3)
     spec = _InvitationSpec(
         label="cwm-aur:pending",
         email="invite.pending@cwm-aur.example",
         role_key=ShippedRoleKey.PRODUCT_LEAD,
         status="pending",
         created_at=ctx.now,
-        expires_at=ctx.now + timedelta(days=7),
-        id_anchor=ANCHOR_TIME + timedelta(hours=3),
+        expires_at=ctx.now + INVITATION_LIFETIME,
+        id_anchor=action_ts,
     )
     with person_access_change_set(
         ctx.session,
@@ -411,6 +420,7 @@ def _seed_cwm_aur_admin_actions(
         ),
     ):
         _row, summary = _create_spec_invitation(ctx, cwm_aur, cwm_aur_roles, cwm_aur_admin, spec)
+        _end_tenant_memberships(CWM_AUR_SLUG, cwm_aur_memberships, action_ts)
     return summary
 
 
@@ -427,19 +437,20 @@ def _seed_platform_audit_log(ctx: _SeedContext) -> None:
         )
         for spec in TENANT_SPECS
     ]
-    entries.extend(
-        _AuditEntry(
-            key=f"audit:person:disabled:{persona_spec.key}",
-            action="person.disabled",
-            target_type="person",
-            target_id=ctx.named_people[persona_spec.key].id,
-            reason="Seeded disabled persona",
-            details={},
-            occurred_at=ctx.disabled_at_by_key[persona_spec.key],
-        )
-        for persona_spec in NAMED_PERSONAS
-        if persona_spec.disabled
-    )
+    for persona_spec in NAMED_PERSONAS:
+        person = ctx.named_people[persona_spec.key]
+        if person.disabled_at is not None:
+            entries.append(
+                _AuditEntry(
+                    key=f"audit:person:disabled:{persona_spec.key}",
+                    action="person.disabled",
+                    target_type="person",
+                    target_id=person.id,
+                    reason="Seeded disabled persona",
+                    details={},
+                    occurred_at=person.disabled_at,
+                )
+            )
     for entry in entries:
         ctx.session.add(
             PlatformAuditLog(
@@ -482,9 +493,8 @@ def seed_database(
     effective_now = datetime.now(UTC) if now is None else now.astimezone(UTC)
 
     tenants = _seed_tenants(session)
-    named_people, disabled_at_by_key = _seed_named_personas(session)
+    named_people = _seed_named_personas(session)
     generated_members = _seed_generated_members(session, seed=seed)
-    session.flush()
 
     ctx = _SeedContext(
         session=session,
@@ -492,15 +502,14 @@ def seed_database(
         now=effective_now,
         tenants=tenants,
         named_people=named_people,
-        disabled_at_by_key=disabled_at_by_key,
         generated_members=generated_members,
     )
 
     dhcw_roles, dhcw_memberships = _seed_tenant_bootstrap(ctx, DHCW_SLUG, minute_offset=0)
-    cwm_aur_roles, _cwm_aur_memberships = _seed_tenant_bootstrap(ctx, CWM_AUR_SLUG, minute_offset=5)
+    cwm_aur_roles, cwm_aur_memberships = _seed_tenant_bootstrap(ctx, CWM_AUR_SLUG, minute_offset=5)
 
     dhcw_invitations = _seed_dhcw_admin_actions(ctx, dhcw_roles, dhcw_memberships)
-    cwm_aur_invitation = _seed_cwm_aur_admin_actions(ctx, cwm_aur_roles)
+    cwm_aur_invitation = _seed_cwm_aur_admin_actions(ctx, cwm_aur_roles, cwm_aur_memberships)
     _seed_platform_audit_log(ctx)
     session.flush()
 
@@ -552,8 +561,6 @@ def run_seed(
         ):
             assert_superuser(connection)
             truncate_public_tables(connection)
-            result = seed_database(session, seed=seed, now=now)
-            session.flush()
-            return result
+            return seed_database(session, seed=seed, now=now)
     finally:
         engine.dispose()

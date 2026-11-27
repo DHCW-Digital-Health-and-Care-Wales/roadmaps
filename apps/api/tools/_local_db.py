@@ -1,14 +1,15 @@
-"""Shared local-only superuser guards and replica-mode table truncation for dev tooling.
+"""Shared local-only superuser guards, table-teardown metadata and SQLAlchemy truncate helper.
 
-Used by `tools.bootstrap_database`, `tools.seed` and `tests.harness` so URL validation,
-superuser verification and `TRUNCATE ... CASCADE` teardown stay in one place.
+`tools.bootstrap_database` and `tools.seed` share the environment/URL/superuser guards here;
+`tests.harness.empty_tables` and `truncate_public_tables` share `VERSION_TABLE` and
+`PUBLIC_TABLES_QUERY`.
 """
 
 import ipaddress
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping
 from typing import Final
 
-from sqlalchemy import Connection, text
+from sqlalchemy import Connection
 from sqlalchemy.engine import make_url
 
 from roadmaps_api.settings import CLOUD_RUN_MARKERS, ENV, Environment, is_database_url, refuse
@@ -21,11 +22,6 @@ SUPERUSER_QUERY: Final = "SELECT rolsuper FROM pg_roles WHERE rolname = current_
 PUBLIC_TABLES_QUERY: Final = (
     "SELECT tablename FROM pg_tables"
     " WHERE schemaname = 'public' AND tablename <> %s"
-    " ORDER BY tablename"
-)
-_PUBLIC_TABLES_SA = text(
-    "SELECT tablename FROM pg_tables"
-    " WHERE schemaname = 'public' AND tablename <> :version_table"
     " ORDER BY tablename"
 )
 
@@ -67,20 +63,15 @@ def validated_local_admin_url(environ: Mapping[str, str], *, reject_cloud_run: b
     return url
 
 
-def truncate_public_tables_sql(tables: Sequence[str], quote: Callable[[str], str]) -> str:
-    """Builds `TRUNCATE public.<table>, ... CASCADE` with dialect-quoted identifiers."""
-    targets = ", ".join(f"public.{quote(table)}" for table in tables)
-    return f"TRUNCATE {targets} CASCADE"
-
-
 def truncate_public_tables(connection: Connection) -> None:
     """Truncates every `public` table except `alembic_version`, then restores `'origin'` mode."""
-    tables = list(connection.execute(_PUBLIC_TABLES_SA, {"version_table": VERSION_TABLE}).scalars())
+    tables = list(connection.exec_driver_sql(PUBLIC_TABLES_QUERY, (VERSION_TABLE,)).scalars())
     if not tables:
         return
-    statement = truncate_public_tables_sql(tables, connection.dialect.identifier_preparer.quote)
+    quote = connection.dialect.identifier_preparer.quote
+    targets = ", ".join(f"public.{quote(table)}" for table in tables)
     # Replica mode is scoped strictly to teardown so immutable history tables can be cleared;
     # origin mode is restored immediately before any write.
-    connection.execute(text("SET LOCAL session_replication_role = 'replica'"))
-    connection.execute(text(statement))
-    connection.execute(text("SET LOCAL session_replication_role = 'origin'"))
+    connection.exec_driver_sql("SET LOCAL session_replication_role = 'replica'")
+    connection.exec_driver_sql(f"TRUNCATE {targets} CASCADE")
+    connection.exec_driver_sql("SET LOCAL session_replication_role = 'origin'")

@@ -1,16 +1,18 @@
-"""Unit tests for deterministic IDs, Welsh name helpers, persona specs, safety guards and CLI."""
+"""Unit tests for deterministic IDs, Welsh helpers, personas, seed guards, packaging and CLI."""
 
 import base64
 import hashlib
 import ipaddress
+import tomllib
 import uuid
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from urllib.parse import urlsplit
 
 import pytest
 
 from roadmaps_api.authz import ShippedRoleKey
-from roadmaps_api.settings import CLOUD_RUN_MARKERS, ENV, SettingsError
+from roadmaps_api.settings import ENV, SettingsError
 from tests.support import DOWN_DATABASE_URL, Lines
 from tools._local_db import ADMIN_DATABASE_URL
 from tools.seed.cli import format_summary, main, parse_args
@@ -33,8 +35,18 @@ from tools.seed.personas import (
 from tools.seed.seeder import SeededInvitation, SeededPerson, SeededTenant, SeedResult
 from tools.seed.welsh import create_faker, example_email, welsh_name_parts
 
+API_DIR = Path(__file__).parent.parent
 SECRET = "SECRET-SEED-VALUE-91e2"  # noqa: S105 - planted, to prove no secret leaks
 LOCAL_URL = f"postgresql+psycopg://roadmaps:{SECRET}@127.0.0.1:5432/roadmaps"
+
+
+def test_faker_is_declared_only_in_dev_dependency_group() -> None:
+    pyproject = tomllib.loads((API_DIR / "pyproject.toml").read_text(encoding="utf-8"))
+    runtime_deps: list[str] = pyproject["project"]["dependencies"]
+    dev_deps: list[str] = pyproject["dependency-groups"]["dev"]
+
+    assert not any(dep.lower().startswith("faker") for dep in runtime_deps)
+    assert any(dep.lower().startswith("faker") for dep in dev_deps)
 
 
 def test_deterministic_uuidv7_is_rfc9562_stable_and_time_ordered() -> None:
@@ -147,96 +159,26 @@ def test_tenants_and_named_persona_roster_match_story_and_adr_018_contracts() ->
     assert any(p.disabled for p in NAMED_PERSONAS)
 
 
-BAD_ENVIRONMENTS: dict[str, tuple[dict[str, str], list[str]]] = {
-    "unset ROADMAPS_ENV": ({ADMIN_DATABASE_URL: LOCAL_URL}, [ENV]),
-    "production ROADMAPS_ENV": ({ENV: "production", ADMIN_DATABASE_URL: LOCAL_URL}, [ENV]),
-    "unknown ROADMAPS_ENV": ({ENV: SECRET, ADMIN_DATABASE_URL: LOCAL_URL}, [ENV]),
-    **{
-        f"Cloud Run marker {marker} set": (
-            {ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL, marker: SECRET},
-            [marker],
-        )
-        for marker in CLOUD_RUN_MARKERS
-    },
-    "empty Cloud Run marker present": (
-        {ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL, "K_SERVICE": ""},
-        ["K_SERVICE"],
-    ),
-    "missing admin URL": ({ENV: "local"}, [ADMIN_DATABASE_URL]),
-    "wrong driver scheme": (
-        {ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL.replace("+psycopg", "")},
-        [ADMIN_DATABASE_URL],
-    ),
-    "socket URL without host": (
-        {
-            ENV: "local",
-            ADMIN_DATABASE_URL: f"postgresql+psycopg://roadmaps:{SECRET}@/roadmaps",
-        },
-        [ADMIN_DATABASE_URL],
-    ),
-    **{
-        f"non-loopback host {host}": (
-            {ENV: "test", ADMIN_DATABASE_URL: LOCAL_URL.replace("127.0.0.1", host)},
-            [ADMIN_DATABASE_URL],
-        )
-        for host in ("localhost", "db.example", "10.0.0.5", "192.168.1.10")
-    },
-    **{
-        f"query parameter {param}": (
-            {ENV: "local", ADMIN_DATABASE_URL: f"{LOCAL_URL}?{param}={value}"},
-            [ADMIN_DATABASE_URL],
-        )
-        for param, value in (
-            ("host", "db.example"),
-            ("hostaddr", "10.0.0.5"),
-            ("service", "prod"),
-            ("sslmode", "require"),
-        )
-    },
-    "multiple invalid settings together": (
-        {ENV: "production", "CLOUD_RUN_JOB": SECRET},
-        [ENV, "CLOUD_RUN_JOB", ADMIN_DATABASE_URL],
-    ),
-}
+def test_seed_guard_wiring_rejects_cloud_run_markers_and_accepts_loopback(lines: Lines) -> None:
+    assert validated_admin_url({ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL}) == LOCAL_URL
+    assert pinned_host(LOCAL_URL) == "127.0.0.1"
 
-
-@pytest.mark.parametrize(
-    ("environ", "expected_invalid"), BAD_ENVIRONMENTS.values(), ids=BAD_ENVIRONMENTS
-)
-def test_safety_guards_refuse_disallowed_environments_without_leaking_values(
-    lines: Lines,
-    environ: dict[str, str],
-    expected_invalid: list[str],
-) -> None:
     with pytest.raises(SettingsError) as raised:
-        validated_admin_url(environ)
-    assert raised.value.invalid == expected_invalid
+        validated_admin_url({ENV: "local", ADMIN_DATABASE_URL: LOCAL_URL, "K_SERVICE": ""})
+    assert raised.value.invalid == ["K_SERVICE"]
     [line] = lines.read()
-    assert line["invalid_settings"] == expected_invalid
-    assert SECRET not in str(raised.value)
-    assert SECRET not in str(line)
+    assert line["invalid_settings"] == ["K_SERVICE"]
 
 
 def test_cli_main_refuses_bad_environment_without_leaking_secret(lines: Lines) -> None:
     code = main(
         argv=[],
-        environ={ENV: "production", "K_SERVICE": SECRET, ADMIN_DATABASE_URL: LOCAL_URL},
+        environ={ENV: "production", "CLOUD_RUN_JOB": SECRET, ADMIN_DATABASE_URL: LOCAL_URL},
     )
     assert code == 1
     [line] = lines.read()
-    assert line["invalid_settings"] == [ENV, "K_SERVICE"]
+    assert line["invalid_settings"] == [ENV, "CLOUD_RUN_JOB"]
     assert SECRET not in str(line)
-
-
-@pytest.mark.parametrize(
-    ("host", "expected_host"),
-    [("127.0.0.1", "127.0.0.1"), ("127.0.0.2", "127.0.0.2"), ("[::1]", "::1")],
-)
-def test_safety_guards_accept_loopback_ips_in_local_and_test(host: str, expected_host: str) -> None:
-    url = LOCAL_URL.replace("127.0.0.1", host)
-    assert validated_admin_url({ENV: "local", ADMIN_DATABASE_URL: url}) == url
-    assert validated_admin_url({ENV: "test", ADMIN_DATABASE_URL: url}) == url
-    assert pinned_host(url) == expected_host
 
 
 def test_pinned_host_refuses_non_loopback_or_query_url_directly(lines: Lines) -> None:

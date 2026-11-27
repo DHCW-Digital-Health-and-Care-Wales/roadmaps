@@ -1,6 +1,5 @@
 """Dev-only deterministic seeder, reusable factories and `local_mock` persona specs (`STY-093`)."""
 
-from tools._local_db import truncate_public_tables
 from tools.seed.deterministic import (
     ANCHOR_TIME,
     DEFAULT_SEED,
@@ -71,5 +70,4 @@ __all__ = [
     "run_seed",
     "seed_database",
     "system_access_change_set",
-    "truncate_public_tables",
 ]

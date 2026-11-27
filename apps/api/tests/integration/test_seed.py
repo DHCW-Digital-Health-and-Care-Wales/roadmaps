@@ -20,7 +20,7 @@ from typing import Any
 import psycopg
 import pytest
 from psycopg import sql
-from sqlalchemy import create_engine, select, text
+from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -448,95 +448,99 @@ def test_run_seed_enforces_env_and_cloud_run_guards_directly(
     assert preserved == [("keep-direct",)]
 
 
+def _bootstrap_factory_tenant(
+    admin_session: Session,
+    *,
+    slug: str,
+) -> tuple[Tenant, Person, dict[ShippedRoleKey, Role]]:
+    tenant = create_tenant(
+        admin_session,
+        TenantSpec(slug=slug, name_en=f"{slug} Tenant", name_cy=f"Tenant {slug}"),
+        created_at=FIXED_NOW,
+    )
+    person, _identity = create_person_with_identity(
+        admin_session,
+        PersonInput(
+            display_name="Carys Morgan",
+            email=f"carys.morgan@{slug}.example",
+            subject=f"local-{slug}-carys",
+            created_at=FIXED_NOW,
+        ),
+    )
+    with system_access_change_set(
+        admin_session,
+        tenant.id,
+        ChangeSetRequest.seeded(DEFAULT_SEED, f"{slug}:bootstrap"),
+    ):
+        roles = create_shipped_roles(admin_session, tenant_id=tenant.id, created_at=FIXED_NOW)
+    return tenant, person, roles
+
+
 @pytest.mark.usefixtures("database_url")
-def test_person_access_change_set_preserves_db_errors_and_clears_settings_on_python_error(
+def test_person_access_change_set_preserves_db_errors_and_restores_settings_on_error(
     worker_database: str,
 ) -> None:
-    engine = create_engine(harness.admin_url(worker_database), hide_parameters=True)
-    try:
-        with Session(engine, autoflush=False) as admin_session:
-            tenant = create_tenant(
-                admin_session,
-                TenantSpec(slug="err-tenant", name_en="Err Tenant", name_cy="Tenant Gwall"),
-                created_at=FIXED_NOW,
-            )
-            person, _ = create_person_with_identity(
-                admin_session,
-                PersonInput(
-                    display_name="Gethin Owen",
-                    email="gethin.owen@err.example",
-                    subject="local-err-gethin",
-                    created_at=FIXED_NOW,
-                ),
-            )
-            admin_session.flush()
-            with system_access_change_set(
+    with harness.admin_session(worker_database) as admin_session:
+        tenant, person, roles = _bootstrap_factory_tenant(admin_session, slug="err-tenant")
+        admin_session.commit()
+
+        # Prior transaction settings are restored after a non-DB error inside the block.
+        admin_session.execute(
+            text("SELECT set_config(:setting, :value, true)"),
+            {"setting": TENANT_SETTING, "value": "prior-tenant"},
+        )
+        msg = "boom"
+        with (
+            pytest.raises(ValueError, match="boom"),
+            person_access_change_set(
                 admin_session,
                 tenant.id,
-                ChangeSetRequest.seeded(DEFAULT_SEED, "err:bootstrap"),
-            ):
-                roles = create_shipped_roles(
-                    admin_session, tenant_id=tenant.id, created_at=FIXED_NOW
-                )
-            admin_session.commit()
+                person.id,
+                ChangeSetRequest.seeded(DEFAULT_SEED, "err:python-error"),
+            ),
+        ):
+            raise ValueError(msg)
+        tenant_setting = admin_session.execute(
+            text("SELECT current_setting(:setting, true)"), {"setting": TENANT_SETTING}
+        ).scalar()
+        person_setting = admin_session.execute(
+            text("SELECT current_setting(:setting, true)"), {"setting": PERSON_SETTING}
+        ).scalar()
+        assert (tenant_setting, person_setting) == ("prior-tenant", "")
+        admin_session.rollback()
 
-            # A non-DB error inside the block still clears app.tenant_id / app.person_id.
-            msg = "boom"
-            with (
-                pytest.raises(ValueError, match="boom"),
-                person_access_change_set(
-                    admin_session,
-                    tenant.id,
-                    person.id,
-                    ChangeSetRequest.seeded(DEFAULT_SEED, "err:python-error"),
+        # A DB constraint violation inside the block propagates as IntegrityError (not masked).
+        with (
+            pytest.raises(IntegrityError),
+            person_access_change_set(
+                admin_session,
+                tenant.id,
+                person.id,
+                ChangeSetRequest.seeded(DEFAULT_SEED, "err:bad-inv"),
+            ),
+        ):
+            create_invitation(
+                admin_session,
+                InvitationInput(
+                    tenant_id=tenant.id,
+                    email="bad@err.example",
+                    role_id=roles[ShippedRoleKey.VIEWER].id,
+                    raw_token="bad-expiry-token",  # noqa: S106 - synthetic test token
+                    invited_by_person_id=person.id,
+                    created_at=FIXED_NOW,
+                    expires_at=FIXED_NOW + timedelta(days=30),
                 ),
-            ):
-                raise ValueError(msg)
-            tenant_setting = admin_session.execute(
-                text("SELECT current_setting(:setting, true)"), {"setting": TENANT_SETTING}
-            ).scalar()
-            person_setting = admin_session.execute(
-                text("SELECT current_setting(:setting, true)"), {"setting": PERSON_SETTING}
-            ).scalar()
-            assert (tenant_setting, person_setting) == ("", "")
-            admin_session.rollback()
-
-            # A DB constraint violation inside the block propagates as IntegrityError (not masked).
-            with (
-                pytest.raises(IntegrityError),
-                person_access_change_set(
-                    admin_session,
-                    tenant.id,
-                    person.id,
-                    ChangeSetRequest.seeded(DEFAULT_SEED, "err:bad-inv"),
-                ),
-            ):
-                create_invitation(
-                    admin_session,
-                    InvitationInput(
-                        tenant_id=tenant.id,
-                        email="bad@err.example",
-                        role_id=roles[ShippedRoleKey.VIEWER].id,
-                        raw_token="bad-expiry-token",  # noqa: S106 - synthetic test token
-                        invited_by_person_id=person.id,
-                        created_at=FIXED_NOW,
-                        expires_at=FIXED_NOW + timedelta(days=30),
-                    ),
-                )
-            admin_session.rollback()
-    finally:
-        engine.dispose()
+            )
+        admin_session.rollback()
 
 
 def test_truncate_public_tables_on_empty_database_is_a_noop() -> None:
     empty_db = harness.unique_name("seed_empty")
     harness.create_database(empty_db)
-    engine = create_engine(harness.admin_url(empty_db), hide_parameters=True)
     try:
-        with engine.connect() as connection, connection.begin():
+        with harness.admin_connection(empty_db) as connection, connection.begin():
             truncate_public_tables(connection)
     finally:
-        engine.dispose()
         harness.drop_database(empty_db)
 
 
@@ -545,67 +549,44 @@ def test_seed_factories_are_reusable_directly(
     worker_database: str,
     sessions: sessionmaker[Session],
 ) -> None:
-    # autoflush=False proves create_tenant flushes its TenantScope rows before change sets open.
-    engine = create_engine(harness.admin_url(worker_database), hide_parameters=True)
-    try:
-        with Session(engine, autoflush=False) as admin_session:
-            tenant = create_tenant(
+    with harness.admin_session(worker_database) as admin_session:
+        tenant, person, roles = _bootstrap_factory_tenant(admin_session, slug="factory-tenant")
+        with system_access_change_set(
+            admin_session,
+            tenant.id,
+            ChangeSetRequest.seeded(DEFAULT_SEED, "factory:membership"),
+        ):
+            create_membership(
                 admin_session,
-                TenantSpec(
-                    slug="factory-tenant", name_en="Factory Tenant", name_cy="Tenant Ffatri"
-                ),
-                created_at=FIXED_NOW,
-            )
-            person, _identity = create_person_with_identity(
-                admin_session,
-                PersonInput(
-                    display_name="Carys Morgan",
-                    email="carys.morgan@factory.example",
-                    subject="local-factory-carys",
+                MembershipInput(
+                    tenant_id=tenant.id,
+                    person_id=person.id,
+                    role_id=roles[ShippedRoleKey.ADMIN].id,
                     created_at=FIXED_NOW,
                 ),
             )
-            admin_session.flush()
-            with system_access_change_set(
+        with person_access_change_set(
+            admin_session,
+            tenant.id,
+            person.id,
+            ChangeSetRequest.seeded(DEFAULT_SEED, "factory:invite"),
+        ):
+            invitation = create_invitation(
                 admin_session,
-                tenant.id,
-                ChangeSetRequest.seeded(DEFAULT_SEED, "factory:bootstrap"),
-            ):
-                roles = create_shipped_roles(
-                    admin_session, tenant_id=tenant.id, created_at=FIXED_NOW
-                )
-                create_membership(
-                    admin_session,
-                    MembershipInput(
-                        tenant_id=tenant.id,
-                        person_id=person.id,
-                        role_id=roles[ShippedRoleKey.ADMIN].id,
-                        created_at=FIXED_NOW,
-                    ),
-                )
-            with person_access_change_set(
-                admin_session,
-                tenant.id,
-                person.id,
-                ChangeSetRequest.seeded(DEFAULT_SEED, "factory:invite"),
-            ):
-                create_invitation(
-                    admin_session,
-                    InvitationInput(
-                        tenant_id=tenant.id,
-                        email="guest@factory.example",
-                        role_id=roles[ShippedRoleKey.VIEWER].id,
-                        raw_token="factory-raw-token",  # noqa: S106 - test fixture token
-                        invited_by_person_id=person.id,
-                        created_at=FIXED_NOW,
-                        expires_at=FIXED_NOW + timedelta(days=7),
-                    ),
-                )
-            tenant_id = tenant.id
-            person_id = person.id
-            admin_session.commit()
-    finally:
-        engine.dispose()
+                InvitationInput(
+                    tenant_id=tenant.id,
+                    email="guest@factory.example",
+                    role_id=roles[ShippedRoleKey.VIEWER].id,
+                    raw_token="factory-raw-token",  # noqa: S106 - test fixture token
+                    invited_by_person_id=person.id,
+                    created_at=FIXED_NOW,
+                    expires_at=FIXED_NOW + timedelta(days=7),
+                ),
+            )
+            assert invitation.id is not None
+        tenant_id = tenant.id
+        person_id = person.id
+        admin_session.commit()
 
     with sessions(info=session_info(tenant_id=tenant_id, person_id=person_id)) as session:
         assert list(session.scalars(select(Tenant.slug))) == ["factory-tenant"]

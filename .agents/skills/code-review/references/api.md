@@ -4,6 +4,13 @@ Diff-inspection lenses for `apps/api/` (applied in `../SKILL.md`'s working order
 Baseline rules live in `apps/api/AGENTS.md` and `ADR-017`–`ADR-020`; focus here on
 failure modes CI cannot catch.
 
+- **Migrations, grants, RLS and SQL `CHECK` logic.** For every migration touching
+  tables, policies or routines, check that multi-branch `CHECK` constraints cannot
+  evaluate to `NULL` under SQL three-valued logic (wrap composite predicates in
+  `IS TRUE`), that `UPDATE` RLS `USING` clauses exclude terminal states, that
+  `roadmaps_app` holds only the exact table and column grants its routes need, and that
+  every `SECURITY DEFINER` routine pins `search_path` with `pg_temp` last and revokes
+  `PUBLIC` `EXECUTE`.
 - **Transaction error paths.** Trace exceptions inside services for partial
   commits or leaked sessions, and check routes/repositories for renamed session
   helpers that bypass `apps/api/tools/check_transactions.py`.

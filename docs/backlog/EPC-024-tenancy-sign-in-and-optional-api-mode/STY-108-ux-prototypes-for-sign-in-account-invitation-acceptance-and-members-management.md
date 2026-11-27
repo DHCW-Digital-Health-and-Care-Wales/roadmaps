@@ -1,13 +1,13 @@
 # STY-108: UX prototypes for sign-in, account, invitation acceptance and members management
 
-- **Status**: Proposed — grilled 2026-11-26; produces owner-selectable desktop and phone
-  HTML prototypes (`ux-prototypes` skill) for the Sheets → API app shell shift and
-  `STY-109` just-in-time before `STY-109`
+- **Status**: In progress — phase-1 prototypes and UX analysis ready for owner selection
+  on `t3/sty-108-ux-prototypes-sign-in-members` (D9, D10)
 - **Type**: Docs
 - **Area**: Docs
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
-- **Depends on**: STY-107 (hard — runs just-in-time before `STY-109` once `/me`, refusal
-  codes and the reshaped `AuthClient` have landed)
+- **Depends on**: — (D10 amended D3 on 2026-11-26 so `STY-108` runs ahead of `STY-107`
+  against the planned `/me` shape and refusal codes in `ADR-018`, `ADR-019`, `STY-106`,
+  `STY-107` and `STY-109`)
 - **Binding ADRs**: ADR-008, ADR-010, ADR-018 §Getting in, §The editor, §STY-108
   amendments; ADR-019 §What members and assigned leads may do, §Enforcement
 - **Suggested model**: Opus — app shell and sign-in/account UX design across desktop,
@@ -129,6 +129,11 @@ categories and organisations` in the sidebar, without designing any `EPC-025` sc
   page and replies with selections, the _Outcome_ is recorded, `STY-109` is updated with
   the chosen design references, and `STY-108` is marked `Done` and archived on that same
   PR before merge.
+- **D10** (owner, 2026-11-26; amends D3): run `STY-108` ahead of `STY-107`, removing the
+  hard `STY-107` prerequisite; draw the prototypes against the current editor screens and
+  the planned `/me` shape and refusal codes in `ADR-018`, `ADR-019`, `STY-106`, `STY-107`
+  and `STY-109`, flagging any unsettled `/me` or refusal-code details in _Decisions
+  needed_.
 
 ## Out of scope
 
@@ -141,3 +146,36 @@ categories and organisations` in the sidebar, without designing any `EPC-025` sc
   (D4).
 - Prototyping roadmap scratch/draft/history/Viewer-roadmap screens (`EPC-027`).
 - Prototyping the 6-monthly access review flow (`STY-114`) or ask-for-access (`STY-094`).
+
+## Delivery
+
+Phase 1 of D9's two-phase PR (awaiting owner selection to record _Outcome_, update
+`STY-109`, mark `STY-108` `Done` and archive on this same PR).
+
+### Departures
+
+- **D10 (owner, 2026-11-26)**: ran `STY-108` ahead of `STY-107`, relaxing D3's hard
+  `STY-107` dependency. Designs ground against the planned `/me` shape and refusal codes
+  in `ADR-018`, `ADR-019`, `STY-106`, `STY-107` and `STY-109`; unsettled wire details are
+  recorded in `docs/analysis/api-sign-in-and-account-ux-analysis.md` _Decisions needed_
+  (#11).
+- **S1–S3 scope narrowed by owner decisions D2, D4–D9 (2026-11-26)**: prototypes cover
+  the Sheets → API app shell shift and `STY-109` across four journeys (3 + 2 + 2 + 1
+  designs); Invitation acceptance (`STY-112`), Members & invitations (`STY-113`) and the
+  multi-tenant switcher (`EPC-030`) are excluded as decided in D2 and D4.
+
+### Contract for dependents
+
+- Once the owner selects designs in Phase 2, `docs/analysis/api-sign-in-and-account-ux-analysis.md`
+  (_Outcome_) and `docs/analysis/api-sign-in-and-account-ux-analysis/api-sign-in-and-account-ux-prototypes.html`
+  supply the settled shell, sign-in/refusal/zero-membership, Account page and
+  session-expiry layouts for `STY-109` and the sidebar utility slot (`Members` beside
+  `Families, categories and organisations`) for `EPC-025` (`STY-113`).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `docs/analysis/api-sign-in-and-account-ux-analysis/api-sign-in-and-account-ux-prototypes.html` (8 designs across 4 journeys, 21 desktop 1280px + phone 375px artboards including 3 Welsh 375px checks); observed run of `check-page.mjs` passed (phone scroll width 375px, 0 errors) and every artboard screenshot inspected |
+| S2       | `docs/analysis/api-sign-in-and-account-ux-analysis.md` (Journeys 1–3, _Decisions needed_ #1–#10) and frames `d1`–`d7` (open sidebar, 64px folded rail, 375px phone en/cy, header-only unauth/refusal/zero-membership shell, future `Members` slot beside Families)                                                           |
+| S3       | Pending Phase 2 (D9): awaiting owner selections on this PR before recording _Outcome_, updating `STY-109`, marking `STY-108` `Done` and archiving                                                                                                                                                                            |

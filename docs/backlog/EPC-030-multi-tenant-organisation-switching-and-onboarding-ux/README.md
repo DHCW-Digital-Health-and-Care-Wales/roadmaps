@@ -94,7 +94,7 @@ None.
   [EPC-025](../EPC-025-tenant-members-and-invitations/README.md),
   [EPC-027](../EPC-027-editor-roadmap-editing-on-the-api/README.md),
   [EPC-028](../EPC-028-public-read-api-sheets-migration-entra-and-switch-over/README.md)
-- [STY-108](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md),
+- [STY-108](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md),
   [STY-109](../EPC-024-tenancy-sign-in-and-optional-api-mode/STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md)
 - [Product Lead persona](../personas/product-lead.md),
   [Tenant Admin persona](../personas/tenant-admin.md),

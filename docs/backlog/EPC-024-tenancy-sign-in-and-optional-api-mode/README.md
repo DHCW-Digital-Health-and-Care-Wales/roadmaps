@@ -2,8 +2,8 @@
 
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 2b, 3a, 4a, 5a);
   stories start `Needs grilling` / `Placeholder` and become selectable as each is grilled
-- **Progress**: 3 of 10 terminal; next selectable: none (`STY-108` in progress ahead of
-  `STY-107` per `STY-108` D10; grill STY-105 or CHO-049 next)
+- **Progress**: 4 of 10 terminal; next selectable: none (`STY-108` Done ahead of `STY-107`
+  per `STY-108` D10; grill STY-105, STY-106 or CHO-049 next)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -31,13 +31,15 @@ roadmap and family screens fail cleanly against a stub repository until
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —
   person-assertion header name (`{tenantSlug}` path parameter settled in `STY-105` D2)
 - [STY-106](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) —
-  mock OIDC provider image/implementation and OIDC library choice
+  mock OIDC provider image/implementation, OIDC library choice, refusal codes,
+  `lastSignInAt` and `prompt=select_account` for "Try a different account"
 - [STY-107](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md#open-questions) —
   `VITE_DATA_SOURCE` config behaviour, `AuthClient` shape during dual-mode transition and
   stub error copy
 - [STY-109](STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md#open-questions) —
-  final UI, routing and E2E details once `STY-108` settles the chosen shell and page
-  designs (URL layout and zero-memberships flow settled in `STY-108` D4, D6)
+  final UI, routing, E2E, sign-out pending-edits confirmation and new-tab re-sign-in
+  return UX (shell, sign-in, Account and session-expiry designs 1A, 2B, 3B, 4A settled in
+  `STY-108` _Outcome_)
 - [CHO-049](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md) — Placeholder
   awaiting timeout policy
 
@@ -135,18 +137,18 @@ coverage, and adding seeder factories under `apps/api/tools/seed/` for every new
 
 ## Stories
 
-| ID      | Story                                                                                                                                                                                            | Area                                                          | Depends on                         | State |
-| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ---------------------------------- | ----- |
-| STY-102 | [Threat model for sign-in, sessions, invitations and linking](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)    | Docs                                                          | —                                  | ✅    |
-| STY-103 | [Tenancy, people, roles, memberships and access-history schema](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-103-tenancy-people-roles-memberships-and-access-history-schema.md) | API                                                           | —                                  | ✅    |
-| STY-093 | [A deterministic seeder](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-093-a-deterministic-seeder.md)                                                                            | API                                                           | STY-103                            | ✅    |
-| CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                                                     | API                                                           | —                                  |       |
-| STY-104 | [Platform operator CLI for tenants, bootstrap invitations and person control](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md)                             | API                                                           | STY-102, STY-103, STY-106          |       |
-| STY-105 | [Route authorisation policy, tenant dependency and same-origin guard](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md)                                             | API                                                           | STY-103                            |       |
-| STY-106 | [OIDC sign-in, server-side sessions, local mock provider and `/me`](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md)                                                     | API + Infrastructure + CI/CD                                  | STY-093, STY-102, STY-103, STY-105 |       |
-| STY-107 | [Editor optional API mode, reshaped AuthClient and stub roadmap repository](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md)                                | Domain + Infrastructure + Features/UI + i18n (en + cy)        | STY-106                            |       |
-| STY-108 | [UX prototypes for sign-in, account, invitation acceptance and members management](STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md)                    | Docs                                                          | —                                  |       |
-| STY-109 | [Editor sign-in, session expiry, tenant switcher and account page on the API](STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md)                              | Features/UI + Routing + Infrastructure + i18n (en + cy) + E2E | STY-107, STY-108                   |       |
+| ID      | Story                                                                                                                                                                                                                                   | Area                                                          | Depends on                         | State |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------- | ----- |
+| STY-102 | [Threat model for sign-in, sessions, invitations and linking](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-102-threat-model-for-sign-in-sessions-invitations-and-linking.md)                                           | Docs                                                          | —                                  | ✅    |
+| STY-103 | [Tenancy, people, roles, memberships and access-history schema](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-103-tenancy-people-roles-memberships-and-access-history-schema.md)                                        | API                                                           | —                                  | ✅    |
+| STY-093 | [A deterministic seeder](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-093-a-deterministic-seeder.md)                                                                                                                   | API                                                           | STY-103                            | ✅    |
+| CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                                                                                            | API                                                           | —                                  |       |
+| STY-104 | [Platform operator CLI for tenants, bootstrap invitations and person control](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md)                                                                    | API                                                           | STY-102, STY-103, STY-106          |       |
+| STY-105 | [Route authorisation policy, tenant dependency and same-origin guard](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md)                                                                                    | API                                                           | STY-103                            |       |
+| STY-106 | [OIDC sign-in, server-side sessions, local mock provider and `/me`](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md)                                                                                            | API + Infrastructure + CI/CD                                  | STY-093, STY-102, STY-103, STY-105 |       |
+| STY-107 | [Editor optional API mode, reshaped AuthClient and stub roadmap repository](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md)                                                                       | Domain + Infrastructure + Features/UI + i18n (en + cy)        | STY-106                            |       |
+| STY-108 | [UX prototypes for sign-in, account, invitation acceptance and members management](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md) | Docs                                                          | —                                  | ✅    |
+| STY-109 | [Editor sign-in, session expiry, tenant switcher and account page on the API](STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md)                                                                     | Features/UI + Routing + Infrastructure + i18n (en + cy) + E2E | STY-107, STY-108                   |       |
 
 ## Sequencing
 
@@ -167,9 +169,9 @@ flowchart LR
 ```
 
 - **Start in parallel**: `STY-102` (threat model, Done), `STY-103` (first schema migration
-  and enforcement suite, Done), `STY-108` (app shell and `STY-109` UX prototypes,
-  running ahead of `STY-107` per `STY-108` D10), and `CHO-049` (independent DB timeout
-  chore).
+  and enforcement suite, Done), `STY-108` (app shell and `STY-109` UX prototypes, Done
+  ahead of `STY-107` per `STY-108` D10; Outcome 1A, 2B, 3B, 4A), and `CHO-049`
+  (independent DB timeout chore).
 - **After `STY-103`**: `STY-093` (seeder, Done) and `STY-105` (authorisation & CSRF framework)
   can run in parallel.
 - **After `STY-093`, `STY-102`, `STY-103` and `STY-105`**: `STY-106` lands OIDC sign-in,
@@ -180,9 +182,9 @@ flowchart LR
   session revocation directly against real sessions) and `STY-107` (editor API mode +
   stub) run in parallel, and `EPC-025`'s `STY-111` (members API) unblocks; once `STY-104`
   also lands, `STY-110` (invitations API) unblocks.
-- **After `STY-107` and `STY-108`**: once `STY-108`'s _Outcome_ and `STY-107` have both
-  landed, `STY-109` delivers the API-mode sign-in, session-warning, single-tenant shell
-  and Account experience, unblocking `EPC-025`'s UI stories (`STY-112`, `STY-113`).
+- **After `STY-107` and `STY-108`**: once `STY-107` lands (`STY-108` _Outcome_ is Done),
+  `STY-109` delivers the API-mode sign-in, session-warning, single-tenant shell and
+  Account experience, unblocking `EPC-025`'s UI stories (`STY-112`, `STY-113`).
 
 ## Out of scope
 

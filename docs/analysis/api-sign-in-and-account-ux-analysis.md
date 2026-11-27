@@ -264,9 +264,10 @@ seconds`), swapping the primary action to `Sign in again` (with external-link ic
 
 ## Decisions needed
 
-Each row is an owner choice to record in _Outcome_ (and carry into `STY-109` on this same
-PR per `STY-108` D9), including rules the prototypes chose and unsettled `STY-106` /
-`STY-107` contract details surfaced because `STY-108` ran ahead of `STY-107` (D10).
+Each row lists an owner choice surfaced by the prototypes (including rules the prototypes
+chose and unsettled `STY-106` / `STY-107` contract details surfaced because `STY-108` ran
+ahead of `STY-107` per D10). Selections and where each item landed are recorded in
+_Outcome_ below.
 
 | #   | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Options                                                                                                                                                                                                                                                                  |
 | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -281,6 +282,41 @@ PR per `STY-108` D9), including rules the prototypes chose and unsettled `STY-10
 | 9   | **Future `Members` sidebar slot in `STY-109`** (`STY-108` D8) — shown in 1A–1C to settle placement beside `Families, categories and organisations`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **(a) Omit `Members` in `STY-109` and add it in `STY-113` (`EPC-025`) in the exact slot settled here (recommended — no dead/stub nav link)**; (b) Render a disabled/coming-soon link in `STY-109`                                                                        |
 | 10  | **Role permissions summary on Account page** (`STY-109` S3) — prototypes show a one-line plain-language summary of what `Product Lead` (or `Admin` / `Viewer`) can do                                                                                                                                                                                                                                                                                                                                                                                                                                                 | **(a) Show one-line plain-language summary per shipped role (recommended — helps Viewers and new leads understand their access)**; (b) Show role badge alone                                                                                                             |
 | 11  | **Contract details deferred to `STY-106` / `STY-107` grilling** (surfaced by `STY-108` D10): exact refusal query codes (`not_invited`, `person_disabled`, `sign_in_failed`), `lastSignInAt` field presence on `/me` identities, URL-tenant-removed notice copy (`STY-109` D3), and whether `POST /api/v1/auth/sign-in` always passes `prompt=select_account` to Google or accepts an explicit account-picker parameter so `"Try a different account"` (`d4-ab2`, `d5-ab2`) does not silently loop the same uninvited Google account (`STY-106` S1/S3 currently specify `prompt=select_account` only after `sign-out`) | **(a) Confirm these wire names and the `prompt=select_account` contract when `STY-106` and `STY-107` are grilled, keeping `STY-108` designs decoupled from raw code names (recommended)**; (b) Pin exact query parameter, account-picker flag and refusal code names now |
+
+## Outcome
+
+On 2026-11-27 (Phase 2 of `STY-108` D9), the owner selected designs across all four
+journeys:
+
+- **Journey 1 — Design 1A (as recommended):** header `AccountMenu` (person display name,
+  role + active organisation, Theme, Edit surface, Account, Sign out) + quiet sidebar
+  organisation band (`Organisation: Digital Health and Care Wales`, folded to a `DHCW`
+  rail chip), compact icon-only 375px phone account button (#2a), and the future `Members`
+  utility slot reserved directly beneath `Families, categories and organisations` for
+  `STY-113` (omitted in `STY-109`, #9a).
+- **Journey 2 — Design 2B:** centred single-column card (`max-width: 480px`) on a clean
+  header-only shell for Sign-in, refusals (dedicated refusal screen for `not_invited` /
+  `person_disabled`, inline dismissible `AuthNotice` on Sign-in for retryable
+  `sign_in_failed`, #6a), and the calm `"No organisation access"` zero-membership screen.
+- **Journey 3 — Design 3B:** stacked DHCW section cards (`Profile and organisation`,
+  `Sign-in methods` carrying per-identity email with room for future `EPC-028` Entra ID
+  linking, and `Sessions` with `"Sign out everywhere"` confirmation) inside the full
+  authenticated shell for active-org members (#5a; zero-membership `/account` stays in
+  D6's header-only shell), with the one-line plain-language role summary (#10a).
+- **Journey 4 — Design 4A (as recommended):** 2-minute idle warning (`Stay signed in`),
+  2-minute pre-absolute-limit warning (`Sign in again (opens in a new tab)`), post-expiry
+  / 401 new-tab re-sign-in keeping open edits, and the destructive red notice on
+  different-person edit discard.
+
+| Decisions               | Where they landed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1, 2, 3, 4, 5, 6, 9, 10 | Settled in [STY-108](../backlog/_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md) D11 and [STY-109](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md) D6 (`Members` slot also recorded for [STY-113](../backlog/EPC-025-tenant-members-and-invitations/STY-113-editor-members-and-invitations-management.md)) |
+| 7, 8                    | Carried into [STY-109](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md#open-questions) (`Q4`, `Q5`) for grilling before build                                                                                                                                                                                                                                                                                |
+| 11                      | Carried into [STY-106](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) (`Q3`) and [STY-109](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md#open-questions) (`Q3`) for grilling                                                                                                                             |
+
+Items under _Not yet drawn_ (dark theme verification, `/auth/callback` spinner,
+`person_disabled` refusal, URL-tenant-removed discard notice, zero-membership `/account`,
+and Welsh catalogue review) carry into `STY-109`'s build and E2E verification.
 
 ## Not yet drawn
 
@@ -323,7 +359,7 @@ Health and Care Wales`, `View on GitHub`, version) stay unchanged.
 
 ## Related
 
-- [STY-108: UX prototypes for sign-in, account, invitation acceptance and members management](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md)
+- [STY-108: UX prototypes for sign-in, account, invitation acceptance and members management](../backlog/_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md)
 - [STY-109: Editor sign-in, session expiry, tenant switcher and account page on the API](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-109-editor-sign-in-session-expiry-tenant-switcher-and-account-page-on-the-api.md)
 - [EPC-024: Tenancy, sign-in and optional API mode](../backlog/EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
 - [EPC-025: Tenant members and invitations](../backlog/EPC-025-tenant-members-and-invitations/README.md)

@@ -1,8 +1,9 @@
 # STY-109: Editor sign-in, session expiry, tenant switcher and account page on the API
 
-- **Status**: Needs grilling — implements the chosen `STY-108` UX for API-mode sign-in,
-  session warning/expiry, tenant-prefixed single-tenant shell (`/$tenantSlug/…`) and
-  Account page (multi-tenant switcher and picker deferred to `EPC-030`, `STY-108` D4)
+- **Status**: Needs grilling — implements `STY-108`'s chosen UX (1A, 2B, 3B, 4A) for
+  API-mode sign-in, session warning/expiry, tenant-prefixed single-tenant shell
+  (`/$tenantSlug/…`) and Account page (multi-tenant switcher deferred to `EPC-030`,
+  `STY-108` D4)
 - **Type**: Feature
 - **Area**: Features/UI + Routing + Infrastructure + i18n (en + cy) + E2E
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
@@ -23,7 +24,8 @@ tenant routes carry `/$tenantSlug/…` per ADR-019 Option 14 (with `/` redirecti
 member's tenant, keeping Sheets mode's flat routes untouched; D3), the account menu shows
 their name and active organisation while keeping Theme and Edit surface (D2, D5;
 multi-tenant switcher and multi-tenant `/` picker deferred to `EPC-030`), the Account
-page shows their email, sign-in identity, membership and role, and "Sign out everywhere",
+page shows their display name, sign-in identity (provider, email and last sign-in),
+membership and role, and "Sign out everywhere",
 and session expiry warns two minutes before the idle limit ("Stay signed in") or opens
 sign-in in a new tab for absolute expiry / 401, verifying on tab focus that the same
 person signed back in.
@@ -88,10 +90,25 @@ flow passes unchanged
 ## Open questions
 
 - **Q3**: Final UI, routing and E2E details (callback/refusal route paths, error-code
-  mapping, URL-bound tenant display and post-discard redirect, and reserved root paths
-  such as `sign-in`, `auth`, `account`, `invitations` against tenant slugs) to be grilled
-  once `STY-108`'s _Outcome_ settles the chosen shell, sign-in, Account and session-expiry
-  designs.
+  mapping, URL-bound tenant display and URL-tenant-removed discard notice copy, and
+  reserved root paths such as `sign-in`, `auth`, `account`, `invitations` against tenant
+  slugs) to be grilled against `STY-108`'s settled designs (D6) and `STY-106`/`STY-107`'s
+  contracts.
+- **Q4** (from `STY-108` _Decisions needed_ #7): What happens when a user clicks **Sign
+  out** or **Sign out everywhere** while holding pending edits (before `EPC-027` server
+  scratch exists)?
+  - (a) Confirm before discarding held edits (reusing a simplified version of Sheets'
+    discard warning, without a "keep changes" option since another person may sign in
+    next) (recommended) — prevents accidental edit loss on sign-out.
+  - (b) Sign out immediately, discarding held edits — fewer clicks, relies on the user
+    checking the pending-edits bar first.
+- **Q5** (from `STY-108` _Decisions needed_ #8): What should the newly opened tab show
+  once OIDC callback finishes when launched from **"Sign in again (opens in a new tab)"**
+  (Design 4A)?
+  - (a) Show a brief `"You're signed in — you can close this tab and return to your work"`
+    message with a link to roadmaps (recommended) — avoids leaving two duplicate
+    workspaces open while the original tab refreshes on focus.
+  - (b) Land normally on `/#/dhcw/` — simpler callback flow, leaves two editor tabs open.
 
 ## Decisions
 
@@ -122,6 +139,19 @@ flow passes unchanged
 - **D5** (owner, 2026-11-26, `STY-108` D7): keep **Theme** and **Edit surface** inside
   `AccountMenu` (consistent with Sheets mode) and keep the 375px phone header trigger
   compact so Cymraeg satisfies `tests/e2e/shell.spec.ts`.
+- **D6** (owner, 2026-11-27, `STY-108` D11 /
+  [Outcome](../../analysis/api-sign-in-and-account-ux-analysis.md#outcome)): build from
+  the settled [prototype designs](../../analysis/api-sign-in-and-account-ux-analysis/api-sign-in-and-account-ux-prototypes.html)
+  — **1A** (header `AccountMenu` + quiet sidebar org band folded to a `DHCW` rail chip,
+  icon-only 375px phone account trigger, omitting `Members` in `STY-109` and reserving the
+  slot beneath `Families, categories and organisations` for `STY-113`), **2B** (centred
+  single-column card in a clean header-only shell, with dedicated refusal screen for
+  `not_invited`/`person_disabled` and inline `AuthNotice` for `sign_in_failed`), **3B**
+  (stacked DHCW section cards on `/account` inside the full authenticated shell for
+  active-org members, per-identity email in `Sign-in methods` with room for `EPC-028`
+  Entra linking, and one-line role permissions summary), and **4A** (2-minute idle
+  warning, 2-minute pre-absolute-limit warning, post-expiry / 401 new-tab re-sign-in, and
+  destructive red notice on cross-person edit discard).
 
 ## Out of scope
 

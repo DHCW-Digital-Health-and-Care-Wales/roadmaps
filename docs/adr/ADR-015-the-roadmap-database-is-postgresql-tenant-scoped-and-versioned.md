@@ -11,7 +11,9 @@
   roles across the closed list, including redaction, and invitation-create idempotency
   omitting raw tokens; by STY-103, 2026-11-26: single `NOT NULL` role per membership in
   v1, ended-membership and active-member `identities` RLS, caller roles, `SECURITY DEFINER`
-  access summary triggers and `roadmaps_redaction_definer` split)
+  access summary triggers and `roadmaps_redaction_definer` split; aligned after STY-103
+  delivery, 2026-11-27: active-only `memberships` `UPDATE` policy, unset-tenant guard on
+  person-keyed policies, and the delivered `roadmaps_history_definer` trigger list)
 
 ## Context
 
@@ -395,26 +397,33 @@ _STY-102 amendments_), they hold; the rest stands.
   normalised so a future migration can introduce a join table if composable custom roles
   are ever needed.
 - **Ended memberships and shared-table RLS** (_Tenancy_): memberships are soft-ended
-  with `ended_at`. `memberships`'s tenant-keyed policy stays `TENANT_POLICY` (so ending a
-  membership, historical reads and `people`'s ended-member subquery work), while RLS
-  enforces `ended_at IS NULL` on the person-keyed `memberships` `SELECT` policy,
-  `tenants`'s person-keyed `SELECT` policy and `identities`'s tenant `SELECT` policy.
-  `people`'s tenant `SELECT` policy permits active or ended members of `app.tenant_id` so
-  historical change-set attribution stays readable; `identities`'s `SELECT` policy permits
+  with `ended_at`. `memberships`'s tenant-keyed `SELECT` policy stays `TENANT_POLICY` (so
+  historical reads and `people`'s ended-member subquery work), while `roadmaps_app`'s
+  `UPDATE` policy adds `ended_at IS NULL` with column-scoped `UPDATE (role_id, ended_at,
+updated_at)` and no `INSERT` grant (so an active membership can be ended or have its
+  role changed, an ended membership cannot be un-ended by the app, and ADR-018 invitation
+  redemption remains the only runtime creation path). RLS also enforces `ended_at IS NULL`
+  on the person-keyed `memberships` `SELECT` policy, `tenants`'s person-keyed `SELECT`
+  policy (both requiring `app.tenant_id` unset so a multi-tenant member inside one tenant
+  never reads another tenant's rows) and `identities`'s tenant `SELECT` policy. `people`'s
+  tenant `SELECT` policy permits active or ended members of `app.tenant_id` so historical
+  change-set attribution stays readable; `identities`'s `SELECT` policy permits
   `person_id = app.person_id` or an active (`ended_at IS NULL`) member of `app.tenant_id`,
   letting the API serve ADR-019 Option 9's member emails and last sign-in to
   `members:manage` holders while isolating other tenants and ended members' live identities.
 - **Caller roles, summary trigger definers and redaction owner** (_Tenancy_, _Roles,
   operation and data protection_, refining _STY-102 amendments_): `bootstrap.sql` creates
   the separate `roadmaps_platform` and `roadmaps_purge` no-login caller roles with
-  pairwise mutual exclusivity across all four caller roles. The access `change_summaries`
-  trigger functions are `SECURITY DEFINER`, owned by `roadmaps_history_definer` (pinned
-  `search_path`, `EXECUTE` revoked from `PUBLIC`, added to the closed list);
-  `roadmaps_app` holds no `INSERT` on `change_sets` or `change_summaries`, and its
-  application-callable commit routine takes no actor argument (always recording `'person'`
-  from `app.person_id`). Future `EPC-026` redaction moves to its own dedicated no-login
-  `roadmaps_redaction_definer` role when `EPC-026` lands so `roadmaps_history_definer`
-  stays strictly append-only (zero `UPDATE`/`DELETE` grants on history).
+  pairwise mutual exclusivity across all four caller roles. The access commit-guard,
+  deferred sign-off verification and `change_summaries` trigger functions are
+  `SECURITY DEFINER`, owned by `roadmaps_history_definer` (pinned `search_path` ending in
+  `pg_temp`, `EXECUTE` revoked from `PUBLIC`, added to the closed list; the unconditional
+  history-immutability trigger runs `SECURITY INVOKER`); `roadmaps_app` holds no `INSERT`
+  on `change_sets` or `change_summaries`, and its application-callable commit routine
+  takes no actor argument (always recording `'person'` from `app.person_id`). Future
+  `EPC-026` redaction moves to its own dedicated no-login `roadmaps_redaction_definer`
+  role when `EPC-026` lands so `roadmaps_history_definer` stays strictly append-only (zero
+  `UPDATE`/`DELETE` grants on history).
 - **Access-scope `change_summaries` and invitation purge** (_History_): derived
   automatically inside PostgreSQL by the summary triggers above on `roles`,
   `role_permissions`, `memberships` and `invitations` from an explicit allow-list of

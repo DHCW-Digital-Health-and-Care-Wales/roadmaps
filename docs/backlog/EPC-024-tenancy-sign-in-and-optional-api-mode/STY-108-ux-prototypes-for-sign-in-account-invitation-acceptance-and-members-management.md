@@ -1,7 +1,7 @@
 # STY-108: UX prototypes for sign-in, account, invitation acceptance and members management
 
-- **Status**: In progress — phase-1 prototypes and UX analysis ready for owner selection
-  on `t3/sty-108-ux-prototypes-sign-in-members` (D9, D10)
+- **Status**: In progress — phase-1 prototypes and UX analysis open on PR #334 for owner
+  selection (D9, D10)
 - **Type**: Docs
 - **Area**: Docs
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
@@ -12,6 +12,7 @@
   amendments; ADR-019 §What members and assigned leads may do, §Enforcement
 - **Suggested model**: Opus — app shell and sign-in/account UX design across desktop,
   folded rail and phone (including Welsh 375px width check)
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/334
 
 ## Summary
 

@@ -12,6 +12,7 @@
   amendments; ADR-019 §What members and assigned leads may do, §Enforcement
 - **Suggested model**: Opus — app shell and sign-in/account UX design across desktop,
   folded rail and phone (including Welsh 375px width check)
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/341
 
 ## Summary
 

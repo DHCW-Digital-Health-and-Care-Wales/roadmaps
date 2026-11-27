@@ -31,7 +31,7 @@ roadmap and family screens fail cleanly against a stub repository until
 - [STY-105](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md#open-questions) —
   person-assertion header name (`{tenantSlug}` path parameter settled in `STY-105` D2)
 - [STY-106](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md#open-questions) —
-  mock OIDC provider image/implementation, OIDC library choice and `/me` response shape
+  mock OIDC provider image/implementation and OIDC library choice
 - [STY-107](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md#open-questions) —
   `VITE_DATA_SOURCE` config behaviour, `AuthClient` shape during dual-mode transition and
   stub error copy

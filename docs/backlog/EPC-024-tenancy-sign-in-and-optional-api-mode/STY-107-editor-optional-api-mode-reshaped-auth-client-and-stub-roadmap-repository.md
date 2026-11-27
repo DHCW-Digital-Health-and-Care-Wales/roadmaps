@@ -18,8 +18,8 @@ Lets the editor run optionally against the backend API (`VITE_DATA_SOURCE=api`) 
 keeping Google Sheets as the default deployed mode (`VITE_DATA_SOURCE=sheets` or unset).
 Reshapes `AuthClient` so no access token leaves the port (keeping GIS token plumbing
 private to the Sheets adapters inside `composeApp`), adds an `ApiAuthClient` backed by
-`/api/v1/me` and `/api/v1/auth/*` plus a same-origin API HTTP client (attaching the
-signed-in person assertion header settled in `STY-105` on state-changing calls and routing
+`/api/v1/me` and `/api/v1/auth/*` plus a same-origin API HTTP client (attaching
+`X-Roadmaps-Person-Id` per `STY-105` D5 on authenticated state-changing calls and routing
 errors through `toApiError`), and wires a stub `ApiRoadmapRepository` whose unimplemented roadmap and list calls reject
 with a dedicated "not yet available" error kind in English and Welsh so existing screens
 fail cleanly until `EPC-026` and `EPC-027` implement them.
@@ -109,8 +109,18 @@ rather than crashing or looping
   `tenantSlug`/`nameEn`/`nameCy`/`role`/`permissions` in deterministic order, and `session`
   with `idleExpiresAt`/`absoluteExpiresAt`/`signedInAt`/`provider`), `POST /api/v1/auth/extend`
   returning `{ idleExpiresAt, absoluteExpiresAt }`, and `POST /api/v1/auth/sign-out` under
-  `signed_in` policy (sending `STY-105`'s person-assertion header and treating 401 as
+  `signed_in` policy (sending `X-Roadmaps-Person-Id` per `STY-105` D5 and treating 401 as
   signed out locally).
+- **D4** (owner, 2026-11-27, `STY-105` D5, D8 & D9): authenticated state-changing calls
+  send `X-Roadmaps-Person-Id` (omitted on anonymous `public` calls like
+  `POST /api/v1/auth/sign-in` for `sign-in`/`redeem` and on `GET` calls; Phase 2 `link`
+  start in `EPC-028` keeps person assertion per `STY-105` D5) and
+  `Content-Type: application/json` whenever a JSON body is sent; missing, malformed or
+  disagreeing person assertions return `409 auth.person_mismatch`, mapped in
+  `api-error.ts` to `AppError(kind: "unauthenticated", retryable: false, status: 409)`
+  (same `kind` as `401`, distinguishable inside `infrastructure/roadmaps-api/` by
+  `status === 409` or `code === "auth.person_mismatch"` unless `STY-107`/`STY-109`
+  grilling introduces a dedicated `AppErrorKind`).
 
 ## Out of scope
 

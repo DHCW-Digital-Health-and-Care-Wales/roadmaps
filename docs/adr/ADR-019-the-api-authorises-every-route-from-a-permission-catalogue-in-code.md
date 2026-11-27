@@ -6,7 +6,9 @@
 - Date: 2026-11-21 (amended by STY-091, 2026-11-24: the one table without row-level
   security; by STY-102, 2026-11-26: detective bounding of operator `invite-admin` and
   out-of-band hosted job link delivery; by STY-103, 2026-11-26: v1 role-by-route matrix
-  with `NOT NULL role_id` and ended membership)
+  with `NOT NULL role_id` and ended membership; by STY-105, 2026-11-27: offline code
+  catalogue check at start-up with per-read fail-closed validation of `role_permissions`
+  under forced RLS)
 
 ## Context
 
@@ -190,6 +192,36 @@ Where this bullet differs from _Enforcement_ above, it holds; the rest stands.
   matrix tests `Admin`, `Product Lead`, `Viewer` (zero-permission role), a member whose
   membership has ended (`ended_at IS NOT NULL`, refused 404 on tenant routes), a
   non-member and an anonymous caller in place of a roleless membership row.
+
+### STY-105 amendments
+
+From the owner's STY-105 grilling (2026-11-27, STY-105 D10, D11 and D13). Where these
+bullets refine _The catalogue and the shipped roles_ and _Enforcement_ above, they hold;
+the rest stands.
+
+- **Offline code check at start-up and per-read fail-closed role validation under forced
+  RLS**: because `create_app` builds without a database connection (`export_openapi.py` and
+  unit tests) and `roadmaps_app` reads `role_permissions` strictly under forced
+  tenant-scoped RLS (no cross-tenant definer), start-up validates code-level
+  `SHIPPED_ROLES` against `Permission`, while every tenant-scoped request parses each
+  `role_permissions` row on the caller's role through `Permission(raw)`. Any unknown
+  permission name logs an allow-listed `authz.unknown_permission` event (`tenant_id` and
+  `role_id` only; alerted in `EPC-023`) and fails closed with `403 authz.forbidden` on
+  both `tenant_member` and `tenant_permission` routes, isolating a corrupted role row to
+  its own tenant and role. **Deploy ordering consequence**: a new permission enters the
+  code `Permission` catalogue one release before any migration or write inserts it into
+  `role_permissions`, and leaves `role_permissions` one release before leaving code, so an
+  earlier revision serving during a rolling deploy never rejects valid roles.
+- **Default-deny start-up route verification and standalone permission-literal lint**:
+  `verify_app_routes` runs in `create_app` over both `iter_route_contexts(app.routes)` and
+  `_iter_low_priority_routes()`, admitting only a `PolicyAPIRoute` with a non-empty method
+  set within `{GET, POST, PUT, PATCH, DELETE}` (with `{tenantSlug}` verified on effective
+  `path_format` and `public()` checked against `PUBLIC_ROUTES`) or a plain Starlette
+  `Route` with a non-`None`, non-empty method set whose every `(method, path)` is in
+  `PUBLIC_ROUTES`; every other route object (including `Mount`, `Host`, `WebSocketRoute`
+  and any `frontend()`/low-priority route) is refused at start-up. Raw permission string
+  literals outside `authz/permissions.py` are refused by `apps/api/tools/check_permissions.py`
+  (wired into `pnpm api:lint` and unit-tested in `tests/test_check_permissions.py`).
 
 ## Consequences
 

@@ -152,18 +152,18 @@ memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verifi
   persona picker for manual dev and Playwright E2E plus local-only `/_test/*` control
   endpoints (e.g. `POST /_test/rotate-key` and per-request fault presets) strictly inside
   `tools/mock_oidc/`.
-- **D6** (owner, 2026-11-27, `STY-106` grilling R1 #3a): Require an explicit
-  `ROADMAPS_EDITOR_ORIGIN` setting on startup for any API process serving editor/session
-  routes (future `EPC-028` public-only mode serves no session routes and exempts it). It
-  must be a bare origin (`scheme://host[:port]` with no path, query, fragment, userinfo or
-  wildcard, tested per case in `test_settings.py`); whenever `ROADMAPS_ENV` is
-  `production`, unset or invalid, or any Cloud Run marker (`K_SERVICE`, `CLOUD_RUN_JOB`,
-  `CLOUD_RUN_WORKER_POOL`) is set, it must use `https` and its host must appear in
-  `ROADMAPS_ALLOWED_HOSTS` (`scripts/api.sh dev` defaults it to
-  `http://localhost:${DEV_PORT}`, and preview/E2E passes `PREVIEW_PORT`). Build OIDC
-  `redirect_uri`, post-callback redirects and local `__Host-` cookie port suffixes from
-  `ROADMAPS_EDITOR_ORIGIN` without reading `Host` or `X-Forwarded-Host` (also reusable by
-  `STY-104` for local invitation links and `STY-105` for `Origin` matching).
+- **D6** (owner, 2026-11-27, `STY-106` grilling R1 #3a; introduced ahead in `STY-105` D7):
+  Reuse the required `ROADMAPS_EDITOR_ORIGIN` setting introduced in `STY-105` D7 (bare
+  origin `scheme://host[:port]` with no path, query, fragment, userinfo or wildcard,
+  tested per case in `test_settings.py`; requiring `https` and a host in
+  `ROADMAPS_ALLOWED_HOSTS` whenever `ROADMAPS_ENV` is `production`, unset or invalid, or
+  any Cloud Run marker `K_SERVICE`, `CLOUD_RUN_JOB`, `CLOUD_RUN_WORKER_POOL` is set;
+  future `EPC-028` public-only mode serves no session routes and exempts it;
+  `scripts/api.sh dev` reads `DEV_PORT` from `.env.worktree` via `worktree_value DEV_PORT`
+  with `5173` fallback outside a worktree and exports `http://localhost:$DEV_PORT`, and
+  preview/E2E passes `PREVIEW_PORT`) to build OIDC `redirect_uri`, post-callback redirects
+  and local `__Host-` cookie port suffixes without reading `Host` or `X-Forwarded-Host`
+  (also reusable by `STY-104` for local invitation links).
 - **D7** (owner, 2026-11-27, `STY-106` grilling R2 #3a; amends ADR-015 & ADR-018): Add
   narrow read-only `person_select` RLS policies on `roles` and `role_permissions` (active
   only when `app.tenant_id IS NULL`, matching `roles` referenced by an active membership
@@ -203,13 +203,14 @@ memberships.tenant_id ASC`, using `STY-103` S1's `uuidv7()` primary key), verifi
   and `STY-108` Design 2B's `"Try a different account"` flow without extra cookie or
   request-flag state; a future per-account preference may be revisited after real user
   testing if Google sign-in is still active).
-- **D11** (owner, 2026-11-27, `STY-106` grilling R1 #8a): Declare
-  `POST /api/v1/auth/sign-out` (alongside `POST /api/v1/auth/extend`,
+- **D11** (owner, 2026-11-27, `STY-106` grilling R1 #8a; aligned with `STY-105` D5 & D14):
+  Declare `POST /api/v1/auth/sign-out` (alongside `POST /api/v1/auth/extend`,
   `POST /api/v1/auth/sign-out-all` and `GET /api/v1/me`) under the `signed_in` route policy
-  (requiring same-origin proof and `STY-105`'s person-assertion header on the three `POST`
-  routes); `POST /api/v1/auth/sign-in` and `GET /api/v1/auth/callback/{provider}` join the
-  reviewed `public` allow-list (with callback exempt from same-origin CSRF per
-  ADR-018/ADR-020).
+  (requiring same-origin proof and `X-Roadmaps-Person-Id` per `STY-105` D5 on the three
+  `POST` routes, backed by `get_current_principal` wired here to cookie-hash session
+  lookup and `people.disabled_at IS NULL` per `STY-105` D14); `POST /api/v1/auth/sign-in`
+  and `GET /api/v1/auth/callback/{provider}` join the reviewed `public` allow-list (with
+  callback exempt from same-origin CSRF per ADR-018/ADR-020).
 - **D12** (owner, 2026-11-27, `STY-106` grilling R1 #9a): Every authenticated request
   (including same-origin `GET /api/v1/me`) slides `idle_expires_at = LEAST(now() +
 interval '60 minutes', absolute_expires_at)` and updates `last_activity_at` at most once

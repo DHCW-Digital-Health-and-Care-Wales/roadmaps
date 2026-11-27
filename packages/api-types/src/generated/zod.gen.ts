@@ -6,6 +6,11 @@ import * as z from 'zod/mini';
  * ErrorCode
  */
 export const zErrorCode = z.enum([
+    'auth.unauthenticated',
+    'auth.person_mismatch',
+    'authz.forbidden',
+    'request.origin_not_allowed',
+    'request.unsupported_media_type',
     'request.not_found',
     'request.method_not_allowed',
     'request.invalid',

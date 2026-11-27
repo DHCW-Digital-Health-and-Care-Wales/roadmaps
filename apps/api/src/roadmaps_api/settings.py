@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 ENV: Final = "ROADMAPS_ENV"
 DATABASE_URL: Final = "ROADMAPS_DATABASE_URL"
 ALLOWED_HOSTS: Final = "ROADMAPS_ALLOWED_HOSTS"
+EDITOR_ORIGIN: Final = "ROADMAPS_EDITOR_ORIGIN"
 # Only the migration tooling reads it (`migration_url`): an API process that holds it
 # refuses to start, in every environment, so no server holds the migration login
 # (STY-091 D31).
@@ -34,6 +35,8 @@ OTLP_ENDPOINT: Final = "OTEL_EXPORTER_OTLP_ENDPOINT"
 SERVICE_NAME: Final = "ROADMAPS_SERVICE_NAME"
 DEFAULT_SERVICE_NAME: Final = "roadmaps-api"
 _SERVICE_NAME_FORM = re.compile(r"[a-z0-9-]{1,63}")
+_DEFAULT_PORTS: Final = {"http": 80, "https": 443}
+_ASCII_SPACE: Final = 0x20
 
 # Set by Cloud Run in a service, a job and a worker pool: a local environment there still
 # writes no message to the log (ADR-018 _Records and retention_).
@@ -57,6 +60,8 @@ class Settings:
     database_url: str = field(repr=False)
     # Host names without a port, never a wildcard.
     allowed_hosts: tuple[str, ...]
+    # Canonical `scheme://host[:port]` origin of the editor, for same-origin checks (ADR-020).
+    editor_origin: str
     max_body_bytes: int = MAX_BODY_BYTES
     # Whether log lines carry an exception's and a third party's message: only a
     # developer's own machine, never test, production or Cloud Run (ADR-018).
@@ -101,8 +106,18 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         invalid.append(MIGRATION_DATABASE_URL)
 
     hosts = tuple(host.strip().lower() for host in environ.get(ALLOWED_HOSTS, "").split(","))
-    if not all(hosts) or any("*" in host for host in hosts):
+    hosts_valid = bool(all(hosts) and not any("*" in host for host in hosts))
+    if not hosts_valid:
         invalid.append(ALLOWED_HOSTS)
+
+    on_cloud_run = any(marker in environ for marker in CLOUD_RUN_MARKERS)
+    strict_origin = environment is Environment.PRODUCTION or on_cloud_run
+    parsed_origin = parse_origin(environ.get(EDITOR_ORIGIN, "").strip())
+    if parsed_origin is None or (
+        strict_origin
+        and (parsed_origin[0] != "https" or (hosts_valid and parsed_origin[1] not in hosts))
+    ):
+        invalid.append(EDITOR_ORIGIN)
 
     # Empty is unset, as OpenTelemetry reads it; checked before its trailing slash goes.
     otlp_endpoint = environ.get(OTLP_ENDPOINT, "").strip() or None
@@ -115,11 +130,12 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
 
     if invalid:
         refuse(invalid)
-    on_cloud_run = any(marker in environ for marker in CLOUD_RUN_MARKERS)
+    assert parsed_origin is not None  # noqa: S101 - guaranteed when invalid is empty
     return Settings(
         environment=environment,
         database_url=database_url,
         allowed_hosts=hosts,
+        editor_origin=parsed_origin[2],
         writes_messages=environment is Environment.LOCAL and not on_cloud_run,
         otlp_endpoint=otlp_endpoint.removesuffix("/") if otlp_endpoint else None,
         service_name=service_name,
@@ -159,3 +175,40 @@ def is_http_url(url: str) -> bool:
     except ValueError:
         return False
     return parts.scheme in {"http", "https"} and bool(parts.hostname)
+
+
+def parse_origin(raw: str) -> tuple[str, str, str] | None:
+    """Parses a bare `scheme://host[:port]` origin into `(scheme, host_token, canonical)`.
+
+    Refuses any path (including a trailing slash), query, fragment, userinfo, wildcard,
+    whitespace, control character or malformed/zero port. Lowercases scheme and host and
+    strips default `:80`/`:443` ports for exact string matching (STY-105 D7).
+    """
+    if (
+        not raw
+        or "://" not in raw
+        or "?" in raw
+        or "#" in raw
+        or any(ch.isspace() or ord(ch) < _ASCII_SPACE for ch in raw)
+    ):
+        return None
+    raw_scheme, rest = raw.split("://", 1)
+    scheme = raw_scheme.lower()
+    if scheme not in _DEFAULT_PORTS or not rest or "/" in rest or "@" in rest or "*" in rest:
+        return None
+    try:
+        parts = urlsplit(f"{scheme}://{rest}")
+        port = parts.port
+    except ValueError:
+        return None
+    hostname = parts.hostname
+    if not hostname:
+        return None
+    host_token = f"[{hostname}]" if ":" in hostname else hostname
+    expected_netloc = host_token if port is None else f"{host_token}:{port}"
+    if rest.lower() != expected_netloc or port == 0:
+        return None
+    if port == _DEFAULT_PORTS[scheme]:
+        port = None
+    canonical = f"{scheme}://{host_token}" if port is None else f"{scheme}://{host_token}:{port}"
+    return scheme, host_token, canonical

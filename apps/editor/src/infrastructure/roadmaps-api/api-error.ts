@@ -13,6 +13,11 @@ interface Mapping {
  * _Errors_). Several codes may share a kind, which alone picks the copy (ADR-008).
  */
 const BY_CODE: Record<ErrorCode, Mapping> = {
+  "auth.unauthenticated": { kind: "unauthenticated", retryable: false },
+  "auth.person_mismatch": { kind: "unauthenticated", retryable: false },
+  "authz.forbidden": { kind: "forbidden", retryable: false },
+  "request.origin_not_allowed": { kind: "unknown", retryable: false },
+  "request.unsupported_media_type": { kind: "unknown", retryable: false },
   "request.not_found": { kind: "not-found", retryable: false },
   "request.method_not_allowed": { kind: "unknown", retryable: false },
   "request.invalid": { kind: "unknown", retryable: false },

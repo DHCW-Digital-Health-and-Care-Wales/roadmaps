@@ -56,3 +56,23 @@ SHIPPED_ROLE_NAMES: Final[Mapping[ShippedRoleKey, str]] = MappingProxyType(
         ShippedRoleKey.VIEWER: "Viewer",
     }
 )
+
+
+def validate_shipped_roles(
+    roles: Mapping[ShippedRoleKey, frozenset[Permission]] = SHIPPED_ROLES,
+) -> None:
+    """Validates code-level shipped role definitions against `Permission` at startup (D11)."""
+    expected_keys = set(ShippedRoleKey)
+    if set(roles) != expected_keys:
+        msg = "SHIPPED_ROLES is missing one or more ShippedRoleKey entries"
+        raise ValueError(msg)
+    for role_key, permissions in roles.items():
+        for permission in permissions:
+            if not isinstance(permission, Permission):
+                try:
+                    Permission(permission)
+                except ValueError:
+                    msg = f"Shipped role {role_key.value!r} contains an unknown permission"
+                    raise ValueError(msg) from None
+                msg = f"Shipped role {role_key.value!r} must use Permission enum members"
+                raise TypeError(msg)

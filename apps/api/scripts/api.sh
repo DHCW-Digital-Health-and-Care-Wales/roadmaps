@@ -29,17 +29,19 @@ worktree_value() {
 }
 
 if [ -f "$ENV_FILE" ]; then
+  DEV_PORT="$(worktree_value DEV_PORT)"
   API_PORT="$(worktree_value API_PORT)"
   DB_PORT="$(worktree_value DB_PORT)"
   DB_PROJECT="$(worktree_value API_DB_PROJECT)"
   SLOT="$(worktree_value WORKTREE_SLOT)"
-  if [ -z "$API_PORT" ] || [ -z "$DB_PORT" ] || [ -z "$DB_PROJECT" ] || [ -z "$SLOT" ]; then
-    echo "api: .env.worktree has no API_PORT, DB_PORT, API_DB_PROJECT or WORKTREE_SLOT — rerun pnpm worktree:setup" >&2
+  if [ -z "$DEV_PORT" ] || [ -z "$API_PORT" ] || [ -z "$DB_PORT" ] || [ -z "$DB_PROJECT" ] || [ -z "$SLOT" ]; then
+    echo "api: .env.worktree has no DEV_PORT, API_PORT, DB_PORT, API_DB_PROJECT or WORKTREE_SLOT — rerun pnpm worktree:setup" >&2
     exit 1
   fi
   SERVICE_NAME="roadmaps-api-$SLOT"
 else
-  # The editor's dev proxy falls back to the same 8000 (scripts/worktree/dev-ports.ts).
+  # The editor's dev proxy falls back to the same 5173 and 8000 (scripts/worktree/dev-ports.ts).
+  DEV_PORT=5173
   API_PORT=8000
   DB_PORT=15432
   DB_PROJECT=roadmaps-api
@@ -99,6 +101,7 @@ case "${1:-}" in
     export ROADMAPS_ENV=local
     export ROADMAPS_DATABASE_URL="$APP_DATABASE_URL"
     export ROADMAPS_ALLOWED_HOSTS="127.0.0.1,localhost"
+    export ROADMAPS_EDITOR_ORIGIN="http://localhost:$DEV_PORT"
     export ROADMAPS_SERVICE_NAME="$SERVICE_NAME"
     # --local-traces: the shared Jaeger, if it answers now and no endpoint is set.
     exec uv run --locked python -m roadmaps_api.server --port "$API_PORT" --reload --local-traces

@@ -21,6 +21,7 @@ SETTINGS: Final = Settings(
     environment=Environment.PRODUCTION,
     database_url="postgresql+psycopg://openapi@database.invalid/openapi",
     allowed_hosts=("openapi.invalid",),
+    editor_origin="https://openapi.invalid",
 )
 
 

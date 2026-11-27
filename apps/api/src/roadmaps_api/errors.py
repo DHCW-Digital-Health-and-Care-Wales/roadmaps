@@ -27,6 +27,11 @@ from roadmaps_api.wire import ApiResponseModel
 
 
 class ErrorCode(StrEnum):
+    UNAUTHENTICATED = "auth.unauthenticated"
+    PERSON_MISMATCH = "auth.person_mismatch"
+    FORBIDDEN = "authz.forbidden"
+    ORIGIN_NOT_ALLOWED = "request.origin_not_allowed"
+    UNSUPPORTED_MEDIA_TYPE = "request.unsupported_media_type"
     NOT_FOUND = "request.not_found"
     METHOD_NOT_ALLOWED = "request.method_not_allowed"
     INVALID = "request.invalid"
@@ -36,6 +41,26 @@ class ErrorCode(StrEnum):
 
 # Each code's status and the English sentence its `detail` carries.
 _ERRORS: Final[dict[ErrorCode, tuple[HTTPStatus, str]]] = {
+    ErrorCode.UNAUTHENTICATED: (
+        HTTPStatus.UNAUTHORIZED,
+        "You need to sign in to continue.",
+    ),
+    ErrorCode.PERSON_MISMATCH: (
+        HTTPStatus.CONFLICT,
+        "The signed-in person does not match this request.",
+    ),
+    ErrorCode.FORBIDDEN: (
+        HTTPStatus.FORBIDDEN,
+        "You do not have permission to do this.",
+    ),
+    ErrorCode.ORIGIN_NOT_ALLOWED: (
+        HTTPStatus.FORBIDDEN,
+        "This request's origin is not allowed.",
+    ),
+    ErrorCode.UNSUPPORTED_MEDIA_TYPE: (
+        HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
+        "The request body must be JSON.",
+    ),
     ErrorCode.NOT_FOUND: (HTTPStatus.NOT_FOUND, "Nothing is found at this path."),
     ErrorCode.METHOD_NOT_ALLOWED: (
         HTTPStatus.METHOD_NOT_ALLOWED,

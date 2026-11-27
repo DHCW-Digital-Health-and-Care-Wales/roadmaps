@@ -45,6 +45,9 @@ ALLOWED_EXTRA_FIELDS: Final = frozenset(
         "invalid_settings",
         # A revision `/ready` found ahead of the code's, only once it reads `NNNN_<slug>`.
         "revision",
+        # Authorisation events (STY-105 D11): IDs only, never raw unknown permission strings.
+        "tenant_id",
+        "role_id",
     }
 )
 

@@ -31,6 +31,7 @@ SERVER_ENVIRONMENT = {
     "ROADMAPS_ENV": "production",
     "ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL,
     "ROADMAPS_ALLOWED_HOSTS": "127.0.0.1,localhost",
+    "ROADMAPS_EDITOR_ORIGIN": "https://localhost",
 }
 
 

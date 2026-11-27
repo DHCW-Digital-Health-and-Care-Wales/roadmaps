@@ -2,8 +2,8 @@
 
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 2b, 3a, 4a, 5a);
   stories start `Needs grilling` / `Placeholder` and become selectable as each is grilled
-- **Progress**: 4 of 10 terminal; next selectable: `STY-105` (`STY-108` Done ahead of
-  `STY-107` per `STY-108` D10; `STY-106` also grilled and unblocks once `STY-105` is Done)
+- **Progress**: 5 of 10 terminal; next selectable: `STY-106` (`STY-108` Done ahead of
+  `STY-107` per `STY-108` D10; `STY-105` Done, unblocking `STY-106`)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary
@@ -139,7 +139,7 @@ coverage, and adding seeder factories under `apps/api/tools/seed/` for every new
 | STY-093 | [A deterministic seeder](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-093-a-deterministic-seeder.md)                                                                                                                   | API                                                           | STY-103                            | ✅    |
 | CHO-049 | [Every route's database wait has a deadline](../chores/CHO-049-every-routes-database-wait-has-a-deadline.md)                                                                                                                            | API                                                           | —                                  |       |
 | STY-104 | [Platform operator CLI for tenants, bootstrap invitations and person control](STY-104-platform-operator-cli-for-tenants-bootstrap-invitations-and-person-control.md)                                                                    | API                                                           | STY-102, STY-103, STY-106          |       |
-| STY-105 | [Route authorisation policy, tenant dependency and same-origin guard](STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md)                                                                                    | API                                                           | STY-103                            |       |
+| STY-105 | [Route authorisation policy, tenant dependency and same-origin guard](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-105-route-authorisation-policy-tenant-dependency-and-same-origin-guard.md)                          | API                                                           | STY-103                            | ✅    |
 | STY-106 | [OIDC sign-in, server-side sessions, local mock provider and `/me`](STY-106-oidc-sign-in-server-side-sessions-local-mock-provider-and-me.md)                                                                                            | API + Infrastructure + CI/CD                                  | STY-093, STY-102, STY-103, STY-105 |       |
 | STY-107 | [Editor optional API mode, reshaped AuthClient and stub roadmap repository](STY-107-editor-optional-api-mode-reshaped-auth-client-and-stub-roadmap-repository.md)                                                                       | Domain + Infrastructure + Features/UI + i18n (en + cy)        | STY-106                            |       |
 | STY-108 | [UX prototypes for sign-in, account, invitation acceptance and members management](../_archive/EPC-024-tenancy-sign-in-and-optional-api-mode/STY-108-ux-prototypes-for-sign-in-account-invitation-acceptance-and-members-management.md) | Docs                                                          | —                                  | ✅    |
@@ -167,8 +167,8 @@ flowchart LR
   and enforcement suite, Done), `STY-108` (app shell and `STY-109` UX prototypes, Done
   ahead of `STY-107` per `STY-108` D10; Outcome 1A, 2B, 3B, 4A), and `CHO-049`
   (independent DB timeout chore).
-- **After `STY-103`**: `STY-093` (seeder, Done) and `STY-105` (authorisation & CSRF framework)
-  can run in parallel.
+- **After `STY-103`**: `STY-093` (seeder, Done) and `STY-105` (authorisation & CSRF
+  framework, Done) can run in parallel.
 - **After `STY-093`, `STY-102`, `STY-103` and `STY-105`**: `STY-106` lands OIDC sign-in,
   sessions, `/me` and the local mock provider (importing `STY-093`'s `local_mock` persona
   specs; cyber review of `STY-102` proceeds in parallel and gates hosted deployment,

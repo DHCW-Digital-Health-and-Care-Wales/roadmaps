@@ -27,10 +27,17 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.exceptions import HTTPException  # noqa: TID251
 
 from roadmaps_api.app import create_app
+from roadmaps_api.authz import PolicyAPIRoute, public
 from roadmaps_api.settings import Environment, Settings, load_settings
 from roadmaps_api.wire import ApiRequestModel
 
 TEST_HOST: Final = "testserver"
+TEST_EDITOR_ORIGIN: Final = f"http://{TEST_HOST}"
+SAME_ORIGIN_HEADERS: Final = {"Sec-Fetch-Site": "same-origin"}
+SAME_ORIGIN_JSON_HEADERS: Final = {
+    "Sec-Fetch-Site": "same-origin",
+    "Content-Type": "application/json",
+}
 # A port where nothing listens: the database is down.
 DOWN_DATABASE_URL: Final = "postgresql+psycopg://roadmaps:roadmaps@127.0.0.1:1/roadmaps"
 PLANTED: Final = "PLANTED-VALUE-7f3a"
@@ -70,8 +77,14 @@ def make_settings(
     url: str = DOWN_DATABASE_URL,
     environment: Environment = Environment.TEST,
     hosts: tuple[str, ...] = (TEST_HOST,),
+    editor_origin: str = TEST_EDITOR_ORIGIN,
 ) -> Settings:
-    return Settings(environment=environment, database_url=url, allowed_hosts=hosts)
+    return Settings(
+        environment=environment,
+        database_url=url,
+        allowed_hosts=hosts,
+        editor_origin=editor_origin,
+    )
 
 
 class Echo(ApiRequestModel):
@@ -79,7 +92,7 @@ class Echo(ApiRequestModel):
 
 
 def add_test_routes(app: FastAPI) -> FastAPI:
-    router = APIRouter(prefix="/test")
+    router = APIRouter(prefix="/test", route_class=PolicyAPIRoute, dependencies=[public()])
     app.state.unread_calls = 0
 
     @router.post("/echo")
@@ -106,13 +119,13 @@ def add_test_routes(app: FastAPI) -> FastAPI:
 
     # Routers included in another, under a prefix of their own and one given at include
     # time, as the contract's resources will be under /api/v1.
-    nested = APIRouter(prefix="/nested")
+    nested = APIRouter(prefix="/nested", route_class=PolicyAPIRoute, dependencies=[public()])
 
     @nested.get("/{item_id}")
     def nested_item(item_id: str) -> dict[str, str]:
         return {"item": item_id}
 
-    admin = APIRouter()
+    admin = APIRouter(route_class=PolicyAPIRoute, dependencies=[public()])
 
     @admin.get("/things/{thing_id}")
     def thing(thing_id: str) -> dict[str, str]:

@@ -9,6 +9,11 @@ type Mapping = readonly [kind: AppErrorKind, retryable: boolean]
 
 /** Each code the API's contract names, with the status the API sends it with. */
 const CODES: Readonly<Record<ErrorCode, readonly [number, ...Mapping]>> = {
+  "auth.unauthenticated": [401, "unauthenticated", false],
+  "auth.person_mismatch": [409, "unauthenticated", false],
+  "authz.forbidden": [403, "forbidden", false],
+  "request.origin_not_allowed": [403, "unknown", false],
+  "request.unsupported_media_type": [415, "unknown", false],
   "request.not_found": [404, "not-found", false],
   "request.method_not_allowed": [405, "unknown", false],
   "request.invalid": [422, "unknown", false],

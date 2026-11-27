@@ -7,6 +7,7 @@ from fastapi import FastAPI, Query
 from fastapi.testclient import TestClient
 
 from roadmaps_api.app import create_app
+from roadmaps_api.authz import public
 from roadmaps_api.errors import ErrorCode, ErrorResponse
 from roadmaps_api.settings import Environment
 from roadmaps_api.wire import ApiResponseModel
@@ -23,10 +24,10 @@ def validating_app() -> FastAPI:
     """The API with routes FastAPI documents a 422 for, as the contract's will be."""
     app = create_app(make_settings())
 
-    @app.get("/test/validating")
+    @app.get("/test/validating", dependencies=[public()])
     def validating(page_size: Annotated[int, Query(alias="pageSize")] = 1) -> None: ...
 
-    @app.get("/test/own-refusal", responses={422: {"model": OtherRefusal}})
+    @app.get("/test/own-refusal", responses={422: {"model": OtherRefusal}}, dependencies=[public()])
     def own_refusal(page_size: Annotated[int, Query(alias="pageSize")] = 1) -> None: ...
 
     return app
@@ -86,7 +87,7 @@ def test_a_route_added_after_the_document_is_built_is_shaped_too() -> None:
     app = create_app(make_settings())
     app.openapi()
 
-    @app.get("/test/later")
+    @app.get("/test/later", dependencies=[public()])
     def later(count: int = 1) -> None: ...
 
     assert schema_of_422(app.openapi(), "/test/later") == {"$ref": ERROR_RESPONSE_REF}

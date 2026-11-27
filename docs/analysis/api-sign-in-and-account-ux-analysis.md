@@ -293,8 +293,8 @@ journeys:
   organisation band (`Organisation: Digital Health and Care Wales`, folded to a `DHCW`
   rail chip), compact icon-only 375px phone account button (#2a), and the future `Members`
   utility slot reserved directly beneath `Families, categories and organisations` for
-  `STY-113` (omitted in `STY-109` per Journey 1's recommendation — "when `STY-113` ships"
-  — and `STY-109` Out of scope, #9a).
+  `STY-113` (omitted in `STY-109` per _Decisions needed_ #9(a) and `STY-109` Out of
+  scope).
 - **Journey 2 — Design 2B:** centred single-column card (`max-width: 520px`) on a clean
   header-only shell for Sign-in, refusals (dedicated refusal screen for `not_invited` /
   `person_disabled`, inline dismissible `AuthNotice` on Sign-in for retryable

@@ -144,11 +144,10 @@ categories and organisations` for `STY-113`), Journey 2 **Design 2B** (centred
   active-org members, with per-identity email in `Sign-in methods` and one-line role
   summary), and Journey 4 as recommended (**Design 4A**). Recorded in
   `api-sign-in-and-account-ux-analysis.md` (_Outcome_), `STY-109` D6, and `STY-113` D3;
-  omitting `Members` in `STY-109` (#9a) follows Journey 1's recommendation ("when
-  `STY-113` ships") and `STY-109` Out of scope. Remaining undrawn sub-decisions (#7–#8
-  sign-out pending edits and new-tab return UX; #11 `STY-106`/`STY-107` wire names and
-  `prompt=select_account`) carried into `STY-109` (`Q4`–`Q5`) and `STY-106` (`Q3`)
-  grilling.
+  omitting `Members` in `STY-109` (#9a) follows _Decisions needed_ #9(a) and `STY-109`
+  Out of scope. Remaining undrawn sub-decisions (#7–#8 sign-out pending edits and new-tab
+  return UX; #11 `STY-106`/`STY-107` wire names and `prompt=select_account`) carried into
+  `STY-109` (`Q4`–`Q5`) and `STY-106` (`Q3`) grilling.
 
 ## Out of scope
 
@@ -166,7 +165,8 @@ categories and organisations` for `STY-113`), Journey 2 **Design 2B** (centred
 
 Phase 1 (prototypes and analysis) and Phase 2 (owner Outcome recorded in
 `docs/analysis/api-sign-in-and-account-ux-analysis.md`, carried into `STY-109` D6 and
-`Q4`–`Q5` plus `STY-106` `Q3`, and `STY-108` archived as Done) completed per D9.
+`Q4`–`Q5`, `STY-113` D3, and `STY-106` `Q3`, and `STY-108` archived as Done) completed
+per D9.
 
 ### Departures
 

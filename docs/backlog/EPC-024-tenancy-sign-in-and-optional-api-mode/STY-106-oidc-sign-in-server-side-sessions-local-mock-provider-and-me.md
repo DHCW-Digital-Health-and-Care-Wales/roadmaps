@@ -132,8 +132,8 @@ definer functions, leaving active and recent records untouched
     uninvited Google account (S1/S3 currently specify `prompt=select_account` only after
     `sign-out`) and matches Design 2B/3B.
   - (b) Keep `prompt=select_account` strictly post-sign-out and omit `lastSignInAt` from
-    `/me` — narrower initial API contract, requiring `STY-109` to adapt `"Try a different
-account"` and omit last sign-in time on Account.
+    `/me` — narrower initial API contract, amending S3 and requiring `STY-109` to adapt
+    `"Try a different account"` and omit last sign-in time on Account.
 
 ## Decisions
 

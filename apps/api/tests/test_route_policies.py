@@ -2,7 +2,7 @@
 
 Covers startup route verification (`create_app` wiring and `verify_app_routes`),
 `PolicyAPIRoute` registration checks, pure same-origin and media-type rules (D6-D8),
-person-assertion (D5) and D9's fixed evaluation order before DB-backed tenant resolution.
+person-assertion (D5) and fixed evaluation order before DB-backed tenant resolution (D9).
 """
 
 from collections.abc import Callable, Iterator
@@ -43,7 +43,7 @@ from roadmaps_api.errors import ApiError, ErrorCode
 from roadmaps_api.routes import api_v1
 from roadmaps_api.settings import MAX_BODY_BYTES, Environment
 from roadmaps_api.wire import ApiRequestModel
-from tests.support import PLANTED, TEST_EDITOR_ORIGIN, make_settings
+from tests.support import PLANTED, SAME_ORIGIN_HEADERS, TEST_EDITOR_ORIGIN, make_settings
 
 PERSON_A = UUID("01950000-0000-7000-8000-000000000001")
 PERSON_B = UUID("01950000-0000-7000-8000-000000000002")
@@ -63,7 +63,10 @@ def test_create_app_runs_startup_policy_and_shipped_role_checks(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     app = create_app(make_settings())
-    assert app.router.route_class is PolicyAPIRoute
+    try:
+        assert app.router.route_class is PolicyAPIRoute
+    finally:
+        app.state.engine.dispose()
 
     rogue_router = APIRouter(prefix="/api/v1")
     rogue_router.routes.append(APIRoute("/rogue", lambda: {"ok": "no"}, methods=["GET"]))
@@ -93,25 +96,27 @@ def test_every_route_on_create_app_is_classified_and_public_routes_match_allow_l
     environment: Environment, expected_public: frozenset[tuple[str, str]]
 ) -> None:
     app = create_app(make_settings(environment=environment))
+    try:
+        verify_app_routes(app)
+        assert list(app.router._iter_low_priority_routes()) == []  # noqa: SLF001 - D10
 
-    verify_app_routes(app)
-    assert list(app.router._iter_low_priority_routes()) == []  # noqa: SLF001 - D10
-
-    discovered_public: set[tuple[str, str]] = set()
-    for ctx in iter_route_contexts(app.routes):
-        original = ctx.original_route
-        assert ctx.methods
-        assert ctx.path_format
-        if isinstance(original, PolicyAPIRoute):
-            if original.policy.kind is PolicyKind.PUBLIC:
+        discovered_public: set[tuple[str, str]] = set()
+        for ctx in iter_route_contexts(app.routes):
+            original = ctx.original_route
+            assert ctx.methods
+            assert ctx.path_format
+            if isinstance(original, PolicyAPIRoute):
+                if original.policy.kind is PolicyKind.PUBLIC:
+                    for method in ctx.methods:
+                        discovered_public.add((method, ctx.path_format))
+            else:
+                assert type(original) is Route
                 for method in ctx.methods:
                     discovered_public.add((method, ctx.path_format))
-        else:
-            assert type(original) is Route
-            for method in ctx.methods:
-                discovered_public.add((method, ctx.path_format))
 
-    assert discovered_public == expected_public
+        assert discovered_public == expected_public
+    finally:
+        app.state.engine.dispose()
 
 
 def test_policy_api_route_refuses_missing_duplicate_or_invalid_policy() -> None:
@@ -184,19 +189,22 @@ def test_policy_api_route_defaults_omitted_methods_to_get() -> None:
 
 def test_tenant_route_with_include_time_tenant_slug_prefix_passes_verify() -> None:
     app = create_app(make_settings())
-    sub = APIRouter(route_class=PolicyAPIRoute)
+    try:
+        sub = APIRouter(route_class=PolicyAPIRoute)
 
-    @sub.get("/items", dependencies=[tenant_member()])
-    def list_items() -> dict[str, str]:
-        return {"status": "ok"}
+        @sub.get("/items", dependencies=[tenant_member()])
+        def list_items() -> dict[str, str]:
+            return {"status": "ok"}
 
-    @sub.post("/items", dependencies=[tenant_permission(Permission.LISTS_EDIT)])
-    def create_item() -> dict[str, str]:
-        return {"status": "ok"}
+        @sub.post("/items", dependencies=[tenant_permission(Permission.LISTS_EDIT)])
+        def create_item() -> dict[str, str]:
+            return {"status": "ok"}
 
-    app.include_router(sub, prefix="/api/v1/tenants/{tenantSlug}")
+        app.include_router(sub, prefix="/api/v1/tenants/{tenantSlug}")
 
-    verify_app_routes(app)
+        verify_app_routes(app)
+    finally:
+        app.state.engine.dispose()
 
 
 def _add_unapproved_public(app: FastAPI) -> None:
@@ -225,6 +233,32 @@ def _add_include_duplicate_policy(app: FastAPI) -> None:
         return {"ok": "no"}
 
     app.include_router(sub, prefix="/api/v1", dependencies=[public()])
+
+
+def _add_include_body_dependency(app: FastAPI) -> None:
+    def needs_body(body: Payload) -> Payload:
+        return body
+
+    sub = APIRouter(route_class=PolicyAPIRoute)
+
+    @sub.post("/included-body", dependencies=[signed_in()])
+    def included_body() -> dict[str, str]:
+        return {"ok": "no"}
+
+    app.include_router(sub, prefix="/api/v1", dependencies=[Depends(needs_body)])
+
+
+def _add_dependency_before_policy(app: FastAPI) -> None:
+    def side_effect() -> None:
+        return None
+
+    sub = APIRouter(route_class=PolicyAPIRoute)
+
+    @sub.get("/dep-first", dependencies=[signed_in()])
+    def dep_first() -> dict[str, str]:
+        return {"ok": "no"}
+
+    app.include_router(sub, prefix="/api/v1", dependencies=[Depends(side_effect)])
 
 
 def _add_mutated_empty_methods(app: FastAPI) -> None:
@@ -329,6 +363,8 @@ ILLICIT_ROUTES: dict[str, Callable[[FastAPI], None]] = {
     "a tenant_member route without {tenantSlug}": _add_tenant_without_slug,
     "a tenant_permission route without {tenantSlug}": _add_permission_without_slug,
     "a router inclusion adding a duplicate policy": _add_include_duplicate_policy,
+    "a router inclusion adding a body dependency": _add_include_body_dependency,
+    "a router-level dependency ahead of the policy": _add_dependency_before_policy,
     "a PolicyAPIRoute mutated to methods=[]": _add_mutated_empty_methods,
     "a plain FastAPI APIRoute": _add_plain_api_route,
     "a plain FastAPI APIRoute carrying a valid policy": _add_plain_api_route_with_policy,
@@ -353,10 +389,12 @@ def test_verify_app_routes_refuses_every_illicit_route(
     tamper: Callable[[FastAPI], None],
 ) -> None:
     app = create_app(make_settings())
-    tamper(app)
-
-    with pytest.raises(RoutePolicyError):
-        verify_app_routes(app)
+    try:
+        tamper(app)
+        with pytest.raises(RoutePolicyError):
+            verify_app_routes(app)
+    finally:
+        app.state.engine.dispose()
 
 
 # ---------------------------------------------------------------------------
@@ -421,49 +459,101 @@ def test_enforce_same_origin_rules(headers: list[tuple[str, str]], *, allowed: b
         assert raised.value.code is ErrorCode.ORIGIN_NOT_ALLOWED
 
 
-BODY_MEDIA_CASES: dict[str, tuple[list[tuple[str, str]], bool]] = {
-    "application/json": ([("Content-Type", "application/json")], True),
-    "application/json with charset": ([("Content-Type", "application/json; charset=utf-8")], True),
-    "APPLICATION/JSON uppercase with params": (
+MEDIA_TYPE_CASES: dict[str, tuple[bool, list[tuple[str, str]], bool]] = {
+    "body: application/json": (True, [("Content-Type", "application/json")], True),
+    "body: application/json with charset": (
+        True,
+        [("Content-Type", "application/json; charset=utf-8")],
+        True,
+    ),
+    "body: APPLICATION/JSON uppercase with params": (
+        True,
         [("Content-Type", "APPLICATION/JSON; charset=UTF-8")],
         True,
     ),
-    "missing Content-Type on body route": ([], False),
-    "empty Content-Type on body route": ([("Content-Type", "")], False),
-    "text/plain": ([("Content-Type", "text/plain")], False),
-    "application/x-www-form-urlencoded": (
+    "body: missing Content-Type": (True, [], False),
+    "body: empty Content-Type": (True, [("Content-Type", "")], False),
+    "body: text/plain": (True, [("Content-Type", "text/plain")], False),
+    "body: application/x-www-form-urlencoded": (
+        True,
         [("Content-Type", "application/x-www-form-urlencoded")],
         False,
     ),
-    "multipart/form-data": ([("Content-Type", "multipart/form-data; boundary=x")], False),
-    "application/problem+json": ([("Content-Type", "application/problem+json")], False),
-    "duplicate Content-Type": (
+    "body: multipart/form-data": (
+        True,
+        [("Content-Type", "multipart/form-data; boundary=x")],
+        False,
+    ),
+    "body: application/problem+json": (
+        True,
+        [("Content-Type", "application/problem+json")],
+        False,
+    ),
+    "body: duplicate Content-Type": (
+        True,
         [("Content-Type", "application/json"), ("Content-Type", "application/json")],
+        False,
+    ),
+    "bodyless: no Content-Type and no body headers": (False, [], True),
+    "bodyless: Content-Length 0 and no Content-Type": (False, [("Content-Length", "0")], True),
+    "bodyless: application/json": (False, [("Content-Type", "application/json")], True),
+    "bodyless: text/plain": (False, [("Content-Type", "text/plain")], False),
+    "bodyless: form content-type": (
+        False,
+        [("Content-Type", "application/x-www-form-urlencoded")],
+        False,
+    ),
+    "bodyless: multipart content-type": (
+        False,
+        [("Content-Type", "multipart/form-data; boundary=a")],
+        False,
+    ),
+    "bodyless: non-zero Content-Length without Content-Type": (
+        False,
+        [("Content-Length", "5")],
+        False,
+    ),
+    "bodyless: Transfer-Encoding without Content-Type": (
+        False,
+        [("Transfer-Encoding", "chunked")],
+        False,
+    ),
+    "bodyless: duplicate Content-Length without Content-Type": (
+        False,
+        [("Content-Length", "0"), ("Content-Length", "0")],
         False,
     ),
 }
 
 
-@pytest.mark.parametrize(("headers", "allowed"), BODY_MEDIA_CASES.values(), ids=BODY_MEDIA_CASES)
-def test_enforce_json_media_type_for_body_routes(
-    headers: list[tuple[str, str]], *, allowed: bool
+@pytest.mark.parametrize(
+    ("expects_body", "headers", "allowed"),
+    MEDIA_TYPE_CASES.values(),
+    ids=MEDIA_TYPE_CASES,
+)
+def test_enforce_json_media_type(
+    *, expects_body: bool, headers: list[tuple[str, str]], allowed: bool
 ) -> None:
     raw = _raw_headers(headers)
     if allowed:
-        enforce_json_media_type(raw, expects_body=True)
+        enforce_json_media_type(raw, expects_body=expects_body)
     else:
         with pytest.raises(ApiError) as raised:
-            enforce_json_media_type(raw, expects_body=True)
+            enforce_json_media_type(raw, expects_body=expects_body)
         assert raised.value.code is ErrorCode.UNSUPPORTED_MEDIA_TYPE
 
 
 # ---------------------------------------------------------------------------
-# S4: PolicyAPIRoute wiring, bodyless HTTP framing, person assertion & D9 order
+# S4: PolicyAPIRoute wiring, person assertion & evaluation order
 # ---------------------------------------------------------------------------
 
 
-def _build_guard_app(*, principal: AuthenticatedPrincipal | None = None) -> FastAPI:
-    app = create_app(make_settings())
+def _build_guard_app(
+    *,
+    principal: AuthenticatedPrincipal | None = None,
+    editor_origin: str = TEST_EDITOR_ORIGIN,
+) -> FastAPI:
+    app = create_app(make_settings(editor_origin=editor_origin))
     router = APIRouter(prefix="/test-guard", route_class=PolicyAPIRoute)
 
     @router.post("/public-body", dependencies=[public()])
@@ -532,69 +622,70 @@ def test_same_origin_guard_runs_on_every_non_safe_method(
     refused = anon_guard_client.request(method, path)
     assert (refused.status_code, refused.json()["code"]) == (403, "request.origin_not_allowed")
 
-    allowed = anon_guard_client.request(method, path, headers={"Sec-Fetch-Site": "same-origin"})
+    allowed = anon_guard_client.request(method, path, headers=SAME_ORIGIN_HEADERS)
     assert allowed.status_code == 200
 
 
-BODYLESS_MEDIA_CASES: dict[
-    str, tuple[str, list[tuple[str, str]], bytes | Iterator[bytes] | None, int]
-] = {
-    "POST without Content-Type or body": ("POST", [], None, 200),
-    "DELETE without Content-Type or body": ("DELETE", [], None, 200),
-    "POST with Content-Length: 0 and no Content-Type": (
-        "POST",
-        [("Content-Length", "0")],
-        b"",
-        200,
-    ),
-    "POST with application/json": ("POST", [("Content-Type", "application/json")], b"", 200),
-    "POST with text/plain and empty body": ("POST", [("Content-Type", "text/plain")], b"", 415),
-    "POST with form content-type and empty body": (
-        "POST",
-        [("Content-Type", "application/x-www-form-urlencoded")],
-        b"",
-        415,
-    ),
-    "POST with multipart content-type and empty body": (
-        "POST",
-        [("Content-Type", "multipart/form-data; boundary=a")],
-        b"",
-        415,
-    ),
-    "POST with non-zero body and no Content-Type": ("POST", [], b"hello", 415),
-    "POST with chunked stream and no Content-Type": ("POST", [], iter([b"x"]), 415),
-    "POST with duplicate Content-Length and no Content-Type": (
-        "POST",
-        [("Content-Length", "0"), ("Content-Length", "0")],
-        b"",
-        415,
-    ),
-}
+def test_same_origin_guard_uses_configured_editor_origin() -> None:
+    custom_origin = "https://custom-editor.example"
+    app = _build_guard_app(editor_origin=custom_origin)
+    with TestClient(app) as client:
+        matching = client.post("/test-guard/public-empty", headers={"Origin": custom_origin})
+        assert matching.status_code == 200
+
+        wrong_origin = client.post(
+            "/test-guard/public-empty", headers={"Origin": "https://other.example"}
+        )
+        assert (wrong_origin.status_code, wrong_origin.json()["code"]) == (
+            403,
+            "request.origin_not_allowed",
+        )
+
+        disagreeing = client.post(
+            "/test-guard/public-empty",
+            headers={**SAME_ORIGIN_HEADERS, "Origin": "https://other.example"},
+        )
+        assert (disagreeing.status_code, disagreeing.json()["code"]) == (
+            403,
+            "request.origin_not_allowed",
+        )
 
 
-@pytest.mark.parametrize(
-    ("method", "headers", "content", "expected"),
-    BODYLESS_MEDIA_CASES.values(),
-    ids=BODYLESS_MEDIA_CASES,
-)
-def test_json_media_type_guard_on_bodyless_routes(
+def test_json_media_type_guard_wiring_for_body_and_bodyless_routes(
     anon_guard_client: TestClient,
-    method: str,
-    headers: list[tuple[str, str]],
-    content: bytes | Iterator[bytes] | None,
-    expected: int,
 ) -> None:
-    path = "/test-guard/public-delete" if method == "DELETE" else "/test-guard/public-empty"
-    response = anon_guard_client.request(
-        method,
-        path,
-        headers=[("Sec-Fetch-Site", "same-origin"), *headers],
-        content=content,
+    # Body route: allows JSON and refuses non-JSON.
+    assert (
+        anon_guard_client.post(
+            "/test-guard/public-body", headers=SAME_ORIGIN_HEADERS, json={"title": "ok"}
+        ).status_code
+        == 200
+    )
+    bad_body = anon_guard_client.post(
+        "/test-guard/public-body",
+        headers={**SAME_ORIGIN_HEADERS, "Content-Type": "text/plain"},
+        content=b"hello",
+    )
+    assert (bad_body.status_code, bad_body.json()["code"]) == (
+        415,
+        "request.unsupported_media_type",
     )
 
-    assert response.status_code == expected
-    if expected == 415:
-        assert response.json()["code"] == "request.unsupported_media_type"
+    # Bodyless route: allows empty POST/DELETE; refuses unlabelled framed or chunked payloads.
+    assert (
+        anon_guard_client.delete(
+            "/test-guard/public-delete", headers=SAME_ORIGIN_HEADERS
+        ).status_code
+        == 200
+    )
+    for content in (b"hello", iter([b"x"])):
+        unlabelled = anon_guard_client.post(
+            "/test-guard/public-empty", headers=SAME_ORIGIN_HEADERS, content=content
+        )
+        assert (unlabelled.status_code, unlabelled.json()["code"]) == (
+            415,
+            "request.unsupported_media_type",
+        )
 
 
 PERSON_HEADER_CASES: dict[str, tuple[list[tuple[str, str]], int]] = {
@@ -620,7 +711,7 @@ def test_person_assertion_header_on_authenticated_state_changing_routes(
 ) -> None:
     response = authed_guard_client.put(
         "/test-guard/signed-in-empty",
-        headers=[("Sec-Fetch-Site", "same-origin"), *extra_headers],
+        headers=[*SAME_ORIGIN_HEADERS.items(), *extra_headers],
     )
 
     assert response.status_code == expected
@@ -645,13 +736,13 @@ def test_safe_get_and_public_post_ignore_person_assertion_header(
     assert (
         authed_guard_client.post(
             "/test-guard/public-empty",
-            headers={"Sec-Fetch-Site": "same-origin", PERSON_ASSERTION_HEADER: str(PERSON_B)},
+            headers={**SAME_ORIGIN_HEADERS, PERSON_ASSERTION_HEADER: str(PERSON_B)},
         ).status_code
         == 200
     )
 
 
-def test_d9_evaluation_order_on_authenticated_body_route(
+def test_guard_and_dependency_evaluation_order_on_authenticated_body_route(
     anon_guard_client: TestClient, authed_guard_client: TestClient
 ) -> None:
     # 1. Declared Content-Length above limit answers 413 even without same-origin/JSON.
@@ -675,7 +766,7 @@ def test_d9_evaluation_order_on_authenticated_body_route(
     # 3. Valid origin + bad content-type beats invalid JSON and auth -> 415.
     bad_ct = anon_guard_client.patch(
         "/test-guard/signed-in-patch",
-        headers={"Sec-Fetch-Site": "same-origin", "Content-Type": "text/plain"},
+        headers={**SAME_ORIGIN_HEADERS, "Content-Type": "text/plain"},
         content=b"not-json",
     )
     assert (bad_ct.status_code, bad_ct.json()["code"]) == (
@@ -686,7 +777,7 @@ def test_d9_evaluation_order_on_authenticated_body_route(
     # 4. Valid origin + application/json + malformed JSON -> 422 json_invalid.
     bad_json = anon_guard_client.patch(
         "/test-guard/signed-in-patch",
-        headers={"Sec-Fetch-Site": "same-origin", "Content-Type": "application/json"},
+        headers={**SAME_ORIGIN_HEADERS, "Content-Type": "application/json"},
         content=b"{bad",
     )
     assert (bad_json.status_code, bad_json.json()["code"]) == (422, "request.invalid")
@@ -695,7 +786,7 @@ def test_d9_evaluation_order_on_authenticated_body_route(
     # 5. Valid JSON (even failing Pydantic validation) + anonymous -> 401 before 422.
     unauth = anon_guard_client.patch(
         "/test-guard/signed-in-patch",
-        headers={"Sec-Fetch-Site": "same-origin"},
+        headers=SAME_ORIGIN_HEADERS,
         json={"wrongField": 1},
     )
     assert (unauth.status_code, unauth.json()["code"]) == (401, "auth.unauthenticated")
@@ -703,7 +794,7 @@ def test_d9_evaluation_order_on_authenticated_body_route(
     # 6. Signed in + missing person assertion beats Pydantic validation -> 409 before 422.
     mismatch = authed_guard_client.patch(
         "/test-guard/signed-in-patch",
-        headers={"Sec-Fetch-Site": "same-origin"},
+        headers=SAME_ORIGIN_HEADERS,
         json={"wrongField": 1},
     )
     assert (mismatch.status_code, mismatch.json()["code"]) == (409, "auth.person_mismatch")
@@ -711,10 +802,7 @@ def test_d9_evaluation_order_on_authenticated_body_route(
     # 7. Signed in + matching person assertion + invalid Pydantic fields -> 422.
     invalid_body = authed_guard_client.patch(
         "/test-guard/signed-in-patch",
-        headers={
-            "Sec-Fetch-Site": "same-origin",
-            PERSON_ASSERTION_HEADER: str(PERSON_A),
-        },
+        headers={**SAME_ORIGIN_HEADERS, PERSON_ASSERTION_HEADER: str(PERSON_A)},
         json={"wrongField": 1},
     )
     assert (invalid_body.status_code, invalid_body.json()["code"]) == (422, "request.invalid")
@@ -730,29 +818,3 @@ def test_wrong_method_still_answers_405_with_allow_header_before_guards(
     delete_post = anon_guard_client.delete("/test-guard/public-body")
     assert delete_post.status_code == 405
     assert delete_post.headers["Allow"] == "POST"
-
-
-def test_include_time_body_dependency_still_requires_json_before_auth() -> None:
-    def needs_body(body: Payload) -> Payload:
-        return body
-
-    app = create_app(make_settings())
-    sub = APIRouter(route_class=PolicyAPIRoute)
-
-    @sub.post("/with-included-body", dependencies=[signed_in()])
-    def endpoint() -> dict[str, str]:
-        return {"status": "ok"}
-
-    app.include_router(sub, prefix="/test-guard", dependencies=[Depends(needs_body)])
-    verify_app_routes(app)
-
-    with TestClient(app) as client:
-        response = client.post(
-            "/test-guard/with-included-body",
-            headers={"Sec-Fetch-Site": "same-origin"},
-        )
-
-    assert (response.status_code, response.json()["code"]) == (
-        415,
-        "request.unsupported_media_type",
-    )

@@ -6,12 +6,21 @@ bound to one tenant under tenant-scoped RLS (`TENANT_POLICY`) to read `role_perm
 Neither repository ends a transaction.
 """
 
+from dataclasses import dataclass
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from roadmaps_api.models import Membership, RolePermission, Tenant
+
+
+@dataclass(frozen=True, slots=True)
+class ActiveMembership:
+    """Resolved active membership for a person in one tenant."""
+
+    tenant_id: UUID
+    role_id: UUID
 
 
 class AuthorisationRepository:
@@ -22,8 +31,8 @@ class AuthorisationRepository:
 
     def find_active_membership_by_slug(
         self, *, tenant_slug: str, person_id: UUID
-    ) -> tuple[UUID, UUID] | None:
-        """Returns `(tenant_id, role_id)` for an active membership, or `None`."""
+    ) -> ActiveMembership | None:
+        """Returns the caller's active membership for `tenant_slug`, or `None`."""
         row = self._session.execute(
             select(Tenant.id, Membership.role_id)
             .join(Membership, Membership.tenant_id == Tenant.id)
@@ -33,7 +42,7 @@ class AuthorisationRepository:
                 Membership.ended_at.is_(None),
             )
         ).one_or_none()
-        return (row[0], row[1]) if row is not None else None
+        return ActiveMembership(tenant_id=row[0], role_id=row[1]) if row is not None else None
 
 
 class TenantAuthorisationRepository:

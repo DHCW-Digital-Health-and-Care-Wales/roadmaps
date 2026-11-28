@@ -5,11 +5,7 @@ from typing import Any, Final, override
 
 from fastapi import FastAPI, Request, Response
 from fastapi.dependencies.models import Dependant
-from fastapi.routing import (
-    APIRoute,
-    _effective_route_context_var,
-    iter_route_contexts,
-)
+from fastapi.routing import APIRoute, RouteContext, iter_route_contexts
 from starlette.routing import Route
 
 from roadmaps_api.authz.guards import SAFE_METHODS, enforce_json_media_type, enforce_same_origin
@@ -77,13 +73,7 @@ class PolicyAPIRoute(APIRoute):
     @override
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         original_handler = super().get_route_handler()
-        # Match FastAPI's own effective-context lookup so body parameters introduced by
-        # include-time router dependencies are also guarded upfront (STY-105 D8, D9).
-        effective = _effective_route_context_var.get()
-        effective_route = (
-            effective if effective is not None and effective.original_route is self else self
-        )
-        expects_body = effective_route.body_field is not None
+        expects_body = self.body_field is not None
 
         async def guarded_handler(request: Request) -> Response:
             if request.method not in SAFE_METHODS:
@@ -94,13 +84,39 @@ class PolicyAPIRoute(APIRoute):
         return guarded_handler
 
 
+def _verify_policy_route(
+    ctx: RouteContext, original: PolicyAPIRoute, methods: set[str] | None, path_format: str
+) -> None:
+    if not methods or not methods.issubset(ALLOWED_METHODS):
+        msg = f"Route {path_format!r} has empty or disallowed HTTP methods"
+        raise RoutePolicyError(msg)
+    policy = extract_route_policy(ctx.dependant)
+    if ctx.body_field is not None and original.body_field is None:
+        msg = f"Route {path_format!r} inherits a body parameter from a router include"
+        raise RoutePolicyError(msg)
+    if getattr(ctx.dependant.dependencies[0].call, POLICY_ATTR, _MISSING) is not policy:
+        msg = f"Route {path_format!r} must place its policy dependency first"
+        raise RoutePolicyError(msg)
+    if policy.kind is PolicyKind.PUBLIC:
+        if any((method, path_format) not in PUBLIC_ROUTES for method in methods):
+            msg = f"Public route {path_format!r} is not in PUBLIC_ROUTES"
+            raise RoutePolicyError(msg)
+    elif policy.kind in {PolicyKind.TENANT_MEMBER, PolicyKind.TENANT_PERMISSION} and (
+        "{tenantSlug}" not in path_format or "tenantSlug" not in ctx.param_convertors
+    ):
+        msg = f"Tenant-scoped route {path_format!r} must include '{{tenantSlug}}'"
+        raise RoutePolicyError(msg)
+
+
 def verify_app_routes(app: FastAPI) -> None:
     """Default-deny startup verification of every route on `app` (STY-105 D10).
 
     Admits only:
     1. A `PolicyAPIRoute` with non-empty methods within `ALLOWED_METHODS`, one valid
-       effective policy, `{tenantSlug}` on tenant policies, and `PUBLIC_ROUTES` membership
-       for `public()` routes.
+       effective policy placed first in the dependency list (no router-level or
+       include-time dependency running ahead of it), no body parameter inherited solely
+       from a router include, `{tenantSlug}` on tenant policies, and `PUBLIC_ROUTES`
+       membership for `public()` routes.
     2. A plain Starlette `Route` with a non-`None`, non-empty method set whose every
        `(method, path)` is in the active public allow-list (local `/api/v1/openapi.json`
        only when `serves_live_openapi` is enabled).
@@ -121,19 +137,7 @@ def verify_app_routes(app: FastAPI) -> None:
         path_format = ctx.path_format or ""
 
         if type(original) is PolicyAPIRoute:
-            if not methods or not methods.issubset(ALLOWED_METHODS):
-                msg = f"Route {path_format!r} has empty or disallowed HTTP methods"
-                raise RoutePolicyError(msg)
-            policy = extract_route_policy(ctx.dependant)
-            if policy.kind is PolicyKind.PUBLIC:
-                if any((method, path_format) not in PUBLIC_ROUTES for method in methods):
-                    msg = f"Public route {path_format!r} is not in PUBLIC_ROUTES"
-                    raise RoutePolicyError(msg)
-            elif policy.kind in {PolicyKind.TENANT_MEMBER, PolicyKind.TENANT_PERMISSION} and (
-                "{tenantSlug}" not in path_format or "tenantSlug" not in ctx.param_convertors
-            ):
-                msg = f"Tenant-scoped route {path_format!r} must include '{{tenantSlug}}'"
-                raise RoutePolicyError(msg)
+            _verify_policy_route(ctx, original, methods, path_format)
         elif type(original) is Route:
             if not methods or any(
                 (method, path_format) not in allowed_public for method in methods

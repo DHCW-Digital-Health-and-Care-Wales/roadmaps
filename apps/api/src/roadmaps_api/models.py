@@ -55,12 +55,18 @@ class SoftEndMixin:
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+TENANT_SLUG_MIN_LENGTH: Final = 2
+TENANT_SLUG_MAX_LENGTH: Final = 63
+TENANT_SLUG_PATTERN: Final = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
+
+
 class Tenant(Base):
     __tablename__ = "tenants"
     __table_args__ = (
         UniqueConstraint("slug", name="uq_tenants_slug"),
         CheckConstraint(
-            "length(slug) BETWEEN 2 AND 63 AND slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'",
+            f"length(slug) BETWEEN {TENANT_SLUG_MIN_LENGTH} AND {TENANT_SLUG_MAX_LENGTH}"
+            f" AND slug ~ '{TENANT_SLUG_PATTERN}'",
             name="slug_format",
         ),
         CheckConstraint("btrim(name_en) <> ''", name="name_en_non_blank"),

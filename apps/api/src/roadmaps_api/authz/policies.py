@@ -12,7 +12,7 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Annotated, Final, TypeGuard
 from uuid import UUID
 
 from fastapi import Depends, Request
@@ -23,6 +23,11 @@ from roadmaps_api.authz.guards import SAFE_METHODS
 from roadmaps_api.authz.permissions import Permission
 from roadmaps_api.database import Sessions, session_info
 from roadmaps_api.errors import ApiError, ErrorCode
+from roadmaps_api.models import (
+    TENANT_SLUG_MAX_LENGTH,
+    TENANT_SLUG_MIN_LENGTH,
+    TENANT_SLUG_PATTERN,
+)
 from roadmaps_api.repositories.authorisation import (
     AuthorisationRepository,
     TenantAuthorisationRepository,
@@ -33,12 +38,9 @@ logger = logging.getLogger(__name__)
 PERSON_ASSERTION_HEADER: Final = "X-Roadmaps-Person-Id"
 POLICY_ATTR: Final = "_roadmaps_route_policy"
 
-# Matches `tenants.slug` (`ck_tenants_slug_format` in models.py): 2..63 lowercase
-# alphanumeric/hyphen characters. Refusing malformed slugs (including NUL bytes) upfront
-# keeps non-existent lookups a uniform 404 before touching PostgreSQL.
-_MIN_SLUG_LENGTH: Final = 2
-_MAX_SLUG_LENGTH: Final = 63
-_TENANT_SLUG_FORM: Final = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+# Shared with `Tenant`'s `ck_tenants_slug_format` constraint: refusing malformed slugs
+# (including NUL bytes) upfront keeps non-existent lookups a uniform 404 before PostgreSQL.
+_TENANT_SLUG_FORM: Final = re.compile(TENANT_SLUG_PATTERN)
 
 
 class RoutePolicyError(RuntimeError):
@@ -113,10 +115,10 @@ def _parse_permission(raw: str) -> Permission | None:
         return None
 
 
-def _is_valid_tenant_slug(value: object) -> bool:
+def _is_valid_tenant_slug(value: object) -> TypeGuard[str]:
     return (
         isinstance(value, str)
-        and _MIN_SLUG_LENGTH <= len(value) <= _MAX_SLUG_LENGTH
+        and TENANT_SLUG_MIN_LENGTH <= len(value) <= TENANT_SLUG_MAX_LENGTH
         and _TENANT_SLUG_FORM.fullmatch(value) is not None
     )
 
@@ -146,7 +148,6 @@ def resolve_tenant_context(
     tenant_slug = request.path_params.get("tenantSlug")
     if not _is_valid_tenant_slug(tenant_slug):
         raise ApiError(ErrorCode.NOT_FOUND)
-    assert isinstance(tenant_slug, str)  # noqa: S101 - narrowed by _is_valid_tenant_slug
 
     # Transaction 1 (person-scoped RLS): resolve active membership for the named tenant slug.
     with sessions(info=session_info(person_id=principal.person_id)) as session:
@@ -155,7 +156,8 @@ def resolve_tenant_context(
         )
     if membership is None:
         raise ApiError(ErrorCode.NOT_FOUND)
-    tenant_id, role_id = membership
+    tenant_id = membership.tenant_id
+    role_id = membership.role_id
 
     # Transaction 2 (tenant-scoped RLS): read role_permissions and parse strictly via Permission.
     with sessions(info=session_info(tenant_id=tenant_id, person_id=principal.person_id)) as session:

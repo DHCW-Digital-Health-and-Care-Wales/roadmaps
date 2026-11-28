@@ -58,7 +58,7 @@ describe("travel (STY-072)", () => {
   })
 
   it("makes the move as a view transition typed by how far it goes", () => {
-    const start = withViewTransitions({ delay: 0 })
+    const start = withViewTransitions()
 
     travel("within", update)
     travel("across", update)
@@ -89,7 +89,7 @@ describe("travel (STY-072)", () => {
   })
 
   it("makes the move at once where the system asks for reduced motion (S4)", () => {
-    const start = withViewTransitions({ delay: 0 })
+    const start = withViewTransitions()
     matchMediaQueries(REDUCED_MOTION)
 
     travel("within", update)

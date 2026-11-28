@@ -81,8 +81,8 @@ ignore = [
 "starlette.exceptions.HTTPException".msg = "Raise roadmaps_api.errors.ApiError, whose code the envelope carries (ADR-017 Errors)."
 "jose".msg = "python-jose is banned; use joserfc inside roadmaps_api.identity (ADR-018, STY-106 D4)."
 "authlib.jose".msg = "authlib.jose is deprecated; use joserfc inside roadmaps_api.identity (ADR-018, STY-106 D4)."
-"time.sleep".msg = "A fixed pause makes a test pass by luck: wait on an Event or a condition, or poll with tests.support.wait_until_serving."
-"asyncio.sleep".msg = "A fixed pause makes a test pass by luck: wait on an Event or a condition."
+"time.sleep".msg = "A fixed pause passes or fails by timing: wait on an Event or a condition (a test polling a server uses tests.support.wait_until_serving)."
+"asyncio.sleep".msg = "A fixed pause passes or fails by timing: wait on an Event or a condition."
 
 [tool.ty.terminal]
 error-on-warning = true

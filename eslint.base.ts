@@ -4,7 +4,7 @@ import prettier from "eslint-config-prettier/flat"
 import jsxA11y from "eslint-plugin-jsx-a11y-x"
 import reactHooks from "eslint-plugin-react-hooks"
 import { reactRefresh } from "eslint-plugin-react-refresh"
-import type { Linter } from "eslint"
+import type { Linter, Rule } from "eslint"
 import { defineConfig } from "eslint/config"
 import globals from "globals"
 import tseslint from "typescript-eslint"
@@ -55,29 +55,43 @@ const FIXED_PAUSE =
   "A fixed pause makes a test pass or fail by timing: await the state itself (waitFor, expect.poll), hold what the code waits for and release it, or move a faked clock (vi.useFakeTimers, page.clock)."
 
 /**
- * No test waits a fixed time: a timer, a timer promise, Playwright's `waitForTimeout` or
+ * What waits a fixed time: a timer, a timer promise, Playwright's `waitForTimeout` or
  * msw's `delay` short of `"infinite"`. A pause too short passes without the overlap or
  * the wait it means to show; one long enough to be safe is slow.
  */
+const FIXED_PAUSES = [
+  "CallExpression[callee.name=/^set(Timeout|Interval)$/]",
+  "CallExpression[callee.property.name=/^set(Timeout|Interval)$/]",
+  "CallExpression[callee.property.name='waitForTimeout']",
+  "CallExpression[callee.name='delay']:not([arguments.0.value='infinite'])",
+  "ImportDeclaration[source.value=/^(node:)?timers(\\/promises)?$/]",
+]
+
+/**
+ * A rule of its own rather than `no-restricted-syntax`, whose options a later block for
+ * the same files replaces (the editor's e2e and design-token rules set it).
+ */
+const noFixedPause: Rule.RuleModule = {
+  meta: { type: "problem", schema: [], messages: { pause: FIXED_PAUSE } },
+  create(context) {
+    const report = (node: Rule.Node) => {
+      context.report({ node, messageId: "pause" })
+    }
+    return Object.fromEntries(FIXED_PAUSES.map((pause) => [pause, report]))
+  },
+}
+
+/** Tests and the helpers they use wait on a state, never a fixed time. */
 export const noFixedPausesInTests: Linter.Config = {
   files: [
     "**/*.test.{ts,tsx}",
     "**/*.spec.ts",
-    "**/tests/e2e/**/*.ts",
     "**/e2e/**/*.ts",
+    "**/testing/**/*.{ts,tsx}",
+    "**/test/**/*.{ts,tsx}",
   ],
-  rules: {
-    "no-restricted-syntax": [
-      "error",
-      ...[
-        "CallExpression[callee.name=/^set(Timeout|Interval)$/]",
-        "CallExpression[callee.property.name=/^set(Timeout|Interval)$/]",
-        "CallExpression[callee.property.name='waitForTimeout']",
-        "CallExpression[callee.name='delay']:not([arguments.0.value='infinite'])",
-        "ImportDeclaration[source.value=/^(node:)?timers(\\/promises)?$/]",
-      ].map((selector) => ({ selector, message: FIXED_PAUSE })),
-    ],
-  },
+  plugins: { tests: { rules: { "no-fixed-pause": noFixedPause } } },
+  rules: { "tests/no-fixed-pause": "error" },
 }
 
 interface ReactAppOptions {
@@ -136,8 +150,8 @@ export function reactAppConfig(
         ],
       },
     },
-    ...appConfigs,
     noFixedPausesInTests,
+    ...appConfigs,
     prettier,
   )
 }

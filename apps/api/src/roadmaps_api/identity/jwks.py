@@ -50,7 +50,8 @@ class DiscoveryDocument:
     jwks_uri: str
 
 
-type EntryLock = AbstractContextManager[object]
+# Exits returning None, so a lock never swallows an error raised under it.
+type EntryLock = AbstractContextManager[object, None]
 
 
 @dataclass

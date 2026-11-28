@@ -1,6 +1,6 @@
 import { join } from "node:path"
 
-import { ESLint } from "eslint"
+import { ESLint, type Linter } from "eslint"
 import tseslint from "typescript-eslint"
 import { describe, expect, it } from "vitest"
 
@@ -69,5 +69,21 @@ describe("e2e lint rules", () => {
 
   it("leaves other code alone", async () => {
     expect(await lint(throttle, "src/lib/example.ts")).toEqual([])
+  })
+})
+
+describe("the editor's lint config", () => {
+  it("bans fixed pauses beside the e2e restrictions, which no block replaces", async () => {
+    const config = (await new ESLint({
+      cwd: join(import.meta.dirname, ".."),
+    }).calculateConfigForFile("tests/e2e/press.spec.ts")) as Linter.Config
+    const [, ...restricted] = (config.rules?.["no-restricted-syntax"] ??
+      []) as { message: string }[]
+
+    expect(config.rules?.["tests/no-fixed-pause"]).toEqual([2])
+    expect(restricted.map((entry) => entry.message)).toEqual([
+      expect.stringContaining("Do not slow the CPU in a test"),
+      expect.stringContaining("Read a box with boxOf or boxesOf"),
+    ])
   })
 })

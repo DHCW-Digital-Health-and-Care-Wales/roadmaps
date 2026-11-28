@@ -289,12 +289,14 @@ amendments_; the rest of _STY-091 amendments_ stands.
 From STY-105's route authorisation (2026-11-27), which ADR-019 binds; recorded here at
 the owner's request in the review of PR 346 (2026-11-28). The rest of _Layering_ stands.
 
-- **`authz` is a layer between services and repositories**: route →
-  service → `authz` → repository. `roadmaps_api.authz` holds each route's declared
-  policy, the principal and tenant dependencies, the permission catalogue and the
-  same-origin and media-type guards (ADR-019, ADR-020). Routes declare their policy
-  from it and services take its principal and permission types; it reads memberships
-  and role permissions through repositories, never a service or a route.
+- **`authz` is a layer between services and repositories** in import order, not a
+  call chain: routes and services import from `roadmaps_api.authz`, which imports
+  repositories and never a service or a route. It holds each route's declared policy,
+  the principal and tenant dependencies, the permission catalogue and the same-origin
+  and media-type guards (ADR-019, ADR-020). Routes declare their policy from it,
+  services take its principal and permission types, and it reads memberships and role
+  permissions through repositories. The session service it needs to authenticate a
+  request reaches it at run time through a protocol `app.py` wires, not an import.
 - **Enforced** by the same import-linter `layers` contract, which lists
   `roadmaps_api.authz` between `services` and `repositories`
   (`apps/api/pyproject.toml`).

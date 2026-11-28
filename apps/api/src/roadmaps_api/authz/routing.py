@@ -13,11 +13,13 @@ from roadmaps_api.authz.policies import POLICY_ATTR, PolicyKind, RoutePolicy, Ro
 
 ALLOWED_METHODS: Final = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE"})
 
-# Reviewed allow-list of public endpoints (ADR-019 _Enforcement_, STY-105 S1, D10).
+# Reviewed allow-list of public endpoints (ADR-019 _Enforcement_, STY-105 S1, D10, STY-106 D11).
 PUBLIC_ROUTES: Final[frozenset[tuple[str, str]]] = frozenset(
     {
         ("GET", "/health"),
         ("GET", "/ready"),
+        ("POST", "/api/v1/auth/sign-in"),
+        ("GET", "/api/v1/auth/callback/{provider}"),
     }
 )
 LOCAL_OPENAPI_ROUTES: Final[frozenset[tuple[str, str]]] = frozenset(

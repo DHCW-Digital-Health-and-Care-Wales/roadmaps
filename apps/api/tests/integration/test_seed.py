@@ -53,11 +53,15 @@ from tools.seed import (
     InvitationInput,
     MembershipInput,
     PersonInput,
+    SessionInput,
+    SignInTransactionInput,
     TenantSpec,
     create_invitation,
     create_membership,
     create_person_with_identity,
+    create_session,
     create_shipped_roles,
+    create_sign_in_transaction,
     create_tenant,
     derive_invitation_token,
     hash_invitation_token,
@@ -170,6 +174,9 @@ def test_seed_truncates_manual_edits_populates_all_tables_via_real_triggers_and_
     assert tenant_slugs == {DHCW_SLUG, CWM_AUR_SLUG}
     for table in ALL_SEEDED_TABLES:
         assert _table_count(worker_admin, table) > 0, f"expected rows in {table}"
+    # D14: pnpm api:seed leaves sign_in_transactions and sessions empty.
+    for empty_table in ("sessions", "sign_in_transactions"):
+        assert _table_count(worker_admin, empty_table) == 0, f"expected 0 rows in {empty_table}"
 
     for seeded_tenant in result.tenants:
         scopes = {
@@ -610,6 +617,37 @@ def test_seed_factories_are_reusable_directly(
                 ),
             )
             assert invitation.id is not None
+        identity = admin_session.scalars(
+            select(Identity).where(Identity.person_id == person.id)
+        ).one()
+        from uuid import UUID  # noqa: PLC0415
+
+        explicit_session_id = UUID("01960000-0000-7000-8000-000000000101")
+        explicit_tx_id = UUID("01960000-0000-7000-8000-000000000102")
+        auth_session = create_session(
+            admin_session,
+            SessionInput(
+                person_id=person.id,
+                identity_id=identity.id,
+                raw_token="factory-session-token",  # noqa: S106 - test fixture token
+                signed_in_at=FIXED_NOW,
+                session_id=explicit_session_id,
+            ),
+        )
+        assert auth_session.id == explicit_session_id
+        tx = create_sign_in_transaction(
+            admin_session,
+            SignInTransactionInput(
+                raw_state="factory-state",
+                raw_cookie_token="factory-cookie-token",  # noqa: S106 - test fixture token
+                nonce="factory-nonce",
+                code_verifier="factory-verifier",
+                created_at=FIXED_NOW,
+                expires_at=FIXED_NOW + timedelta(minutes=10),
+                transaction_id=explicit_tx_id,
+            ),
+        )
+        assert tx.id == explicit_tx_id
         tenant_id = tenant.id
         person_id = person.id
         admin_session.commit()

@@ -32,6 +32,7 @@ if [ -f "$ENV_FILE" ]; then
   DEV_PORT="$(worktree_value DEV_PORT)"
   API_PORT="$(worktree_value API_PORT)"
   DB_PORT="$(worktree_value DB_PORT)"
+  OIDC_PORT="$(worktree_value OIDC_PORT)"
   DB_PROJECT="$(worktree_value API_DB_PROJECT)"
   SLOT="$(worktree_value WORKTREE_SLOT)"
   if [ -z "$DEV_PORT" ] || [ -z "$API_PORT" ] || [ -z "$DB_PORT" ] || [ -z "$DB_PROJECT" ] || [ -z "$SLOT" ]; then
@@ -44,6 +45,7 @@ else
   DEV_PORT=5173
   API_PORT=8000
   DB_PORT=15432
+  OIDC_PORT=8001
   DB_PROJECT=roadmaps-api
   SERVICE_NAME=roadmaps-api
 fi
@@ -94,17 +96,29 @@ case "${1:-}" in
       uv run --locked python -m tools.seed "$@"
     ;;
   dev)
+    if [ -z "$OIDC_PORT" ]; then
+      echo "api: .env.worktree has no OIDC_PORT — rerun pnpm worktree:setup" >&2
+      exit 1
+    fi
     migrate
-    echo "==> API on http://127.0.0.1:$API_PORT, its database on 127.0.0.1:$DB_PORT" >&2
-    # The API refuses to start with the migration login in its environment.
-    unset ROADMAPS_MIGRATION_DATABASE_URL ROADMAPS_ADMIN_DATABASE_URL
+    echo "==> API on http://127.0.0.1:$API_PORT, mock OIDC on http://127.0.0.1:$OIDC_PORT, database on 127.0.0.1:$DB_PORT" >&2
+    # The API refuses to start with the migration or purge login in its environment.
+    unset ROADMAPS_MIGRATION_DATABASE_URL ROADMAPS_ADMIN_DATABASE_URL ROADMAPS_PURGE_DATABASE_URL
     export ROADMAPS_ENV=local
     export ROADMAPS_DATABASE_URL="$APP_DATABASE_URL"
     export ROADMAPS_ALLOWED_HOSTS="127.0.0.1,localhost"
     export ROADMAPS_EDITOR_ORIGIN="http://localhost:$DEV_PORT"
+    export ROADMAPS_LOCAL_MOCK_OIDC_URL="http://127.0.0.1:$OIDC_PORT"
     export ROADMAPS_SERVICE_NAME="$SERVICE_NAME"
+    uv run --locked python -m tools.mock_oidc --port "$OIDC_PORT" &
+    MOCK_OIDC_PID=$!
+    cleanup_mock_oidc() {
+      kill "$MOCK_OIDC_PID" 2>/dev/null || true
+      wait "$MOCK_OIDC_PID" 2>/dev/null || true
+    }
+    trap cleanup_mock_oidc EXIT INT TERM
     # --local-traces: the shared Jaeger, if it answers now and no endpoint is set.
-    exec uv run --locked python -m roadmaps_api.server --port "$API_PORT" --reload --local-traces
+    uv run --locked python -m roadmaps_api.server --port "$API_PORT" --reload --local-traces
     ;;
   jaeger)
     jaeger up --detach --wait --quiet-pull

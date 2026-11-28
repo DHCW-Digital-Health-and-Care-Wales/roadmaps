@@ -32,7 +32,7 @@ PORT_BASE=21000
 MAX_SLOT=99
 # A slot's ports, in offset order from its base: the one place the layout is
 # written down.
-PORT_VARS=(DEV_PORT PREVIEW_PORT SITE_DEV_PORT SITE_PREVIEW_PORT API_PORT DB_PORT)
+PORT_VARS=(DEV_PORT PREVIEW_PORT SITE_DEV_PORT SITE_PREVIEW_PORT API_PORT DB_PORT OIDC_PORT)
 
 # The Compose project of a slot's database container (apps/api/compose.yaml).
 db_project() {
@@ -256,6 +256,7 @@ Worktree slot $WORKTREE_SLOT
     site:lighthouse
   pnpm api:dev                          http://127.0.0.1:$API_PORT
   pnpm api:db:up, api:test (database)   127.0.0.1:$DB_PORT
+  pnpm api:dev (local mock OIDC)        http://127.0.0.1:$OIDC_PORT
 EOF
 }
 

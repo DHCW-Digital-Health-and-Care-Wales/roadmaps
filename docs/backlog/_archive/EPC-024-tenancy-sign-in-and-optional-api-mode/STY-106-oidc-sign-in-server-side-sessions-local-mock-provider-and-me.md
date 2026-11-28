@@ -1,9 +1,10 @@
 # STY-106: OIDC sign-in, server-side sessions, local mock provider and `/me`
 
-- **Status**: Proposed — grilled (D1–D15); selectable (STY-093, STY-102, STY-103 and STY-105 Done)
+- **Status**: Done — OIDC sign-in, opaque server-side sessions, `/me`, loopback mock OIDC
+  provider, retention purge CLIs and updated OpenAPI/editor contract
 - **Type**: Feature
 - **Area**: API + Infrastructure + CI/CD
-- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
+- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
 - **Depends on**: STY-093 (hard — exports canonical `local_mock` persona fixture specs
   from `tools/seed/`), STY-102 (hard — threat model written first, ADR-018 _EPC-024
   amendments_; cyber review runs in parallel and gates hosted deployment), STY-103
@@ -251,8 +252,77 @@ absolute_expires_at)`) — sharing one thin reusable runner module. Each script 
 
 - Testing mock-provider and non-HTTPS/loopback-issuer refusal against the built
   production container image: handed over to
-  [EPC-023](../EPC-023-hosting-and-infrastructure-security/README.md) (_The API's image
+  [EPC-023](../../EPC-023-hosting-and-infrastructure-security/README.md) (_The API's image
   and server_), where the Dockerfile and production image are built (ADR-018).
 - Invitation redemption (`purpose=redeem`, `STY-110` in EPC-025).
 - Microsoft Entra ID provider and identity linking (`purpose=link`, `EPC-028`).
 - Editor sign-in UI (`STY-107`, `STY-109`).
+
+## Delivery
+
+### Departures
+
+- **Two new API `ErrorCode`s for sign-in start (`auth.provider_not_enabled`,
+  `auth.provider_unavailable`):** `POST /api/v1/auth/sign-in` returns `400
+auth.provider_not_enabled` when a provider is disabled in settings and `503
+auth.provider_unavailable` when provider discovery fails, exported into OpenAPI /
+  `@roadmaps/api-types` and mapped in `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`.
+- **Callback query model ignores extra provider parameters:** `GET
+/api/v1/auth/callback/{provider}` uses a `ConfigDict(extra="ignore")` query model so
+  standard provider callback parameters (e.g. Google's `hd`, `authuser`, `scope`, `prompt`)
+  do not trigger `422` validation errors while JSON request bodies remain `extra="forbid"`.
+
+### Contract for dependents
+
+- **Schema & definer routines (`0003_sign_in_and_sessions.py`, `models.py`,
+  `tools/seed/factories.py`)**:
+  - Adds `sessions` and `sign_in_transactions` (forced RLS, zero direct `roadmaps_app`
+    table grants), read-only `person_select` RLS on `roles` and `role_permissions` (D7),
+    9 runtime `roadmaps_auth_definer` routines (`create_sign_in_transaction`,
+    `consume_sign_in_transaction`, `lookup_sign_in_identity`, `create_session`,
+    `lookup_session`, `touch_session_activity`, `extend_session`, `revoke_session`,
+    `revoke_all_person_sessions` granted to `roadmaps_app`), and 2 purge routines
+    (`purge_expired_sign_in_transactions`, `purge_ended_sessions` granted only to
+    `roadmaps_purge`).
+  - Exports `SessionInput`, `SignInTransactionInput`, `create_session` and
+    `create_sign_in_transaction` in `apps/api/tools/seed/factories.py`; `pnpm api:seed`
+    leaves both tables empty.
+- **OIDC client, session service & confinement (`roadmaps_api.identity`,
+  `roadmaps_api.services.sessions`, `pyproject.toml`)**:
+  - `authlib`, `joserfc` and `requests` are confined to `roadmaps_api.identity` by
+    `import-linter`; `roadmaps_api.repositories.sessions` is protected so only
+    `roadmaps_api.services.sessions` may import it; `jose` and `authlib.jose` are banned by
+    ruff.
+  - `get_current_principal` authenticates the `__Host-` session cookie (port-prefixed in
+    `local` mode via `Settings.session_cookie_name`), re-checks session/person status on
+    every request, and slides `idle_expires_at` at most once per minute (never on
+    `same-site`/`cross-site` `GET`).
+- **HTTP routes & OpenAPI (`routes/auth.py`, `apps/api/openapi.json`,
+  `packages/api-types/src/generated/`)**:
+  - `POST /api/v1/auth/sign-in` (`public`, `purpose: "sign-in"`, `returnPath` default `"/"`,
+    sets `__Host-` transaction cookie `SameSite=Lax`, `Max-Age=600`),
+    `GET /api/v1/auth/callback/{provider}` (`public`, redirects `302` to
+    `/#/auth/callback[?returnTo=…]` or `/#/sign-in?error=<code>`, sets `__Host-`
+    `SameSite=Strict` session cookie with no expiry attribute), `GET /api/v1/me`
+    (`signed_in`, memberships ordered `(id ASC, tenant_id ASC)`), `POST /api/v1/auth/extend`
+    (`signed_in`), `POST /api/v1/auth/sign-out` (`signed_in`), `POST /api/v1/auth/sign-out-all`
+    (`signed_in`).
+- **Local mock OIDC & worktree wiring (`apps/api/tools/mock_oidc/`, `apps/api/scripts/api.sh`,
+  `scripts/worktree/worktree.sh`)**:
+  - `OIDC_PORT` (worktree slot offset 6, default `8001` outside a worktree); `api.sh dev`
+    starts `python -m tools.mock_oidc --port $OIDC_PORT` on `127.0.0.1` and exports
+    `ROADMAPS_LOCAL_MOCK_OIDC_URL`.
+- **Retention purge CLIs (`roadmaps_api.purge`, `[project.scripts]`)**:
+  - `roadmaps-purge-transactions` and `roadmaps-purge-sessions` share
+    `roadmaps_api.purge.runner.run_purge` (zero CLI args, fail-closed on unexpected
+    `ROADMAPS_*` env vars, reading `ROADMAPS_PURGE_DATABASE_URL`, which the API refuses).
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/integration/test_auth.py` (`test_full_sign_in_refreshes_identity_sets_strict_cookies_and_serves_me`, `test_local_mode_cookies_carry_editor_origin_port_and_ignore_host_headers`, `test_sign_in_start_rejects_disabled_provider_unreachable_provider_and_bad_requests`, `test_uninvited_disabled_cancelled_and_faulty_sign_ins_are_refused`, `test_google_sign_in_for_person_with_entra_identity_redirects_entra_required`, `test_transaction_single_use_cookie_binding_provider_binding_and_concurrent_race`, `test_return_path_rejects_open_redirects_and_unsafe_characters`, `test_return_path_accepts_valid_relative_spa_paths`, `test_callback_and_me_edge_refusals`, `test_session_touch_and_create_race_recovery`), `apps/api/tests/test_identity.py` (`test_google_authorization_url_includes_pkce_s256_scopes_and_prompt_select_account`, `test_google_short_issuer_normalises_to_canonical_url_and_accepts_case_insensitive_hd`, `test_multi_audience_with_matching_azp_is_accepted`, `test_every_refused_jwt_claim_and_algorithm_is_rejected`, `test_jwks_key_rollover_rate_limited_refetch_and_stale_key_retention`, `test_cold_jwks_outage_and_redirects_fail_closed`, `test_jwks_and_client_edge_error_paths`), `apps/api/tests/test_confinement.py` (`test_ruff_bans_python_jose_and_deprecated_authlib_jose`, `test_import_linter_rejects_oidc_and_session_repository_confinement_breaks`), `apps/api/tests/integration/test_schema_and_privileges.py` (`test_expected_tables_keys_timestamps_composite_fks_and_no_native_enums`, `test_every_table_except_alembic_version_has_forced_rls_and_a_policy`, `test_exact_privileges_and_definer_bounds_after_migration`, `test_check_constraints_reject_invalid_values`), `apps/editor/src/infrastructure/roadmaps-api/api-error.test.ts` |
+| S2       | `apps/api/tests/integration/test_auth.py` (`test_uninvited_disabled_cancelled_and_faulty_sign_ins_are_refused`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| S3       | `apps/api/tests/integration/test_auth.py` (`test_full_sign_in_refreshes_identity_sets_strict_cookies_and_serves_me`, `test_session_idle_absolute_throttled_sliding_and_extend`, `test_sign_out_sign_out_all_and_person_disable_revoke_sessions`, `test_callback_and_me_edge_refusals`, `test_session_touch_and_create_race_recovery`), `apps/api/tests/integration/test_rls_isolation.py` (`test_person_keyed_policies_are_read_only_and_filter_ended_memberships`), `apps/api/tests/integration/test_authorisation.py` (`test_generated_role_by_route_matrix_exercises_every_route_and_principal`, `test_every_non_get_route_refuses_missing_same_origin_proof`, `test_every_non_exempt_get_route_makes_no_domain_write_and_cross_site_writes_nothing`, `test_real_session_cookie_get_me_tracks_bookkeeping_only_on_same_origin`), `apps/api/tests/test_identity.py` (`test_google_authorization_url_includes_pkce_s256_scopes_and_prompt_select_account`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| S4       | `apps/api/tests/test_settings.py` (`test_start_up_stops_naming_each_bad_setting_never_its_value`, `test_local_and_test_allow_omitting_google_and_enabling_loopback_mock`, `test_deployed_issuer_guard_refuses_non_https_and_loopback_issuers`, `test_the_settings_repr_leaves_out_the_database_url_and_the_otlp_endpoint`, `test_local_mock_empty_and_issuer_and_loopback_edge_helpers`), `apps/api/tests/test_identity.py` (`test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run`), `apps/api/tests/test_mock_oidc.py` (`test_mock_oidc_serves_discovery_jwks_picker_and_single_use_pkce_code`, `test_mock_oidc_server_refuses_outside_local_test_or_on_cloud_run`, `test_mock_oidc_fault_presets_invalid_requests_and_cli_entrypoint`), `apps/api/tests/test_api_script.py` (`test_api_script_dev_exports_editor_origin_from_worktree_dev_port`, `test_api_script_dev_fails_when_worktree_env_lacks_oidc_port`), `scripts/worktree/worktree.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| S5       | `apps/api/tests/integration/test_purge.py` (`test_purge_clis_reject_arguments_missing_url_and_unexpected_roadmaps_env_vars`, `test_purge_cli_logs_database_failure_type_without_message`, `test_purge_transactions_removes_only_rows_expired_over_one_day_ago`, `test_purge_sessions_removes_only_sessions_ended_over_thirty_days_ago`, `test_purge_console_scripts_run_and_refuse_unexpected_args`), `apps/api/tests/integration/test_schema_and_privileges.py` (`test_platform_and_purge_logins_have_no_direct_table_or_app_routine_access`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |

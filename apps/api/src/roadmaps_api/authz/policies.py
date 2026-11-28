@@ -11,8 +11,9 @@ import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Annotated, Final, TypeGuard
+from typing import Annotated, Final, Protocol, TypeGuard
 from uuid import UUID
 
 from fastapi import Depends, Request
@@ -73,10 +74,22 @@ class RoutePolicy:
 
 @dataclass(frozen=True)
 class AuthenticatedPrincipal:
-    """The authenticated person and session returned by `get_current_principal` (D14)."""
+    """The authenticated person and session returned by `get_current_principal` (D14, D13)."""
 
     person_id: UUID
     session_id: UUID
+    provider: str = "local_mock"
+    signed_in_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    idle_expires_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    absolute_expires_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+class SessionAuthenticator(Protocol):
+    """Protocol implemented by `SessionService` and wired at the composition root (`app.py`)."""
+
+    def authenticate(
+        self, *, raw_token: str, allow_activity_update: bool
+    ) -> AuthenticatedPrincipal | None: ...
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -95,9 +108,33 @@ class TenantContext:
         return self._sessions(info=session_info(tenant_id=self.tenant_id, person_id=self.person_id))
 
 
-def get_current_principal(_request: Request) -> AuthenticatedPrincipal:
-    """Session-authenticator seam (D14); STY-106 wires real cookie-hash lookup here."""
-    raise ApiError(ErrorCode.UNAUTHENTICATED)
+def _allows_activity_update(request: Request) -> bool:
+    """On GET, permits throttled activity updates only for same-origin or absent Sec-Fetch-Site."""
+    if request.method not in SAFE_METHODS:
+        return True
+    sec_fetch_sites = request.headers.getlist("sec-fetch-site")
+    if not sec_fetch_sites:
+        return True
+    return len(sec_fetch_sites) == 1 and sec_fetch_sites[0] == "same-origin"
+
+
+def get_current_principal(request: Request) -> AuthenticatedPrincipal:
+    """Authenticates the caller's `__Host-` session cookie via `SessionService` (D11-D12)."""
+    cookie_name: str = request.app.state.session_cookie_name
+    raw_token = request.cookies.get(cookie_name)
+    if not raw_token:
+        raise ApiError(ErrorCode.UNAUTHENTICATED)
+    make_authenticator: Callable[[sessionmaker[Session]], SessionAuthenticator] = (
+        request.app.state.make_session_authenticator
+    )
+    authenticator = make_authenticator(request.app.state.sessions)
+    principal = authenticator.authenticate(
+        raw_token=raw_token,
+        allow_activity_update=_allows_activity_update(request),
+    )
+    if principal is None:
+        raise ApiError(ErrorCode.UNAUTHENTICATED)
+    return principal
 
 
 def _parse_canonical_uuid(raw: str) -> UUID | None:

@@ -29,6 +29,8 @@ from roadmaps_api.wire import ApiResponseModel
 class ErrorCode(StrEnum):
     UNAUTHENTICATED = "auth.unauthenticated"
     PERSON_MISMATCH = "auth.person_mismatch"
+    PROVIDER_NOT_ENABLED = "auth.provider_not_enabled"
+    PROVIDER_UNAVAILABLE = "auth.provider_unavailable"
     FORBIDDEN = "authz.forbidden"
     ORIGIN_NOT_ALLOWED = "request.origin_not_allowed"
     UNSUPPORTED_MEDIA_TYPE = "request.unsupported_media_type"
@@ -48,6 +50,14 @@ _ERRORS: Final[dict[ErrorCode, tuple[HTTPStatus, str]]] = {
     ErrorCode.PERSON_MISMATCH: (
         HTTPStatus.CONFLICT,
         "The signed-in person does not match this request.",
+    ),
+    ErrorCode.PROVIDER_NOT_ENABLED: (
+        HTTPStatus.BAD_REQUEST,
+        "This sign-in provider is not available.",
+    ),
+    ErrorCode.PROVIDER_UNAVAILABLE: (
+        HTTPStatus.SERVICE_UNAVAILABLE,
+        "The sign-in provider is temporarily unavailable.",
     ),
     ErrorCode.FORBIDDEN: (
         HTTPStatus.FORBIDDEN,

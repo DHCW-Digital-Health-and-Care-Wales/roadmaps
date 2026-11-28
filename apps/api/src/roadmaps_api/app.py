@@ -12,10 +12,12 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from roadmaps_api.authz import PolicyAPIRoute, validate_shipped_roles, verify_app_routes
 from roadmaps_api.database import create_database_engine, create_sessions
 from roadmaps_api.errors import register_error_handlers
+from roadmaps_api.identity import OidcClient, build_provider_configs
 from roadmaps_api.middleware import RequestContext
 from roadmaps_api.migrations import latest_revision
 from roadmaps_api.openapi import document_refusals
 from roadmaps_api.routes import api_v1, probes
+from roadmaps_api.services.sessions import SessionService
 from roadmaps_api.settings import Settings, SettingsError, load_settings
 from roadmaps_api.tracing import INSTRUMENTATION, create_tracer_provider, trace_queries
 
@@ -47,6 +49,7 @@ def create_app(settings: Settings, *, span_exporter: SpanExporter | None = None)
     Its spans go to `span_exporter`, a test's, else to the settings' OTLP endpoint, if any.
     """
     validate_shipped_roles()
+    oidc_client = OidcClient(build_provider_configs(settings))
     tracer_provider = create_tracer_provider(settings, span_exporter)
     tracer = tracer_provider.get_tracer(INSTRUMENTATION)
     engine = create_database_engine(settings.database_url)
@@ -79,6 +82,10 @@ def create_app(settings: Settings, *, span_exporter: SpanExporter | None = None)
     app.state.engine = engine
     app.state.sessions = create_sessions(engine)
     app.state.editor_origin = settings.editor_origin
+    app.state.session_cookie_name = settings.session_cookie_name
+    app.state.transaction_cookie_prefix = settings.transaction_cookie_prefix
+    app.state.oidc_client = oidc_client
+    app.state.make_session_authenticator = SessionService
     app.state.serves_live_openapi = settings.serves_live_openapi
     # Read once, from the package's own migrations, for `/ready` to compare.
     app.state.latest_revision = latest_revision()

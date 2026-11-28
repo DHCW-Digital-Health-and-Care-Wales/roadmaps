@@ -4,14 +4,21 @@ version = "0.0.0"
 requires-python = "==3.15.*"
 dependencies = [
   "alembic>=1.20",
+  "authlib>=1.9.10",
   "fastapi>=0.163.2",
+  "joserfc>=1.8.0",
   "opentelemetry-exporter-otlp-proto-http>=1.45.2",
   "opentelemetry-sdk>=1.45.2",
   "psycopg[binary]>=3.3.9",
   "pydantic>=2.14",
+  "requests>=2.34.2",
   "sqlalchemy>=2.1.9",
   "uvicorn>=0.54",
 ]
+
+[project.scripts]
+roadmaps-purge-transactions = "roadmaps_api.purge.transactions:main"
+roadmaps-purge-sessions = "roadmaps_api.purge.sessions:main"
 
 [dependency-groups]
 dev = [
@@ -72,6 +79,8 @@ ignore = [
 "fastapi.HTTPException".msg = "Raise roadmaps_api.errors.ApiError, whose code the envelope carries (ADR-017 Errors)."
 "fastapi.exceptions.HTTPException".msg = "Raise roadmaps_api.errors.ApiError, whose code the envelope carries (ADR-017 Errors)."
 "starlette.exceptions.HTTPException".msg = "Raise roadmaps_api.errors.ApiError, whose code the envelope carries (ADR-017 Errors)."
+"jose".msg = "python-jose is banned; use joserfc inside roadmaps_api.identity (ADR-018, STY-106 D4)."
+"authlib.jose".msg = "authlib.jose is deprecated; use joserfc inside roadmaps_api.identity (ADR-018, STY-106 D4)."
 
 [tool.ty.terminal]
 error-on-warning = true
@@ -96,6 +105,24 @@ name = "The runtime package never imports dev-only faker or tools (STY-093 S5)"
 type = "forbidden"
 source_modules = ["roadmaps_api"]
 forbidden_modules = ["faker", "tools"]
+
+[[tool.importlinter.contracts]]
+name = "Only roadmaps_api.identity imports authlib, joserfc or requests (ADR-018, STY-106 D4)"
+type = "forbidden"
+source_modules = ["roadmaps_api"]
+forbidden_modules = ["authlib", "joserfc", "requests"]
+allow_indirect_imports = true
+ignore_imports = [
+  "roadmaps_api.identity.* -> authlib",
+  "roadmaps_api.identity.* -> joserfc",
+  "roadmaps_api.identity.* -> requests",
+]
+
+[[tool.importlinter.contracts]]
+name = "Only roadmaps_api.services.sessions accesses roadmaps_api.repositories.sessions (ADR-018, STY-106 D4)"
+type = "protected"
+protected_modules = ["roadmaps_api.repositories.sessions"]
+allowed_importers = ["roadmaps_api.services.sessions"]
 
 [tool.alembic]
 # For Alembic's own command line, run from apps/api to draft a revision by autogenerate

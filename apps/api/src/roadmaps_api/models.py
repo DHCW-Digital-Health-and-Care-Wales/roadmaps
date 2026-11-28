@@ -607,3 +607,143 @@ class ChangeSetSignoff(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     signed_off_xid: Mapped[str] = mapped_column(Text, nullable=False, server_default=XID_DEFAULT)
+
+
+class AuthSession(Base):
+    """Opaque server-side session storing only the SHA-256 hash of its token (ADR-018)."""
+
+    __tablename__ = "sessions"
+    __table_args__ = (
+        UniqueConstraint("token_hash", name="uq_sessions_token_hash"),
+        CheckConstraint("octet_length(token_hash) = 32", name="token_hash_sha256"),
+        CheckConstraint("provider IN ('google', 'entra', 'local_mock')", name="provider"),
+        CheckConstraint("idle_expires_at > signed_in_at", name="idle_after_signed_in"),
+        CheckConstraint("idle_expires_at <= absolute_expires_at", name="idle_within_absolute"),
+        CheckConstraint(
+            "absolute_expires_at <= signed_in_at + interval '10 hours 5 minutes'",
+            name="absolute_max_lifetime",
+        ),
+        CheckConstraint("last_activity_at >= signed_in_at", name="last_activity_after_signed_in"),
+        CheckConstraint(
+            "revoked_at IS NULL OR revoked_at >= signed_in_at",
+            name="revoked_after_signed_in",
+        ),
+        Index(
+            "ix_sessions_person_id_active",
+            "person_id",
+            postgresql_where=text("revoked_at IS NULL"),
+        ),
+        Index("ix_sessions_absolute_expires_at", "absolute_expires_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, server_default=UUIDV7_DEFAULT)
+    token_hash: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    person_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey("people.id", ondelete="RESTRICT", name="fk_sessions_person_id_people"),
+        nullable=False,
+    )
+    identity_id: Mapped[UUID] = mapped_column(
+        Uuid,
+        ForeignKey("identities.id", ondelete="RESTRICT", name="fk_sessions_identity_id_identities"),
+        nullable=False,
+    )
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    signed_in_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_activity_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    idle_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    absolute_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class SignInTransaction(Base):
+    """Single-use OIDC sign-in/redeem/link transaction (ADR-018, STY-106 D14)."""
+
+    __tablename__ = "sign_in_transactions"
+    __table_args__ = (
+        UniqueConstraint("state_hash", name="uq_sign_in_transactions_state_hash"),
+        UniqueConstraint("cookie_token_hash", name="uq_sign_in_transactions_cookie_token_hash"),
+        CheckConstraint("octet_length(state_hash) = 32", name="state_hash_sha256"),
+        CheckConstraint("octet_length(cookie_token_hash) = 32", name="cookie_token_hash_sha256"),
+        CheckConstraint("btrim(nonce) <> ''", name="nonce_non_blank"),
+        CheckConstraint("btrim(code_verifier) <> ''", name="code_verifier_non_blank"),
+        CheckConstraint("provider IN ('google', 'entra', 'local_mock')", name="provider"),
+        CheckConstraint(
+            "btrim(issuer) <> '' AND issuer ~ '^https?://[^[:space:]]+$'",
+            name="issuer_canonical_url",
+        ),
+        CheckConstraint("purpose IN ('sign-in', 'redeem', 'link')", name="purpose"),
+        CheckConstraint(
+            "return_path ~ '^/' AND length(return_path) <= 512",
+            name="return_path_relative",
+        ),
+        CheckConstraint(
+            "((purpose = 'sign-in' AND invitation_id IS NULL"
+            " AND initiating_session_id IS NULL AND initiating_person_id IS NULL)"
+            " OR (purpose = 'redeem' AND invitation_id IS NOT NULL"
+            " AND initiating_session_id IS NULL AND initiating_person_id IS NULL)"
+            " OR (purpose = 'link' AND invitation_id IS NULL"
+            " AND initiating_session_id IS NOT NULL AND initiating_person_id IS NOT NULL))"
+            " IS TRUE",
+            name="purpose_fields",
+        ),
+        CheckConstraint("expires_at > created_at", name="expires_after_created"),
+        CheckConstraint(
+            "expires_at <= created_at + interval '15 minutes'",
+            name="max_lifetime",
+        ),
+        CheckConstraint(
+            "consumed_at IS NULL OR consumed_at >= created_at",
+            name="consumed_after_created",
+        ),
+        Index("ix_sign_in_transactions_expires_at", "expires_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, server_default=UUIDV7_DEFAULT)
+    state_hash: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    cookie_token_hash: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    nonce: Mapped[str] = mapped_column(Text, nullable=False)
+    code_verifier: Mapped[str] = mapped_column(Text, nullable=False)
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    issuer: Mapped[str] = mapped_column(Text, nullable=False)
+    purpose: Mapped[str] = mapped_column(Text, nullable=False)
+    return_path: Mapped[str] = mapped_column(Text, nullable=False)
+    invitation_id: Mapped[UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "invitations.id",
+            ondelete="RESTRICT",
+            name="fk_sign_in_transactions_invitation_id_invitations",
+        ),
+        nullable=True,
+    )
+    initiating_session_id: Mapped[UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "sessions.id",
+            ondelete="RESTRICT",
+            name="fk_sign_in_transactions_initiating_session_id_sessions",
+        ),
+        nullable=True,
+    )
+    initiating_person_id: Mapped[UUID | None] = mapped_column(
+        Uuid,
+        ForeignKey(
+            "people.id",
+            ondelete="RESTRICT",
+            name="fk_sign_in_transactions_initiating_person_id_people",
+        ),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

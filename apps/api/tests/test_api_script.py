@@ -13,7 +13,7 @@ from roadmaps_api.settings import CLOUD_RUN_MARKERS, load_settings
 API_DIR = Path(__file__).parent.parent
 BASH = shutil.which("bash") or "/bin/bash"
 WORKTREE_ENV = (
-    "WORKTREE_SLOT=64\nDEV_PORT=21640\nAPI_PORT=21644\nDB_PORT=21645\n"
+    "WORKTREE_SLOT=64\nDEV_PORT=21640\nAPI_PORT=21644\nDB_PORT=21645\nOIDC_PORT=21646\n"
     "API_DB_PROJECT=roadmaps-slot-64\n"
 )
 
@@ -31,11 +31,16 @@ def _prepare_api_script_sandbox(tmp_path: Path, env_worktree: str | None) -> tup
     bin_dir.mkdir()
     uv_stub = (
         "#!/usr/bin/env bash\n"
+        'if [[ "$*" == *"tools.mock_oidc"* ]]; then\n'
+        '  printf "MOCK_ARGS=%s\\n" "$*"\n'
+        "  exit 0\n"
+        "fi\n"
         'if [[ "$*" == *"roadmaps_api.server"* ]]; then\n'
         '  printf "ORIGIN=%s\\n" "${ROADMAPS_EDITOR_ORIGIN:-}"\n'
         '  printf "HOSTS=%s\\n" "${ROADMAPS_ALLOWED_HOSTS:-}"\n'
         '  printf "ENV=%s\\n" "${ROADMAPS_ENV:-}"\n'
         '  printf "DB=%s\\n" "${ROADMAPS_DATABASE_URL:-}"\n'
+        '  printf "MOCK_URL=%s\\n" "${ROADMAPS_LOCAL_MOCK_OIDC_URL:-}"\n'
         "fi\n"
         "exit 0\n"
     )
@@ -47,15 +52,18 @@ def _prepare_api_script_sandbox(tmp_path: Path, env_worktree: str | None) -> tup
 
 
 @pytest.mark.parametrize(
-    ("env_worktree", "expected_origin"),
+    ("env_worktree", "expected_origin", "expected_mock_url"),
     [
-        (WORKTREE_ENV, "http://localhost:21640"),
-        (None, "http://localhost:5173"),
+        (WORKTREE_ENV, "http://localhost:21640", "http://127.0.0.1:21646"),
+        (None, "http://localhost:5173", "http://127.0.0.1:8001"),
     ],
-    ids=["worktree DEV_PORT reaches ROADMAPS_EDITOR_ORIGIN", "non-worktree falls back to 5173"],
+    ids=[
+        "worktree DEV_PORT and OIDC_PORT reach settings",
+        "non-worktree falls back to 5173 and 8001",
+    ],
 )
 def test_api_script_dev_exports_editor_origin_from_worktree_dev_port(
-    tmp_path: Path, env_worktree: str | None, expected_origin: str
+    tmp_path: Path, env_worktree: str | None, expected_origin: str, expected_mock_url: str
 ) -> None:
     script, bin_dir = _prepare_api_script_sandbox(tmp_path, env_worktree)
     env = {
@@ -76,21 +84,25 @@ def test_api_script_dev_exports_editor_origin_from_worktree_dev_port(
     assert result.returncode == 0, result.stderr
     exported = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
     assert exported["ORIGIN"] == expected_origin
+    assert exported["MOCK_URL"] == expected_mock_url
     loaded = load_settings(
         {
             "ROADMAPS_ENV": exported["ENV"],
             "ROADMAPS_DATABASE_URL": exported["DB"],
             "ROADMAPS_ALLOWED_HOSTS": exported["HOSTS"],
             "ROADMAPS_EDITOR_ORIGIN": exported["ORIGIN"],
+            "ROADMAPS_LOCAL_MOCK_OIDC_URL": exported["MOCK_URL"],
         }
     )
     assert loaded.editor_origin == expected_origin
+    assert loaded.local_mock_oidc_url == expected_mock_url
 
 
 def test_api_script_fails_when_worktree_env_lacks_dev_port(tmp_path: Path) -> None:
     script, bin_dir = _prepare_api_script_sandbox(
         tmp_path,
-        "WORKTREE_SLOT=64\nAPI_PORT=21644\nDB_PORT=21645\nAPI_DB_PROJECT=roadmaps-slot-64\n",
+        "WORKTREE_SLOT=64\nAPI_PORT=21644\nDB_PORT=21645\nOIDC_PORT=21646\n"
+        "API_DB_PROJECT=roadmaps-slot-64\n",
     )
     env = {"PATH": f"{bin_dir}:{os.environ.get('PATH', '')}"}
 
@@ -104,3 +116,23 @@ def test_api_script_fails_when_worktree_env_lacks_dev_port(tmp_path: Path) -> No
 
     assert result.returncode == 1
     assert "DEV_PORT" in result.stderr
+
+
+def test_api_script_dev_fails_when_worktree_env_lacks_oidc_port(tmp_path: Path) -> None:
+    script, bin_dir = _prepare_api_script_sandbox(
+        tmp_path,
+        "WORKTREE_SLOT=64\nDEV_PORT=21640\nAPI_PORT=21644\nDB_PORT=21645\n"
+        "API_DB_PROJECT=roadmaps-slot-64\n",
+    )
+    env = {"PATH": f"{bin_dir}:{os.environ.get('PATH', '')}"}
+
+    result = subprocess.run(  # noqa: S603 - staged repo script with controlled PATH
+        [BASH, str(script), "dev"],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "OIDC_PORT" in result.stderr

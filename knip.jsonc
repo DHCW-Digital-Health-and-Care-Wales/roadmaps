@@ -4,9 +4,10 @@
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
   // The API is a uv project, which knip cannot read.
   "ignoreWorkspaces": ["apps/api"],
-  // Generated to hold the whole contract, so API stories land ahead of the editor's use.
+  // Generated to hold the whole contract (including per-operation schema aliases),
+  // so API stories land ahead of the editor's use.
   "ignoreIssues": {
-    "packages/api-types/src/generated/**": ["exports", "types"],
+    "packages/api-types/src/generated/**": ["exports", "types", "duplicates"],
   },
   "workspaces": {
     ".": {

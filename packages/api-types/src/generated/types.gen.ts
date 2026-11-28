@@ -7,7 +7,7 @@ export type ClientOptions = {
 /**
  * ErrorCode
  */
-export type ErrorCode = 'auth.unauthenticated' | 'auth.person_mismatch' | 'authz.forbidden' | 'request.origin_not_allowed' | 'request.unsupported_media_type' | 'request.not_found' | 'request.method_not_allowed' | 'request.invalid' | 'service.not_ready' | 'server.internal_error';
+export type ErrorCode = 'auth.unauthenticated' | 'auth.person_mismatch' | 'auth.provider_not_enabled' | 'auth.provider_unavailable' | 'authz.forbidden' | 'request.origin_not_allowed' | 'request.unsupported_media_type' | 'request.not_found' | 'request.method_not_allowed' | 'request.invalid' | 'service.not_ready' | 'server.internal_error';
 
 /**
  * ErrorResponse
@@ -27,3 +27,310 @@ export type ErrorResponse = {
         [key: string]: unknown;
     };
 };
+
+/**
+ * ExtendSessionResponse
+ */
+export type ExtendSessionResponse = {
+    /**
+     * Absoluteexpiresat
+     */
+    absoluteExpiresAt: string;
+    /**
+     * Idleexpiresat
+     */
+    idleExpiresAt: string;
+};
+
+/**
+ * MeIdentityResponse
+ */
+export type MeIdentityResponse = {
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Lastsigninat
+     */
+    lastSignInAt: string | null;
+    /**
+     * Linkedat
+     */
+    linkedAt: string;
+    /**
+     * Provider
+     */
+    provider: string;
+};
+
+/**
+ * MeMembershipResponse
+ */
+export type MeMembershipResponse = {
+    /**
+     * Namecy
+     */
+    nameCy: string | null;
+    /**
+     * Nameen
+     */
+    nameEn: string;
+    /**
+     * Permissions
+     */
+    permissions: Array<Permission>;
+    role: MeRoleResponse;
+    /**
+     * Tenantid
+     */
+    tenantId: string;
+    /**
+     * Tenantslug
+     */
+    tenantSlug: string;
+};
+
+/**
+ * MeResponse
+ */
+export type MeResponse = {
+    /**
+     * Displayname
+     */
+    displayName: string;
+    /**
+     * Identities
+     */
+    identities: Array<MeIdentityResponse>;
+    /**
+     * Memberships
+     */
+    memberships: Array<MeMembershipResponse>;
+    /**
+     * Personid
+     */
+    personId: string;
+    session: MeSessionResponse;
+};
+
+/**
+ * MeRoleResponse
+ */
+export type MeRoleResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Systemkey
+     */
+    systemKey: string | null;
+};
+
+/**
+ * MeSessionResponse
+ */
+export type MeSessionResponse = {
+    /**
+     * Absoluteexpiresat
+     */
+    absoluteExpiresAt: string;
+    /**
+     * Idleexpiresat
+     */
+    idleExpiresAt: string;
+    /**
+     * Provider
+     */
+    provider: string;
+    /**
+     * Signedinat
+     */
+    signedInAt: string;
+};
+
+/**
+ * OidcProviderId
+ *
+ * Enabled v1 OIDC providers accepted by `/api/v1/auth/sign-in` and callbacks.
+ */
+export type OidcProviderId = 'google' | 'local_mock';
+
+/**
+ * Permission
+ */
+export type Permission = 'roadmaps:create' | 'roadmaps:edit' | 'roadmaps:edit-any' | 'roadmaps:publish' | 'tags:edit' | 'lists:edit' | 'members:manage' | 'assignments:manage' | 'content:redact' | 'tenant:settings';
+
+/**
+ * SignInStartRequest
+ */
+export type SignInStartRequest = {
+    provider: OidcProviderId;
+    /**
+     * Purpose
+     */
+    purpose?: 'sign-in';
+    /**
+     * Returnpath
+     */
+    returnPath?: string;
+};
+
+/**
+ * SignInStartResponse
+ */
+export type SignInStartResponse = {
+    /**
+     * Authorizationurl
+     */
+    authorizationUrl: string;
+};
+
+/**
+ * SignOutResponse
+ */
+export type SignOutResponse = {
+    /**
+     * Status
+     */
+    status?: 'ok';
+};
+
+export type SignInCallbackApiV1AuthCallbackProviderGetData = {
+    body?: never;
+    path: {
+        /**
+         * Provider
+         */
+        provider: string;
+    };
+    query?: {
+        /**
+         * Code
+         */
+        code?: string | null;
+        /**
+         * State
+         */
+        state?: string | null;
+        /**
+         * Error
+         */
+        error?: string | null;
+    };
+    url: '/api/v1/auth/callback/{provider}';
+};
+
+export type SignInCallbackApiV1AuthCallbackProviderGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: ErrorResponse;
+};
+
+export type SignInCallbackApiV1AuthCallbackProviderGetError = SignInCallbackApiV1AuthCallbackProviderGetErrors[keyof SignInCallbackApiV1AuthCallbackProviderGetErrors];
+
+export type SignInCallbackApiV1AuthCallbackProviderGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type ExtendSessionApiV1AuthExtendPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/extend';
+};
+
+export type ExtendSessionApiV1AuthExtendPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: ExtendSessionResponse;
+};
+
+export type ExtendSessionApiV1AuthExtendPostResponse = ExtendSessionApiV1AuthExtendPostResponses[keyof ExtendSessionApiV1AuthExtendPostResponses];
+
+export type SignInStartApiV1AuthSignInPostData = {
+    body: SignInStartRequest;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/sign-in';
+};
+
+export type SignInStartApiV1AuthSignInPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: ErrorResponse;
+};
+
+export type SignInStartApiV1AuthSignInPostError = SignInStartApiV1AuthSignInPostErrors[keyof SignInStartApiV1AuthSignInPostErrors];
+
+export type SignInStartApiV1AuthSignInPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: SignInStartResponse;
+};
+
+export type SignInStartApiV1AuthSignInPostResponse = SignInStartApiV1AuthSignInPostResponses[keyof SignInStartApiV1AuthSignInPostResponses];
+
+export type SignOutApiV1AuthSignOutPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/sign-out';
+};
+
+export type SignOutApiV1AuthSignOutPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: SignOutResponse;
+};
+
+export type SignOutApiV1AuthSignOutPostResponse = SignOutApiV1AuthSignOutPostResponses[keyof SignOutApiV1AuthSignOutPostResponses];
+
+export type SignOutAllApiV1AuthSignOutAllPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/auth/sign-out-all';
+};
+
+export type SignOutAllApiV1AuthSignOutAllPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: SignOutResponse;
+};
+
+export type SignOutAllApiV1AuthSignOutAllPostResponse = SignOutAllApiV1AuthSignOutAllPostResponses[keyof SignOutAllApiV1AuthSignOutAllPostResponses];
+
+export type GetMeApiV1MeGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/me';
+};
+
+export type GetMeApiV1MeGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: MeResponse;
+};
+
+export type GetMeApiV1MeGetResponse = GetMeApiV1MeGetResponses[keyof GetMeApiV1MeGetResponses];

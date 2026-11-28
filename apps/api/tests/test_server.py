@@ -32,6 +32,9 @@ SERVER_ENVIRONMENT = {
     "ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL,
     "ROADMAPS_ALLOWED_HOSTS": "127.0.0.1,localhost",
     "ROADMAPS_EDITOR_ORIGIN": "https://localhost",
+    "ROADMAPS_GOOGLE_CLIENT_ID": "test-google-client-id",
+    "ROADMAPS_GOOGLE_CLIENT_SECRET": "test-google-client-secret",
+    "ROADMAPS_GOOGLE_ALLOWED_HD": "wales.nhs.uk",
 }
 
 

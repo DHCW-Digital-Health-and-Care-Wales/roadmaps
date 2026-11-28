@@ -48,6 +48,15 @@ ALLOWED_EXTRA_FIELDS: Final = frozenset(
         # Authorisation events (STY-105 D11): IDs only, never raw unknown permission strings.
         "tenant_id",
         "role_id",
+        # Identity, session and retention-purge events (ADR-018, STY-106 S1-S5, D15):
+        # IDs, closed enum/reason names and counts only, never tokens, codes or emails.
+        "person_id",
+        "session_id",
+        "provider",
+        "reason",
+        "revoked_count",
+        "deleted_count",
+        "table",
     }
 )
 

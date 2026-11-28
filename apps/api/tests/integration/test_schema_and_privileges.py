@@ -39,6 +39,8 @@ EXPECTED_TABLES = frozenset(
         "change_sets",
         "change_summaries",
         "change_set_signoffs",
+        "sessions",
+        "sign_in_transactions",
     }
 )
 
@@ -54,6 +56,8 @@ TABLES_WITH_UUIDV7_PK = frozenset(
         "invitations",
         "change_sets",
         "change_summaries",
+        "sessions",
+        "sign_in_transactions",
     }
 )
 
@@ -71,6 +75,8 @@ EXPECTED_APP_PRIVILEGES: dict[str, frozenset[str]] = {
     "change_sets": frozenset({"SELECT"}),
     "change_summaries": frozenset({"SELECT"}),
     "change_set_signoffs": frozenset(),
+    "sessions": frozenset(),
+    "sign_in_transactions": frozenset(),
 }
 
 EXPECTED_APP_COLUMN_WRITE_PRIVILEGES: dict[tuple[str, str], frozenset[str]] = {
@@ -106,6 +112,18 @@ EXPECTED_HISTORY_DEFINER_PRIVILEGES: dict[str, frozenset[str]] = {
     "change_set_signoffs": frozenset({"SELECT", "INSERT"}),
 }
 
+EXPECTED_AUTH_DEFINER_PRIVILEGES: dict[str, frozenset[str]] = {
+    "people": frozenset({"SELECT"}),
+    "identities": frozenset({"SELECT"}),
+    "sessions": frozenset({"SELECT", "INSERT", "UPDATE", "DELETE"}),
+    "sign_in_transactions": frozenset({"SELECT", "INSERT", "UPDATE", "DELETE"}),
+}
+
+EXPECTED_AUTH_DEFINER_COLUMN_WRITE_PRIVILEGES: dict[tuple[str, str], frozenset[str]] = {
+    ("people", "UPDATE"): frozenset({"display_name", "updated_at"}),
+    ("identities", "UPDATE"): frozenset({"email", "last_sign_in_at", "updated_at"}),
+}
+
 EXPECTED_COMPOSITE_TENANT_FKS = frozenset(
     {
         ("role_permissions", ("tenant_id", "role_id"), "roles", ("tenant_id", "id")),
@@ -121,14 +139,14 @@ EXPECTED_COMPOSITE_TENANT_FKS = frozenset(
     }
 )
 
-APP_CALLABLE_ROUTINES = frozenset(
+APP_CALLABLE_HISTORY_ROUTINES = frozenset(
     {
         "open_access_change_set(text,bytea,text,uuid)",
         "sign_off_access_change_set(uuid)",
     }
 )
 
-INTERNAL_DEFINER_ROUTINES = frozenset(
+INTERNAL_HISTORY_DEFINER_ROUTINES = frozenset(
     {
         "open_access_change_set_internal(uuid,text,text,uuid,text,text,bytea,text,uuid)",
         "sign_off_access_change_set_internal(uuid,uuid)",
@@ -140,6 +158,30 @@ DEFINER_TRIGGER_ROUTINES = frozenset(
         "guard_access_working_write()",
         "record_access_change_summary()",
         "verify_change_set_signed_off()",
+    }
+)
+
+APP_CALLABLE_AUTH_ROUTINES = frozenset(
+    {
+        (
+            "create_sign_in_transaction("
+            "bytea,bytea,text,text,text,text,text,text,uuid,uuid,uuid,integer)"
+        ),
+        "consume_sign_in_transaction(bytea,bytea[],text,text)",
+        "lookup_sign_in_identity(text,text)",
+        "create_session(bytea,uuid,uuid,text,text,text)",
+        "lookup_session(bytea)",
+        "touch_session_activity(bytea)",
+        "extend_session(uuid)",
+        "revoke_session(uuid)",
+        "revoke_all_person_sessions()",
+    }
+)
+
+PURGE_CALLABLE_AUTH_ROUTINES = frozenset(
+    {
+        "purge_expired_sign_in_transactions()",
+        "purge_ended_sessions()",
     }
 )
 
@@ -271,7 +313,7 @@ def test_every_table_except_alembic_version_has_forced_rls_and_a_policy(
         assert policy_count >= 1, f"{table} has no RLS policy"
 
 
-def _assert_public_routines(worker_admin: psycopg.Connection) -> set[int]:
+def _assert_public_routines(worker_admin: psycopg.Connection) -> tuple[set[int], set[int]]:
     """Asserts routine ownership, DEFINER/INVOKER mode, search_path and EXECUTE grants."""
     routine_rows = worker_admin.execute(
         "SELECT oid, oid::regprocedure::text, proowner::regrole::text, prosecdef, proconfig,"
@@ -282,11 +324,12 @@ def _assert_public_routines(worker_admin: psycopg.Connection) -> set[int]:
         " FROM pg_proc WHERE pronamespace = 'public'::regnamespace"
         " ORDER BY 2"
     ).fetchall()
-    expected_definer_routines = (
-        APP_CALLABLE_ROUTINES | INTERNAL_DEFINER_ROUTINES | DEFINER_TRIGGER_ROUTINES
+    expected_history_routines = (
+        APP_CALLABLE_HISTORY_ROUTINES | INTERNAL_HISTORY_DEFINER_ROUTINES | DEFINER_TRIGGER_ROUTINES
     )
+    expected_auth_routines = APP_CALLABLE_AUTH_ROUTINES | PURGE_CALLABLE_AUTH_ROUTINES
     assert {name for _oid, name, *_ in routine_rows} == (
-        expected_definer_routines | INVOKER_TRIGGER_ROUTINES
+        expected_history_routines | expected_auth_routines | INVOKER_TRIGGER_ROUTINES
     )
     for _oid, name, owner, secdef, config, grantees in routine_rows:
         assert config == ["search_path=pg_catalog, public, pg_temp"], f"{name} config={config}"
@@ -295,15 +338,25 @@ def _assert_public_routines(worker_admin: psycopg.Connection) -> set[int]:
         if name in INVOKER_TRIGGER_ROUTINES:
             assert (owner, secdef, grantee_set) == (OWNER_ROLE, False, set())
             continue
-        assert owner == HISTORY_DEFINER_ROLE, f"{name} owned by {owner}"
         assert secdef is True, f"{name} is not SECURITY DEFINER"
-        if name in APP_CALLABLE_ROUTINES:
-            assert grantee_set == {APP_ROLE}
-        elif name in INTERNAL_DEFINER_ROUTINES:
-            assert grantee_set == {OWNER_ROLE, AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE}
+        if name in expected_history_routines:
+            assert owner == HISTORY_DEFINER_ROLE, f"{name} owned by {owner}"
+            if name in APP_CALLABLE_HISTORY_ROUTINES:
+                assert grantee_set == {APP_ROLE}
+            elif name in INTERNAL_HISTORY_DEFINER_ROUTINES:
+                assert grantee_set == {OWNER_ROLE, AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE}
+            else:
+                assert grantee_set == set(), f"trigger {name} granted EXECUTE to {grantee_set}"
         else:
-            assert grantee_set == set(), f"trigger {name} granted EXECUTE to {grantee_set}"
-    return {oid for oid, name, *_ in routine_rows if name in expected_definer_routines}
+            assert owner == AUTH_DEFINER_ROLE, f"{name} owned by {owner}"
+            if name in APP_CALLABLE_AUTH_ROUTINES:
+                assert grantee_set == {APP_ROLE}, f"{name} grantees={grantee_set}"
+            else:
+                assert grantee_set == {PURGE_ROLE}, f"{name} grantees={grantee_set}"
+    return (
+        {oid for oid, name, *_ in routine_rows if name in expected_history_routines},
+        {oid for oid, name, *_ in routine_rows if name in expected_auth_routines},
+    )
 
 
 def test_exact_privileges_and_definer_bounds_after_migration(
@@ -336,11 +389,31 @@ def test_exact_privileges_and_definer_bounds_after_migration(
     hist_privs = _table_privileges(worker_admin, HISTORY_DEFINER_ROLE)
     assert hist_privs == EXPECTED_HISTORY_DEFINER_PRIVILEGES
 
-    # Other definer roles and platform/purge caller roles hold zero table grants in STY-103.
-    for role in (AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE, PLATFORM_ROLE, PURGE_ROLE):
+    # roadmaps_auth_definer holds only minimal table/column grants for auth & purge (STY-106).
+    auth_privs = _table_privileges(worker_admin, AUTH_DEFINER_ROLE)
+    assert auth_privs == EXPECTED_AUTH_DEFINER_PRIVILEGES
+    auth_col_writes_rows = worker_admin.execute(
+        "SELECT table_name, privilege_type, column_name"
+        " FROM information_schema.column_privileges"
+        " WHERE table_schema = 'public' AND table_name <> %s"
+        " AND grantee = %s AND privilege_type <> 'SELECT'"
+        " AND table_name NOT IN ('sessions', 'sign_in_transactions')",
+        (harness.PROBE_TABLE, AUTH_DEFINER_ROLE),
+    ).fetchall()
+    actual_auth_col_writes: dict[tuple[str, str], set[str]] = {}
+    for table_name, priv_type, col_name in auth_col_writes_rows:
+        actual_auth_col_writes.setdefault((table_name, priv_type), set()).add(col_name)
+    assert {
+        key: frozenset(cols) for key, cols in actual_auth_col_writes.items()
+    } == EXPECTED_AUTH_DEFINER_COLUMN_WRITE_PRIVILEGES
+
+    # Platform definer and platform/purge caller roles hold zero table grants.
+    for role in (PLATFORM_DEFINER_ROLE, PLATFORM_ROLE, PURGE_ROLE):
         assert _table_privileges(worker_admin, role) == {}, f"{role} has unexpected table grants"
 
-    expected_history_definer_oids = _assert_public_routines(worker_admin)
+    expected_history_definer_oids, expected_auth_definer_oids = _assert_public_routines(
+        worker_admin
+    )
 
     # S4: verify exact object ownership via pg_shdepend across all object types in this
     # database plus cluster-wide shared objects (excluding pg_default_acl rules created by
@@ -352,13 +425,17 @@ def test_exact_privileges_and_definer_bounds_after_migration(
         " AND dbid IN (0, (SELECT oid FROM pg_database WHERE datname = current_database()))"
         " AND refobjid = %s::regrole"
     )
-    for role in (*CALLER_ROLES, AUTH_DEFINER_ROLE, PLATFORM_DEFINER_ROLE):
+    for role in (*CALLER_ROLES, PLATFORM_DEFINER_ROLE):
         owned_objects = worker_admin.execute(owned_query, (role,)).fetchall()
         assert owned_objects == [], f"{role} owns objects {owned_objects}"
 
     hist_owned = worker_admin.execute(owned_query, (HISTORY_DEFINER_ROLE,)).fetchall()
     assert {cls for cls, _oid in hist_owned} == {"pg_proc"}
     assert {oid for _cls, oid in hist_owned} == expected_history_definer_oids
+
+    auth_owned = worker_admin.execute(owned_query, (AUTH_DEFINER_ROLE,)).fetchall()
+    assert {cls for cls, _oid in auth_owned} == {"pg_proc"}
+    assert {oid for _cls, oid in auth_owned} == expected_auth_definer_oids
 
     for role in (*DEFINER_ROLES, *CALLER_ROLES):
         has_db_create = worker_admin.execute(
@@ -381,6 +458,18 @@ def test_exact_privileges_and_definer_bounds_after_migration(
         (list(DEFINER_ROLES),),
     ).fetchall()
     assert definer_policies == [
+        (AUTH_DEFINER_ROLE, "identities", "SELECT"),
+        (AUTH_DEFINER_ROLE, "identities", "UPDATE"),
+        (AUTH_DEFINER_ROLE, "people", "SELECT"),
+        (AUTH_DEFINER_ROLE, "people", "UPDATE"),
+        (AUTH_DEFINER_ROLE, "sessions", "DELETE"),
+        (AUTH_DEFINER_ROLE, "sessions", "INSERT"),
+        (AUTH_DEFINER_ROLE, "sessions", "SELECT"),
+        (AUTH_DEFINER_ROLE, "sessions", "UPDATE"),
+        (AUTH_DEFINER_ROLE, "sign_in_transactions", "DELETE"),
+        (AUTH_DEFINER_ROLE, "sign_in_transactions", "INSERT"),
+        (AUTH_DEFINER_ROLE, "sign_in_transactions", "SELECT"),
+        (AUTH_DEFINER_ROLE, "sign_in_transactions", "UPDATE"),
         (HISTORY_DEFINER_ROLE, "change_set_signoffs", "INSERT"),
         (HISTORY_DEFINER_ROLE, "change_set_signoffs", "SELECT"),
         (HISTORY_DEFINER_ROLE, "change_sets", "INSERT"),
@@ -412,10 +501,30 @@ def test_platform_and_purge_logins_have_no_direct_table_or_app_routine_access(
                 "SELECT 1 FROM public.tenants",
                 "SELECT 1 FROM public.roles",
                 "SELECT 1 FROM public.platform_audit_log",
+                "SELECT 1 FROM public.sessions",
+                "SELECT 1 FROM public.sign_in_transactions",
                 (
                     "SELECT * FROM public.open_access_change_set("
                     "'k', decode(repeat('00', 32), 'hex'), NULL, NULL)"
                 ),
+                "SELECT * FROM public.lookup_session(decode(repeat('00', 32), 'hex'))",
+                "SELECT * FROM public.revoke_all_person_sessions()",
+            ):
+                with (
+                    conn.transaction(force_rollback=True),
+                    pytest.raises(psycopg.errors.InsufficientPrivilege),
+                ):
+                    conn.execute(stmt.encode())
+
+    # Neither roadmaps_app nor roadmaps_platform may call retention purge routines,
+    # and roadmaps_app cannot read sessions or sign_in_transactions directly.
+    for url in (harness.app_url(worker_database), harness.platform_url(worker_database)):
+        with psycopg.connect(libpq_url(url)) as conn:
+            for stmt in (
+                "SELECT public.purge_expired_sign_in_transactions()",
+                "SELECT public.purge_ended_sessions()",
+                "SELECT 1 FROM public.sessions",
+                "SELECT 1 FROM public.sign_in_transactions",
             ):
                 with (
                     conn.transaction(force_rollback=True),
@@ -432,7 +541,7 @@ class InvalidInsert:
 
 def _seed_tenant_person_role(
     connection: psycopg.Connection,
-) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID]:
+) -> tuple[uuid.UUID, uuid.UUID, uuid.UUID, uuid.UUID]:
     tenant_id = harness.one_uuid(
         connection,
         "INSERT INTO tenants (slug, name_en, name_cy) VALUES ('dhcw', 'DHCW', 'IGCD') RETURNING id",
@@ -440,6 +549,12 @@ def _seed_tenant_person_role(
     person_id = harness.one_uuid(
         connection,
         "INSERT INTO people (display_name) VALUES ('Aled Jones') RETURNING id",
+    )
+    identity_id = harness.one_uuid(
+        connection,
+        "INSERT INTO identities (person_id, issuer, subject, email)"
+        " VALUES (%s, 'https://accounts.google.com', 'aled-sub', 'aled@dhcw.example') RETURNING id",
+        (person_id,),
     )
     connection.execute(
         "INSERT INTO tenant_scopes (tenant_id, scope) VALUES (%s, 'access'), (%s, 'lists')",
@@ -458,7 +573,7 @@ def _seed_tenant_person_role(
         (tenant_id,),
     )
     connection.execute("SELECT sign_off_access_change_set_internal(%s, %s)", (tenant_id, cs_id))
-    return tenant_id, person_id, role_id
+    return tenant_id, person_id, identity_id, role_id
 
 
 def test_check_constraints_reject_invalid_values(
@@ -466,7 +581,7 @@ def test_check_constraints_reject_invalid_values(
     worker_admin: psycopg.Connection,
 ) -> None:
     with worker_admin.transaction():
-        tenant_id, person_id, role_id = _seed_tenant_person_role(worker_admin)
+        tenant_id, person_id, identity_id, role_id = _seed_tenant_person_role(worker_admin)
 
     invalid_cases: dict[str, InvalidInsert] = {
         "uppercase tenant slug": InvalidInsert(
@@ -587,6 +702,67 @@ def test_check_constraints_reject_invalid_values(
             " VALUES (%(t)s, 'roadmap', NULL, 'save', 'system', 'test', 0, 1, 'bad-scope', %(h)s)",
             {"t": tenant_id, "h": b"\x07" * 32},
         ),
+        "sessions short token_hash": InvalidInsert(
+            "INSERT INTO sessions (token_hash, person_id, identity_id, provider,"
+            " idle_expires_at, absolute_expires_at)"
+            " VALUES (%(h)s, %(p)s, %(i)s, 'google',"
+            " now() + interval '1 hour', now() + interval '10 hours')",
+            {"h": b"\x01" * 16, "p": person_id, "i": identity_id},
+        ),
+        "sessions idle past absolute": InvalidInsert(
+            "INSERT INTO sessions (token_hash, person_id, identity_id, provider,"
+            " idle_expires_at, absolute_expires_at)"
+            " VALUES (%(h)s, %(p)s, %(i)s, 'google',"
+            " now() + interval '5 hours', now() + interval '4 hours')",
+            {"h": b"\x0c" * 32, "p": person_id, "i": identity_id},
+        ),
+        "sessions absolute over 10 hours": InvalidInsert(
+            "INSERT INTO sessions (token_hash, person_id, identity_id, provider,"
+            " idle_expires_at, absolute_expires_at)"
+            " VALUES (%(h)s, %(p)s, %(i)s, 'google',"
+            " now() + interval '1 hour', now() + interval '12 hours')",
+            {"h": b"\x0d" * 32, "p": person_id, "i": identity_id},
+        ),
+        "sign_in_transactions invalid purpose": InvalidInsert(
+            "INSERT INTO sign_in_transactions"
+            " (state_hash, cookie_token_hash, nonce, code_verifier, provider, issuer,"
+            "  purpose, return_path, expires_at)"
+            " VALUES (%(s)s, %(c)s, 'n', 'v', 'google', 'https://accounts.google.com',"
+            "  'other', '/', now() + interval '10 minutes')",
+            {"s": b"\x0e" * 32, "c": b"\x0f" * 32},
+        ),
+        "sign_in_transactions redeem without invitation_id": InvalidInsert(
+            "INSERT INTO sign_in_transactions"
+            " (state_hash, cookie_token_hash, nonce, code_verifier, provider, issuer,"
+            "  purpose, return_path, expires_at)"
+            " VALUES (%(s)s, %(c)s, 'n', 'v', 'google', 'https://accounts.google.com',"
+            "  'redeem', '/', now() + interval '10 minutes')",
+            {"s": b"\x10" * 32, "c": b"\x11" * 32},
+        ),
+        "sign_in_transactions link without initiating session/person": InvalidInsert(
+            "INSERT INTO sign_in_transactions"
+            " (state_hash, cookie_token_hash, nonce, code_verifier, provider, issuer,"
+            "  purpose, return_path, expires_at)"
+            " VALUES (%(s)s, %(c)s, 'n', 'v', 'google', 'https://accounts.google.com',"
+            "  'link', '/', now() + interval '10 minutes')",
+            {"s": b"\x12" * 32, "c": b"\x13" * 32},
+        ),
+        "sign_in_transactions non-relative return_path": InvalidInsert(
+            "INSERT INTO sign_in_transactions"
+            " (state_hash, cookie_token_hash, nonce, code_verifier, provider, issuer,"
+            "  purpose, return_path, expires_at)"
+            " VALUES (%(s)s, %(c)s, 'n', 'v', 'google', 'https://accounts.google.com',"
+            "  'sign-in', 'https://evil.example', now() + interval '10 minutes')",
+            {"s": b"\x14" * 32, "c": b"\x15" * 32},
+        ),
+        "sign_in_transactions exceeds max lifetime": InvalidInsert(
+            "INSERT INTO sign_in_transactions"
+            " (state_hash, cookie_token_hash, nonce, code_verifier, provider, issuer,"
+            "  purpose, return_path, expires_at)"
+            " VALUES (%(s)s, %(c)s, 'n', 'v', 'google', 'https://accounts.google.com',"
+            "  'sign-in', '/', now() + interval '1 hour')",
+            {"s": b"\x16" * 32, "c": b"\x17" * 32},
+        ),
     }
 
     for case_name, case in invalid_cases.items():
@@ -603,7 +779,7 @@ def test_partial_unique_indexes_allow_ended_rejoin_and_custom_roles_while_enforc
     worker_admin: psycopg.Connection,
 ) -> None:
     with worker_admin.transaction():
-        tenant_id, person_id, role_id = _seed_tenant_person_role(worker_admin)
+        tenant_id, person_id, _identity_id, role_id = _seed_tenant_person_role(worker_admin)
 
     # D13: duplicate system_key per tenant fails; multiple NULL system_key custom roles succeed.
     with worker_admin.transaction(force_rollback=True):

@@ -110,7 +110,7 @@ class Settings:
 
     @property
     def _cookie_port_segment(self) -> str:
-        if self.environment is not Environment.LOCAL:
+        if self.environment is not Environment.LOCAL or self.on_cloud_run:
             return ""
         parsed = parse_origin(self.editor_origin)
         assert parsed is not None  # noqa: S101 - validated in load_settings
@@ -286,29 +286,15 @@ def is_http_url(url: str) -> bool:
 
 
 def is_loopback_host(hostname: str) -> bool:
-    """Whether `hostname` is `localhost`, `*.localhost` or a loopback/unspecified IP."""
-    lowered = hostname.rstrip(".").lower()
+    """Whether `hostname` is `localhost`, `*.localhost` or a loopback IP (never unspecified)."""
+    lowered = hostname.strip("[]").rstrip(".").lower()
     if lowered == "localhost" or lowered.endswith(".localhost"):
         return True
     try:
         ip = ipaddress.ip_address(lowered)
     except ValueError:
         return False
-    return ip.is_loopback or ip.is_unspecified
-
-
-def is_safe_deployed_issuer(issuer: str) -> bool:
-    """Whether an OIDC issuer is HTTPS on a non-loopback host (ADR-018, STY-106 S4)."""
-    if not issuer or any(ch.isspace() or ord(ch) < _ASCII_SPACE for ch in issuer):
-        return False
-    try:
-        parts = urlsplit(issuer)
-        _ = parts.port
-    except ValueError:
-        return False
-    if parts.scheme != "https" or not parts.hostname:
-        return False
-    return not is_loopback_host(parts.hostname)
+    return ip.is_loopback
 
 
 def parse_loopback_http_origin(raw: str) -> str | None:
@@ -316,10 +302,7 @@ def parse_loopback_http_origin(raw: str) -> str | None:
     parsed = parse_origin(raw)
     if parsed is None or parsed.scheme != "http":
         return None
-    hostname = parsed.host.strip("[]")
-    if hostname == "0.0.0.0":  # noqa: S104 - explicitly rejecting wildcard bind host
-        return None
-    if not is_loopback_host(hostname):
+    if not is_loopback_host(parsed.host):
         return None
     return parsed.canonical
 

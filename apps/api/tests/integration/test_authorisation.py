@@ -2,25 +2,22 @@
 
 Runs against real PostgreSQL 18 as `roadmaps_app` on the shared single-connection pool
 fixture (`pool_size=1, max_overflow=0`) so pooled transactions meet any leaked session
-state. Uses a minimal test-only probe router beside `create_app(...)` until real contract
-routes land in `STY-106` and `EPC-025` (D1, D4, D11, D12, D15).
+state. Uses a minimal test-only probe router beside `create_app(...)` alongside the
+contract routes to cover every policy kind and a tenant write before `EPC-025` adds
+tenant routes (D1, D4, D11, D12, D15).
 """
 
 import dataclasses
 import hashlib
 import re
-import threading
-import time
 import uuid
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, Final, Self
 
-import httpx2
 import psycopg
 import pytest
-import uvicorn
 from fastapi import APIRouter, FastAPI
 from fastapi.routing import iter_route_contexts
 from fastapi.testclient import TestClient
@@ -31,7 +28,6 @@ from roadmaps_api.app import create_app
 from roadmaps_api.authz import (
     PERSON_ASSERTION_HEADER,
     SHIPPED_ROLES,
-    AuthenticatedPrincipal,
     CurrentPrincipal,
     CurrentTenant,
     Permission,
@@ -56,9 +52,8 @@ from tests.support import (
     TEST_EDITOR_ORIGIN,
     TEST_HOST,
     Lines,
-    free_port,
+    make_principal,
 )
-from tools.mock_oidc.app import create_mock_oidc_app
 from tools.seed.factories import (
     ChangeSetRequest,
     MembershipInput,
@@ -321,36 +316,12 @@ def _add_probe_router(app: FastAPI) -> None:
     app.include_router(probe)
 
 
-@pytest.fixture(scope="module")
-def authz_mock_oidc_url() -> Iterator[str]:
-    port = free_port()
-    base_url = f"http://127.0.0.1:{port}"
-    mock_app = create_mock_oidc_app(base_url=base_url)
-    server = uvicorn.Server(
-        uvicorn.Config(mock_app, host="127.0.0.1", port=port, log_level="critical")
-    )
-    thread = threading.Thread(target=server.run, daemon=True)
-    thread.start()
-    deadline = time.monotonic() + 10.0
-    while time.monotonic() < deadline:
-        try:
-            if httpx2.get(f"{base_url}/health").status_code == 200:
-                break
-        except httpx2.TransportError:
-            time.sleep(0.05)
-    else:
-        pytest.fail("authz mock OIDC server did not start")
-    yield base_url
-    server.should_exit = True
-    thread.join(timeout=5.0)
-
-
 @pytest.fixture
 def authz_app(
     database_url: str,
     engine: Engine,
     sessions: sessionmaker[Session],
-    authz_mock_oidc_url: str,
+    mock_oidc_base_url: str,
 ) -> FastAPI:
     """The real app (plus D15 probe router) wired to the shared single-connection pool."""
     settings = Settings(
@@ -358,7 +329,7 @@ def authz_app(
         database_url=database_url,
         allowed_hosts=(TEST_HOST,),
         editor_origin=TEST_EDITOR_ORIGIN,
-        local_mock_oidc_url=authz_mock_oidc_url,
+        local_mock_oidc_url=mock_oidc_base_url,
     )
     app = create_app(settings)
     app.state.engine.dispose()
@@ -377,7 +348,7 @@ def _set_principal(
     if person_id is None:
         app.dependency_overrides.pop(get_current_principal, None)
     else:
-        principal = AuthenticatedPrincipal(person_id=person_id, session_id=session_id)
+        principal = make_principal(person_id, session_id=session_id)
         app.dependency_overrides[get_current_principal] = lambda: principal
 
 
@@ -994,10 +965,6 @@ def test_real_session_cookie_get_me_tracks_bookkeeping_only_on_same_origin(
     authz_data: AuthzFixture,
 ) -> None:
     """Real cookie auth through `_WriteTracker`: same-origin slides, cross-site writes nothing."""
-    from datetime import timedelta  # noqa: PLC0415
-
-    from tools.seed.factories import SessionInput, create_session  # noqa: PLC0415
-
     app = create_app(
         Settings(
             environment=Environment.TEST,

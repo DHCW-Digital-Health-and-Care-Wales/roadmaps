@@ -13,7 +13,7 @@ Compose, beside the workspace's Node and pnpm. `pnpm worktree:setup`, or
 repository's root:
 
 ```sh
-pnpm api:dev        # the database, its migrations, then the API with reload (never auto-seeds)
+pnpm api:dev        # the database, migrations, local mock OIDC, then the API with reload (never auto-seeds)
 pnpm api:db:up      # the database alone, its roles and local logins bootstrapped
 pnpm api:migrate    # the database, then the migrations
 pnpm api:seed       # migrate, truncate and deterministically seed local data (pass --seed <int> to vary)
@@ -29,17 +29,17 @@ pnpm api:jaeger     # the Jaeger every worktree shares, to read the API's traces
 pnpm api:jaeger:stop  # stop it, forgetting its traces
 ```
 
-Outside a worktree the API listens on <http://127.0.0.1:8000> and its database on
-`127.0.0.1:15432`; a worktree has its own ports (`pnpm worktree:info`), and
-`pnpm worktree:teardown` removes its database and the data in it. The editor's dev
-server (`pnpm editor:dev`) proxies `/api` to the API, so the browser sees both on one
-origin.
+Outside a worktree the API listens on <http://127.0.0.1:8000>, the local mock OIDC
+provider on <http://127.0.0.1:8001> and its database on `127.0.0.1:15432`; a worktree has
+its own ports (`pnpm worktree:info`), and `pnpm worktree:teardown` removes its database
+and the data in it. The editor's dev server (`pnpm editor:dev`) proxies `/api` to the API,
+so the browser sees both on one origin.
 
 | Path                   | Answers                                                       |
 | ---------------------- | ------------------------------------------------------------- |
 | `/health`              | 200 while the process runs                                    |
 | `/ready`               | 200 once the database is served, else 503 `service.not_ready` |
-| `/api/v1/…`            | the contract's routes (none yet)                              |
+| `/api/v1/…`            | the contract's routes (OIDC sign-in/session routes and `/me`) |
 | `/api/v1/openapi.json` | the live OpenAPI document, locally only                       |
 
 `/ready` serves the database when it answers within about two seconds, at the code's
@@ -123,11 +123,16 @@ editor's bare `scheme://host[:port]` origin with no path, query, fragment, useri
 wildcard; under `production`, an unset or invalid `ROADMAPS_ENV`, or Cloud Run it must use
 `https` and a host in `ROADMAPS_ALLOWED_HOSTS`; `pnpm api:dev` sets it to
 `http://localhost:<DEV_PORT>`, so open the editor on `localhost` rather than `127.0.0.1`
-for state-changing calls), `ROADMAPS_SERVICE_NAME` (its traces' service, `roadmaps-api` by
-default) and OpenTelemetry's `OTEL_EXPORTER_OTLP_ENDPOINT` (see _Traces_).
-`ROADMAPS_DATABASE_URL`, `ROADMAPS_ALLOWED_HOSTS` and `ROADMAPS_EDITOR_ORIGIN` are
-required: any one missing, or any setting invalid, stops start-up, naming it, as does
-`ROADMAPS_MIGRATION_DATABASE_URL`, which only the migration tooling reads:
-`python -m roadmaps_api.migrate`, and Alembic's command line when drafting. Every log line
-is JSON on stdout; only a local API's lines carry an exception's or another library's
-message.
+for state-changing calls), `ROADMAPS_SERVICE_NAME` (its traces' service, `roadmaps-api` by default),
+`ROADMAPS_GOOGLE_CLIENT_ID`, `ROADMAPS_GOOGLE_CLIENT_SECRET` and
+`ROADMAPS_GOOGLE_ALLOWED_HD` (Google Workspace OIDC, required in production, when
+`ROADMAPS_ENV` is unset or invalid, or on Cloud Run, and all-or-nothing optional in
+`local`/`test`), `ROADMAPS_LOCAL_MOCK_OIDC_URL` (the loopback mock OIDC provider URL,
+allowed only in `local`/`test` off Cloud Run, exported by `pnpm api:dev`) and
+OpenTelemetry's `OTEL_EXPORTER_OTLP_ENDPOINT` (see _Traces_). `ROADMAPS_DATABASE_URL`,
+`ROADMAPS_ALLOWED_HOSTS` and `ROADMAPS_EDITOR_ORIGIN` are required: any one missing, or
+any setting invalid, stops start-up, naming it, as do `ROADMAPS_MIGRATION_DATABASE_URL`
+(read only by `python -m roadmaps_api.migrate` and Alembic's command line when drafting)
+and `ROADMAPS_PURGE_DATABASE_URL` (read only by the retention purge CLIs
+`roadmaps-purge-transactions` and `roadmaps-purge-sessions`). Every log line is JSON on
+stdout; only a local API's lines carry an exception's or another library's message.

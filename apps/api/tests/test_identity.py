@@ -1,47 +1,50 @@
 """S1, S4 & D4: OIDC client, JWKS cache, strict RS256/claim validation and outbound HTTP bounds.
 
-Uses a custom `requests.adapters.BaseAdapter` for deterministic mocked Google transports
-(D4) so every refused claim, key rollover, outage retention, rate-limited refetch, timeout,
-and redirect refusal runs without sockets.
+Uses `RecordingAdapter` (`requests.adapters.BaseAdapter`) for deterministic mocked Google
+transports (D4) so every refused claim, key rollover, outage retention, failure backoff,
+single-flight deduplication, token-endpoint refusal, timeout and redirect refusal runs
+without sockets.
 """
 
 import base64
 import json
+import threading
 import time
 from collections.abc import Callable
-from typing import Any, override
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import requests
 from joserfc import jws, jwt
-from joserfc.jwk import ECKey, KeySet, OctKey, RSAKey
-from requests.adapters import BaseAdapter
+from joserfc.jwk import ECKey, OctKey, RSAKey
 
-from roadmaps_api.identity.client import (
+from roadmaps_api.identity import (
+    FAILURE_BACKOFF_SECONDS,
+    GOOGLE_CANONICAL_ISSUER,
+    LOCAL_MOCK_ISSUER,
     OidcClient,
     OidcError,
     OidcProviderError,
+    OidcProviderId,
     OidcVerificationError,
+    ProviderConfig,
     TokenExchangeRequest,
-    _validate_id_token_claims,
+    build_provider_configs,
+    is_safe_deployed_issuer,
+    provider_for_issuer,
+    validate_deployed_providers,
+    validate_id_token_claims,
 )
 from roadmaps_api.identity.jwks import (
     OUTBOUND_TIMEOUT,
     UNKNOWN_KID_REFETCH_INTERVAL_SECONDS,
     JwksCache,
 )
-from roadmaps_api.identity.providers import (
-    GOOGLE_CANONICAL_ISSUER,
-    GOOGLE_DISCOVERY_URL,
-    LOCAL_MOCK_ISSUER,
-    OidcProviderId,
-    ProviderConfig,
-    build_provider_configs,
-    provider_for_issuer,
-    validate_deployed_providers,
-)
+from roadmaps_api.identity.providers import GOOGLE_DISCOVERY_URL
 from roadmaps_api.settings import Environment, Settings, SettingsError
+from tests.support import RecordingAdapter
 
 GOOGLE_CLIENT_ID = "google-client-123"
 GOOGLE_CLIENT_SECRET = "google-secret-456"  # noqa: S105 - synthetic test secret
@@ -53,43 +56,6 @@ EDITOR_ORIGIN = "https://roadmaps.dhcw.example"
 
 def _make_rsa_key(kid: str) -> RSAKey:
     return RSAKey.generate_key(2048, parameters={"kid": kid, "use": "sig", "alg": "RS256"})
-
-
-class RecordingAdapter(BaseAdapter):
-    """In-memory `requests.adapters.BaseAdapter` asserting timeouts and `allow_redirects=False`."""
-
-    def __init__(
-        self,
-        handler: Callable[[requests.PreparedRequest, Any], tuple[int, dict[str, str], bytes]],
-    ) -> None:
-        super().__init__()
-        self._handler = handler
-        self.calls: list[tuple[str, str, Any]] = []
-
-    @override
-    def send(
-        self,
-        request: requests.PreparedRequest,
-        stream: bool = False,
-        timeout: float | tuple[float | None, float | None] | None = None,
-        verify: bool | str = True,
-        cert: bytes | str | tuple[bytes | str, bytes | str] | None = None,
-        proxies: dict[str, str] | None = None,
-    ) -> requests.Response:
-        assert request.url is not None
-        assert request.method is not None
-        self.calls.append((request.method, request.url, timeout))
-        status, headers, body = self._handler(request, timeout)
-        response = requests.Response()
-        response.status_code = status
-        response.headers.update(headers)
-        response._content = body  # noqa: SLF001 - standard BaseAdapter response construction
-        response.url = request.url
-        response.request = request
-        return response
-
-    def close(self) -> None:
-        return None
 
 
 def _json_response(payload: dict[str, Any], status: int = 200) -> tuple[int, dict[str, str], bytes]:
@@ -143,6 +109,15 @@ def _exchange_request(*, code: str = "auth-code", now: int) -> TokenExchangeRequ
     )
 
 
+def _standard_discovery() -> dict[str, str]:
+    return {
+        "issuer": GOOGLE_CANONICAL_ISSUER,
+        "authorization_endpoint": GOOGLE_AUTH_ENDPOINT,
+        "token_endpoint": GOOGLE_TOKEN_ENDPOINT,
+        "jwks_uri": GOOGLE_JWKS_URI,
+    }
+
+
 def _status_or_body(
     status: int, redirect_to: str, error_body: bytes, ok_payload: dict[str, Any]
 ) -> tuple[int, dict[str, str], bytes]:
@@ -162,12 +137,7 @@ def _make_google_transport(
     token_status: int = 200,
 ) -> tuple[RecordingAdapter, dict[str, int]]:
     counts = {"discovery": 0, "jwks": 0, "token": 0}
-    discovery = discovery_override or {
-        "issuer": GOOGLE_CANONICAL_ISSUER,
-        "authorization_endpoint": GOOGLE_AUTH_ENDPOINT,
-        "token_endpoint": GOOGLE_TOKEN_ENDPOINT,
-        "jwks_uri": GOOGLE_JWKS_URI,
-    }
+    discovery = discovery_override or _standard_discovery()
 
     def handle(
         request: requests.PreparedRequest, timeout: object
@@ -200,6 +170,34 @@ def _make_google_transport(
         pytest.fail(f"Unexpected outbound URL: {request.url}")
 
     return RecordingAdapter(handle), counts
+
+
+@pytest.mark.parametrize(
+    ("issuer", "expected"),
+    [
+        ("https://accounts.google.com", True),
+        ("https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0", True),
+        ("", False),
+        ("https://accounts.google.com\n", False),
+        ("https://accounts.google.com:badport", False),
+        ("http://127.0.0.1/local-mock-oidc", False),
+        ("http://accounts.google.com", False),
+        ("https://localhost/oidc", False),
+        ("https://sub.localhost/oidc", False),
+        ("https://127.0.0.1/oidc", False),
+        ("https://127.0.0.2/oidc", False),
+        ("https://[::1]/oidc", False),
+        ("https://0.0.0.0/oidc", False),
+        ("https://[::]/oidc", False),
+        ("https://[::ffff:0.0.0.0]/oidc", False),
+        ("ftp://accounts.google.com", False),
+        ("not-a-url", False),
+    ],
+)
+def test_deployed_issuer_guard_refuses_non_https_and_loopback_issuers(
+    issuer: str, *, expected: bool
+) -> None:
+    assert is_safe_deployed_issuer(issuer) is expected
 
 
 def test_google_authorization_url_includes_pkce_s256_scopes_and_prompt_select_account() -> None:
@@ -454,13 +452,8 @@ def test_cold_jwks_outage_and_redirects_fail_closed() -> None:
     with pytest.raises(OidcError):
         client_tok_302.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(now=now))
 
-    # Discovery returning a non-HTTPS or mismatched-issuer document fails closed.
-    bad_discovery = {
-        "issuer": "https://evil.example",
-        "authorization_endpoint": GOOGLE_AUTH_ENDPOINT,
-        "token_endpoint": GOOGLE_TOKEN_ENDPOINT,
-        "jwks_uri": GOOGLE_JWKS_URI,
-    }
+    # Discovery returning a mismatched-issuer document fails closed.
+    bad_discovery = {**_standard_discovery(), "issuer": "https://evil.example"}
     adapter_bad_disc, _ = _make_google_transport(
         [key], lambda: token, discovery_override=bad_discovery
     )
@@ -474,6 +467,159 @@ def test_cold_jwks_outage_and_redirects_fail_closed() -> None:
             nonce="n",
             code_verifier="v" * 43,
         )
+
+
+@pytest.mark.parametrize(
+    ("status", "body"),
+    [
+        (400, b'{"error": "invalid_grant", "error_description": "code expired"}'),
+        (401, b'{"error": "invalid_client"}'),
+        (200, b'{"error": "invalid_grant"}'),
+        (302, b'{"access_token": "a", "token_type": "Bearer", "id_token": "x.y.z"}'),
+        (502, b'{"detail": "bad gateway"}'),
+    ],
+    ids=[
+        "400 invalid_grant OAuthError",
+        "401 invalid_client OAuthError",
+        "200 with error JSON",
+        "302 with JSON body",
+        "502 with non-OAuth JSON",
+    ],
+)
+def test_token_endpoint_oauth_errors_and_non_200_responses_raise_provider_error(
+    status: int, body: bytes
+) -> None:
+    key = _make_rsa_key("k1")
+    now = int(time.time())
+
+    def handle(
+        request: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if request.url == GOOGLE_DISCOVERY_URL:
+            return _json_response(_standard_discovery())
+        if request.url == GOOGLE_JWKS_URI:
+            return _json_response({"keys": [key.as_dict(private=False)]})
+        return status, {"Content-Type": "application/json"}, body
+
+    client = OidcClient(
+        build_provider_configs(_google_settings()), adapter=RecordingAdapter(handle)
+    )
+    with pytest.raises(OidcProviderError) as exc_info:
+        client.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(now=now))
+    assert exc_info.value.reason == "token_exchange_failed"
+
+
+def test_discovery_and_jwks_outage_backoff_avoids_upstream_storms() -> None:
+    key = _make_rsa_key("k1")
+    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
+
+    clock = [1000.0]
+    counts = {"discovery": 0, "jwks": 0}
+    disc_status = [503]
+    jwks_status = [503]
+
+    def backoff_handler(
+        req: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if req.url == GOOGLE_DISCOVERY_URL:
+            counts["discovery"] += 1
+            if disc_status[0] != 200:
+                return disc_status[0], {}, b"down"
+            return _json_response(_standard_discovery())
+        counts["jwks"] += 1
+        if jwks_status[0] != 200:
+            return jwks_status[0], {}, b"down"
+        return _json_response({"keys": [key.as_dict(private=False)]})
+
+    cache = JwksCache(adapter=RecordingAdapter(backoff_handler), clock=lambda: clock[0])
+
+    with pytest.raises(OidcProviderError):
+        cache.get_discovery(google_cfg)
+    assert counts["discovery"] == 1
+    with pytest.raises(OidcProviderError) as backed_off:
+        cache.get_discovery(google_cfg)
+    assert backed_off.value.reason == "provider_backoff"
+    assert counts["discovery"] == 1
+
+    # After backoff elapses, discovery succeeds and caches.
+    clock[0] += FAILURE_BACKOFF_SECONDS + 1.0
+    disc_status[0] = 200
+    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
+    assert counts["discovery"] == 2
+
+    # Cold JWKS outage backs off similarly.
+    with pytest.raises(OidcProviderError):
+        cache.get_key_set(google_cfg)
+    assert counts["jwks"] == 1
+    with pytest.raises(OidcProviderError) as jwks_backed_off:
+        cache.get_key_set(google_cfg)
+    assert jwks_backed_off.value.reason == "provider_backoff"
+    assert counts["jwks"] == 1
+
+    # After backoff elapses, JWKS succeeds and caches.
+    clock[0] += FAILURE_BACKOFF_SECONDS + 1.0
+    jwks_status[0] = 200
+    assert cache.get_key_set(google_cfg) is not None
+    assert counts["jwks"] == 2
+
+    # Warm discovery + JWKS outage past TTL retains stale values AND backs off follow-ups.
+    clock[0] += 7200.0
+    disc_status[0] = 503
+    jwks_status[0] = 503
+    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
+    assert counts["discovery"] == 3
+    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
+    assert counts["discovery"] == 3
+
+    assert cache.get_key_set(google_cfg) is not None
+    assert counts["jwks"] == 3
+    assert cache.get_key_set(google_cfg) is not None
+    assert counts["jwks"] == 3
+
+
+def test_discovery_and_jwks_single_flight_deduplicates_concurrent_fetches() -> None:
+    key = _make_rsa_key("k1")
+    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
+
+    sf_counts = {"discovery": 0, "jwks": 0}
+    disc_entered = threading.Event()
+    disc_release = threading.Event()
+    jwks_entered = threading.Event()
+    jwks_release = threading.Event()
+
+    def sf_handler(
+        req: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if req.url == GOOGLE_DISCOVERY_URL:
+            sf_counts["discovery"] += 1
+            disc_entered.set()
+            disc_release.wait(timeout=5.0)
+            return _json_response(_standard_discovery())
+        sf_counts["jwks"] += 1
+        jwks_entered.set()
+        jwks_release.wait(timeout=5.0)
+        return _json_response({"keys": [key.as_dict(private=False)]})
+
+    sf_cache = JwksCache(adapter=RecordingAdapter(sf_handler))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        f1 = pool.submit(sf_cache.get_discovery, google_cfg)
+        assert disc_entered.wait(timeout=5.0)
+        f2 = pool.submit(sf_cache.get_discovery, google_cfg)
+        time.sleep(0.05)
+        disc_release.set()
+        assert f1.result().issuer == GOOGLE_CANONICAL_ISSUER
+        assert f2.result().issuer == GOOGLE_CANONICAL_ISSUER
+    assert sf_counts["discovery"] == 1
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        k1 = pool.submit(sf_cache.get_key_set, google_cfg)
+        assert jwks_entered.wait(timeout=5.0)
+        k2 = pool.submit(sf_cache.get_key_set, google_cfg)
+        time.sleep(0.05)
+        jwks_release.set()
+        assert k1.result() is not None
+        assert k2.result() is not None
+    assert sf_counts["jwks"] == 1
 
 
 def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() -> None:
@@ -502,11 +648,6 @@ def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() 
     with pytest.raises(SettingsError):
         build_provider_configs(local_on_cloud_run)
 
-    # Confirm KeySet and LOCAL_MOCK_ISSUER consistency with tools.seed.personas.
-    assert LOCAL_MOCK_ISSUER == "http://127.0.0.1/local-mock-oidc"
-    assert isinstance(KeySet([_make_rsa_key("k1")]), KeySet)
-
-    # Direct provider-registry defense-in-depth and issuer-to-provider mapping.
     unsafe_config = ProviderConfig(
         provider=OidcProviderId.LOCAL_MOCK,
         canonical_issuer=LOCAL_MOCK_ISSUER,
@@ -530,16 +671,13 @@ def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() 
         provider_for_issuer("https://unknown.example")
 
 
-def test_jwks_and_client_edge_error_paths() -> None:
-    key = _make_rsa_key("k1")
-    unknown_key = _make_rsa_key("k-unknown")
+def test_validate_id_token_claims_rejects_non_rs256_header_and_unconfigured_provider() -> None:
     configs = build_provider_configs(_google_settings())
     google_cfg = configs[OidcProviderId.GOOGLE]
     now = int(time.time())
 
-    # Direct alg guard in _validate_id_token_claims.
     with pytest.raises(OidcVerificationError):
-        _validate_id_token_claims(
+        validate_id_token_claims(
             google_cfg,
             {"alg": "HS256"},
             _valid_claims(now),
@@ -547,7 +685,6 @@ def test_jwks_and_client_edge_error_paths() -> None:
             now=now,
         )
 
-    # Unconfigured provider raises OidcProviderError.
     with pytest.raises(OidcProviderError):
         OidcClient({}).create_authorization_url(
             OidcProviderId.GOOGLE,
@@ -557,107 +694,79 @@ def test_jwks_and_client_edge_error_paths() -> None:
             code_verifier="v" * 43,
         )
 
-    # Malformed JSON / non-dict JSON / invalid endpoints / bad JWKS / empty JWKS.
-    for body_bytes, url_mode in (
-        (b"not-json", "discovery"),
-        (b"[]", "discovery"),
-        (
-            json.dumps(
-                {
-                    "issuer": GOOGLE_CANONICAL_ISSUER,
-                    "authorization_endpoint": "",
-                    "token_endpoint": GOOGLE_TOKEN_ENDPOINT,
-                    "jwks_uri": GOOGLE_JWKS_URI,
-                }
-            ).encode(),
-            "discovery",
-        ),
-        (
-            json.dumps(
-                {
-                    "issuer": GOOGLE_CANONICAL_ISSUER,
-                    "authorization_endpoint": "http://insecure.example/auth",
-                    "token_endpoint": GOOGLE_TOKEN_ENDPOINT,
-                    "jwks_uri": GOOGLE_JWKS_URI,
-                }
-            ).encode(),
-            "discovery",
-        ),
-        (b'{"keys": "not-a-list"}', "jwks"),
-        (b'{"keys": [{"kty": "RSA"}]}', "jwks"),
-        (b'{"keys": []}', "jwks"),
-    ):
 
-        def _edge_handler(
-            req: requests.PreparedRequest,
-            _timeout: object,
-            *,
-            payload: bytes = body_bytes,
-            mode: str = url_mode,
-        ) -> tuple[int, dict[str, str], bytes]:
-            if req.url == GOOGLE_DISCOVERY_URL and mode == "discovery":
-                return 200, {"Content-Type": "application/json"}, payload
-            if req.url == GOOGLE_DISCOVERY_URL:
-                return _json_response(
-                    {
-                        "issuer": GOOGLE_CANONICAL_ISSUER,
-                        "authorization_endpoint": GOOGLE_AUTH_ENDPOINT,
-                        "token_endpoint": GOOGLE_TOKEN_ENDPOINT,
-                        "jwks_uri": GOOGLE_JWKS_URI,
-                    }
-                )
+MALFORMED_PROVIDER_DOCS: dict[str, tuple[str, bytes]] = {
+    "discovery non-JSON": ("discovery", b"not-json"),
+    "discovery JSON list": ("discovery", b"[]"),
+    "discovery blank auth endpoint": (
+        "discovery",
+        json.dumps({**_standard_discovery(), "authorization_endpoint": ""}).encode(),
+    ),
+    "discovery non-HTTPS auth endpoint": (
+        "discovery",
+        json.dumps(
+            {**_standard_discovery(), "authorization_endpoint": "http://insecure.example/auth"}
+        ).encode(),
+    ),
+    "jwks non-list keys": ("jwks", b'{"keys": "not-a-list"}'),
+    "jwks invalid key object": ("jwks", b'{"keys": [{"kty": "RSA"}]}'),
+    "jwks empty key list": ("jwks", b'{"keys": []}'),
+}
+
+
+@pytest.mark.parametrize(
+    ("mode", "payload"), MALFORMED_PROVIDER_DOCS.values(), ids=MALFORMED_PROVIDER_DOCS
+)
+def test_malformed_discovery_and_jwks_documents_fail_closed(mode: str, payload: bytes) -> None:
+    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
+
+    def handler(
+        req: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if req.url == GOOGLE_DISCOVERY_URL and mode == "discovery":
             return 200, {"Content-Type": "application/json"}, payload
+        if req.url == GOOGLE_DISCOVERY_URL:
+            return _json_response(_standard_discovery())
+        return 200, {"Content-Type": "application/json"}, payload
 
-        cache = JwksCache(adapter=RecordingAdapter(_edge_handler))
-        with pytest.raises(OidcProviderError):
-            cache.get_key_set(google_cfg)
+    cache = JwksCache(adapter=RecordingAdapter(handler))
+    with pytest.raises(OidcProviderError):
+        cache.get_key_set(google_cfg)
 
-    # Stale discovery retained past TTL; unknown-kid outage & still-unknown kid fail closed.
+
+def test_missing_id_token_and_unknown_kid_refetch_failures_fail_closed() -> None:
+    key = _make_rsa_key("k1")
+    unknown_key = _make_rsa_key("k-unknown")
+    configs = build_provider_configs(_google_settings())
+    google_cfg = configs[OidcProviderId.GOOGLE]
+    now = int(time.time())
+
     clock = [1000.0]
-    disc_fail = [False]
     jwks_fail = [False]
     token_payload: dict[str, Any] = {"access_token": "a", "token_type": "Bearer"}
 
-    def _lifecycle_handler(
+    def handler(
         req: requests.PreparedRequest, _timeout: object
     ) -> tuple[int, dict[str, str], bytes]:
         if req.url == GOOGLE_DISCOVERY_URL:
-            if disc_fail[0]:
-                return 503, {}, b"down"
-            return _json_response(
-                {
-                    "issuer": GOOGLE_CANONICAL_ISSUER,
-                    "authorization_endpoint": GOOGLE_AUTH_ENDPOINT,
-                    "token_endpoint": GOOGLE_TOKEN_ENDPOINT,
-                    "jwks_uri": GOOGLE_JWKS_URI,
-                }
-            )
+            return _json_response(_standard_discovery())
         if req.url == GOOGLE_JWKS_URI:
             if jwks_fail[0]:
                 return 503, {}, b"down"
             return _json_response({"keys": [key.as_dict(private=False)]})
         return _json_response(token_payload)
 
-    adapter = RecordingAdapter(_lifecycle_handler)
+    adapter = RecordingAdapter(handler)
     cache = JwksCache(adapter=adapter, clock=lambda: clock[0])
     client = OidcClient(configs, jwks_cache=cache, adapter=adapter)
 
-    # Warm discovery + JWKS, then fail discovery after TTL -> retains stale discovery!
-    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
-    clock[0] += 7200.0
-    disc_fail[0] = True
-    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
-
-    # Missing id_token in token endpoint response -> OidcVerificationError.
     with pytest.raises(OidcVerificationError):
         client.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(now=now))
 
-    # Unknown kid when refetch succeeds but still lacks that kid -> OidcVerificationError.
     token_payload["id_token"] = _sign_rs256(unknown_key, _valid_claims(now))
     with pytest.raises(OidcVerificationError):
         client.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(now=now))
 
-    # Unknown kid when refetch hits 503 outage -> returns None cleanly -> OidcVerificationError.
     clock[0] += UNKNOWN_KID_REFETCH_INTERVAL_SECONDS + 1.0
     jwks_fail[0] = True
     assert cache.refetch_on_unknown_kid(google_cfg) is None

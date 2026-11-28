@@ -57,36 +57,24 @@ CREATE ON SCHEMA public FROM <definer>` before commit. If `roadmaps_owner` itsel
   `apps/api/tests/integration/test_authorisation.py` (failing the standing role-by-route
   matrix, cross-tenant sweep, non-`GET` same-origin sweep and read-only `GET` suite
   immediately if omitted). A new `public()` route also requires a reviewed entry in
-  `PUBLIC_ROUTES` (`apps/api/src/roadmaps_api/authz/routing.py`); the future OIDC
-  callback also registers in `READ_ONLY_GET_EXEMPTIONS`.
+  `PUBLIC_ROUTES` (`apps/api/src/roadmaps_api/authz/routing.py`); the OIDC callback is
+  registered in `READ_ONLY_GET_EXEMPTIONS`.
 - **State-changing API test calls send same-origin and person-assertion headers**:
   non-`GET` requests need `Sec-Fetch-Site: same-origin` (or `Origin: <editor_origin>`),
   `Content-Type: application/json` for routes declaring a body parameter, and
   `X-Roadmaps-Person-Id` when authenticated. Inject test principals by overriding
-  `app.dependency_overrides[get_current_principal]`. In `STY-107`, keep `fetch`'s default
-  mode (not `no-cors` under `no-referrer`) so the browser never sends `Origin: null`, and
-  open the local editor on `localhost:<DEV_PORT>` rather than `127.0.0.1`.
-- **OIDC confinement, session writes and retention purge CLIs (`STY-106`)**:
-  - `authlib`, `joserfc` and `requests` are confined to `roadmaps_api.identity` by
-    `import-linter`, and `roadmaps_api.repositories.sessions` is protected so only
-    `roadmaps_api.services.sessions` may import it; `jose` and `authlib.jose` are banned by
-    ruff. `roadmaps_app` holds zero direct table grants on `sessions` or
-    `sign_in_transactions` (every read/write goes through `roadmaps_auth_definer`).
-  - `get_current_principal` is wired through `app.state.make_session_authenticator` (preserving
-    `authz` < `services` layering and `app.dependency_overrides[get_current_principal]`);
-    `Settings.session_cookie_name` / `transaction_cookie_prefix` carry the local editor port
-    after `__Host-` in `local` mode only.
-  - `ROADMAPS_GOOGLE_CLIENT_ID`, `ROADMAPS_GOOGLE_CLIENT_SECRET` and
-    `ROADMAPS_GOOGLE_ALLOWED_HD` are required in production/unset/invalid/Cloud Run and
-    all-or-nothing optional in `local`/`test`; `ROADMAPS_LOCAL_MOCK_OIDC_URL` is strictly
-    refused outside `local`/`test` or on Cloud Run. `apps/api/scripts/api.sh dev` starts the
-    loopback mock OIDC provider on `127.0.0.1:${OIDC_PORT}` (worktree offset 6, default
-    `8001` outside a worktree).
-  - `roadmaps_api.purge.runner.run_purge` is the shared zero-arg, fail-closed runner for
-    retention CLIs (`roadmaps-purge-transactions`, `roadmaps-purge-sessions`; reuse for
-    `STY-110`'s `roadmaps-purge-invitations`). `ROADMAPS_PURGE_DATABASE_URL` is refused by
-    the API's `load_settings()`.
-  - **PostgreSQL 18 `pg_stat_xact_user_tables` on pooled connections**:
-    `pg_stat_xact_user_tables` can still show the previous transaction's tuple counts when
-    `pg_current_xact_id_if_assigned()` is `NULL`; `_WriteTracker` gates tuple-write diffs on
-    `xid is not None`.
+  `app.dependency_overrides[get_current_principal]` (with `tests/support.py`'s
+  `make_principal`). In `STY-107`, keep `fetch`'s default mode (not `no-cors` under
+  `no-referrer`) so the browser never sends `Origin: null`, and open the local editor on
+  `localhost:<DEV_PORT>` rather than `127.0.0.1`.
+- **Retention purge runner (`STY-106`)**: `roadmaps_api.purge.runner.run_purge` is the
+  shared zero-arg, fail-closed runner for retention CLIs (`roadmaps-purge-transactions`,
+  `roadmaps-purge-sessions`; reuse for `STY-110`'s `roadmaps-purge-invitations`).
+  `ROADMAPS_PURGE_DATABASE_URL` is refused by the API's `load_settings()`.
+- **`sessions.identity_id` uses `ON DELETE RESTRICT` (`STY-106`)**: future identity
+  unlinking (`EPC-028`) must account for `fk_sessions_identity_id_identities` rather than
+  expecting cascading session deletion.
+- **PostgreSQL 18 `pg_stat_xact_user_tables` on pooled connections**:
+  `pg_stat_xact_user_tables` can still show the previous transaction's tuple counts when
+  `pg_current_xact_id_if_assigned()` is `NULL`; `_WriteTracker` gates tuple-write diffs on
+  `xid is not None`.

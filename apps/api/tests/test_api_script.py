@@ -18,8 +18,10 @@ WORKTREE_ENV = (
 )
 
 
-def _prepare_api_script_sandbox(tmp_path: Path, env_worktree: str | None) -> tuple[Path, Path]:
-    """Stages a copy of `api.sh` with stub `docker`/`uv` executables to observe `api.sh dev`."""
+def _prepare_api_script_sandbox(
+    tmp_path: Path, env_worktree: str | None, *, mock_oidc_fails: bool = False
+) -> tuple[Path, Path]:
+    """Stages a copy of `api.sh` with stub `docker`/`uv`/`curl` executables to test `api.sh dev`."""
     script_dir = tmp_path / "apps" / "api" / "scripts"
     script_dir.mkdir(parents=True)
     script = script_dir / "api.sh"
@@ -29,11 +31,12 @@ def _prepare_api_script_sandbox(tmp_path: Path, env_worktree: str | None) -> tup
 
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
+    mock_action = "  exit 1\n" if mock_oidc_fails else "  sleep 10\n  exit 0\n"
     uv_stub = (
         "#!/usr/bin/env bash\n"
         'if [[ "$*" == *"tools.mock_oidc"* ]]; then\n'
         '  printf "MOCK_ARGS=%s\\n" "$*"\n'
-        "  exit 0\n"
+        f"{mock_action}"
         "fi\n"
         'if [[ "$*" == *"roadmaps_api.server"* ]]; then\n'
         '  printf "ORIGIN=%s\\n" "${ROADMAPS_EDITOR_ORIGIN:-}"\n'
@@ -44,7 +47,14 @@ def _prepare_api_script_sandbox(tmp_path: Path, env_worktree: str | None) -> tup
         "fi\n"
         "exit 0\n"
     )
-    for name, body in (("docker", "#!/usr/bin/env bash\nexit 0\n"), ("uv", uv_stub)):
+    curl_stub = (
+        "#!/usr/bin/env bash\nexit 1\n" if mock_oidc_fails else "#!/usr/bin/env bash\nexit 0\n"
+    )
+    for name, body in (
+        ("docker", "#!/usr/bin/env bash\nexit 0\n"),
+        ("curl", curl_stub),
+        ("uv", uv_stub),
+    ):
         exe = bin_dir / name
         exe.write_text(body, encoding="utf-8")
         exe.chmod(exe.stat().st_mode | stat.S_IXUSR)
@@ -136,3 +146,19 @@ def test_api_script_dev_fails_when_worktree_env_lacks_oidc_port(tmp_path: Path) 
 
     assert result.returncode == 1
     assert "OIDC_PORT" in result.stderr
+
+
+def test_api_script_dev_fails_when_mock_oidc_exits_early(tmp_path: Path) -> None:
+    script, bin_dir = _prepare_api_script_sandbox(tmp_path, WORKTREE_ENV, mock_oidc_fails=True)
+    env = {"PATH": f"{bin_dir}:{os.environ.get('PATH', '')}"}
+
+    result = subprocess.run(  # noqa: S603 - staged repo script with controlled PATH
+        [BASH, str(script), "dev"],
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "mock OIDC exited" in result.stderr

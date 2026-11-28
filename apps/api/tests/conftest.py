@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from roadmaps_api.logs import log_config
-from roadmaps_api.settings import MIGRATION_DATABASE_URL
+from roadmaps_api.settings import MIGRATION_DATABASE_URL, PURGE_DATABASE_URL
 from tests import harness
 from tests.support import ConfigureLogging, Lines, make_settings, serving
 
@@ -93,12 +93,13 @@ def database_url(worker_database: str, worker_admin: psycopg.Connection) -> Iter
 
 @pytest.fixture(autouse=True)
 def no_migration_login(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The migration login a developer exported to draft a revision reaches no test.
+    """Privileged migration and purge logins exported in a shell reach no test.
 
-    The API refuses to start with it set, and the server tests' processes inherit the
+    The API refuses to start with either set, and the server tests' processes inherit the
     environment.
     """
     monkeypatch.delenv(MIGRATION_DATABASE_URL, raising=False)
+    monkeypatch.delenv(PURGE_DATABASE_URL, raising=False)
 
 
 # The exporter's HTTP session follows them: a test's stand-in receiver is on 127.0.0.1.

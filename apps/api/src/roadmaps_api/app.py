@@ -84,6 +84,7 @@ def create_app(settings: Settings, *, span_exporter: SpanExporter | None = None)
     app.state.editor_origin = settings.editor_origin
     app.state.session_cookie_name = settings.session_cookie_name
     app.state.transaction_cookie_prefix = settings.transaction_cookie_prefix
+    app.state.format_transaction_cookie_name = settings.transaction_cookie_name
     app.state.oidc_client = oidc_client
     app.state.make_session_authenticator = SessionService
     app.state.serves_live_openapi = settings.serves_live_openapi

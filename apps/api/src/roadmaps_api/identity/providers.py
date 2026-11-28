@@ -1,17 +1,17 @@
 """Pinned OIDC provider registry and deployed-issuer guard (ADR-018, STY-106 S4, D1, D8, D10)."""
 
-import os
+import ipaddress
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Final
+from urllib.parse import urlsplit
 
 from roadmaps_api.settings import (
-    CLOUD_RUN_MARKERS,
     LOCAL_MOCK_OIDC_URL,
     Environment,
     Settings,
-    is_safe_deployed_issuer,
+    is_loopback_host,
     refuse,
 )
 
@@ -19,13 +19,14 @@ GOOGLE_CANONICAL_ISSUER: Final = "https://accounts.google.com"
 GOOGLE_ACCEPTED_ISSUERS: Final = frozenset({"https://accounts.google.com", "accounts.google.com"})
 GOOGLE_DISCOVERY_URL: Final = "https://accounts.google.com/.well-known/openid-configuration"
 
-# Fixed non-HTTPS loopback issuer matching `tools.seed.personas.LOCAL_MOCK_ISSUER`.
+# Fixed non-HTTPS loopback issuer re-exported by `tools.seed.personas.LOCAL_MOCK_ISSUER`.
 LOCAL_MOCK_ISSUER: Final = "http://127.0.0.1/local-mock-oidc"
 LOCAL_MOCK_CLIENT_ID: Final = "roadmaps-local-mock"
 LOCAL_MOCK_CLIENT_SECRET: Final = "roadmaps-local-mock-secret"  # noqa: S105 - local mock only
 
 OIDC_SCOPES: Final = "openid email profile"
 ENTRA_ISSUER_PATTERN: Final = re.compile(r"^https://login\.microsoftonline\.com/[^/]+/v2\.0$")
+_ASCII_SPACE: Final = 0x20
 
 
 class OidcProviderId(StrEnum):
@@ -51,6 +52,27 @@ class ProviderConfig:
     extra_auth_params: tuple[tuple[str, str], ...] = ()
 
 
+def _is_unspecified_ip(hostname: str) -> bool:
+    try:
+        return ipaddress.ip_address(hostname.strip("[]")).is_unspecified
+    except ValueError:
+        return False
+
+
+def is_safe_deployed_issuer(issuer: str) -> bool:
+    """Whether an OIDC issuer is HTTPS on a non-loopback, non-unspecified host (ADR-018, S4)."""
+    if not issuer or any(ch.isspace() or ord(ch) < _ASCII_SPACE for ch in issuer):
+        return False
+    try:
+        parts = urlsplit(issuer)
+        _ = parts.port
+    except ValueError:
+        return False
+    if parts.scheme != "https" or not parts.hostname:
+        return False
+    return not is_loopback_host(parts.hostname) and not _is_unspecified_ip(parts.hostname)
+
+
 def validate_deployed_providers(configs: dict[OidcProviderId, ProviderConfig]) -> None:
     """Fails closed if any configured provider uses a non-HTTPS or loopback issuer (S4)."""
     for config in configs.values():
@@ -59,11 +81,8 @@ def validate_deployed_providers(configs: dict[OidcProviderId, ProviderConfig]) -
 
 
 def build_provider_configs(settings: Settings) -> dict[OidcProviderId, ProviderConfig]:
-    """Builds enabled provider configs and re-verifies S4/D8 invariants at startup."""
-    on_cloud_run = settings.on_cloud_run or any(
-        marker in os.environ for marker in CLOUD_RUN_MARKERS
-    )
-    strict_mode = settings.environment is Environment.PRODUCTION or on_cloud_run
+    """Builds enabled provider configs and re-verifies S4/D8 invariants from `Settings` alone."""
+    strict_mode = settings.environment is Environment.PRODUCTION or settings.on_cloud_run
 
     configs: dict[OidcProviderId, ProviderConfig] = {}
 

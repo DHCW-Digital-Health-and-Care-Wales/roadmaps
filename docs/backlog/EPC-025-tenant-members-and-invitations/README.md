@@ -2,8 +2,9 @@
 
 - **Status**: Active — decomposed from owner answers (2026-11-25: 1a, 4a, 5a); stories
   start `Needs grilling` / `Placeholder` and become selectable as each is grilled
-- **Progress**: 0 of 6 terminal; next selectable: none (depends on EPC-024's STY-104,
-  STY-105, STY-106 and STY-109)
+- **Progress**: 0 of 6 terminal; next selectable: none (`STY-111` is unblocked on
+  EPC-024's `STY-105` and `STY-106` and awaits grilling; `STY-110` depends on `STY-104`,
+  and `STY-112`/`STY-113` depend on `STY-109`)
 - **Binding ADRs**: ADR-002, ADR-008, ADR-010, ADR-015, ADR-017, ADR-018, ADR-019, ADR-020
 
 ## Summary

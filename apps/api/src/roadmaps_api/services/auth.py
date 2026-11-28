@@ -2,6 +2,7 @@
 
 import logging
 import secrets
+import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
@@ -9,9 +10,7 @@ from typing import Annotated, Final
 from urllib.parse import quote
 from uuid import UUID
 
-import psycopg
 from fastapi import Depends, Request
-from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session, sessionmaker
 
 from roadmaps_api.database import Sessions
@@ -23,16 +22,24 @@ from roadmaps_api.identity import (
     TokenExchangeRequest,
     VerifiedIdentity,
 )
-from roadmaps_api.repositories.auth import AuthRepository, NewSignInTransaction
-from roadmaps_api.services.sessions import SessionService, SessionSvc, hash_token
+from roadmaps_api.repositories.auth import (
+    AuthRepository,
+    ConsumedTransaction,
+    NewSignInTransaction,
+)
+from roadmaps_api.services.sessions import (
+    SessionRefusedError,
+    SessionService,
+    SessionSvc,
+    hash_token,
+)
 
 logger = logging.getLogger(__name__)
 
 MAX_RETURN_PATH_LENGTH: Final = 512
 MAX_TRANSACTION_COOKIES_CHECKED: Final = 20
 TRANSACTION_TTL_SECONDS: Final = 600
-_ASCII_SPACE: Final = 0x20
-_ASCII_DEL: Final = 0x7F
+_DISALLOWED_UNICODE_CATEGORIES: Final = frozenset({"Cc", "Cf"})
 
 
 class SignInErrorCode(StrEnum):
@@ -43,6 +50,12 @@ class SignInErrorCode(StrEnum):
     ENTRA_REQUIRED = "entra_required"
     SIGN_IN_CANCELLED = "sign_in_cancelled"
     SIGN_IN_FAILED = "sign_in_failed"
+
+
+_SESSION_REFUSAL_CODES: Final[dict[str, SignInErrorCode]] = {
+    "person_disabled": SignInErrorCode.PERSON_DISABLED,
+    "entra_required": SignInErrorCode.ENTRA_REQUIRED,
+}
 
 
 @dataclass(frozen=True)
@@ -68,7 +81,9 @@ def validate_return_path(raw: str) -> str:
         or raw.startswith("//")
         or "\\" in raw
         or "#" in raw
-        or any(ch.isspace() or ord(ch) < _ASCII_SPACE or ord(ch) == _ASCII_DEL for ch in raw)
+        or any(
+            ch.isspace() or unicodedata.category(ch) in _DISALLOWED_UNICODE_CATEGORIES for ch in raw
+        )
     ):
         msg = "returnPath must be a relative path starting with '/'"
         raise ValueError(msg)
@@ -181,10 +196,12 @@ class AuthService:
         tx_cookie_values: Sequence[str],
         provider: OidcProviderId,
         issuer: str,
-    ) -> tuple[UUID | None, str | None, str | None, str | None]:
+    ) -> ConsumedTransaction | None:
         if not state or not tx_cookie_values:
-            return None, None, None, None
-        cookie_hashes = [hash_token(v) for v in tx_cookie_values[:MAX_TRANSACTION_COOKIES_CHECKED]]
+            return None
+        # Keep the newest transaction cookies when a browser carries more than the bound.
+        recent_cookies = tx_cookie_values[-MAX_TRANSACTION_COOKIES_CHECKED:]
+        cookie_hashes = [hash_token(v) for v in recent_cookies]
         with self._sessions() as session:
             consumed = AuthRepository(session).consume_transaction(
                 state_hash=hash_token(state),
@@ -194,13 +211,8 @@ class AuthService:
             )
             session.commit()
         if consumed is None or consumed.purpose != "sign-in":
-            return None, None, None, None
-        return (
-            consumed.transaction_id,
-            consumed.nonce,
-            consumed.code_verifier,
-            consumed.return_path,
-        )
+            return None
+        return consumed
 
     def _refuse(
         self,
@@ -263,16 +275,14 @@ class AuthService:
                 email=verified.email,
                 display_name=verified.display_name,
             )
-        except DBAPIError as exc:
-            if isinstance(exc.orig, psycopg.errors.RaiseException):
-                return self._refuse(
-                    reason="session_create_refused",
-                    code=SignInErrorCode.SIGN_IN_FAILED,
-                    provider=provider,
-                    person_id=identity.person_id,
-                    consumed_transaction_id=tx_id,
-                )
-            raise
+        except SessionRefusedError as exc:
+            return self._refuse(
+                reason=exc.reason,
+                code=_SESSION_REFUSAL_CODES.get(exc.reason, SignInErrorCode.SIGN_IN_FAILED),
+                provider=provider,
+                person_id=identity.person_id,
+                consumed_transaction_id=tx_id,
+            )
 
         return CallbackOutcome(
             redirect_url=build_success_redirect(self._editor_origin, return_path),
@@ -304,7 +314,7 @@ class AuthService:
             )
 
         if error is not None:
-            tx_id, _, _, _ = self._consume_matching_transaction(
+            consumed = self._consume_matching_transaction(
                 state=state,
                 tx_cookie_values=tx_cookie_values,
                 provider=provider,
@@ -319,10 +329,10 @@ class AuthService:
                     else SignInErrorCode.SIGN_IN_FAILED
                 ),
                 provider=provider,
-                consumed_transaction_id=tx_id,
+                consumed_transaction_id=consumed.transaction_id if consumed is not None else None,
             )
 
-        tx_id, nonce, code_verifier, return_path = (
+        consumed = (
             self._consume_matching_transaction(
                 state=state,
                 tx_cookie_values=tx_cookie_values,
@@ -330,15 +340,9 @@ class AuthService:
                 issuer=config.canonical_issuer,
             )
             if code
-            else (None, None, None, None)
+            else None
         )
-        if (
-            not code
-            or tx_id is None
-            or nonce is None
-            or code_verifier is None
-            or return_path is None
-        ):
+        if not code or consumed is None:
             return self._refuse(
                 reason="missing_code" if not code else "invalid_transaction",
                 code=SignInErrorCode.SIGN_IN_FAILED,
@@ -351,8 +355,8 @@ class AuthService:
                 TokenExchangeRequest(
                     code=code,
                     redirect_uri=self._redirect_uri(provider),
-                    code_verifier=code_verifier,
-                    expected_nonce=nonce,
+                    code_verifier=consumed.code_verifier,
+                    expected_nonce=consumed.nonce,
                 ),
             )
         except OidcError as exc:
@@ -360,14 +364,14 @@ class AuthService:
                 reason=exc.reason,
                 code=SignInErrorCode.SIGN_IN_FAILED,
                 provider=provider,
-                consumed_transaction_id=tx_id,
+                consumed_transaction_id=consumed.transaction_id,
             )
 
         return self._resolve_and_create_session(
             provider=provider,
             verified=verified,
-            return_path=return_path,
-            tx_id=tx_id,
+            return_path=consumed.return_path,
+            tx_id=consumed.transaction_id,
         )
 
 

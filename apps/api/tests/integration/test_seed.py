@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import psycopg
 import pytest
@@ -620,8 +621,6 @@ def test_seed_factories_are_reusable_directly(
         identity = admin_session.scalars(
             select(Identity).where(Identity.person_id == person.id)
         ).one()
-        from uuid import UUID  # noqa: PLC0415
-
         explicit_session_id = UUID("01960000-0000-7000-8000-000000000101")
         explicit_tx_id = UUID("01960000-0000-7000-8000-000000000102")
         auth_session = create_session(

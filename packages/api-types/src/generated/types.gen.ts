@@ -239,13 +239,6 @@ export type SignInCallbackApiV1AuthCallbackProviderGetErrors = {
 
 export type SignInCallbackApiV1AuthCallbackProviderGetError = SignInCallbackApiV1AuthCallbackProviderGetErrors[keyof SignInCallbackApiV1AuthCallbackProviderGetErrors];
 
-export type SignInCallbackApiV1AuthCallbackProviderGetResponses = {
-    /**
-     * Successful Response
-     */
-    200: unknown;
-};
-
 export type ExtendSessionApiV1AuthExtendPostData = {
     body?: never;
     path?: never;

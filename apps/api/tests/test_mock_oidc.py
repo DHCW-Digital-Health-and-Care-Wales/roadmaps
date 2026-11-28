@@ -2,11 +2,16 @@
 
 import base64
 import hashlib
+import os
+import subprocess
+import sys
+from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from fastapi.testclient import TestClient
 
+import tools.mock_oidc.server as mock_server
 from roadmaps_api.identity.providers import (
     LOCAL_MOCK_CLIENT_ID,
     LOCAL_MOCK_CLIENT_SECRET,
@@ -150,12 +155,6 @@ def test_mock_oidc_server_refuses_outside_local_test_or_on_cloud_run(
 def test_mock_oidc_fault_presets_invalid_requests_and_cli_entrypoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import subprocess  # noqa: PLC0415
-    import sys  # noqa: PLC0415
-    from pathlib import Path  # noqa: PLC0415
-
-    import tools.mock_oidc.server as mock_server  # noqa: PLC0415
-
     app = create_mock_oidc_app(base_url="http://127.0.0.1:21646")
     verifier = "test-pkce-verifier-" + "y" * 30
     challenge = _pkce_challenge(verifier)
@@ -243,13 +242,11 @@ def test_mock_oidc_fault_presets_invalid_requests_and_cli_entrypoint(
     monkeypatch.setattr(
         mock_server.uvicorn,
         "run",
-        lambda _app, *, host, port, log_level: calls.append((host, port)),  # noqa: ARG005
+        lambda _app, *, host, port, **_kw: calls.append((host, port)),
     )
     assert mock_server.main(["--port", "21646"], environ={ENV: "local"}) == 0
     assert calls == [("127.0.0.1", 21646)]
     assert mock_server.main([], environ={ENV: "production"}) == 1
-
-    import os  # noqa: PLC0415
 
     proc = subprocess.run(
         [sys.executable, "-m", "tools.mock_oidc"],

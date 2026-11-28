@@ -9,14 +9,21 @@ from dataclasses import dataclass
 from typing import Final
 
 from roadmaps_api.authz import ShippedRoleKey
+from roadmaps_api.identity import LOCAL_MOCK_ISSUER
 
 DHCW_SLUG: Final = "dhcw"
 CWM_AUR_SLUG: Final = "cwm-aur"
 
-# Fixed non-HTTPS loopback issuer so both ADR-018's mock-provider guard and its
-# non-HTTPS/loopback issuer guard independently refuse it outside local/test, without
-# coupling the issuer to any worktree port.
-LOCAL_MOCK_ISSUER: Final = "http://127.0.0.1/local-mock-oidc"
+__all__ = [
+    "CWM_AUR_SLUG",
+    "DHCW_SLUG",
+    "LOCAL_MOCK_ISSUER",
+    "NAMED_PERSONAS",
+    "TENANT_SPECS",
+    "UNINVITED_PERSONA",
+    "PersonaSpec",
+    "TenantSpec",
+]
 
 
 @dataclass(frozen=True)

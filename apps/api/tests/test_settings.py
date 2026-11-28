@@ -9,8 +9,8 @@ from roadmaps_api.settings import (
     CLOUD_RUN_MARKERS,
     Environment,
     SettingsError,
-    is_safe_deployed_issuer,
     load_settings,
+    parse_loopback_http_origin,
 )
 
 URL = "postgresql+psycopg://roadmaps:SECRET-PASSWORD@db.example:5432/roadmaps"
@@ -118,28 +118,10 @@ def test_local_and_test_allow_omitting_google_and_enabling_loopback_mock() -> No
     test_mode = load_settings({**base, "ROADMAPS_ENV": "test"})
     assert test_mode.session_cookie_name == "__Host-session"
 
-
-@pytest.mark.parametrize(
-    ("issuer", "expected"),
-    [
-        ("https://accounts.google.com", True),
-        ("https://login.microsoftonline.com/00000000-0000-0000-0000-000000000001/v2.0", True),
-        ("http://127.0.0.1/local-mock-oidc", False),
-        ("http://accounts.google.com", False),
-        ("https://localhost/oidc", False),
-        ("https://sub.localhost/oidc", False),
-        ("https://127.0.0.1/oidc", False),
-        ("https://127.0.0.2/oidc", False),
-        ("https://[::1]/oidc", False),
-        ("https://0.0.0.0/oidc", False),
-        ("ftp://accounts.google.com", False),
-        ("not-a-url", False),
-    ],
-)
-def test_deployed_issuer_guard_refuses_non_https_and_loopback_issuers(
-    issuer: str, *, expected: bool
-) -> None:
-    assert is_safe_deployed_issuer(issuer) is expected
+    # Cloud Run never prefixes cookies with a local port even if ROADMAPS_ENV=local.
+    cloud_run_local = load_settings({**VALID, "ROADMAPS_ENV": "local", "K_SERVICE": "roadmaps-api"})
+    assert cloud_run_local.session_cookie_name == "__Host-session"
+    assert cloud_run_local.transaction_cookie_prefix == "__Host-tx-"
 
 
 EDITOR_ORIGINS = {
@@ -519,12 +501,26 @@ def test_the_settings_repr_leaves_out_the_database_url_and_the_otlp_endpoint() -
     assert "TOP-SECRET-OIDC-VALUE" not in rendered
 
 
-def test_local_mock_empty_and_issuer_and_loopback_edge_helpers() -> None:
-    from roadmaps_api.settings import (  # noqa: PLC0415
-        is_safe_deployed_issuer,
-        parse_loopback_http_origin,
-    )
+@pytest.mark.parametrize(
+    ("raw_origin", "expected"),
+    [
+        ("http://127.0.0.1:8001", "http://127.0.0.1:8001"),
+        ("http://localhost:8001", "http://localhost:8001"),
+        ("http://[::1]:8001", "http://[::1]:8001"),
+        ("http://0.0.0.0:8001", None),
+        ("http://[::]:8001", None),
+        ("http://[0:0:0:0:0:0:0:0]:8001", None),
+        ("http://[::ffff:0.0.0.0]:8001", None),
+        ("https://127.0.0.1:8001", None),
+    ],
+)
+def test_parse_loopback_http_origin_allows_loopback_and_rejects_unspecified_hosts(
+    raw_origin: str, expected: str | None
+) -> None:
+    assert parse_loopback_http_origin(raw_origin) == expected
 
+
+def test_blank_local_mock_oidc_url_is_treated_as_unset() -> None:
     local_empty_mock = load_settings(
         {
             "ROADMAPS_ENV": "local",
@@ -535,9 +531,3 @@ def test_local_mock_empty_and_issuer_and_loopback_edge_helpers() -> None:
         }
     )
     assert local_empty_mock.local_mock_oidc_url is None
-
-    assert is_safe_deployed_issuer("") is False
-    assert is_safe_deployed_issuer("https://accounts.google.com\n") is False
-    assert is_safe_deployed_issuer("https://accounts.google.com:badport") is False
-    assert is_safe_deployed_issuer("http://accounts.google.com") is False
-    assert parse_loopback_http_origin("http://0.0.0.0:8001") is None

@@ -9,9 +9,9 @@ body validation (STY-105 D5, D9, D11, D12, D14).
 
 import logging
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Final, Protocol, TypeGuard
 from uuid import UUID
@@ -78,10 +78,10 @@ class AuthenticatedPrincipal:
 
     person_id: UUID
     session_id: UUID
-    provider: str = "local_mock"
-    signed_in_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    idle_expires_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    absolute_expires_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    provider: str
+    signed_in_at: datetime
+    idle_expires_at: datetime
+    absolute_expires_at: datetime
 
 
 class SessionAuthenticator(Protocol):
@@ -145,11 +145,29 @@ def _parse_canonical_uuid(raw: str) -> UUID | None:
     return parsed if str(parsed) == raw.lower() else None
 
 
-def _parse_permission(raw: str) -> Permission | None:
-    try:
-        return Permission(raw)
-    except ValueError:
-        return None
+_PERMISSIONS_BY_VALUE: Final[dict[str, Permission]] = {p.value: p for p in Permission}
+
+
+def parse_role_permissions(
+    raw_permissions: Iterable[str], *, tenant_id: UUID, role_id: UUID
+) -> frozenset[Permission]:
+    """Parses stored permission strings strictly against `Permission`, refusing unknown values."""
+    permissions: set[Permission] = set()
+    for raw in raw_permissions:
+        permission = _PERMISSIONS_BY_VALUE.get(raw)
+        if permission is None:
+            # Never log the raw unknown permission string (D11, ADR-018/ADR-019).
+            logger.error(
+                "authz.unknown_permission",
+                extra={
+                    "tenant_id": str(tenant_id),
+                    "role_id": str(role_id),
+                    "code": ErrorCode.FORBIDDEN.value,
+                },
+            )
+            raise ApiError(ErrorCode.FORBIDDEN)
+        permissions.add(permission)
+    return frozenset(permissions)
 
 
 def _is_valid_tenant_slug(value: object) -> TypeGuard[str]:
@@ -202,28 +220,14 @@ def resolve_tenant_context(
             role_id=role_id
         )
 
-    permissions: set[Permission] = set()
-    for raw in raw_permissions:
-        permission = _parse_permission(raw)
-        if permission is None:
-            # Never log the raw unknown permission string (D11, ADR-018/ADR-019).
-            logger.error(
-                "authz.unknown_permission",
-                extra={
-                    "tenant_id": str(tenant_id),
-                    "role_id": str(role_id),
-                    "code": ErrorCode.FORBIDDEN.value,
-                },
-            )
-            raise ApiError(ErrorCode.FORBIDDEN)
-        permissions.add(permission)
+    permissions = parse_role_permissions(raw_permissions, tenant_id=tenant_id, role_id=role_id)
 
     return TenantContext(
         tenant_id=tenant_id,
         tenant_slug=tenant_slug,
         person_id=principal.person_id,
         role_id=role_id,
-        permissions=frozenset(permissions),
+        permissions=permissions,
         _sessions=sessions,
     )
 

@@ -5,11 +5,13 @@ windows (> 1 day past `expires_at` for transactions; > 30 days past ended time f
 sessions), dedicated `roadmaps_purge` login execution, and allow-listed JSON log output.
 """
 
+import subprocess
+import sys
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import psycopg
 import pytest
-from sqlalchemy import text
 
 from roadmaps_api.purge import sessions as purge_sessions
 from roadmaps_api.purge import transactions as purge_transactions
@@ -225,10 +227,8 @@ def test_purge_sessions_removes_only_sessions_ended_over_thirty_days_ago(
         deleted_ids = {revoked_old.id, idle_expired_old.id}
         session.commit()
 
-    # Verify non-superuser purge role works cleanly without reading tables directly.
-    assert worker_admin.execute(
-        text("SELECT count(*) FROM public.sessions").text.encode()
-    ).fetchone() == (5,)
+    # Confirm seeded session count before running the purge job under roadmaps_purge.
+    assert worker_admin.execute("SELECT count(*) FROM public.sessions").fetchone() == (5,)
     rc = purge_sessions.main([], environ={PURGE_DATABASE_URL: harness.purge_url(worker_database)})
     assert rc == 0
     [done_line] = lines.read()
@@ -249,10 +249,6 @@ def test_purge_console_scripts_run_and_refuse_unexpected_args(
     worker_database: str, script_name: str
 ) -> None:
     """Smoke-checks `[project.scripts]` entrypoints in `.venv/bin/` (D15)."""
-    import subprocess  # noqa: PLC0415
-    import sys  # noqa: PLC0415
-    from pathlib import Path  # noqa: PLC0415
-
     binary = Path(sys.executable).parent / script_name
     env = {"ROADMAPS_PURGE_DATABASE_URL": harness.purge_url(worker_database)}
     ok = subprocess.run(  # noqa: S603 - repo venv console script

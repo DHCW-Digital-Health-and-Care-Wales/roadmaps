@@ -3,10 +3,11 @@
 import hashlib
 import logging
 import secrets
-from typing import Annotated
+from typing import Annotated, Final
 from uuid import UUID
 
 from fastapi import Depends
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session, sessionmaker
 
 from roadmaps_api.authz import AuthenticatedPrincipal
@@ -20,6 +21,22 @@ from roadmaps_api.repositories.sessions import (
 )
 
 logger = logging.getLogger(__name__)
+
+# SQLSTATEs raised by `public.create_session` for expected domain refusals (P0001 raise_exception,
+# P0002 no_data_found, 22023 invalid_parameter_value); transient/infrastructure errors propagate.
+_SESSION_REFUSAL_SQLSTATES: Final = frozenset({"P0001", "P0002", "22023"})
+_SESSION_REFUSAL_REASONS: Final[dict[str, str]] = {
+    "person is disabled": "person_disabled",
+    "entra sign-in required": "entra_required",
+}
+
+
+class SessionRefusedError(Exception):
+    """Raised when `public.create_session` refuses to establish a session for a domain reason."""
+
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(reason)
 
 
 def hash_token(raw_token: str) -> bytes:
@@ -46,16 +63,24 @@ class SessionService:
         raw_token = secrets.token_urlsafe(32)
         token_hash = hash_token(raw_token)
         with self._sessions() as session:
-            created = SessionRepository(session).create(
-                NewSession(
-                    token_hash=token_hash,
-                    person_id=person_id,
-                    identity_id=identity_id,
-                    provider=provider,
-                    email=email,
-                    display_name=display_name,
+            try:
+                created = SessionRepository(session).create(
+                    NewSession(
+                        token_hash=token_hash,
+                        person_id=person_id,
+                        identity_id=identity_id,
+                        provider=provider,
+                        email=email,
+                        display_name=display_name,
+                    )
                 )
-            )
+            except DBAPIError as exc:
+                sqlstate = getattr(exc.orig, "sqlstate", None)
+                if sqlstate in _SESSION_REFUSAL_SQLSTATES:
+                    primary = getattr(getattr(exc.orig, "diag", None), "message_primary", None)
+                    reason = _SESSION_REFUSAL_REASONS.get(primary or "", "session_create_refused")
+                    raise SessionRefusedError(reason) from None
+                raise
             session.commit()
         logger.info(
             "auth.signed_in",

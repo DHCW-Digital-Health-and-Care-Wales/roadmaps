@@ -410,7 +410,7 @@ def _create_auth_definer_routines() -> None:
             SELECT p.disabled_at INTO v_disabled_at
             FROM public.people AS p
             WHERE p.id = p_person_id
-            FOR SHARE;
+            FOR NO KEY UPDATE;
             IF NOT FOUND THEN
                 RAISE EXCEPTION 'person not found' USING ERRCODE = 'P0002';
             END IF;

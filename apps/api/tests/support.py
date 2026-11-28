@@ -8,11 +8,18 @@ route of their own, and the body limit a route that reads no body. The server te
 import contextlib
 import json
 import socket
+import threading
+import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from typing import Annotated, Any, Final
+from datetime import UTC, datetime, timedelta
+from typing import Annotated, Any, Final, override
+from uuid import UUID
 
+import httpx2
 import pytest
+import requests
+import uvicorn
 from fastapi import APIRouter, FastAPI, Query, Request
 from fastapi.testclient import TestClient
 from opentelemetry import trace
@@ -20,6 +27,7 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import SpanKind, Status, StatusCode
+from requests.adapters import BaseAdapter
 from sqlalchemy import text
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -27,9 +35,10 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.exceptions import HTTPException  # noqa: TID251
 
 from roadmaps_api.app import create_app
-from roadmaps_api.authz import PolicyAPIRoute, public
+from roadmaps_api.authz import AuthenticatedPrincipal, PolicyAPIRoute, public
 from roadmaps_api.settings import Environment, Settings, load_settings
 from roadmaps_api.wire import ApiRequestModel
+from tools.mock_oidc.app import create_mock_oidc_app
 
 TEST_HOST: Final = "testserver"
 TEST_EDITOR_ORIGIN: Final = f"http://{TEST_HOST}"
@@ -73,17 +82,105 @@ def free_port() -> int:
         return probe.getsockname()[1]
 
 
+DEFAULT_TEST_SESSION_ID: Final = UUID("01950000-0000-7000-8000-000000000099")
+
+
+def make_principal(
+    person_id: UUID,
+    *,
+    session_id: UUID = DEFAULT_TEST_SESSION_ID,
+    provider: str = "local_mock",
+) -> AuthenticatedPrincipal:
+    """Builds a complete `AuthenticatedPrincipal` for dependency-override tests."""
+    now = datetime.now(UTC)
+    return AuthenticatedPrincipal(
+        person_id=person_id,
+        session_id=session_id,
+        provider=provider,
+        signed_in_at=now,
+        idle_expires_at=now + timedelta(minutes=60),
+        absolute_expires_at=now + timedelta(hours=10),
+    )
+
+
+class RecordingAdapter(BaseAdapter):
+    """In-memory `requests.adapters.BaseAdapter` capturing outbound calls without sockets."""
+
+    def __init__(
+        self,
+        handler: Callable[[requests.PreparedRequest, Any], tuple[int, dict[str, str], bytes]],
+    ) -> None:
+        super().__init__()
+        self._handler = handler
+        self.calls: list[tuple[str, str, Any]] = []
+
+    @override
+    def send(
+        self,
+        request: requests.PreparedRequest,
+        stream: bool = False,
+        timeout: float | tuple[float | None, float | None] | None = None,
+        verify: bool | str = True,
+        cert: bytes | str | tuple[bytes | str, bytes | str] | None = None,
+        proxies: dict[str, str] | None = None,
+    ) -> requests.Response:
+        assert request.url is not None
+        assert request.method is not None
+        self.calls.append((request.method, request.url, timeout))
+        status, headers, body = self._handler(request, timeout)
+        response = requests.Response()
+        response.status_code = status
+        response.headers.update(headers)
+        response._content = body  # noqa: SLF001 - standard BaseAdapter response construction
+        response.url = request.url
+        response.request = request
+        return response
+
+    def close(self) -> None:
+        return None
+
+
+@contextmanager
+def serving_mock_oidc() -> Generator[str]:
+    """Starts the in-repo local mock OIDC FastAPI app on an ephemeral loopback port."""
+    port = free_port()
+    base_url = f"http://127.0.0.1:{port}"
+    mock_app = create_mock_oidc_app(base_url=base_url)
+    server = uvicorn.Server(
+        uvicorn.Config(mock_app, host="127.0.0.1", port=port, log_level="critical")
+    )
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    deadline = time.monotonic() + 10.0
+    while time.monotonic() < deadline:
+        try:
+            if httpx2.get(f"{base_url}/health").status_code == 200:
+                break
+        except httpx2.TransportError:
+            time.sleep(0.05)
+    else:
+        pytest.fail("local mock OIDC server did not start")
+    try:
+        yield base_url
+    finally:
+        server.should_exit = True
+        thread.join(timeout=5.0)
+
+
 def make_settings(
     url: str = DOWN_DATABASE_URL,
     environment: Environment = Environment.TEST,
     hosts: tuple[str, ...] = (TEST_HOST,),
     editor_origin: str = TEST_EDITOR_ORIGIN,
+    *,
+    local_mock_oidc_url: str | None = None,
 ) -> Settings:
     return Settings(
         environment=environment,
         database_url=url,
         allowed_hosts=hosts,
         editor_origin=editor_origin,
+        local_mock_oidc_url=local_mock_oidc_url,
     )
 
 

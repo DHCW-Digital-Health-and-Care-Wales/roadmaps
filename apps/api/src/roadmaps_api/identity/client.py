@@ -6,19 +6,20 @@ from dataclasses import dataclass
 from typing import Any, Final
 
 import requests
+from authlib.common.errors import AuthlibBaseError
 from authlib.integrations.requests_client import OAuth2Session
-from authlib.oauth2.rfc6749.errors import OAuth2Error
 from authlib.oidc.core import CodeIDToken
 from joserfc import jwt
 from joserfc.errors import InvalidKeyIdError, JoseError
 from joserfc.jwk import KeySet
 from requests.adapters import BaseAdapter
 
+from roadmaps_api.identity.errors import OidcProviderError, OidcVerificationError
 from roadmaps_api.identity.jwks import (
+    HTTP_OK,
     OUTBOUND_TIMEOUT,
+    DiscoveryDocument,
     JwksCache,
-    OidcError,
-    OidcProviderError,
 )
 from roadmaps_api.identity.providers import (
     OIDC_SCOPES,
@@ -28,18 +29,6 @@ from roadmaps_api.identity.providers import (
 
 ALLOWED_JWS_ALGORITHMS: Final[tuple[str, ...]] = ("RS256",)
 CLOCK_SKEW_SECONDS: Final[int] = 60
-
-
-class OidcVerificationError(OidcError):
-    """Raised when an ID token fails signature, algorithm or claim validation."""
-
-
-def _verify_error(reason: str) -> OidcVerificationError:
-    return OidcVerificationError(reason)
-
-
-def _provider_error(reason: str) -> OidcProviderError:
-    return OidcProviderError(reason)
 
 
 @dataclass(frozen=True)
@@ -68,6 +57,14 @@ def _is_numeric_timestamp(value: object) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def _require_http_ok_response(response: requests.Response) -> requests.Response:
+    """Compliance hook enforcing HTTP 200 on token-endpoint responses (RFC 6749 §5.1)."""
+    if response.status_code != HTTP_OK:
+        msg = "token_exchange_failed"
+        raise OidcProviderError(msg)
+    return response
+
+
 def _validate_standard_claims(
     config: ProviderConfig,
     header: Mapping[str, Any],
@@ -78,20 +75,20 @@ def _validate_standard_claims(
 ) -> CodeIDToken:
     if header.get("alg") != "RS256":
         msg = "invalid_alg"
-        raise _verify_error(msg)
+        raise OidcVerificationError(msg)
 
     for time_claim in ("exp", "iat"):
         if not _is_numeric_timestamp(raw_claims.get(time_claim)):
             msg = f"invalid_{time_claim}"
-            raise _verify_error(msg)
+            raise OidcVerificationError(msg)
     if "nbf" in raw_claims and not _is_numeric_timestamp(raw_claims["nbf"]):
         msg = "invalid_nbf"
-        raise _verify_error(msg)
+        raise OidcVerificationError(msg)
 
     nonce = raw_claims.get("nonce")
     if not isinstance(nonce, str) or not hmac.compare_digest(nonce, expected_nonce):
         msg = "invalid_nonce"
-        raise _verify_error(msg)
+        raise OidcVerificationError(msg)
 
     options: dict[str, Any] = {
         "iss": {"essential": True, "values": list(config.accepted_issuers)},
@@ -110,18 +107,18 @@ def _validate_standard_claims(
         claims.validate(now=now, leeway=CLOCK_SKEW_SECONDS)
     except JoseError as exc:
         msg = "invalid_claims"
-        raise _verify_error(msg) from exc
+        raise OidcVerificationError(msg) from exc
 
     # Explicitly guard `azp` whenever the key is present (including empty/non-string values).
     if "azp" in claims:
         azp = claims["azp"]
         if not isinstance(azp, str) or azp != config.client_id:
             msg = "invalid_azp"
-            raise _verify_error(msg)
+            raise OidcVerificationError(msg)
     return claims
 
 
-def _validate_id_token_claims(
+def validate_id_token_claims(
     config: ProviderConfig,
     header: Mapping[str, Any],
     raw_claims: Mapping[str, Any],
@@ -129,6 +126,7 @@ def _validate_id_token_claims(
     expected_nonce: str,
     now: int | None,
 ) -> VerifiedIdentity:
+    """Validates decoded ID-token headers and claims against `config`."""
     claims = _validate_standard_claims(
         config, header, raw_claims, expected_nonce=expected_nonce, now=now
     )
@@ -136,22 +134,22 @@ def _validate_id_token_claims(
     subject = claims.get("sub")
     if not isinstance(subject, str) or not subject.strip():
         msg = "invalid_sub"
-        raise _verify_error(msg)
+        raise OidcVerificationError(msg)
 
     email = claims.get("email")
     if not isinstance(email, str) or not email.strip():
         msg = "invalid_email"
-        raise _verify_error(msg)
+        raise OidcVerificationError(msg)
 
     if config.require_email_verified and claims.get("email_verified") is not True:
         msg = "email_not_verified"
-        raise _verify_error(msg)
+        raise OidcVerificationError(msg)
 
     if config.allowed_hd is not None:
         hd = claims.get("hd")
         if not isinstance(hd, str) or hd.strip().lower() not in config.allowed_hd:
             msg = "hd_not_allowed"
-            raise _verify_error(msg)
+            raise OidcVerificationError(msg)
 
     raw_name = claims.get("name")
     display_name = raw_name.strip() if isinstance(raw_name, str) and raw_name.strip() else None
@@ -186,7 +184,7 @@ class OidcClient:
         config = self._providers.get(provider)
         if config is None:
             msg = "provider_not_enabled"
-            raise _provider_error(msg)
+            raise OidcProviderError(msg)
         return config
 
     def _make_oauth_session(self, config: ProviderConfig, *, redirect_uri: str) -> OAuth2Session:
@@ -198,6 +196,7 @@ class OidcClient:
             code_challenge_method="S256",
         )
         session.trust_env = False
+        session.register_compliance_hook("access_token_response", _require_http_ok_response)
         if self._adapter is not None:
             session.mount("https://", self._adapter)
             session.mount("http://", self._adapter)
@@ -226,23 +225,25 @@ class OidcClient:
             )
         return str(url)
 
-    def _decode_with_rollover(self, config: ProviderConfig, raw_id_token: str) -> jwt.Token:
-        key_set: KeySet = self._jwks_cache.get_key_set(config)
+    def _decode_with_rollover(
+        self, config: ProviderConfig, raw_id_token: str, *, discovery: DiscoveryDocument
+    ) -> jwt.Token:
+        key_set: KeySet = self._jwks_cache.get_key_set(config, discovery=discovery)
         try:
             return jwt.decode(raw_id_token, key_set, algorithms=list(ALLOWED_JWS_ALGORITHMS))
         except InvalidKeyIdError:
-            refreshed = self._jwks_cache.refetch_on_unknown_kid(config)
+            refreshed = self._jwks_cache.refetch_on_unknown_kid(config, discovery=discovery)
             if refreshed is None:
                 msg = "unknown_kid"
-                raise _verify_error(msg) from None
+                raise OidcVerificationError(msg) from None
             try:
                 return jwt.decode(raw_id_token, refreshed, algorithms=list(ALLOWED_JWS_ALGORITHMS))
-            except JoseError as exc:
+            except (JoseError, ValueError) as exc:
                 msg = "invalid_signature"
-                raise _verify_error(msg) from exc
+                raise OidcVerificationError(msg) from exc
         except (JoseError, ValueError) as exc:
             msg = "invalid_token"
-            raise _verify_error(msg) from exc
+            raise OidcVerificationError(msg) from exc
 
     def exchange_code_and_verify(
         self,
@@ -261,17 +262,17 @@ class OidcClient:
                     timeout=OUTBOUND_TIMEOUT,
                     allow_redirects=False,
                 )
-            except (OAuth2Error, requests.RequestException, ValueError) as exc:
+            except (AuthlibBaseError, requests.RequestException, ValueError) as exc:
                 msg = "token_exchange_failed"
-                raise _provider_error(msg) from exc
+                raise OidcProviderError(msg) from exc
 
         raw_id_token = token_response.get("id_token") if isinstance(token_response, dict) else None
         if not isinstance(raw_id_token, str) or not raw_id_token:
             msg = "missing_id_token"
-            raise _verify_error(msg)
+            raise OidcVerificationError(msg)
 
-        decoded = self._decode_with_rollover(config, raw_id_token)
-        return _validate_id_token_claims(
+        decoded = self._decode_with_rollover(config, raw_id_token, discovery=discovery)
+        return validate_id_token_claims(
             config,
             decoded.header,
             decoded.claims,

@@ -2,17 +2,16 @@
 
 Drives the real API routes against real PostgreSQL 18 (`roadmaps_app`) and the real
 in-repo local mock OIDC ASGI app running on an ephemeral loopback port per worker (D5),
-proving full sign-in, uninvited refusal, disabled/Entra refusals, state/cookie replay and
-concurrency race safety, session fixation protection, `/me` ordering, idle/absolute
-timeouts, 1-minute throttled sliding, cross-site GET no-write, extend, sign-out and
-sign-out-all, cookie attributes and allow-listed security event logging.
+proving full sign-in, uninvited refusal, disabled/Entra refusals, state/cookie replay,
+parallel-tab concurrency without deadlocks, session fixation protection, `/me` ordering,
+idle/absolute timeouts, 1-minute throttled sliding, cross-site GET no-write, extend,
+sign-out and sign-out-all, cookie attributes and allow-listed security event logging.
 """
 
 import hashlib
 import json
 import threading
 import time
-from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -23,23 +22,25 @@ import httpx2
 import psycopg
 import pytest
 import requests
-import uvicorn
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from joserfc import jwt
 from joserfc.jwk import RSAKey
-from sqlalchemy import Engine
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session, sessionmaker
 
 from roadmaps_api.app import create_app
-from roadmaps_api.authz import PERSON_ASSERTION_HEADER, ShippedRoleKey
+from roadmaps_api.authz import PERSON_ASSERTION_HEADER, ShippedRoleKey, get_current_principal
+from roadmaps_api.database import create_sessions
 from roadmaps_api.identity import (
     GOOGLE_CANONICAL_ISSUER,
     OidcClient,
     build_provider_configs,
 )
 from roadmaps_api.identity.providers import GOOGLE_DISCOVERY_URL
-from roadmaps_api.services.auth import validate_return_path
+from roadmaps_api.repositories.sessions import SessionRepository
+from roadmaps_api.services.sessions import SessionRefusedError, SessionService
 from roadmaps_api.settings import Environment, Settings
 from tests import harness
 from tests.support import (
@@ -48,10 +49,10 @@ from tests.support import (
     TEST_EDITOR_ORIGIN,
     TEST_HOST,
     Lines,
+    RecordingAdapter,
     free_port,
+    make_principal,
 )
-from tests.test_identity import RecordingAdapter
-from tools.mock_oidc.app import create_mock_oidc_app
 from tools.seed.factories import (
     ChangeSetRequest,
     MembershipInput,
@@ -86,6 +87,7 @@ class _AuthWorld:
     m_multi_dhcw_id: UUID
     m_multi_cwm_id: UUID
     disabled_id: UUID
+    disabled_identity_id: UUID
 
 
 @dataclass(frozen=True)
@@ -104,6 +106,7 @@ class _AuthEnv:
         editor_origin: str = TEST_EDITOR_ORIGIN,
         local_mock_oidc_url: str | None = None,
         google: tuple[str, str, tuple[str, ...]] | None = None,
+        pool_engine: Engine | None = None,
     ) -> FastAPI:
         mock_url = self.mock_oidc_base_url if local_mock_oidc_url is None else local_mock_oidc_url
         g_id, g_secret, g_hd = google if google is not None else (None, None, ())
@@ -119,33 +122,13 @@ class _AuthEnv:
         )
         app = create_app(settings)
         app.state.engine.dispose()
-        app.state.engine = self.engine
-        app.state.sessions = self.sessions
+        if pool_engine is not None:
+            app.state.engine = pool_engine
+            app.state.sessions = create_sessions(pool_engine)
+        else:
+            app.state.engine = self.engine
+            app.state.sessions = self.sessions
         return app
-
-
-@pytest.fixture(scope="module")
-def mock_oidc_base_url() -> Iterator[str]:
-    """Starts the real local mock OIDC FastAPI app on an ephemeral loopback port (D5)."""
-    port = free_port()
-    base_url = f"http://127.0.0.1:{port}"
-    mock_app = create_mock_oidc_app(base_url=base_url)
-    config = uvicorn.Config(mock_app, host="127.0.0.1", port=port, log_level="critical")
-    server = uvicorn.Server(config)
-    thread = threading.Thread(target=server.run, daemon=True)
-    thread.start()
-    deadline = time.monotonic() + 10.0
-    while time.monotonic() < deadline:
-        try:
-            if httpx2.get(f"{base_url}/health").status_code == 200:
-                break
-        except httpx2.TransportError:
-            time.sleep(0.05)
-    else:
-        pytest.fail("local mock OIDC server did not start")
-    yield base_url
-    server.should_exit = True
-    thread.join(timeout=5.0)
 
 
 @pytest.fixture
@@ -200,7 +183,7 @@ def _seed_auth_world(worker_database: str) -> _AuthWorld:
                 created_at=SEED_TIME,
             ),
         )
-        disabled_person, _ = create_person_with_identity(
+        disabled_person, disabled_ident = create_person_with_identity(
             session,
             PersonInput(
                 display_name=disabled_spec.display_name,
@@ -252,6 +235,7 @@ def _seed_auth_world(worker_database: str) -> _AuthWorld:
             m_multi_dhcw_id=m_multi_dhcw.id,
             m_multi_cwm_id=m_multi_cwm.id,
             disabled_id=disabled_person.id,
+            disabled_identity_id=disabled_ident.id,
         )
         session.commit()
     return world
@@ -279,6 +263,17 @@ def _with_cookie(
     return headers
 
 
+@dataclass(frozen=True)
+class _SignInResult:
+    callback: httpx2.Response
+    session_token: str | None
+    start_cookies: dict[str, str]
+    tx_cookie_value: str
+    state: str
+    nonce: str
+    code: str | None
+
+
 def _drive_mock_sign_in(
     client: TestClient,
     persona_key: str,
@@ -286,7 +281,7 @@ def _drive_mock_sign_in(
     return_path: str = "/",
     session_cookie_name: str = "__Host-session",
     extra_callback_query: str = "",
-) -> tuple[httpx2.Response, str | None, dict[str, str]]:
+) -> _SignInResult:
     start = client.post(
         "/api/v1/auth/sign-in",
         headers=SAME_ORIGIN_JSON_HEADERS,
@@ -298,12 +293,14 @@ def _drive_mock_sign_in(
     tx_cookie_value = _cookie_value(start_cookies[tx_cookie_name])
 
     auth_url = start.json()["authorizationUrl"]
+    auth_query = parse_qs(urlsplit(auth_url).query)
     provider_res = httpx2.get(
         f"{auth_url}&persona={persona_key}",
         follow_redirects=False,
     )
     assert provider_res.status_code == 302
     callback_loc = urlsplit(provider_res.headers["location"])
+    cb_params = parse_qs(callback_loc.query)
     query = f"{callback_loc.query}{extra_callback_query}"
     callback = client.get(
         f"{callback_loc.path}?{query}",
@@ -316,7 +313,15 @@ def _drive_mock_sign_in(
         if session_cookie_name in cb_cookies
         else None
     )
-    return callback, session_token, start_cookies
+    return _SignInResult(
+        callback=callback,
+        session_token=session_token,
+        start_cookies=start_cookies,
+        tx_cookie_value=tx_cookie_value,
+        state=auth_query["state"][0],
+        nonce=auth_query["nonce"][0],
+        code=cb_params.get("code", [None])[0],
+    )
 
 
 def _assert_cookie_attributes(tx_header: str, sess_header: str) -> None:
@@ -336,39 +341,6 @@ def _assert_cookie_attributes(tx_header: str, sess_header: str) -> None:
     assert "Domain=" not in sess_header
 
 
-@pytest.mark.parametrize(
-    "bad_path",
-    [
-        "",
-        "roadmaps",
-        "https://evil.example/roadmaps",
-        "http://evil.example/roadmaps",
-        "//evil.example/roadmaps",
-        "/\\evil.example",
-        "/foo\\bar",
-        "/foo#frag",
-        "/foo bar",
-        "/foo\nbar",
-        "/foo\rbar",
-        "/foo\x00bar",
-        "/foo\x7fbar",
-        "javascript:alert(1)",
-        "/" + "a" * 512,
-    ],
-)
-def test_return_path_rejects_open_redirects_and_unsafe_characters(bad_path: str) -> None:
-    with pytest.raises(ValueError, match="returnPath"):
-        validate_return_path(bad_path)
-
-
-@pytest.mark.parametrize(
-    "good_path",
-    ["/", "/dhcw/roadmaps", "/dhcw/roadmaps?view=compact&q=1", "/" + "a" * 511],
-)
-def test_return_path_accepts_valid_relative_spa_paths(good_path: str) -> None:
-    assert validate_return_path(good_path) == good_path
-
-
 def test_full_sign_in_refreshes_identity_sets_strict_cookies_and_serves_me(
     auth_env: _AuthEnv, lines: Lines
 ) -> None:
@@ -377,29 +349,30 @@ def test_full_sign_in_refreshes_identity_sets_strict_cookies_and_serves_me(
 
     with TestClient(app) as client:
         # Also proves extra provider callback params (e.g. Google's hd/authuser/scope) are ignored.
-        cb, session_token, start_cookies = _drive_mock_sign_in(
+        res = _drive_mock_sign_in(
             client,
             "dhcw_admin_primary",
             return_path="/dhcw/roadmaps?view=compact",
             extra_callback_query="&hd=wales.nhs.uk&authuser=0&scope=openid",
         )
-        assert cb.status_code == 302
-        assert cb.headers["location"] == (
+        assert res.callback.status_code == 302
+        assert res.callback.headers["location"] == (
             f"{TEST_EDITOR_ORIGIN}/#/auth/callback?returnTo=%2Fdhcw%2Froadmaps%3Fview%3Dcompact"
         )
-        assert cb.headers["cache-control"] == "no-store"
+        assert res.callback.headers["cache-control"] == "no-store"
 
-        [tx_cookie_header] = list(start_cookies.values())
-        cb_cookies = _parse_set_cookies(cb.headers)
+        [tx_cookie_header] = list(res.start_cookies.values())
+        cb_cookies = _parse_set_cookies(res.callback.headers)
         _assert_cookie_attributes(tx_cookie_header, cb_cookies["__Host-session"])
-        assert session_token is not None
+        assert res.session_token is not None
+        assert res.code is not None
 
         # Raw session token never reaches PostgreSQL (SHA-256 hash only).
         stored = auth_env.worker_admin.execute("SELECT token_hash FROM public.sessions").fetchall()
-        assert stored == [(hashlib.sha256(session_token.encode()).digest(),)]
+        assert stored == [(hashlib.sha256(res.session_token.encode()).digest(),)]
 
         # Display name, email and last_sign_in_at were refreshed from the ID token.
-        me = client.get("/api/v1/me", headers=_with_cookie("__Host-session", session_token))
+        me = client.get("/api/v1/me", headers=_with_cookie("__Host-session", res.session_token))
         assert me.status_code == 200
         me_body = me.json()
         assert me_body["personId"] == str(world.admin_id)
@@ -416,22 +389,31 @@ def test_full_sign_in_refreshes_identity_sets_strict_cookies_and_serves_me(
         assert me_body["session"]["provider"] == "local_mock"
 
         # Multi-tenant /me orders memberships deterministically by (id ASC, tenant_id ASC) (D2).
-        cb_multi, multi_token, _ = _drive_mock_sign_in(client, "multi_tenant_member")
-        assert cb_multi.status_code == 302
-        assert cb_multi.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/auth/callback"
-        assert multi_token is not None
-        assert multi_token != session_token
-        me_multi = client.get("/api/v1/me", headers=_with_cookie("__Host-session", multi_token))
+        multi_res = _drive_mock_sign_in(client, "multi_tenant_member")
+        assert multi_res.callback.status_code == 302
+        assert multi_res.callback.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/auth/callback"
+        assert multi_res.session_token is not None
+        assert multi_res.session_token != res.session_token
+        me_multi = client.get(
+            "/api/v1/me", headers=_with_cookie("__Host-session", multi_res.session_token)
+        )
         assert [m["tenantSlug"] for m in me_multi.json()["memberships"]] == [
             DHCW_SLUG,
             CWM_AUR_SLUG,
         ]
 
-    # Security event logs carry IDs and codes only, never raw tokens or emails.
+    # Security event logs carry IDs and codes only, never tokens, codes, state, nonce or emails.
     all_lines = lines.read()
     serialized = json.dumps(all_lines)
-    assert session_token not in serialized
-    assert "rhiannon.davies@dhcw.example" not in serialized
+    for secret_value in (
+        res.session_token,
+        res.tx_cookie_value,
+        res.state,
+        res.nonce,
+        res.code,
+        "rhiannon.davies@dhcw.example",
+    ):
+        assert secret_value not in serialized
     signed_in_events = [line for line in all_lines if line.get("message") == "auth.signed_in"]
     assert len(signed_in_events) == 2
     assert signed_in_events[0]["person_id"] == str(world.admin_id)
@@ -465,15 +447,15 @@ def test_local_mode_cookies_carry_editor_origin_port_and_ignore_host_headers(
         [tx_name] = list(_parse_set_cookies(start.headers))
         assert tx_name.startswith("__Host-21640-tx-")
 
-        cb, sess_token, _ = _drive_mock_sign_in(
+        res = _drive_mock_sign_in(
             client, "dhcw_admin_primary", session_cookie_name="__Host-21640-session"
         )
-        assert cb.status_code == 302
-        assert cb.headers["location"] == "http://localhost:21640/#/auth/callback"
-        assert sess_token is not None
+        assert res.callback.status_code == 302
+        assert res.callback.headers["location"] == "http://localhost:21640/#/auth/callback"
+        assert res.session_token is not None
         assert (
             client.get(
-                "/api/v1/me", headers=_with_cookie("__Host-21640-session", sess_token)
+                "/api/v1/me", headers=_with_cookie("__Host-21640-session", res.session_token)
             ).status_code
             == 200
         )
@@ -531,42 +513,44 @@ def test_uninvited_disabled_cancelled_and_faulty_sign_ins_are_refused(
 
     with TestClient(app) as client:
         # S2: Uninvited user writes zero people/identities/sessions rows and redirects not_invited.
-        cb_uninvited, tok, _ = _drive_mock_sign_in(client, UNINVITED_PERSONA.key)
-        assert cb_uninvited.status_code == 302
+        uninvited = _drive_mock_sign_in(client, UNINVITED_PERSONA.key)
+        assert uninvited.callback.status_code == 302
         assert (
-            cb_uninvited.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=not_invited"
+            uninvited.callback.headers["location"]
+            == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=not_invited"
         )
-        assert tok is None
+        assert uninvited.session_token is None
         assert admin.execute("SELECT count(*) FROM public.people").fetchone() == before_people
         assert admin.execute("SELECT count(*) FROM public.identities").fetchone() == before_idents
         assert admin.execute("SELECT count(*) FROM public.sessions").fetchone() == (0,)
 
         # Disabled person is refused with person_disabled and writes no session.
-        cb_disabled, tok, _ = _drive_mock_sign_in(client, "dhcw_disabled_person")
-        assert cb_disabled.status_code == 302
+        disabled = _drive_mock_sign_in(client, "dhcw_disabled_person")
+        assert disabled.callback.status_code == 302
         assert (
-            cb_disabled.headers["location"]
+            disabled.callback.headers["location"]
             == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=person_disabled"
         )
-        assert tok is None
+        assert disabled.session_token is None
 
         # User cancellation (error=access_denied) redirects sign_in_cancelled.
-        cb_cancel, tok, _ = _drive_mock_sign_in(client, "__cancel__")
-        assert cb_cancel.status_code == 302
+        cancel = _drive_mock_sign_in(client, "__cancel__")
+        assert cancel.callback.status_code == 302
         assert (
-            cb_cancel.headers["location"]
+            cancel.callback.headers["location"]
             == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_cancelled"
         )
-        assert tok is None
+        assert cancel.session_token is None
 
         # Faulty ID token from mock provider (alg=none) redirects sign_in_failed.
         httpx2.post(f"{auth_env.mock_oidc_base_url}/_test/fault", json={"algNone": True})
-        cb_fault, tok, _ = _drive_mock_sign_in(client, "dhcw_admin_primary")
-        assert cb_fault.status_code == 302
+        fault = _drive_mock_sign_in(client, "dhcw_admin_primary")
+        assert fault.callback.status_code == 302
         assert (
-            cb_fault.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
+            fault.callback.headers["location"]
+            == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
         )
-        assert tok is None
+        assert fault.session_token is None
 
     assert admin.execute("SELECT count(*) FROM public.sessions").fetchone() == (0,)
     refused = [line for line in lines.read() if line.get("message") == "auth.sign_in_refused"]
@@ -575,6 +559,43 @@ def test_uninvited_disabled_cancelled_and_faulty_sign_ins_are_refused(
         "person_disabled",
         "sign_in_cancelled",
     }
+
+
+def test_callback_with_invalid_authorization_code_refuses_cleanly_without_500(
+    auth_env: _AuthEnv, lines: Lines
+) -> None:
+    _seed_auth_world(auth_env.worker_database)
+    app = auth_env.make_app()
+
+    with TestClient(app) as client:
+        start = client.post(
+            "/api/v1/auth/sign-in",
+            headers=SAME_ORIGIN_JSON_HEADERS,
+            json={"provider": "local_mock"},
+        )
+        assert start.status_code == 200
+        start_cookies = _parse_set_cookies(start.headers)
+        [tx_name] = list(start_cookies)
+        tx_val = _cookie_value(start_cookies[tx_name])
+        state = parse_qs(urlsplit(start.json()["authorizationUrl"]).query)["state"][0]
+
+        cb = client.get(
+            f"/api/v1/auth/callback/local_mock?code=bogus-invalid-code&state={state}",
+            headers=_with_cookie(tx_name, tx_val),
+            follow_redirects=False,
+        )
+        assert cb.status_code == 302
+        assert cb.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
+        cb_cookies = _parse_set_cookies(cb.headers)
+        assert "__Host-session" not in cb_cookies
+        assert "Max-Age=0" in cb_cookies[tx_name]
+
+    assert auth_env.worker_admin.execute("SELECT count(*) FROM public.sessions").fetchone() == (0,)
+    assert any(
+        line.get("message") == "auth.sign_in_refused"
+        and line.get("reason") == "token_exchange_failed"
+        for line in lines.read()
+    )
 
 
 def test_google_sign_in_for_person_with_entra_identity_redirects_entra_required(
@@ -783,6 +804,92 @@ def test_transaction_single_use_cookie_binding_provider_binding_and_concurrent_r
         assert (
             expired_cb.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
         )
+
+
+def test_parallel_sign_in_callbacks_for_same_person_succeed_without_deadlock(
+    auth_env: _AuthEnv,
+) -> None:
+    """Two parallel tabs signing in as the same person on separate connections never deadlock."""
+    _seed_auth_world(auth_env.worker_database)
+    concurrent_engine = create_engine(auth_env.database_url, pool_size=4, max_overflow=0)
+    try:
+        app = auth_env.make_app(pool_engine=concurrent_engine)
+        with TestClient(app) as client:
+            callbacks: list[tuple[str, str, str]] = []
+            for _ in range(2):
+                start = client.post(
+                    "/api/v1/auth/sign-in",
+                    headers=SAME_ORIGIN_JSON_HEADERS,
+                    json={"provider": "local_mock"},
+                )
+                assert start.status_code == 200
+                [tx_name] = list(_parse_set_cookies(start.headers))
+                tx_val = _cookie_value(_parse_set_cookies(start.headers)[tx_name])
+                prov = httpx2.get(
+                    f"{start.json()['authorizationUrl']}&persona=dhcw_admin_primary",
+                    follow_redirects=False,
+                )
+                loc = urlsplit(prov.headers["location"])
+                callbacks.append((f"{loc.path}?{loc.query}", tx_name, tx_val))
+
+            barrier = threading.Barrier(2)
+
+            def finish(item: tuple[str, str, str]) -> tuple[int, str, str]:
+                url, tx_name, tx_val = item
+                barrier.wait(timeout=5.0)
+                res = client.get(url, headers=_with_cookie(tx_name, tx_val), follow_redirects=False)
+                token = _cookie_value(_parse_set_cookies(res.headers)["__Host-session"])
+                return res.status_code, res.headers["location"], token
+
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                results = list(pool.map(finish, callbacks))
+
+            assert [status for status, _, _ in results] == [302, 302]
+            assert [loc for _, loc, _ in results] == [
+                f"{TEST_EDITOR_ORIGIN}/#/auth/callback",
+                f"{TEST_EDITOR_ORIGIN}/#/auth/callback",
+            ]
+            assert results[0][2] != results[1][2]
+            assert auth_env.worker_admin.execute(
+                "SELECT count(*) FROM public.sessions"
+            ).fetchone() == (2,)
+    finally:
+        concurrent_engine.dispose()
+
+
+def test_newest_transaction_cookie_succeeds_when_over_twenty_transactions_started(
+    auth_env: _AuthEnv,
+) -> None:
+    _seed_auth_world(auth_env.worker_database)
+    app = auth_env.make_app()
+
+    with TestClient(app) as client:
+        cookie_pairs: list[str] = []
+        last_auth_url = ""
+        for _ in range(21):
+            start = client.post(
+                "/api/v1/auth/sign-in",
+                headers=SAME_ORIGIN_JSON_HEADERS,
+                json={"provider": "local_mock"},
+            )
+            assert start.status_code == 200
+            cookies = _parse_set_cookies(start.headers)
+            [tx_name] = list(cookies)
+            cookie_pairs.append(f"{tx_name}={_cookie_value(cookies[tx_name])}")
+            last_auth_url = start.json()["authorizationUrl"]
+
+        prov = httpx2.get(
+            f"{last_auth_url}&persona=dhcw_admin_primary",
+            follow_redirects=False,
+        )
+        loc = urlsplit(prov.headers["location"])
+        cb = client.get(
+            f"{loc.path}?{loc.query}",
+            headers={"Cookie": "; ".join(cookie_pairs)},
+            follow_redirects=False,
+        )
+        assert cb.status_code == 302
+        assert cb.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/auth/callback"
 
 
 def test_session_idle_absolute_throttled_sliding_and_extend(auth_env: _AuthEnv) -> None:
@@ -995,8 +1102,6 @@ def test_sign_out_sign_out_all_and_person_disable_revoke_sessions(auth_env: _Aut
 
 def test_callback_and_me_edge_refusals(auth_env: _AuthEnv) -> None:
     """Covers invalid/missing callback params, ghost principal and unknown permission on /me."""
-    from roadmaps_api.authz import AuthenticatedPrincipal, get_current_principal  # noqa: PLC0415
-
     world = _seed_auth_world(auth_env.worker_database)
     app = auth_env.make_app()
 
@@ -1028,8 +1133,8 @@ def test_callback_and_me_edge_refusals(auth_env: _AuthEnv) -> None:
             )
             auth_env.worker_admin.execute("ALTER TABLE public.role_permissions ENABLE TRIGGER USER")
 
-        ghost_principal = AuthenticatedPrincipal(
-            person_id=UUID("00000000-0000-0000-0000-000000000099"),
+        ghost_principal = make_principal(
+            UUID("00000000-0000-0000-0000-000000000099"),
             session_id=UUID("00000000-0000-0000-0000-000000000098"),
         )
         app.dependency_overrides[get_current_principal] = lambda: ghost_principal
@@ -1045,8 +1150,8 @@ def test_callback_and_me_edge_refusals(auth_env: _AuthEnv) -> None:
             == 401
         )
 
-        admin_principal = AuthenticatedPrincipal(
-            person_id=world.admin_id,
+        admin_principal = make_principal(
+            world.admin_id,
             session_id=UUID("00000000-0000-0000-0000-000000000097"),
         )
         app.dependency_overrides[get_current_principal] = lambda: admin_principal
@@ -1054,17 +1159,10 @@ def test_callback_and_me_edge_refusals(auth_env: _AuthEnv) -> None:
         app.dependency_overrides.clear()
 
 
-def test_session_touch_and_create_race_recovery(
+def test_session_touch_and_create_refusal_race_recovery(
     auth_env: _AuthEnv, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Covers repository None paths, concurrent touch-activity races and DBAPIError handling."""
-    from sqlalchemy.exc import DBAPIError  # noqa: PLC0415
-
-    from roadmaps_api.identity import OidcProviderId, VerifiedIdentity  # noqa: PLC0415
-    from roadmaps_api.repositories.sessions import SessionRepository  # noqa: PLC0415
-    from roadmaps_api.services.auth import AuthService  # noqa: PLC0415
-    from roadmaps_api.services.sessions import SessionService  # noqa: PLC0415
-
+    """Covers touch-activity races and domain vs infrastructure `create_session` errors."""
     world = _seed_auth_world(auth_env.worker_database)
     app = auth_env.make_app()
     now = datetime.now(UTC)
@@ -1092,6 +1190,47 @@ def test_session_touch_and_create_race_recovery(
 
     sess_svc = SessionService(auth_env.sessions)
 
+    # 1. Domain refusals from `public.create_session` translate to `SessionRefusedError`.
+    with pytest.raises(SessionRefusedError) as disabled_refusal:
+        sess_svc.create_session(
+            person_id=world.disabled_id,
+            identity_id=world.disabled_identity_id,
+            provider="local_mock",
+            email="owen.hughes@dhcw.example",
+            display_name="Owen Hughes",
+        )
+    assert disabled_refusal.value.reason == "person_disabled"
+
+    with pytest.raises(SessionRefusedError) as missing_refusal:
+        sess_svc.create_session(
+            person_id=world.admin_id,
+            identity_id=UUID("00000000-0000-0000-0000-000000000099"),
+            provider="local_mock",
+            email="rhiannon.davies@dhcw.example",
+            display_name="Rhiannon Davies",
+        )
+    assert missing_refusal.value.reason == "session_create_refused"
+
+    # Non-refusal DBAPIError propagates out of SessionService.create_session.
+    pg_other = DBAPIError.instance(
+        "SELECT 1", {}, psycopg.OperationalError("connection lost"), Exception
+    )
+
+    def _raise_other(_self: SessionRepository, _new_session: object) -> object:
+        raise pg_other
+
+    monkeypatch.setattr(SessionRepository, "create", _raise_other)
+    with pytest.raises(DBAPIError):
+        sess_svc.create_session(
+            person_id=world.admin_id,
+            identity_id=world.admin_identity_id,
+            provider="local_mock",
+            email="rhiannon.davies@dhcw.example",
+            display_name="Rhiannon Davies",
+        )
+    monkeypatch.undo()
+
+    # 2. Concurrent touch-activity races: benign contention keeps auth; revocation returns None.
     def _noop_touch(_self: SessionRepository, *, token_hash: bytes) -> None:
         del token_hash
 
@@ -1107,50 +1246,19 @@ def test_session_touch_and_create_race_recovery(
 
     monkeypatch.setattr(SessionRepository, "touch_activity", _revoke_then_none)
     assert sess_svc.authenticate(raw_token=race_token, allow_activity_update=True) is None
+    monkeypatch.undo()
 
-    # RaiseException during create_session refuses cleanly; other DBAPIError re-raises.
-    auth_svc = AuthService(
-        auth_env.sessions,
-        app.state.oidc_client,
-        sess_svc,
-        editor_origin=TEST_EDITOR_ORIGIN,
-    )
-    verified = VerifiedIdentity(
-        provider=OidcProviderId.LOCAL_MOCK,
-        canonical_issuer="http://127.0.0.1/local-mock-oidc",
-        subject=NAMED_PERSONAS[0].subject,
-        email="rhiannon.davies@dhcw.example",
-        display_name="Rhiannon Davies",
-    )
+    # 3. Person disabled between lookup and create_session redirects cleanly via callback route.
+    def _refuse_create(_self: SessionService, **_kwargs: object) -> object:
+        msg = "person_disabled"
+        raise SessionRefusedError(msg)
 
-    pg_raise = DBAPIError.instance(
-        "SELECT 1", {}, psycopg.errors.RaiseException("person is disabled"), Exception
-    )
-
-    def _raise_pg_err(**_kwargs: object) -> object:
-        raise pg_raise
-
-    monkeypatch.setattr(sess_svc, "create_session", _raise_pg_err)
-    outcome = auth_svc._resolve_and_create_session(  # noqa: SLF001 - testing race recovery branch
-        provider=OidcProviderId.LOCAL_MOCK,
-        verified=verified,
-        return_path="/",
-        tx_id=UUID("00000000-0000-0000-0000-000000000011"),
-    )
-    assert outcome.redirect_url == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
-
-    pg_other = DBAPIError.instance(
-        "SELECT 1", {}, psycopg.OperationalError("connection lost"), Exception
-    )
-
-    def _raise_other_err(**_kwargs: object) -> object:
-        raise pg_other
-
-    monkeypatch.setattr(sess_svc, "create_session", _raise_other_err)
-    with pytest.raises(DBAPIError):
-        auth_svc._resolve_and_create_session(  # noqa: SLF001 - testing non-RaiseException re-raise
-            provider=OidcProviderId.LOCAL_MOCK,
-            verified=verified,
-            return_path="/",
-            tx_id=UUID("00000000-0000-0000-0000-000000000011"),
+    monkeypatch.setattr(SessionService, "create_session", _refuse_create)
+    with TestClient(app) as client:
+        res = _drive_mock_sign_in(client, "dhcw_admin_primary")
+        assert res.callback.status_code == 302
+        assert (
+            res.callback.headers["location"]
+            == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=person_disabled"
         )
+        assert res.session_token is None

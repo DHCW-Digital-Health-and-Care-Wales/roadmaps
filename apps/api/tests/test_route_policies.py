@@ -364,7 +364,7 @@ ILLICIT_ROUTES: dict[str, Callable[[FastAPI], None]] = {
     "a tenant_permission route without {tenantSlug}": _add_permission_without_slug,
     "a router inclusion adding a duplicate policy": _add_include_duplicate_policy,
     "a router inclusion adding a body dependency": _add_include_body_dependency,
-    "a router-level dependency ahead of the policy": _add_dependency_before_policy,
+    "an include-time dependency ahead of the policy": _add_dependency_before_policy,
     "a PolicyAPIRoute mutated to methods=[]": _add_mutated_empty_methods,
     "a plain FastAPI APIRoute": _add_plain_api_route,
     "a plain FastAPI APIRoute carrying a valid policy": _add_plain_api_route_with_policy,
@@ -654,19 +654,19 @@ def test_same_origin_guard_uses_configured_editor_origin() -> None:
 def test_json_media_type_guard_wiring_for_body_and_bodyless_routes(
     anon_guard_client: TestClient,
 ) -> None:
-    # Body route: allows JSON and refuses non-JSON.
+    # Body route: allows JSON and refuses an empty request with no Content-Type
+    # (pins expects_body=True).
     assert (
         anon_guard_client.post(
             "/test-guard/public-body", headers=SAME_ORIGIN_HEADERS, json={"title": "ok"}
         ).status_code
         == 200
     )
-    bad_body = anon_guard_client.post(
+    missing_ct = anon_guard_client.post(
         "/test-guard/public-body",
-        headers={**SAME_ORIGIN_HEADERS, "Content-Type": "text/plain"},
-        content=b"hello",
+        headers=SAME_ORIGIN_HEADERS,
     )
-    assert (bad_body.status_code, bad_body.json()["code"]) == (
+    assert (missing_ct.status_code, missing_ct.json()["code"]) == (
         415,
         "request.unsupported_media_type",
     )

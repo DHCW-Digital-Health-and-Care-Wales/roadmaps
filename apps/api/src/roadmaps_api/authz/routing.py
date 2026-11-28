@@ -73,6 +73,8 @@ class PolicyAPIRoute(APIRoute):
     @override
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         original_handler = super().get_route_handler()
+        # Startup verification refuses include-time dependencies, so the route's own
+        # `body_field` is always the effective one.
         expects_body = self.body_field is not None
 
         async def guarded_handler(request: Request) -> Response:
@@ -84,16 +86,11 @@ class PolicyAPIRoute(APIRoute):
         return guarded_handler
 
 
-def _verify_policy_route(
-    ctx: RouteContext, original: PolicyAPIRoute, methods: set[str] | None, path_format: str
-) -> None:
+def _verify_policy_route(ctx: RouteContext, methods: set[str] | None, path_format: str) -> None:
     if not methods or not methods.issubset(ALLOWED_METHODS):
         msg = f"Route {path_format!r} has empty or disallowed HTTP methods"
         raise RoutePolicyError(msg)
     policy = extract_route_policy(ctx.dependant)
-    if ctx.body_field is not None and original.body_field is None:
-        msg = f"Route {path_format!r} inherits a body parameter from a router include"
-        raise RoutePolicyError(msg)
     if getattr(ctx.dependant.dependencies[0].call, POLICY_ATTR, _MISSING) is not policy:
         msg = f"Route {path_format!r} must place its policy dependency first"
         raise RoutePolicyError(msg)
@@ -114,9 +111,8 @@ def verify_app_routes(app: FastAPI) -> None:
     Admits only:
     1. A `PolicyAPIRoute` with non-empty methods within `ALLOWED_METHODS`, one valid
        effective policy placed first in the dependency list (no router-level or
-       include-time dependency running ahead of it), no body parameter inherited solely
-       from a router include, `{tenantSlug}` on tenant policies, and `PUBLIC_ROUTES`
-       membership for `public()` routes.
+       include-time dependency running ahead of it), `{tenantSlug}` on tenant policies,
+       and `PUBLIC_ROUTES` membership for `public()` routes.
     2. A plain Starlette `Route` with a non-`None`, non-empty method set whose every
        `(method, path)` is in the active public allow-list (local `/api/v1/openapi.json`
        only when `serves_live_openapi` is enabled).
@@ -137,7 +133,7 @@ def verify_app_routes(app: FastAPI) -> None:
         path_format = ctx.path_format or ""
 
         if type(original) is PolicyAPIRoute:
-            _verify_policy_route(ctx, original, methods, path_format)
+            _verify_policy_route(ctx, methods, path_format)
         elif type(original) is Route:
             if not methods or any(
                 (method, path_format) not in allowed_public for method in methods

@@ -50,8 +50,9 @@ CREATE ON SCHEMA public FROM <definer>` before commit. If `roadmaps_owner` itsel
 - **Every API router sets `route_class=PolicyAPIRoute` and every route declares one
   policy** (`public()`, `signed_in()`, `tenant_member()`, or
   `tenant_permission(Permission.…)`): `create_app` calls `verify_app_routes` and fails
-  closed on missing/duplicate policies, plain `APIRoute`s, mounts, hosts, `frontend()`
-  routes, tenant routes lacking `{tenantSlug}` or unlisted `public()` routes.
+  closed on missing/duplicate policies, include-time dependencies or non-policy router
+  dependencies placed ahead of a route's policy, plain `APIRoute`s, mounts, hosts,
+  `frontend()` routes, tenant routes lacking `{tenantSlug}` or unlisted `public()` routes.
 - **Every new route needs a `CALL_SPECS` entry** in
   `apps/api/tests/integration/test_authorisation.py` (failing the standing role-by-route
   matrix, cross-tenant sweep, non-`GET` same-origin sweep and read-only `GET` suite

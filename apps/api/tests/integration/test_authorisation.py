@@ -60,6 +60,7 @@ from tools.seed.factories import (
 from tools.seed.personas import TenantSpec
 
 SEED_TIME: Final = datetime(2026, 11, 27, 12, 0, tzinfo=UTC)
+TEST_SEED: Final = 105
 SESSION_ID: Final = uuid.UUID("01950000-0000-7000-8000-0000000000aa")
 
 # Shared probe-table SQL constants (PROBE_TABLE is a test harness constant, never user input).
@@ -112,13 +113,6 @@ class AuthzFixture:
     multi_ab: uuid.UUID
 
 
-def _change_set_request(key: str) -> ChangeSetRequest:
-    return ChangeSetRequest(
-        idempotency_key=key,
-        request_hash=hashlib.sha256(key.encode("utf-8")).digest(),
-    )
-
-
 def _seed_person(session: Session, display_name: str, sub: str) -> uuid.UUID:
     person, _identity = create_person_with_identity(
         session,
@@ -145,7 +139,9 @@ def authz_data(
             created_at=SEED_TIME,
         )
         tenant_a_id = tenant_a.id
-        with system_access_change_set(session, tenant_a_id, _change_set_request("roles-a")):
+        with system_access_change_set(
+            session, tenant_a_id, ChangeSetRequest.seeded(TEST_SEED, "roles-a")
+        ):
             roles_a = {
                 k: role.id
                 for k, role in create_shipped_roles(
@@ -159,7 +155,9 @@ def authz_data(
             created_at=SEED_TIME,
         )
         tenant_b_id = tenant_b.id
-        with system_access_change_set(session, tenant_b_id, _change_set_request("roles-b")):
+        with system_access_change_set(
+            session, tenant_b_id, ChangeSetRequest.seeded(TEST_SEED, "roles-b")
+        ):
             roles_b = {
                 k: role.id
                 for k, role in create_shipped_roles(
@@ -175,7 +173,9 @@ def authz_data(
         admin_b = _seed_person(session, "Admin B", "admin-b")
         multi_ab = _seed_person(session, "Multi AB", "multi-ab")
 
-        with system_access_change_set(session, tenant_a_id, _change_set_request("members-a")):
+        with system_access_change_set(
+            session, tenant_a_id, ChangeSetRequest.seeded(TEST_SEED, "members-a")
+        ):
             for person_id, role_key, ended in (
                 (admin_a, ShippedRoleKey.ADMIN, None),
                 (lead_a, ShippedRoleKey.PRODUCT_LEAD, None),
@@ -198,7 +198,9 @@ def authz_data(
                 if ended is not None:
                     membership.ended_at = ended
 
-        with system_access_change_set(session, tenant_b_id, _change_set_request("members-b")):
+        with system_access_change_set(
+            session, tenant_b_id, ChangeSetRequest.seeded(TEST_SEED, "members-b")
+        ):
             for person_id, role_key in (
                 (admin_b, ShippedRoleKey.ADMIN),
                 (multi_ab, ShippedRoleKey.VIEWER),
@@ -567,7 +569,7 @@ def test_unknown_permission_in_role_fails_closed_without_logging_raw_value(
     # Insert a valid-format unknown permission onto Tenant A's Viewer role (D1).
     with harness.admin_session(worker_database) as session:
         with system_access_change_set(
-            session, authz_data.tenant_a_id, _change_set_request("unknown-perm")
+            session, authz_data.tenant_a_id, ChangeSetRequest.seeded(TEST_SEED, "unknown-perm")
         ):
             session.add(
                 RolePermission(
@@ -883,18 +885,23 @@ def _write_definer_select(tenant: CurrentTenant) -> None:
         session.commit()
 
 
-MUTATING_GET_WRITES: dict[str, Callable[[CurrentTenant], None]] = {
-    "plain INSERT": _write_plain_insert,
-    "writable CTE (WITH ... INSERT ... SELECT)": _write_cte,
-    "mutating SECURITY DEFINER SELECT": _write_definer_select,
+MUTATING_GET_WRITES: dict[str, tuple[Callable[[CurrentTenant], None], str]] = {
+    "plain INSERT": (_write_plain_insert, "INSERT INTO"),
+    "writable CTE (WITH ... INSERT ... SELECT)": (_write_cte, "WITH inserted AS"),
+    "mutating SECURITY DEFINER SELECT": (_write_definer_select, "sign_off_access_change_set"),
 }
 
 
-@pytest.mark.parametrize("do_write", MUTATING_GET_WRITES.values(), ids=MUTATING_GET_WRITES)
+@pytest.mark.parametrize(
+    ("do_write", "expected_fragment"),
+    MUTATING_GET_WRITES.values(),
+    ids=MUTATING_GET_WRITES,
+)
 def test_read_only_get_detector_catches_every_write_kind(
     authz_app: FastAPI,
     authz_data: AuthzFixture,
     do_write: Callable[[CurrentTenant], None],
+    expected_fragment: str,
 ) -> None:
     rogue = APIRouter(route_class=PolicyAPIRoute)
 
@@ -909,4 +916,6 @@ def test_read_only_get_detector_catches_every_write_kind(
         _set_principal(authz_app, authz_data.admin_a)
         res = client.get(f"/api/v1/tenants/{authz_data.tenant_a_slug}/probe/bad-get")
         assert res.status_code == 200
-        assert len(tracker.domain_writes) >= 1
+        assert any(expected_fragment in stmt for stmt in tracker.domain_writes), (
+            f"Expected {expected_fragment!r} in detected writes: {tracker.domain_writes}"
+        )

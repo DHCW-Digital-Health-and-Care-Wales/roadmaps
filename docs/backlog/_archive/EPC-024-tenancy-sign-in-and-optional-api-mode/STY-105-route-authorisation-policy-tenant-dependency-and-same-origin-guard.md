@@ -258,7 +258,13 @@ session_id)` or raising `401 auth.unauthenticated` (default stub raises `401` in
 
 ### Departures
 
-None. All acceptance criteria (S1–S5) and decisions (D1–D15) were implemented as specified.
+- **Stricter dependency-order check at startup (extends D10):** `verify_app_routes` also
+  requires each route's declared policy to be the first dependency in
+  `ctx.dependant.dependencies`, refusing `include_router(..., dependencies=…)` and any
+  non-policy router-level dependency ahead of a route's policy. This guarantees no
+  router-level dependency executes pre-authentication and guarantees the route's own
+  `body_field` is always the effective one without depending on FastAPI's private
+  `_effective_route_context_var`.
 
 ### Contract for dependents
 
@@ -268,11 +274,11 @@ None. All acceptance criteria (S1–S5) and decisions (D1–D15) were implemente
   - Every route declares exactly one policy: `public()`, `signed_in()`, `tenant_member()`,
     or `tenant_permission(Permission.…)`. `verify_app_routes(app)` runs during `create_app`
     and refuses unclassified/duplicate/invalid policies, router-level or include-time
-    dependencies placed ahead of the policy, body parameters inherited solely from a router
-    include, empty or disallowed HTTP methods, tenant routes missing `{tenantSlug}`,
-    unlisted `public()` routes, plain `APIRoute`s, `PolicyAPIRoute` subclasses, `Mount`,
-    `Host`, `WebSocketRoute`, `frontend()`/low-priority routes and any plain Starlette
-    `Route` whose explicit methods are not all in the active public allow-list.
+    dependencies placed ahead of the policy, empty or disallowed HTTP methods, tenant
+    routes missing `{tenantSlug}`, unlisted `public()` routes, plain `APIRoute`s,
+    `PolicyAPIRoute` subclasses, `Mount`, `Host`, `WebSocketRoute`, `frontend()`/low-priority
+    routes and any plain Starlette `Route` whose explicit methods are not all in the active
+    public allow-list.
   - Adding a new public endpoint (such as `STY-106`'s OIDC start/callback) adds its
     `(method, path)` to `PUBLIC_ROUTES` in `apps/api/src/roadmaps_api/authz/routing.py`
     and its call spec to `CALL_SPECS` (and `READ_ONLY_GET_EXEMPTIONS` for the callback) in

@@ -45,8 +45,11 @@ report in the conversation only.
    Read the root `AGENTS.md`, the `AGENTS.md` along each changed path's
    directory ancestry and the shared conventions files those guides point to,
    the epic's `delivery-notes.md` when the change belongs to an epic, and the
-   binding ADRs; cite the rule by file and line, never from memory. A
-   docs-only diff is reviewed against `docs/AGENTS.md` (the records guide).
+   binding ADRs, plus `.agents/skills/writing-for-agents/SKILL.md` and
+   `docs/operations/authoring-agent-instructions.md` whenever the diff touches
+   an `AGENTS.md`, `SKILL.md` or agent file; cite the rule by file and line,
+   never from memory. A docs-only diff is reviewed against `docs/AGENTS.md` (the
+   records guide).
    Repo rules outrank generic advice.
 2. **Context.** Open the story, defect or chore (`docs/backlog/`) the change
    implements and each touched file beyond the hunk, and see how neighbours do
@@ -90,7 +93,8 @@ report in the conversation only.
      agrees to that exception; same concept named differently across layers
      (`remove`/`delete`/`clear`, `roadmap`/`sheet`/`board`).
    - **Dead or false text.** No-op assignments, unused parameters, exports or
-     branches, suppressions with no reason, comments that went stale,
+     branches, suppressions whose reason is missing or does not hold, comments
+     that went stale,
      including "left for S0n" or "TODO" after the story closed. Beyond the
      diff: README, ADRs, `AGENTS.md` guides, `delivery-notes.md`, workflows,
      scripts and config that a changed command, key, route or default now
@@ -124,13 +128,17 @@ report in the conversation only.
      a new gate with no motivating incident, review date or severity that
      warrants it. Fix: assert the invariant, pay the list off at its source or
      move exceptions inline, record the reason and date.
-   - **Rulebook growth.** A line added to an `AGENTS.md`, `SKILL.md` or agent
-     file must pass `docs/operations/authoring-agent-instructions.md`'s test
-     and recur bar (and the `writing-for-agents` skill), and replace or sharpen
-     an existing line, or its commit or PR body says why the file grows. Flag
-     an incident narrative or record ID used as the reason for a rule:
-     per-delivery history belongs in the record's Delivery and the PR, an
-     epic-only rule in the epic's `delivery-notes.md`.
+   - **Rulebook growth.** Every line added to an `AGENTS.md`, `SKILL.md` or
+     agent file must pass `docs/operations/authoring-agent-instructions.md`'s
+     test and recur bar and `.agents/skills/writing-for-agents/SKILL.md`. Flag
+     as 🔴 or 🟡 any addition that duplicates or fragments an existing rule in
+     the same file, encodes a single-incident workaround, or appends to a long
+     guide/skill without first sharpening an existing line, pruning stale or
+     no-op text, or disclosing branch-only detail into `references/` — a note
+     in the PR body does not excuse sprawl or fragmentation. Also flag an
+     incident narrative or record ID used as the reason for a rule: per-delivery
+     history belongs in the record's Delivery and the PR, an epic-only rule in
+     the epic's `delivery-notes.md`.
    - **Change shape.** Scope the story does not reflect (name it so the story
      is updated); a mechanical rename mixed into logic; unrelated refactors;
      generated files (`routeTree.gen.ts`, lockfile) changed without their

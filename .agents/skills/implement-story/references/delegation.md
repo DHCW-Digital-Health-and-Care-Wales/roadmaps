@@ -150,11 +150,13 @@ pass.
   `.agents/skills/` or an `AGENTS.md`/`CLAUDE.md` (an agent definition under
   `.claude/agents/` or a skill's script is config or code, not docs), takes the
   correctness lane alone (Opus and Sol), with the security lane when it is
-  security-relevant. Its briefs add the record sweep (`docs/AGENTS.md`)
-  and, for an instruction file, `.agents/skills/writing-for-agents/SKILL.md`
-  and `docs/operations/authoring-agent-instructions.md`, whose recur bar and
-  replace-or-sharpen rule the reviewers apply to every added line. Its cap is
-  round 1 and one re-check per reviewer, with no final fresh pass.
+  security-relevant; its briefs add the record sweep (`docs/AGENTS.md`), and
+  its cap is round 1 and one re-check per reviewer, with no final fresh pass.
+  Whenever **any** PR changes a guide, skill or agent file (mixed code-and-guide
+  retro PRs included), add `.agents/skills/writing-for-agents/SKILL.md` and
+  `docs/operations/authoring-agent-instructions.md` to every reviewer's brief so
+  reviewers check each added line against their recur bar, co-location, single
+  source of truth and replace-or-sharpen rules.
 - **Security-relevant**: a PR that records a decision on, or implements or changes
   code or configuration that handles, authentication (sign-in included), sessions,
   tokens, OAuth scopes, authorisation, tenant isolation, secrets, untrusted input at a

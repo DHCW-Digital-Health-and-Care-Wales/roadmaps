@@ -96,9 +96,10 @@ the code is.
 - **Sharpen, prune or disclose before growing.** Check the whole file first
   so a new line sharpens an existing rule instead of duplicating or fragmenting
   it across sections. When nothing it replaces exists, prune a stale or no-op
-  line or disclose branch-only detail to `references/`, and state in the PR why
-  the remaining addition earns its context load. A retrospective deletes the
-  lines its session showed stale, wrong or ignored
+  line or disclose branch-only detail behind a pointer (a nested guide or a
+  skill's `references/`, as _Length_ sets); when nothing is stale or
+  disclosable, state in the PR why the addition earns its context load. A
+  retrospective deletes the lines its session showed stale, wrong or ignored
 
 ## Where it goes
 

@@ -47,8 +47,8 @@ report in the conversation only.
    the epic's `delivery-notes.md` when the change belongs to an epic, and the
    binding ADRs, plus `.agents/skills/writing-for-agents/SKILL.md` and
    `docs/operations/authoring-agent-instructions.md` whenever the diff touches
-   an `AGENTS.md`, `SKILL.md` or agent file; cite the rule by file and line,
-   never from memory. A docs-only diff is reviewed against `docs/AGENTS.md` (the
+   a guide file (as the authoring guide defines it); cite the rule by file and
+   line, never from memory. A docs-only diff is reviewed against `docs/AGENTS.md` (the
    records guide).
    Repo rules outrank generic advice.
 2. **Context.** Open the story, defect or chore (`docs/backlog/`) the change
@@ -128,17 +128,16 @@ report in the conversation only.
      a new gate with no motivating incident, review date or severity that
      warrants it. Fix: assert the invariant, pay the list off at its source or
      move exceptions inline, record the reason and date.
-   - **Rulebook growth.** Every line added to an `AGENTS.md`, `SKILL.md` or
-     agent file must pass `docs/operations/authoring-agent-instructions.md`'s
-     test and recur bar and `.agents/skills/writing-for-agents/SKILL.md`. Flag
-     as 🔴 or 🟡 any addition that duplicates or fragments an existing rule in
-     the same file, encodes a single-incident workaround, or appends to a long
-     guide/skill without first sharpening an existing line, pruning stale or
-     no-op text, or disclosing branch-only detail into `references/` — a note
-     in the PR body does not excuse sprawl or fragmentation. Also flag an
-     incident narrative or record ID used as the reason for a rule: per-delivery
-     history belongs in the record's Delivery and the PR, an epic-only rule in
-     the epic's `delivery-notes.md`.
+   - **Rulebook growth.** Every line added to a guide file must pass the
+     authoring guide's test, recur bar and sharpen, prune or disclose rule and
+     the `writing-for-agents` skill. Flag as 🔴 or 🟡 any addition that
+     duplicates or fragments an existing rule in the same file, encodes a
+     single-incident workaround, or appends without first sharpening an
+     existing line, pruning stale or no-op text, or disclosing branch-only
+     detail behind a pointer — a PR-body note does not excuse sprawl or
+     fragmentation. Also flag an incident narrative or record ID used as the
+     reason for a rule: per-delivery history belongs in the record's Delivery
+     and the PR, an epic-only rule in the epic's `delivery-notes.md`.
    - **Change shape.** Scope the story does not reflect (name it so the story
      is updated); a mechanical rename mixed into logic; unrelated refactors;
      generated files (`routeTree.gen.ts`, lockfile) changed without their

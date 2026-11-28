@@ -9,7 +9,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import ConfigDict, field_validator
 
 from roadmaps_api.authz import CurrentPrincipal, Permission, PolicyAPIRoute, public, signed_in
-from roadmaps_api.identity import OidcProviderId
+from roadmaps_api.identity import IdentityProvider, OidcProviderId
 from roadmaps_api.services.auth import (
     TRANSACTION_TTL_SECONDS,
     AuthSvc,
@@ -39,7 +39,7 @@ class SignInStartResponse(ApiResponseModel):
 
 class MeIdentityResponse(ApiResponseModel):
     id: UUID
-    provider: str
+    provider: IdentityProvider
     email: str
     last_sign_in_at: datetime | None
     linked_at: datetime
@@ -64,7 +64,7 @@ class MeSessionResponse(ApiResponseModel):
     idle_expires_at: datetime
     absolute_expires_at: datetime
     signed_in_at: datetime
-    provider: str
+    provider: IdentityProvider
 
 
 class MeResponse(ApiResponseModel):
@@ -113,6 +113,16 @@ def _write_host_cookie(
     )
 
 
+def _clear_session_cookie(request: Request, response: Response) -> None:
+    _write_host_cookie(
+        response,
+        name=request.app.state.session_cookie_name,
+        value="",
+        samesite="strict",
+        max_age=0,
+    )
+
+
 @router.post("/auth/sign-in", dependencies=[public()])
 def sign_in_start(
     body: SignInStartRequest,
@@ -146,8 +156,14 @@ def sign_in_callback(
 ) -> RedirectResponse:
     """Completes an OIDC sign-in callback, establishes the session cookie and redirects."""
     tx_prefix: str = request.app.state.transaction_cookie_prefix
+    # Sort by UUIDv7-bearing cookie name so newest cookies stay at the tail regardless of order.
     tx_cookie_values = [
-        value for name, value in request.cookies.items() if name.startswith(tx_prefix) and value
+        value
+        for _name, value in sorted(
+            (name, value)
+            for name, value in request.cookies.items()
+            if name.startswith(tx_prefix) and value
+        )
     ]
     outcome = auth.complete_callback(
         raw_provider=provider,
@@ -238,13 +254,7 @@ def sign_out(
 ) -> SignOutResponse:
     """Revokes the current session and expires the session cookie (S3)."""
     session_service.sign_out(principal)
-    _write_host_cookie(
-        response,
-        name=request.app.state.session_cookie_name,
-        value="",
-        samesite="strict",
-        max_age=0,
-    )
+    _clear_session_cookie(request, response)
     return SignOutResponse()
 
 
@@ -257,11 +267,5 @@ def sign_out_all(
 ) -> SignOutResponse:
     """Revokes every active session for the current person and expires the session cookie (S3)."""
     session_service.sign_out_all(principal)
-    _write_host_cookie(
-        response,
-        name=request.app.state.session_cookie_name,
-        value="",
-        samesite="strict",
-        max_age=0,
-    )
+    _clear_session_cookie(request, response)
     return SignOutResponse()

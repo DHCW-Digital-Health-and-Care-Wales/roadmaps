@@ -7,8 +7,8 @@ It runs locally and in CI; it holds no roadmap data yet, and nothing deployed ca
 
 ## Run locally
 
-You need [uv](https://docs.astral.sh/uv/getting-started/installation/) and Docker with
-Compose, beside the workspace's Node and pnpm. `pnpm worktree:setup`, or
+You need [uv](https://docs.astral.sh/uv/getting-started/installation/), `curl` and Docker
+with Compose, beside the workspace's Node and pnpm. `pnpm worktree:setup`, or
 `uv sync --locked` here, installs the pinned Python and the dependencies. From the
 repository's root:
 

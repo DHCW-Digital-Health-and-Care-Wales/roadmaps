@@ -128,12 +128,16 @@ case "${1:-}" in
         echo "api: mock OIDC exited before becoming ready on 127.0.0.1:$OIDC_PORT" >&2
         exit 1
       fi
-      if curl -fsS --max-time 1 "http://127.0.0.1:$OIDC_PORT/health" >/dev/null 2>&1; then
+      if curl --noproxy '*' -fsS --max-time 1 "http://127.0.0.1:$OIDC_PORT/health" >/dev/null 2>&1; then
         break
       fi
       sleep 0.1
     done
-    if ! curl -fsS --max-time 1 "http://127.0.0.1:$OIDC_PORT/health" >/dev/null 2>&1; then
+    if ! kill -0 "$MOCK_OIDC_PID" 2>/dev/null; then
+      echo "api: mock OIDC exited before becoming ready on 127.0.0.1:$OIDC_PORT" >&2
+      exit 1
+    fi
+    if ! curl --noproxy '*' -fsS --max-time 1 "http://127.0.0.1:$OIDC_PORT/health" >/dev/null 2>&1; then
       echo "api: mock OIDC did not become ready on 127.0.0.1:$OIDC_PORT" >&2
       exit 1
     fi

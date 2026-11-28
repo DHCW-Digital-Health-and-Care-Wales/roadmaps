@@ -31,7 +31,7 @@ def _prepare_api_script_sandbox(
 
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    mock_action = "  exit 1\n" if mock_oidc_fails else "  sleep 10\n  exit 0\n"
+    mock_action = "  exit 1\n" if mock_oidc_fails else "  exec sleep 10\n"
     uv_stub = (
         "#!/usr/bin/env bash\n"
         'if [[ "$*" == *"tools.mock_oidc"* ]]; then\n'

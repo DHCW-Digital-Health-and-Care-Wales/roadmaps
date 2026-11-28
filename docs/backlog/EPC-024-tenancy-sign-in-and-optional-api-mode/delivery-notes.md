@@ -74,7 +74,6 @@ CREATE ON SCHEMA public FROM <definer>` before commit. If `roadmaps_owner` itsel
 - **`sessions.identity_id` uses `ON DELETE RESTRICT` (`STY-106`)**: future identity
   unlinking (`EPC-028`) must account for `fk_sessions_identity_id_identities` rather than
   expecting cascading session deletion.
-- **PostgreSQL 18 `pg_stat_xact_user_tables` on pooled connections**:
-  `pg_stat_xact_user_tables` can still show the previous transaction's tuple counts when
-  `pg_current_xact_id_if_assigned()` is `NULL`; `_WriteTracker` gates tuple-write diffs on
-  `xid is not None`.
+- **`public.create_sign_in_transaction` refuses non-`'sign-in'` purposes (`STY-106`)**:
+  `STY-110` (`redeem`) and `EPC-028` (`link`) must extend it with database-side binding
+  checks for `invitation_id` / `initiating_session_id` / `initiating_person_id`.

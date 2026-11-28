@@ -2,8 +2,9 @@
 
 Every outbound HTTP request carries explicit `(connect, read)` timeouts and
 `allow_redirects=False` (D4). Keys and discovery documents are retained across provider
-outages once cached, with per-provider failure backoff and single-flight deduplication so
-an upstream hang cannot starve the sync threadpool; a cold cache fails closed (TM-09).
+outages once cached, with per-provider failure backoff, single-flight deduplication and
+non-blocking stale reads during an in-flight refresh so outbound discovery/JWKS refreshes
+stay bounded to one in-flight fetch per cooldown; a cold cache fails closed (TM-09).
 """
 
 import logging
@@ -126,57 +127,79 @@ class JwksCache:
         store: dict[OidcProviderId, _CachedValue[T]],
         failed_at: dict[OidcProviderId, float],
         provider: OidcProviderId,
-    ) -> T | None:
-        """Returns fresh/stale cached value inside TTL/backoff, raises if cold & backed off."""
+    ) -> tuple[T | None, T | None]:
+        """Returns `(ready_value, stale_value)`; raises if cold and inside failure backoff."""
         now = self._clock()
         cached = store.get(provider)
         if cached is not None and (now - cached.fetched_at) < self._ttl_seconds:
-            return cached.value
+            return cached.value, cached.value
         last_fail = failed_at.get(provider)
         if last_fail is not None and (now - last_fail) < self._failure_backoff:
             if cached is not None:
-                return cached.value
+                return cached.value, cached.value
             msg = "provider_backoff"
             raise OidcProviderError(msg)
-        return None
+        return None, cached.value if cached is not None else None
 
-    def get_discovery(self, config: ProviderConfig) -> DiscoveryDocument:
+    def _get_or_fetch[T](  # noqa: PLR0913 - shared typed cache state machine
+        self,
+        store: dict[OidcProviderId, _CachedValue[T]],
+        failed_at: dict[OidcProviderId, float],
+        provider: OidcProviderId,
+        fetch: Callable[[], T],
+        *,
+        log_event: str,
+        stale_reason: str,
+    ) -> T:
         with self._lock:
-            ready = self._cached_or_backed_off(
-                self._discovery, self._discovery_failed_at, config.provider
-            )
+            ready, stale = self._cached_or_backed_off(store, failed_at, provider)
             if ready is not None:
                 return ready
 
-        with self._provider_fetch_lock(config.provider):
+        fetch_lock = self._provider_fetch_lock(provider)
+        # Callers that already have a usable stale value never block behind an in-flight refresh.
+        if stale is not None:
+            if not fetch_lock.acquire(blocking=False):
+                return stale
+        else:
+            fetch_lock.acquire()
+
+        try:
             with self._lock:
-                ready = self._cached_or_backed_off(
-                    self._discovery, self._discovery_failed_at, config.provider
-                )
+                ready, _ = self._cached_or_backed_off(store, failed_at, provider)
                 if ready is not None:
                     return ready
 
             try:
-                doc = self._fetch_discovery(config)
+                fresh = fetch()
             except OidcProviderError:
                 with self._lock:
-                    self._discovery_failed_at[config.provider] = self._clock()
-                    stale = self._discovery.get(config.provider)
-                    if stale is not None:
+                    failed_at[provider] = self._clock()
+                    cached = store.get(provider)
+                    if cached is not None:
                         logger.warning(
-                            "auth.jwks_refetch_failed",
-                            extra={
-                                "provider": config.provider.value,
-                                "cause": "discovery_stale_retained",
-                            },
+                            log_event,
+                            extra={"provider": provider.value, "reason": stale_reason},
                         )
-                        return stale.value
+                        return cached.value
                 raise
 
             with self._lock:
-                self._discovery[config.provider] = _CachedValue(value=doc, fetched_at=self._clock())
-                self._discovery_failed_at.pop(config.provider, None)
-            return doc
+                store[provider] = _CachedValue(value=fresh, fetched_at=self._clock())
+                failed_at.pop(provider, None)
+            return fresh
+        finally:
+            fetch_lock.release()
+
+    def get_discovery(self, config: ProviderConfig) -> DiscoveryDocument:
+        return self._get_or_fetch(
+            self._discovery,
+            self._discovery_failed_at,
+            config.provider,
+            lambda: self._fetch_discovery(config),
+            log_event="auth.discovery_refetch_failed",
+            stale_reason="stale_retained",
+        )
 
     def _fetch_discovery(self, config: ProviderConfig) -> DiscoveryDocument:
         payload = self._get_json(config.discovery_url)
@@ -222,51 +245,42 @@ class JwksCache:
     ) -> KeySet:
         """Returns cached JWKS, refreshing past TTL with backoff and stale-key retention."""
         with self._lock:
-            ready = self._cached_or_backed_off(self._jwks, self._jwks_failed_at, config.provider)
+            ready, _ = self._cached_or_backed_off(self._jwks, self._jwks_failed_at, config.provider)
             if ready is not None:
                 return ready
 
         doc = discovery if discovery is not None else self.get_discovery(config)
-        with self._provider_fetch_lock(config.provider):
-            with self._lock:
-                ready = self._cached_or_backed_off(
-                    self._jwks, self._jwks_failed_at, config.provider
-                )
-                if ready is not None:
-                    return ready
-
-            try:
-                key_set = self._fetch_key_set(doc)
-            except OidcProviderError:
-                with self._lock:
-                    self._jwks_failed_at[config.provider] = self._clock()
-                    stale = self._jwks.get(config.provider)
-                    if stale is not None:
-                        logger.warning(
-                            "auth.jwks_refetch_failed",
-                            extra={"provider": config.provider.value, "cause": "stale_retained"},
-                        )
-                        return stale.value
-                raise
-
-            with self._lock:
-                self._jwks[config.provider] = _CachedValue(value=key_set, fetched_at=self._clock())
-                self._jwks_failed_at.pop(config.provider, None)
-            return key_set
+        return self._get_or_fetch(
+            self._jwks,
+            self._jwks_failed_at,
+            config.provider,
+            lambda: self._fetch_key_set(doc),
+            log_event="auth.jwks_refetch_failed",
+            stale_reason="stale_retained",
+        )
 
     def refetch_on_unknown_kid(
-        self, config: ProviderConfig, *, discovery: DiscoveryDocument | None = None
+        self,
+        config: ProviderConfig,
+        *,
+        discovery: DiscoveryDocument | None = None,
+        previous_key_set: KeySet | None = None,
     ) -> KeySet | None:
-        """Rate-limited JWKS refetch on unknown `kid`, retaining stale keys on outage."""
-        with self._lock:
-            now = self._clock()
-            last = self._last_kid_refetch.get(config.provider)
-            if last is not None and (now - last) < self._unknown_kid_interval:
-                return None
-            self._last_kid_refetch[config.provider] = now
-
+        """Rate-limited JWKS refetch on unknown `kid`, sharing an in-flight rollover refresh."""
         doc = discovery if discovery is not None else self.get_discovery(config)
         with self._provider_fetch_lock(config.provider):
+            with self._lock:
+                # If another concurrent callback already refreshed the cache, reuse its new KeySet.
+                if previous_key_set is not None:
+                    current = self._jwks.get(config.provider)
+                    if current is not None and current.value is not previous_key_set:
+                        return current.value
+                now = self._clock()
+                last = self._last_kid_refetch.get(config.provider)
+                if last is not None and (now - last) < self._unknown_kid_interval:
+                    return None
+                self._last_kid_refetch[config.provider] = now
+
             try:
                 key_set = self._fetch_key_set(doc)
             except OidcProviderError:
@@ -274,7 +288,7 @@ class JwksCache:
                     self._jwks_failed_at[config.provider] = self._clock()
                 logger.warning(
                     "auth.jwks_refetch_failed",
-                    extra={"provider": config.provider.value, "cause": "unknown_kid_outage"},
+                    extra={"provider": config.provider.value, "reason": "unknown_kid_outage"},
                 )
                 return None
 

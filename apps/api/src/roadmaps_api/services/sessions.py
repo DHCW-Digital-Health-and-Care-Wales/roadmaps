@@ -3,6 +3,7 @@
 import hashlib
 import logging
 import secrets
+from enum import StrEnum
 from typing import Annotated, Final
 from uuid import UUID
 
@@ -22,21 +23,30 @@ from roadmaps_api.repositories.sessions import (
 
 logger = logging.getLogger(__name__)
 
+
+class SessionRefusal(StrEnum):
+    """Closed set of domain refusals translated from `public.create_session`."""
+
+    PERSON_DISABLED = "person_disabled"
+    ENTRA_REQUIRED = "entra_required"
+    SESSION_CREATE_REFUSED = "session_create_refused"
+
+
 # SQLSTATEs raised by `public.create_session` for expected domain refusals (P0001 raise_exception,
 # P0002 no_data_found, 22023 invalid_parameter_value); transient/infrastructure errors propagate.
 _SESSION_REFUSAL_SQLSTATES: Final = frozenset({"P0001", "P0002", "22023"})
-_SESSION_REFUSAL_REASONS: Final[dict[str, str]] = {
-    "person is disabled": "person_disabled",
-    "entra sign-in required": "entra_required",
+_SESSION_REFUSAL_REASONS: Final[dict[str, SessionRefusal]] = {
+    "person is disabled": SessionRefusal.PERSON_DISABLED,
+    "entra sign-in required": SessionRefusal.ENTRA_REQUIRED,
 }
 
 
 class SessionRefusedError(Exception):
     """Raised when `public.create_session` refuses to establish a session for a domain reason."""
 
-    def __init__(self, reason: str) -> None:
+    def __init__(self, reason: SessionRefusal) -> None:
         self.reason = reason
-        super().__init__(reason)
+        super().__init__(reason.value)
 
 
 def hash_token(raw_token: str) -> bytes:
@@ -78,7 +88,9 @@ class SessionService:
                 sqlstate = getattr(exc.orig, "sqlstate", None)
                 if sqlstate in _SESSION_REFUSAL_SQLSTATES:
                     primary = getattr(getattr(exc.orig, "diag", None), "message_primary", None)
-                    reason = _SESSION_REFUSAL_REASONS.get(primary or "", "session_create_refused")
+                    reason = _SESSION_REFUSAL_REASONS.get(
+                        primary or "", SessionRefusal.SESSION_CREATE_REFUSED
+                    )
                     raise SessionRefusedError(reason) from None
                 raise
             session.commit()

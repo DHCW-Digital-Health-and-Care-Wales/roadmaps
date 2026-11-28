@@ -28,6 +28,7 @@ from roadmaps_api.repositories.auth import (
     NewSignInTransaction,
 )
 from roadmaps_api.services.sessions import (
+    SessionRefusal,
     SessionRefusedError,
     SessionService,
     SessionSvc,
@@ -52,9 +53,9 @@ class SignInErrorCode(StrEnum):
     SIGN_IN_FAILED = "sign_in_failed"
 
 
-_SESSION_REFUSAL_CODES: Final[dict[str, SignInErrorCode]] = {
-    "person_disabled": SignInErrorCode.PERSON_DISABLED,
-    "entra_required": SignInErrorCode.ENTRA_REQUIRED,
+_SESSION_REFUSAL_CODES: Final[dict[SessionRefusal, SignInErrorCode]] = {
+    SessionRefusal.PERSON_DISABLED: SignInErrorCode.PERSON_DISABLED,
+    SessionRefusal.ENTRA_REQUIRED: SignInErrorCode.ENTRA_REQUIRED,
 }
 
 
@@ -277,7 +278,7 @@ class AuthService:
             )
         except SessionRefusedError as exc:
             return self._refuse(
-                reason=exc.reason,
+                reason=exc.reason.value,
                 code=_SESSION_REFUSAL_CODES.get(exc.reason, SignInErrorCode.SIGN_IN_FAILED),
                 provider=provider,
                 person_id=identity.person_id,

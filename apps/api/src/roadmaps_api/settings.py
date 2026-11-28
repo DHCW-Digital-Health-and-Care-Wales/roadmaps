@@ -102,6 +102,13 @@ class Settings:
     # Local loopback mock OIDC provider base URL (D5); None outside local/test.
     local_mock_oidc_url: str | None = None
     on_cloud_run: bool = False
+    _editor_origin_port: int = field(init=False, repr=False, compare=False)
+
+    def __post_init__(self) -> None:
+        parsed = parse_origin(self.editor_origin)
+        if parsed is None:
+            refuse([EDITOR_ORIGIN])
+        object.__setattr__(self, "_editor_origin_port", parsed.effective_port)
 
     @property
     def serves_live_openapi(self) -> bool:
@@ -112,9 +119,7 @@ class Settings:
     def _cookie_port_segment(self) -> str:
         if self.environment is not Environment.LOCAL or self.on_cloud_run:
             return ""
-        parsed = parse_origin(self.editor_origin)
-        assert parsed is not None  # noqa: S101 - validated in load_settings
-        return f"{parsed.effective_port}-"
+        return f"{self._editor_origin_port}-"
 
     @property
     def session_cookie_name(self) -> str:
@@ -317,6 +322,11 @@ def parse_allowed_hd(raw: str) -> tuple[str, ...] | None:
     return domains
 
 
+def has_space_or_control(raw: str) -> bool:
+    """Whether `raw` contains any whitespace or ASCII control character."""
+    return any(ch.isspace() or ord(ch) < _ASCII_SPACE for ch in raw)
+
+
 def parse_origin(raw: str) -> ParsedOrigin | None:
     """Parses a bare `scheme://host[:port]` origin into `ParsedOrigin`.
 
@@ -324,13 +334,7 @@ def parse_origin(raw: str) -> ParsedOrigin | None:
     whitespace, control character or malformed/zero port. Lowercases scheme and host and
     strips default `:80`/`:443` ports for exact string matching (STY-105 D7).
     """
-    if (
-        not raw
-        or "://" not in raw
-        or "?" in raw
-        or "#" in raw
-        or any(ch.isspace() or ord(ch) < _ASCII_SPACE for ch in raw)
-    ):
+    if not raw or "://" not in raw or "?" in raw or "#" in raw or has_space_or_control(raw):
         return None
     raw_scheme, rest = raw.split("://", 1)
     scheme = raw_scheme.lower()

@@ -112,7 +112,6 @@ class RecordingAdapter(BaseAdapter):
     ) -> None:
         super().__init__()
         self._handler = handler
-        self.calls: list[tuple[str, str, Any]] = []
 
     @override
     def send(
@@ -126,7 +125,6 @@ class RecordingAdapter(BaseAdapter):
     ) -> requests.Response:
         assert request.url is not None
         assert request.method is not None
-        self.calls.append((request.method, request.url, timeout))
         status, headers, body = self._handler(request, timeout)
         response = requests.Response()
         response.status_code = status

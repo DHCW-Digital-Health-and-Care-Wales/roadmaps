@@ -10,8 +10,8 @@
 # API's commands through apps/api/scripts/api.sh, which also names the slot's
 # database container's Compose project from it; without it they keep their
 # canonical ports (the editor 5173 dev and 4173 preview and E2E, the public site
-# 5174 and 4174, the API 8000 and its database 15432), so a main checkout is
-# unaffected.
+# 5174 and 4174, the API 8000, the local mock OIDC provider 8001 and its database
+# 15432), so a main checkout is unaffected.
 #
 #   setup      claim a slot, write .env.worktree, install dependencies (pnpm's,
 #              and the API's with uv), create apps/editor/.env.local (idempotent:

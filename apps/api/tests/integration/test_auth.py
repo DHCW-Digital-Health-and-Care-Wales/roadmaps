@@ -13,7 +13,7 @@ import json
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qs, urlsplit
 from uuid import UUID
@@ -26,7 +26,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from joserfc import jwt
 from joserfc.jwk import RSAKey
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -40,8 +40,8 @@ from roadmaps_api.identity import (
 )
 from roadmaps_api.identity.providers import GOOGLE_DISCOVERY_URL
 from roadmaps_api.repositories.sessions import SessionRepository
-from roadmaps_api.services.sessions import SessionRefusedError, SessionService
-from roadmaps_api.settings import Environment, Settings
+from roadmaps_api.services.sessions import SessionRefusal, SessionRefusedError, SessionService
+from roadmaps_api.settings import Environment
 from tests import harness
 from tests.support import (
     SAME_ORIGIN_HEADERS,
@@ -52,6 +52,7 @@ from tests.support import (
     RecordingAdapter,
     free_port,
     make_principal,
+    make_settings,
 )
 from tools.seed.factories import (
     ChangeSetRequest,
@@ -110,12 +111,14 @@ class _AuthEnv:
     ) -> FastAPI:
         mock_url = self.mock_oidc_base_url if local_mock_oidc_url is None else local_mock_oidc_url
         g_id, g_secret, g_hd = google if google is not None else (None, None, ())
-        settings = Settings(
-            environment=environment,
-            database_url=self.database_url,
-            allowed_hosts=(TEST_HOST, "localhost", "127.0.0.1"),
-            editor_origin=editor_origin,
-            local_mock_oidc_url=mock_url or None,
+        settings = replace(
+            make_settings(
+                self.database_url,
+                environment=environment,
+                hosts=(TEST_HOST, "localhost", "127.0.0.1"),
+                editor_origin=editor_origin,
+                local_mock_oidc_url=mock_url or None,
+            ),
             google_client_id=g_id,
             google_client_secret=g_secret,
             google_allowed_hd=g_hd,
@@ -606,9 +609,9 @@ def test_google_sign_in_for_person_with_entra_identity_redirects_entra_required(
     with auth_env.worker_admin.transaction():
         auth_env.worker_admin.execute(
             "INSERT INTO public.identities (person_id, issuer, subject, email)"
-            " VALUES (%s, %s, 'google-sub-entra-user', 'admin@wales.nhs.uk'),"
+            " VALUES (%s, %s, 'google-sub-entra-user', 'admin@dhcw.example'),"
             " (%s, 'https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0',"
-            "  'entra-oid-1', 'admin@wales.nhs.uk')",
+            "  'entra-oid-1', 'admin@dhcw.example')",
             (world.admin_id, GOOGLE_CANONICAL_ISSUER, world.admin_id),
         )
 
@@ -641,9 +644,9 @@ def test_google_sign_in_for_person_with_entra_identity_redirects_entra_required(
                     "exp": now + 300,
                     "iat": now,
                     "nonce": captured_nonce[0],
-                    "email": "admin@wales.nhs.uk",
+                    "email": "admin@dhcw.example",
                     "email_verified": True,
-                    "hd": "wales.nhs.uk",
+                    "hd": "dhcw.example",
                     "name": "Rhiannon Davies",
                 },
                 google_key,
@@ -652,18 +655,13 @@ def test_google_sign_in_for_person_with_entra_identity_redirects_entra_required(
             return 200, {"Content-Type": "application/json"}, json.dumps(body).encode()
         pytest.fail(f"Unexpected URL: {request.url}")
 
-    google_settings = Settings(
-        environment=Environment.TEST,
-        database_url=auth_env.database_url,
-        allowed_hosts=(TEST_HOST,),
-        editor_origin=TEST_EDITOR_ORIGIN,
+    google_settings = replace(
+        make_settings(auth_env.database_url),
         google_client_id=client_id,
         google_client_secret="google-test-secret",  # noqa: S106 - test fixture
-        google_allowed_hd=("wales.nhs.uk",),
+        google_allowed_hd=("dhcw.example",),
     )
-    app = auth_env.make_app(
-        google=(client_id, "google-test-secret", ("wales.nhs.uk",)),
-    )
+    app = auth_env.make_app()
     app.state.oidc_client = OidcClient(
         build_provider_configs(google_settings),
         adapter=RecordingAdapter(handle_google),
@@ -698,10 +696,14 @@ def test_google_sign_in_for_person_with_entra_identity_redirects_entra_required(
 
 
 def test_transaction_single_use_cookie_binding_provider_binding_and_concurrent_race(
-    auth_env: _AuthEnv,
+    auth_env: _AuthEnv, lines: Lines
 ) -> None:
     _seed_auth_world(auth_env.worker_database)
-    app = auth_env.make_app()
+    # Enable Google alongside local_mock so cross-provider mix-up hits transaction binding,
+    # not the disabled-provider short-circuit (TM-06).
+    app = auth_env.make_app(
+        google=("google-test-client", "google-test-secret", ("dhcw.example",)),
+    )
 
     with TestClient(app) as client:
         # Two parallel tabs start sign-in without overwriting each other's transaction cookies.
@@ -744,7 +746,9 @@ def test_transaction_single_use_cookie_binding_provider_binding_and_concurrent_r
             == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
         )
 
-        # Cross-provider callback path is refused (mix-up attack).
+        # Cross-provider callback path is refused by transaction binding (TM-06 mix-up) and
+        # leaves tx1 unconsumed so its genuine local_mock callback still completes below.
+        lines.read()
         wrong_provider = client.get(
             f"/api/v1/auth/callback/google?{loc1.query}",
             headers=_with_cookie(tx1_name, tx1_val),
@@ -754,6 +758,12 @@ def test_transaction_single_use_cookie_binding_provider_binding_and_concurrent_r
             wrong_provider.headers["location"]
             == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
         )
+        mixup_events = [
+            line for line in lines.read() if line.get("message") == "auth.sign_in_refused"
+        ]
+        assert len(mixup_events) == 1
+        assert mixup_events[0]["provider"] == "google"
+        assert mixup_events[0]["reason"] == "invalid_transaction"
 
         # Concurrent race on the same valid callback: exactly ONE succeeds, the other fails!
         def hit_callback() -> str:
@@ -883,9 +893,10 @@ def test_newest_transaction_cookie_succeeds_when_over_twenty_transactions_starte
             follow_redirects=False,
         )
         loc = urlsplit(prov.headers["location"])
+        # Reverse header order (newest cookie first) to prove UUIDv7 name-sorting picks newest 20.
         cb = client.get(
             f"{loc.path}?{loc.query}",
-            headers={"Cookie": "; ".join(cookie_pairs)},
+            headers={"Cookie": "; ".join(reversed(cookie_pairs))},
             follow_redirects=False,
         )
         assert cb.status_code == 302
@@ -1100,23 +1111,33 @@ def test_sign_out_sign_out_all_and_person_disable_revoke_sessions(auth_env: _Aut
         )
 
 
-def test_callback_and_me_edge_refusals(auth_env: _AuthEnv) -> None:
-    """Covers invalid/missing callback params, ghost principal and unknown permission on /me."""
+@pytest.mark.parametrize(
+    "bad_callback_url",
+    [
+        "/api/v1/auth/callback/not_a_provider?code=x&state=y",
+        "/api/v1/auth/callback/google?code=x&state=y",
+        "/api/v1/auth/callback/local_mock?error=server_error&state=y",
+        "/api/v1/auth/callback/local_mock?state=y",
+    ],
+    ids=["unknown provider", "disabled provider", "non-cancel provider error", "missing code"],
+)
+def test_invalid_callback_queries_redirect_sign_in_failed(
+    auth_env: _AuthEnv, bad_callback_url: str
+) -> None:
+    app = auth_env.make_app()
+    with TestClient(app) as client:
+        response = client.get(bad_callback_url, follow_redirects=False)
+        assert response.status_code == 302
+        assert (
+            response.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
+        )
+
+
+def test_me_and_extend_refuse_unknown_principal_and_unknown_permission(auth_env: _AuthEnv) -> None:
     world = _seed_auth_world(auth_env.worker_database)
     app = auth_env.make_app()
 
     with TestClient(app) as client:
-        # Unknown provider, provider error != access_denied, and missing code -> sign_in_failed.
-        for bad_cb in (
-            "/api/v1/auth/callback/not_a_provider?code=x&state=y",
-            "/api/v1/auth/callback/local_mock?error=server_error&state=y",
-            "/api/v1/auth/callback/local_mock?state=y",
-        ):
-            r = client.get(bad_cb, follow_redirects=False)
-            assert r.status_code == 302
-            assert r.headers["location"] == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=sign_in_failed"
-
-        # Unknown permission row on /me fails closed with 403 authz.forbidden.
         with auth_env.worker_admin.transaction():
             role_id = auth_env.worker_admin.execute(
                 "SELECT id FROM public.roles WHERE tenant_id = %s AND system_key = 'admin'",
@@ -1159,12 +1180,77 @@ def test_callback_and_me_edge_refusals(auth_env: _AuthEnv) -> None:
         app.dependency_overrides.clear()
 
 
-def test_session_touch_and_create_refusal_race_recovery(
+def test_session_create_refusals_and_non_refusal_db_errors(
     auth_env: _AuthEnv, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Covers touch-activity races and domain vs infrastructure `create_session` errors."""
+    """Maps definer refusals to `SessionRefusal` and propagates infrastructure DB errors."""
     world = _seed_auth_world(auth_env.worker_database)
-    app = auth_env.make_app()
+    with auth_env.worker_admin.transaction():
+        google_ident_row = auth_env.worker_admin.execute(
+            "INSERT INTO public.identities (person_id, issuer, subject, email)"
+            " VALUES (%s, %s, 'google-sub-direct', 'admin@dhcw.example')"
+            " RETURNING id",
+            (world.admin_id, GOOGLE_CANONICAL_ISSUER),
+        ).fetchone()
+        assert google_ident_row is not None
+        auth_env.worker_admin.execute(
+            "INSERT INTO public.identities (person_id, issuer, subject, email)"
+            " VALUES (%s,"
+            "  'https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0',"
+            "  'entra-oid-direct', 'admin@dhcw.example')",
+            (world.admin_id,),
+        )
+    google_ident_id: UUID = google_ident_row[0]
+
+    sess_svc = SessionService(auth_env.sessions)
+
+    for person_id, identity_id, provider, expected_reason in (
+        (
+            world.disabled_id,
+            world.disabled_identity_id,
+            "local_mock",
+            SessionRefusal.PERSON_DISABLED,
+        ),
+        (world.admin_id, google_ident_id, "google", SessionRefusal.ENTRA_REQUIRED),
+        (
+            world.admin_id,
+            UUID("00000000-0000-0000-0000-000000000099"),
+            "local_mock",
+            SessionRefusal.SESSION_CREATE_REFUSED,
+        ),
+    ):
+        with pytest.raises(SessionRefusedError) as refusal:
+            sess_svc.create_session(
+                person_id=person_id,
+                identity_id=identity_id,
+                provider=provider,
+                email="rhiannon.davies@dhcw.example",
+                display_name="Rhiannon Davies",
+            )
+        assert refusal.value.reason is expected_reason
+
+    pg_other = DBAPIError.instance(
+        "SELECT 1", {}, psycopg.OperationalError("connection lost"), Exception
+    )
+
+    def _raise_other(_self: SessionRepository, _new_session: object) -> object:
+        raise pg_other
+
+    monkeypatch.setattr(SessionRepository, "create", _raise_other)
+    with pytest.raises(DBAPIError):
+        sess_svc.create_session(
+            person_id=world.admin_id,
+            identity_id=world.admin_identity_id,
+            provider="local_mock",
+            email="rhiannon.davies@dhcw.example",
+            display_name="Rhiannon Davies",
+        )
+
+
+def test_concurrent_touch_activity_races_preserve_or_revoke_session(
+    auth_env: _AuthEnv, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    world = _seed_auth_world(auth_env.worker_database)
     now = datetime.now(UTC)
     race_token = "race-tok"  # noqa: S105 - test fixture
 
@@ -1190,47 +1276,6 @@ def test_session_touch_and_create_refusal_race_recovery(
 
     sess_svc = SessionService(auth_env.sessions)
 
-    # 1. Domain refusals from `public.create_session` translate to `SessionRefusedError`.
-    with pytest.raises(SessionRefusedError) as disabled_refusal:
-        sess_svc.create_session(
-            person_id=world.disabled_id,
-            identity_id=world.disabled_identity_id,
-            provider="local_mock",
-            email="owen.hughes@dhcw.example",
-            display_name="Owen Hughes",
-        )
-    assert disabled_refusal.value.reason == "person_disabled"
-
-    with pytest.raises(SessionRefusedError) as missing_refusal:
-        sess_svc.create_session(
-            person_id=world.admin_id,
-            identity_id=UUID("00000000-0000-0000-0000-000000000099"),
-            provider="local_mock",
-            email="rhiannon.davies@dhcw.example",
-            display_name="Rhiannon Davies",
-        )
-    assert missing_refusal.value.reason == "session_create_refused"
-
-    # Non-refusal DBAPIError propagates out of SessionService.create_session.
-    pg_other = DBAPIError.instance(
-        "SELECT 1", {}, psycopg.OperationalError("connection lost"), Exception
-    )
-
-    def _raise_other(_self: SessionRepository, _new_session: object) -> object:
-        raise pg_other
-
-    monkeypatch.setattr(SessionRepository, "create", _raise_other)
-    with pytest.raises(DBAPIError):
-        sess_svc.create_session(
-            person_id=world.admin_id,
-            identity_id=world.admin_identity_id,
-            provider="local_mock",
-            email="rhiannon.davies@dhcw.example",
-            display_name="Rhiannon Davies",
-        )
-    monkeypatch.undo()
-
-    # 2. Concurrent touch-activity races: benign contention keeps auth; revocation returns None.
     def _noop_touch(_self: SessionRepository, *, token_hash: bytes) -> None:
         del token_hash
 
@@ -1246,12 +1291,16 @@ def test_session_touch_and_create_refusal_race_recovery(
 
     monkeypatch.setattr(SessionRepository, "touch_activity", _revoke_then_none)
     assert sess_svc.authenticate(raw_token=race_token, allow_activity_update=True) is None
-    monkeypatch.undo()
 
-    # 3. Person disabled between lookup and create_session redirects cleanly via callback route.
+
+def test_callback_redirects_person_disabled_when_disabled_during_session_creation(
+    auth_env: _AuthEnv, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _seed_auth_world(auth_env.worker_database)
+    app = auth_env.make_app()
+
     def _refuse_create(_self: SessionService, **_kwargs: object) -> object:
-        msg = "person_disabled"
-        raise SessionRefusedError(msg)
+        raise SessionRefusedError(SessionRefusal.PERSON_DISABLED)
 
     monkeypatch.setattr(SessionService, "create_session", _refuse_create)
     with TestClient(app) as client:
@@ -1262,3 +1311,19 @@ def test_session_touch_and_create_refusal_race_recovery(
             == f"{TEST_EDITOR_ORIGIN}/#/sign-in?error=person_disabled"
         )
         assert res.session_token is None
+
+
+def test_create_sign_in_transaction_refuses_non_sign_in_purpose_as_app_role(
+    auth_env: _AuthEnv,
+) -> None:
+    """`public.create_sign_in_transaction` refuses `link`/`redeem` until STY-110/EPC-028."""
+    with auth_env.sessions() as db_sess, pytest.raises(DBAPIError) as exc_info:
+        db_sess.execute(
+            text(
+                "SELECT * FROM public.create_sign_in_transaction("
+                " :s, :c, 'n', 'v', 'local_mock', 'http://127.0.0.1/local-mock-oidc',"
+                " 'link', '/', NULL, NULL, NULL, 600)"
+            ),
+            {"s": b"\x01" * 32, "c": b"\x02" * 32},
+        )
+    assert getattr(exc_info.value.orig, "sqlstate", None) == "22023"

@@ -40,6 +40,17 @@ export const zExtendSessionResponse = z.object({
 });
 
 /**
+ * IdentityProvider
+ *
+ * Closed set of identity providers surfaced by `/api/v1/me` (D13).
+ */
+export const zIdentityProvider = z.enum([
+    'google',
+    'entra',
+    'local_mock'
+]);
+
+/**
  * MeIdentityResponse
  */
 export const zMeIdentityResponse = z.object({
@@ -47,7 +58,7 @@ export const zMeIdentityResponse = z.object({
     id: z.uuid(),
     lastSignInAt: z.nullable(z.iso.datetime()),
     linkedAt: z.iso.datetime(),
-    provider: z.string()
+    provider: zIdentityProvider
 });
 
 /**
@@ -65,7 +76,7 @@ export const zMeRoleResponse = z.object({
 export const zMeSessionResponse = z.object({
     absoluteExpiresAt: z.iso.datetime(),
     idleExpiresAt: z.iso.datetime(),
-    provider: z.string(),
+    provider: zIdentityProvider,
     signedInAt: z.iso.datetime()
 });
 

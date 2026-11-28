@@ -8,9 +8,12 @@ from typing import Final
 from urllib.parse import urlsplit
 
 from roadmaps_api.settings import (
+    GOOGLE_ALLOWED_HD,
+    GOOGLE_CLIENT_SECRET,
     LOCAL_MOCK_OIDC_URL,
     Environment,
     Settings,
+    has_space_or_control,
     is_loopback_host,
     refuse,
 )
@@ -19,20 +22,29 @@ GOOGLE_CANONICAL_ISSUER: Final = "https://accounts.google.com"
 GOOGLE_ACCEPTED_ISSUERS: Final = frozenset({"https://accounts.google.com", "accounts.google.com"})
 GOOGLE_DISCOVERY_URL: Final = "https://accounts.google.com/.well-known/openid-configuration"
 
-# Fixed non-HTTPS loopback issuer re-exported by `tools.seed.personas.LOCAL_MOCK_ISSUER`.
+# Fixed non-HTTPS loopback issuer so both ADR-018's mock-provider guard and its
+# non-HTTPS/loopback issuer guard independently refuse it outside local/test, without
+# coupling the issuer to any worktree port (re-exported by `tools.seed.personas`).
 LOCAL_MOCK_ISSUER: Final = "http://127.0.0.1/local-mock-oidc"
 LOCAL_MOCK_CLIENT_ID: Final = "roadmaps-local-mock"
 LOCAL_MOCK_CLIENT_SECRET: Final = "roadmaps-local-mock-secret"  # noqa: S105 - local mock only
 
 OIDC_SCOPES: Final = "openid email profile"
 ENTRA_ISSUER_PATTERN: Final = re.compile(r"^https://login\.microsoftonline\.com/[^/]+/v2\.0$")
-_ASCII_SPACE: Final = 0x20
 
 
 class OidcProviderId(StrEnum):
     """Enabled v1 OIDC providers accepted by `/api/v1/auth/sign-in` and callbacks."""
 
     GOOGLE = "google"
+    LOCAL_MOCK = "local_mock"
+
+
+class IdentityProvider(StrEnum):
+    """Closed set of identity providers surfaced by `/api/v1/me` (D13)."""
+
+    GOOGLE = "google"
+    ENTRA = "entra"
     LOCAL_MOCK = "local_mock"
 
 
@@ -61,7 +73,7 @@ def _is_unspecified_ip(hostname: str) -> bool:
 
 def is_safe_deployed_issuer(issuer: str) -> bool:
     """Whether an OIDC issuer is HTTPS on a non-loopback, non-unspecified host (ADR-018, S4)."""
-    if not issuer or any(ch.isspace() or ord(ch) < _ASCII_SPACE for ch in issuer):
+    if not issuer or has_space_or_control(issuer):
         return False
     try:
         parts = urlsplit(issuer)
@@ -87,7 +99,10 @@ def build_provider_configs(settings: Settings) -> dict[OidcProviderId, ProviderC
     configs: dict[OidcProviderId, ProviderConfig] = {}
 
     if settings.google_client_id is not None:
-        assert settings.google_client_secret is not None  # noqa: S101 - validated in Settings
+        if not settings.google_client_secret:
+            refuse([GOOGLE_CLIENT_SECRET])
+        if not settings.google_allowed_hd:
+            refuse([GOOGLE_ALLOWED_HD])
         configs[OidcProviderId.GOOGLE] = ProviderConfig(
             provider=OidcProviderId.GOOGLE,
             canonical_issuer=GOOGLE_CANONICAL_ISSUER,
@@ -124,13 +139,13 @@ def build_provider_configs(settings: Settings) -> dict[OidcProviderId, ProviderC
     return configs
 
 
-def provider_for_issuer(issuer: str) -> str:
-    """Maps a stored canonical `identities.issuer` URL to its wire provider label (D13)."""
+def provider_for_issuer(issuer: str) -> IdentityProvider:
+    """Maps a stored canonical `identities.issuer` URL to its wire provider enum (D13)."""
     if issuer == GOOGLE_CANONICAL_ISSUER:
-        return "google"
+        return IdentityProvider.GOOGLE
     if issuer == LOCAL_MOCK_ISSUER:
-        return "local_mock"
+        return IdentityProvider.LOCAL_MOCK
     if ENTRA_ISSUER_PATTERN.fullmatch(issuer):
-        return "entra"
+        return IdentityProvider.ENTRA
     msg = "Unrecognised canonical identity issuer"
     raise ValueError(msg)

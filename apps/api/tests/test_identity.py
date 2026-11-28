@@ -24,6 +24,7 @@ from roadmaps_api.identity import (
     FAILURE_BACKOFF_SECONDS,
     GOOGLE_CANONICAL_ISSUER,
     LOCAL_MOCK_ISSUER,
+    IdentityProvider,
     OidcClient,
     OidcError,
     OidcProviderError,
@@ -70,7 +71,7 @@ def _google_settings() -> Settings:
         editor_origin=EDITOR_ORIGIN,
         google_client_id=GOOGLE_CLIENT_ID,
         google_client_secret=GOOGLE_CLIENT_SECRET,
-        google_allowed_hd=("wales.nhs.uk",),
+        google_allowed_hd=("dhcw.example",),
     )
 
 
@@ -82,9 +83,9 @@ def _valid_claims(now: int, **overrides: object) -> dict[str, Any]:
         "exp": now + 300,
         "iat": now,
         "nonce": "expected-nonce",
-        "email": "rhiannon.davies@wales.nhs.uk",
+        "email": "rhiannon.davies@dhcw.example",
         "email_verified": True,
-        "hd": "wales.nhs.uk",
+        "hd": "dhcw.example",
         "name": "Rhiannon Davies",
     }
     claims.update(overrides)
@@ -235,7 +236,7 @@ def test_google_short_issuer_normalises_to_canonical_url_and_accepts_case_insens
     token = _sign_rs256(
         key,
         _valid_claims(
-            now, iss="accounts.google.com", hd="WALES.NHS.UK", exp=now - 59, iat=now + 59
+            now, iss="accounts.google.com", hd="DHCW.EXAMPLE", exp=now - 59, iat=now + 59
         ),
     )
     adapter, _counts = _make_google_transport([key], lambda: token)
@@ -248,7 +249,7 @@ def test_google_short_issuer_normalises_to_canonical_url_and_accepts_case_insens
     assert verified.provider is OidcProviderId.GOOGLE
     assert verified.canonical_issuer == GOOGLE_CANONICAL_ISSUER
     assert verified.subject == "google-sub-001"
-    assert verified.email == "rhiannon.davies@wales.nhs.uk"
+    assert verified.email == "rhiannon.davies@dhcw.example"
     assert verified.display_name == "Rhiannon Davies"
 
 
@@ -333,6 +334,7 @@ REFUSED_TOKEN_CASES: dict[str, Callable[[RSAKey, int], str]] = {
         k, {c: v for c, v in _valid_claims(now).items() if c != "nonce"}
     ),
     "non-string nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce=12345)),
+    "non-ASCII nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="n\u00f6nce")),
     "alg none": lambda _k, now: _alg_none_token(_valid_claims(now)),
     "alg HS256": lambda _k, now: _hs256_token(_valid_claims(now)),
     "alg RS384": lambda k, now: _rs384_token(k, _valid_claims(now)),
@@ -477,6 +479,7 @@ def test_cold_jwks_outage_and_redirects_fail_closed() -> None:
         (200, b'{"error": "invalid_grant"}'),
         (302, b'{"access_token": "a", "token_type": "Bearer", "id_token": "x.y.z"}'),
         (502, b'{"detail": "bad gateway"}'),
+        (200, b'{"access_token": "a", "token_type": "Bearer", "expires_in": [1]}'),
     ],
     ids=[
         "400 invalid_grant OAuthError",
@@ -484,6 +487,7 @@ def test_cold_jwks_outage_and_redirects_fail_closed() -> None:
         "200 with error JSON",
         "302 with JSON body",
         "502 with non-OAuth JSON",
+        "200 with non-scalar expires_in",
     ],
 )
 def test_token_endpoint_oauth_errors_and_non_200_responses_raise_provider_error(
@@ -622,6 +626,105 @@ def test_discovery_and_jwks_single_flight_deduplicates_concurrent_fetches() -> N
     assert sf_counts["jwks"] == 1
 
 
+def test_stale_cache_returns_immediately_without_blocking_on_inflight_refresh() -> None:
+    key = _make_rsa_key("k1")
+    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
+    clock = [1000.0]
+    refresh_entered = threading.Event()
+    refresh_release = threading.Event()
+    disc_calls = [0]
+
+    def handler(
+        req: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if req.url == GOOGLE_DISCOVERY_URL:
+            disc_calls[0] += 1
+            if disc_calls[0] == 2:
+                refresh_entered.set()
+                refresh_release.wait(timeout=5.0)
+            return _json_response(_standard_discovery())
+        return _json_response({"keys": [key.as_dict(private=False)]})
+
+    cache = JwksCache(adapter=RecordingAdapter(handler), clock=lambda: clock[0])
+    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
+
+    # Expire TTL: thread 1 enters refresh, thread 2 returns stale immediately without waiting.
+    clock[0] += 7200.0
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(cache.get_discovery, google_cfg)
+        assert refresh_entered.wait(timeout=5.0)
+        second = cache.get_discovery(google_cfg)
+        assert second.issuer == GOOGLE_CANONICAL_ISSUER
+        assert not first.done()
+        refresh_release.set()
+        assert first.result().issuer == GOOGLE_CANONICAL_ISSUER
+    assert disc_calls[0] == 2
+
+
+def test_concurrent_key_rollover_callbacks_share_one_refetch_and_both_succeed() -> None:
+    key1 = _make_rsa_key("k1")
+    key2 = _make_rsa_key("k2")
+    active_keys: list[RSAKey] = [key1]
+    now = int(time.time())
+    clock = [1000.0]
+    jwks_calls = [0]
+    rollover_entered = threading.Event()
+    rollover_release = threading.Event()
+    current_token = [_sign_rs256(key1, _valid_claims(now))]
+
+    def handler(
+        req: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if req.url == GOOGLE_DISCOVERY_URL:
+            return _json_response(_standard_discovery())
+        if req.url == GOOGLE_JWKS_URI:
+            jwks_calls[0] += 1
+            if jwks_calls[0] == 2:
+                rollover_entered.set()
+                rollover_release.wait(timeout=5.0)
+            return _json_response({"keys": [k.as_dict(private=False) for k in active_keys]})
+        return _json_response(
+            {
+                "access_token": "tok",
+                "token_type": "Bearer",
+                "id_token": current_token[0],
+            }
+        )
+
+    adapter = RecordingAdapter(handler)
+    cache = JwksCache(adapter=adapter, clock=lambda: clock[0])
+    client = OidcClient(
+        build_provider_configs(_google_settings()), jwks_cache=cache, adapter=adapter
+    )
+
+    # Warm cache with key1.
+    client.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(code="c0", now=now))
+    assert jwks_calls[0] == 1
+
+    # Rotate to key2 and send two concurrent callbacks: both succeed with ONE refetch.
+    clock[0] += UNKNOWN_KID_REFETCH_INTERVAL_SECONDS + 1.0
+    active_keys.append(key2)
+    current_token[0] = _sign_rs256(key2, _valid_claims(now))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(
+            client.exchange_code_and_verify,
+            OidcProviderId.GOOGLE,
+            _exchange_request(code="c1", now=now),
+        )
+        assert rollover_entered.wait(timeout=5.0)
+        second = pool.submit(
+            client.exchange_code_and_verify,
+            OidcProviderId.GOOGLE,
+            _exchange_request(code="c2", now=now),
+        )
+        time.sleep(0.05)
+        rollover_release.set()
+        assert first.result().subject == "google-sub-001"
+        assert second.result().subject == "google-sub-001"
+    assert jwks_calls[0] == 2
+
+
 def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() -> None:
     prod_with_mock = Settings(
         environment=Environment.PRODUCTION,
@@ -630,12 +733,37 @@ def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() 
         editor_origin=EDITOR_ORIGIN,
         google_client_id=GOOGLE_CLIENT_ID,
         google_client_secret=GOOGLE_CLIENT_SECRET,
-        google_allowed_hd=("wales.nhs.uk",),
+        google_allowed_hd=("dhcw.example",),
         local_mock_oidc_url="http://127.0.0.1:8001",
     )
     with pytest.raises(SettingsError) as exc_info:
         build_provider_configs(prod_with_mock)
     assert "ROADMAPS_LOCAL_MOCK_OIDC_URL" in exc_info.value.invalid
+
+    missing_secret = Settings(
+        environment=Environment.TEST,
+        database_url="postgresql+psycopg://roadmaps:roadmaps@127.0.0.1:1/roadmaps",
+        allowed_hosts=("roadmaps.dhcw.example",),
+        editor_origin=EDITOR_ORIGIN,
+        google_client_id=GOOGLE_CLIENT_ID,
+        google_allowed_hd=("dhcw.example",),
+    )
+    with pytest.raises(SettingsError) as missing_secret_exc:
+        build_provider_configs(missing_secret)
+    assert missing_secret_exc.value.invalid == ["ROADMAPS_GOOGLE_CLIENT_SECRET"]
+
+    missing_hd = Settings(
+        environment=Environment.TEST,
+        database_url="postgresql+psycopg://roadmaps:roadmaps@127.0.0.1:1/roadmaps",
+        allowed_hosts=("roadmaps.dhcw.example",),
+        editor_origin=EDITOR_ORIGIN,
+        google_client_id=GOOGLE_CLIENT_ID,
+        google_client_secret=GOOGLE_CLIENT_SECRET,
+        google_allowed_hd=(),
+    )
+    with pytest.raises(SettingsError) as missing_hd_exc:
+        build_provider_configs(missing_hd)
+    assert missing_hd_exc.value.invalid == ["ROADMAPS_GOOGLE_ALLOWED_HD"]
 
     local_on_cloud_run = Settings(
         environment=Environment.LOCAL,
@@ -659,21 +787,20 @@ def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() 
     with pytest.raises(SettingsError):
         validate_deployed_providers({OidcProviderId.LOCAL_MOCK: unsafe_config})
 
-    assert provider_for_issuer(GOOGLE_CANONICAL_ISSUER) == "google"
-    assert provider_for_issuer(LOCAL_MOCK_ISSUER) == "local_mock"
+    assert provider_for_issuer(GOOGLE_CANONICAL_ISSUER) is IdentityProvider.GOOGLE
+    assert provider_for_issuer(LOCAL_MOCK_ISSUER) is IdentityProvider.LOCAL_MOCK
     assert (
         provider_for_issuer(
             "https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0"
         )
-        == "entra"
+        is IdentityProvider.ENTRA
     )
     with pytest.raises(ValueError, match="Unrecognised"):
         provider_for_issuer("https://unknown.example")
 
 
-def test_validate_id_token_claims_rejects_non_rs256_header_and_unconfigured_provider() -> None:
-    configs = build_provider_configs(_google_settings())
-    google_cfg = configs[OidcProviderId.GOOGLE]
+def test_validate_id_token_claims_rejects_non_rs256_header() -> None:
+    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
     now = int(time.time())
 
     with pytest.raises(OidcVerificationError):
@@ -685,6 +812,8 @@ def test_validate_id_token_claims_rejects_non_rs256_header_and_unconfigured_prov
             now=now,
         )
 
+
+def test_unconfigured_provider_raises_provider_error() -> None:
     with pytest.raises(OidcProviderError):
         OidcClient({}).create_authorization_url(
             OidcProviderId.GOOGLE,

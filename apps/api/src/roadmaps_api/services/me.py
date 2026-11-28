@@ -11,14 +11,14 @@ from sqlalchemy.orm import Session, sessionmaker
 from roadmaps_api.authz import AuthenticatedPrincipal, Permission, parse_role_permissions
 from roadmaps_api.database import Sessions, session_info
 from roadmaps_api.errors import ApiError, ErrorCode
-from roadmaps_api.identity import provider_for_issuer
+from roadmaps_api.identity import IdentityProvider, provider_for_issuer
 from roadmaps_api.repositories.me import MeRepository
 
 
 @dataclass(frozen=True)
 class MeIdentity:
     id: UUID
-    provider: str
+    provider: IdentityProvider
     email: str
     last_sign_in_at: datetime | None
     linked_at: datetime
@@ -46,7 +46,7 @@ class MeSession:
     idle_expires_at: datetime
     absolute_expires_at: datetime
     signed_in_at: datetime
-    provider: str
+    provider: IdentityProvider
 
 
 @dataclass(frozen=True)
@@ -120,7 +120,7 @@ class MeService:
                 idle_expires_at=principal.idle_expires_at,
                 absolute_expires_at=principal.absolute_expires_at,
                 signed_in_at=principal.signed_in_at,
-                provider=principal.provider,
+                provider=IdentityProvider(principal.provider),
             ),
         )
 

@@ -43,6 +43,13 @@ export type ExtendSessionResponse = {
 };
 
 /**
+ * IdentityProvider
+ *
+ * Closed set of identity providers surfaced by `/api/v1/me` (D13).
+ */
+export type IdentityProvider = 'google' | 'entra' | 'local_mock';
+
+/**
  * MeIdentityResponse
  */
 export type MeIdentityResponse = {
@@ -62,10 +69,7 @@ export type MeIdentityResponse = {
      * Linkedat
      */
     linkedAt: string;
-    /**
-     * Provider
-     */
-    provider: string;
+    provider: IdentityProvider;
 };
 
 /**
@@ -148,10 +152,7 @@ export type MeSessionResponse = {
      * Idleexpiresat
      */
     idleExpiresAt: string;
-    /**
-     * Provider
-     */
-    provider: string;
+    provider: IdentityProvider;
     /**
      * Signedinat
      */

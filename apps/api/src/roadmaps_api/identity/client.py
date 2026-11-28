@@ -86,7 +86,9 @@ def _validate_standard_claims(
         raise OidcVerificationError(msg)
 
     nonce = raw_claims.get("nonce")
-    if not isinstance(nonce, str) or not hmac.compare_digest(nonce, expected_nonce):
+    if not isinstance(nonce, str) or not hmac.compare_digest(
+        nonce.encode("utf-8"), expected_nonce.encode("utf-8")
+    ):
         msg = "invalid_nonce"
         raise OidcVerificationError(msg)
 
@@ -232,7 +234,9 @@ class OidcClient:
         try:
             return jwt.decode(raw_id_token, key_set, algorithms=list(ALLOWED_JWS_ALGORITHMS))
         except InvalidKeyIdError:
-            refreshed = self._jwks_cache.refetch_on_unknown_kid(config, discovery=discovery)
+            refreshed = self._jwks_cache.refetch_on_unknown_kid(
+                config, discovery=discovery, previous_key_set=key_set
+            )
             if refreshed is None:
                 msg = "unknown_kid"
                 raise OidcVerificationError(msg) from None
@@ -262,7 +266,7 @@ class OidcClient:
                     timeout=OUTBOUND_TIMEOUT,
                     allow_redirects=False,
                 )
-            except (AuthlibBaseError, requests.RequestException, ValueError) as exc:
+            except (AuthlibBaseError, requests.RequestException, TypeError, ValueError) as exc:
                 msg = "token_exchange_failed"
                 raise OidcProviderError(msg) from exc
 

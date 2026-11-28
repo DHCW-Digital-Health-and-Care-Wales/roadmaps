@@ -8,6 +8,7 @@ import pytest
 from roadmaps_api.settings import (
     CLOUD_RUN_MARKERS,
     Environment,
+    Settings,
     SettingsError,
     load_settings,
     parse_loopback_http_origin,
@@ -531,3 +532,14 @@ def test_blank_local_mock_oidc_url_is_treated_as_unset() -> None:
         }
     )
     assert local_empty_mock.local_mock_oidc_url is None
+
+
+def test_direct_settings_construction_refuses_invalid_editor_origin() -> None:
+    with pytest.raises(SettingsError) as raised:
+        Settings(
+            environment=Environment.TEST,
+            database_url=URL,
+            allowed_hosts=("api.example",),
+            editor_origin="not-an-origin",
+        )
+    assert raised.value.invalid == ["ROADMAPS_EDITOR_ORIGIN"]

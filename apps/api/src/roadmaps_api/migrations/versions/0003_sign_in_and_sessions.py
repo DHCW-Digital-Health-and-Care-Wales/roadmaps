@@ -250,6 +250,11 @@ def _create_auth_definer_routines() -> None:
             v_expires_at timestamptz;
             v_id uuid;
         BEGIN
+            -- Only 'sign-in' transactions are accepted until STY-110 / EPC-028 add validated
+            -- invitation-redemption and identity-link paths.
+            IF p_purpose IS DISTINCT FROM 'sign-in' THEN
+                RAISE EXCEPTION 'unsupported transaction purpose' USING ERRCODE = '22023';
+            END IF;
             IF p_ttl_seconds IS NULL OR p_ttl_seconds < 1 OR p_ttl_seconds > 600 THEN
                 RAISE EXCEPTION 'invalid transaction ttl' USING ERRCODE = '22023';
             END IF;
@@ -415,6 +420,7 @@ def _create_auth_definer_routines() -> None:
                 RAISE EXCEPTION 'person not found' USING ERRCODE = 'P0002';
             END IF;
             IF v_disabled_at IS NOT NULL THEN
+                -- Matched verbatim by `SessionService.create_session` -> `SessionRefusal`.
                 RAISE EXCEPTION 'person is disabled' USING ERRCODE = 'P0001';
             END IF;
 
@@ -432,6 +438,7 @@ def _create_auth_definer_routines() -> None:
                 WHERE other.person_id = p_person_id
                   AND other.issuer ~ '^https://login\\.microsoftonline\\.com/[^/]+/v2\\.0$'
             ) THEN
+                -- Matched verbatim by `SessionService.create_session` -> `SessionRefusal`.
                 RAISE EXCEPTION 'entra sign-in required' USING ERRCODE = 'P0001';
             END IF;
 

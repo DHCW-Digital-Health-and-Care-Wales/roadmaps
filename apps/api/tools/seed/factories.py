@@ -8,7 +8,6 @@ open/sign-off routines.
 """
 
 import contextlib
-import hashlib
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -39,6 +38,7 @@ from roadmaps_api.models import (
     TenantScope,
 )
 from roadmaps_api.repositories.access_change_set import AccessChangeSetRepository
+from roadmaps_api.services.sessions import hash_token
 from tools.seed.deterministic import hash_invitation_token, request_hash_for
 from tools.seed.personas import LOCAL_MOCK_ISSUER, TenantSpec
 
@@ -341,7 +341,7 @@ def create_session(session: Session, data: SessionInput) -> AuthSession:
     idle_expires_at = data.idle_expires_at or (data.signed_in_at + timedelta(minutes=60))
     absolute_expires_at = data.absolute_expires_at or (data.signed_in_at + timedelta(hours=10))
     auth_session = AuthSession(
-        token_hash=hashlib.sha256(data.raw_token.encode("utf-8")).digest(),
+        token_hash=hash_token(data.raw_token),
         person_id=data.person_id,
         identity_id=data.identity_id,
         provider=data.provider,
@@ -362,8 +362,8 @@ def create_session(session: Session, data: SessionInput) -> AuthSession:
 def create_sign_in_transaction(session: Session, data: SignInTransactionInput) -> SignInTransaction:
     """Creates and flushes a `SignInTransaction` storing hashed state and cookie token (D14)."""
     tx = SignInTransaction(
-        state_hash=hashlib.sha256(data.raw_state.encode("utf-8")).digest(),
-        cookie_token_hash=hashlib.sha256(data.raw_cookie_token.encode("utf-8")).digest(),
+        state_hash=hash_token(data.raw_state),
+        cookie_token_hash=hash_token(data.raw_cookie_token),
         nonce=data.nonce,
         code_verifier=data.code_verifier,
         provider=data.provider,

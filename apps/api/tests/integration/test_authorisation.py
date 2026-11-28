@@ -43,16 +43,14 @@ from roadmaps_api.authz import (
 )
 from roadmaps_api.models import RolePermission
 from roadmaps_api.repositories.access_change_set import AccessChangeSetRepository
-from roadmaps_api.settings import Environment, Settings
 from roadmaps_api.wire import ApiRequestModel
 from tests import harness
 from tests.harness import PROBE_TABLE
 from tests.support import (
     SAME_ORIGIN_HEADERS,
-    TEST_EDITOR_ORIGIN,
-    TEST_HOST,
     Lines,
     make_principal,
+    make_settings,
 )
 from tools.seed.factories import (
     ChangeSetRequest,
@@ -324,13 +322,7 @@ def authz_app(
     mock_oidc_base_url: str,
 ) -> FastAPI:
     """The real app (plus D15 probe router) wired to the shared single-connection pool."""
-    settings = Settings(
-        environment=Environment.TEST,
-        database_url=database_url,
-        allowed_hosts=(TEST_HOST,),
-        editor_origin=TEST_EDITOR_ORIGIN,
-        local_mock_oidc_url=mock_oidc_base_url,
-    )
+    settings = make_settings(database_url, local_mock_oidc_url=mock_oidc_base_url)
     app = create_app(settings)
     app.state.engine.dispose()
     app.state.engine = engine
@@ -895,6 +887,8 @@ class _WriteTracker:
             tuple_writes = int(row[1]) if row is not None else 0
         finally:
             probe.close()
+        # PostgreSQL 18 `pg_stat_xact_user_tables` can still report the previous transaction's
+        # tuple count on a pooled connection before a new XID is assigned; gate diffs on `xid`.
         if xid is not None:
             if self._tx_xid is None:
                 self._tx_xid = xid
@@ -958,25 +952,12 @@ def test_every_non_exempt_get_route_makes_no_domain_write_and_cross_site_writes_
 
 
 def test_real_session_cookie_get_me_tracks_bookkeeping_only_on_same_origin(
-    database_url: str,
+    authz_app: FastAPI,
     worker_database: str,
     engine: Engine,
-    sessions: sessionmaker[Session],
     authz_data: AuthzFixture,
 ) -> None:
     """Real cookie auth through `_WriteTracker`: same-origin slides, cross-site writes nothing."""
-    app = create_app(
-        Settings(
-            environment=Environment.TEST,
-            database_url=database_url,
-            allowed_hosts=(TEST_HOST,),
-            editor_origin=TEST_EDITOR_ORIGIN,
-        )
-    )
-    app.state.engine.dispose()
-    app.state.engine = engine
-    app.state.sessions = sessions
-
     now = datetime.now(UTC)
     with harness.admin_session(worker_database) as admin_sess:
         create_session(
@@ -993,7 +974,7 @@ def test_real_session_cookie_get_me_tracks_bookkeeping_only_on_same_origin(
         )
         admin_sess.commit()
 
-    with _WriteTracker(engine) as tracker, TestClient(app) as client:
+    with _WriteTracker(engine) as tracker, TestClient(authz_app) as client:
         for site_header in ("same-site", "cross-site"):
             tracker.clear()
             res = client.get(

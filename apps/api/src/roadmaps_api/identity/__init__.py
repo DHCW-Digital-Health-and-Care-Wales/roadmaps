@@ -15,6 +15,7 @@ from roadmaps_api.identity.jwks import FAILURE_BACKOFF_SECONDS, OUTBOUND_TIMEOUT
 from roadmaps_api.identity.providers import (
     GOOGLE_CANONICAL_ISSUER,
     LOCAL_MOCK_ISSUER,
+    IdentityProvider,
     OidcProviderId,
     ProviderConfig,
     build_provider_configs,
@@ -28,6 +29,7 @@ __all__ = [
     "GOOGLE_CANONICAL_ISSUER",
     "LOCAL_MOCK_ISSUER",
     "OUTBOUND_TIMEOUT",
+    "IdentityProvider",
     "JwksCache",
     "OidcClient",
     "OidcError",

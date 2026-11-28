@@ -63,6 +63,16 @@
         "title": "ExtendSessionResponse",
         "type": "object"
       },
+      "IdentityProvider": {
+        "description": "Closed set of identity providers surfaced by `/api/v1/me` (D13).",
+        "enum": [
+          "google",
+          "entra",
+          "local_mock"
+        ],
+        "title": "IdentityProvider",
+        "type": "string"
+      },
       "MeIdentityResponse": {
         "properties": {
           "email": {
@@ -92,8 +102,7 @@
             "type": "string"
           },
           "provider": {
-            "title": "Provider",
-            "type": "string"
+            "$ref": "#/components/schemas/IdentityProvider"
           }
         },
         "required": [
@@ -237,8 +246,7 @@
             "type": "string"
           },
           "provider": {
-            "title": "Provider",
-            "type": "string"
+            "$ref": "#/components/schemas/IdentityProvider"
           },
           "signedInAt": {
             "format": "date-time",

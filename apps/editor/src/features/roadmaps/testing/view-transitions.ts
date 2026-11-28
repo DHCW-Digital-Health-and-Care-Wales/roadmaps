@@ -6,8 +6,8 @@ import { vi } from "vitest"
  * those deferred, and `ends`, which finishes those held. Each transition draws its update
  * at once; with `deferred`, only when `draw` is called, as a browser draws the update a
  * while after it was asked for; with `held`, it draws it at once and finishes only when
- * its entry in `ends` is called. Undo it with `withoutViewTransitions`. Call it after a
- * test's setup moves, or each of those is deferred too.
+ * its entry in `ends` is called. Undo it with `withoutViewTransitions`. With `deferred`
+ * or `held`, call it after a test's setup moves, or each of those waits too.
  */
 export function withViewTransitions({ deferred = false, held = false } = {}) {
   vi.stubGlobal(

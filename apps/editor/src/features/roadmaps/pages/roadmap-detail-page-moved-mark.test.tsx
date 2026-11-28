@@ -241,10 +241,10 @@ describe("The page scrolls to the moved item (S4)", () => {
 
     await chooseFromMenu(user, "Delta", "To the top")
 
-    // Frames on, once the menu has let go of the page.
     const delta = main()
       .getByRole("heading", { level: 3, name: "Delta" })
       .closest("li")
+    // A few frames on, once the menu has let go of the page.
     await waitFor(() => {
       expect(scrolled.mock.contexts).toContain(delta)
     })

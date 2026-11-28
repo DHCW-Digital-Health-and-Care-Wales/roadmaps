@@ -295,8 +295,9 @@ the owner's request in the review of PR 346 (2026-11-28). The rest of _Layering_
   the principal and tenant dependencies, the permission catalogue and the same-origin
   and media-type guards (ADR-019, ADR-020). Routes declare their policy from it,
   services take its principal and permission types, and it reads memberships and role
-  permissions through repositories. The session service it needs to authenticate a
-  request reaches it at run time through a protocol `app.py` wires, not an import.
+  permissions through repositories. The one service it reaches, the session service
+  that authenticates a request, it reaches at run time through the
+  `SessionAuthenticator` protocol that `app.py` wires into `app.state`, not an import.
 - **Enforced** by the same import-linter `layers` contract, which lists
   `roadmaps_api.authz` between `services` and `repositories`
   (`apps/api/pyproject.toml`).

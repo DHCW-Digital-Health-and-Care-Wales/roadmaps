@@ -8,6 +8,14 @@ from sqlalchemy.orm import Session, sessionmaker
 from roadmaps_api.database import create_sessions
 from roadmaps_api.migrations import latest_revision
 from tests.harness import MOVED_VERSION_TABLE
+from tests.support import serving_mock_oidc
+
+
+@pytest.fixture(scope="module")
+def mock_oidc_base_url() -> Iterator[str]:
+    """Starts the real local mock OIDC FastAPI app on an ephemeral loopback port (D5)."""
+    with serving_mock_oidc() as base_url:
+        yield base_url
 
 
 @pytest.fixture

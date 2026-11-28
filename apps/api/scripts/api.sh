@@ -7,17 +7,18 @@
 #   db-down  stop and remove it, keeping its data volume
 #   migrate  db-up, then the migrations, as the migration login
 #   seed     migrate, then truncate and deterministically seed local data (tools/seed)
-#   dev      migrate, then the API with reload on the slot's API_PORT, as the
-#            application's login, its traces sent to the shared Jaeger if it answers
-#            as the API starts, under the service roadmaps-api-<slot> (never auto-seeds)
+#   dev      migrate, then the local mock OIDC server on OIDC_PORT and the API
+#            with reload on the slot's API_PORT, as the application's login, its
+#            traces sent to the shared Jaeger if it answers as the API starts,
+#            under the service roadmaps-api-<slot> (never auto-seeds)
 #   test     db-up, then pytest under coverage against it, locally and in CI
 #   jaeger, jaeger-stop
 #            start or stop the Jaeger every worktree shares (jaeger/compose.yaml),
 #            on fixed ports
 #
 # Ports and the Compose project come from the .env.worktree that
-# scripts/worktree/worktree.sh writes; outside a worktree the API takes 8000, its
-# database 15432 and its service name roadmaps-api.
+# scripts/worktree/worktree.sh writes; outside a worktree the API takes 8000, the
+# local mock OIDC server 8001, its database 15432 and its service name roadmaps-api.
 set -euo pipefail
 
 API_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -32,6 +33,7 @@ if [ -f "$ENV_FILE" ]; then
   DEV_PORT="$(worktree_value DEV_PORT)"
   API_PORT="$(worktree_value API_PORT)"
   DB_PORT="$(worktree_value DB_PORT)"
+  OIDC_PORT="$(worktree_value OIDC_PORT)"
   DB_PROJECT="$(worktree_value API_DB_PROJECT)"
   SLOT="$(worktree_value WORKTREE_SLOT)"
   if [ -z "$DEV_PORT" ] || [ -z "$API_PORT" ] || [ -z "$DB_PORT" ] || [ -z "$DB_PROJECT" ] || [ -z "$SLOT" ]; then
@@ -44,6 +46,7 @@ else
   DEV_PORT=5173
   API_PORT=8000
   DB_PORT=15432
+  OIDC_PORT=8001
   DB_PROJECT=roadmaps-api
   SERVICE_NAME=roadmaps-api
 fi
@@ -94,17 +97,54 @@ case "${1:-}" in
       uv run --locked python -m tools.seed "$@"
     ;;
   dev)
+    if [ -z "$OIDC_PORT" ]; then
+      echo "api: .env.worktree has no OIDC_PORT — rerun pnpm worktree:setup" >&2
+      exit 1
+    fi
     migrate
-    echo "==> API on http://127.0.0.1:$API_PORT, its database on 127.0.0.1:$DB_PORT" >&2
-    # The API refuses to start with the migration login in its environment.
-    unset ROADMAPS_MIGRATION_DATABASE_URL ROADMAPS_ADMIN_DATABASE_URL
+    echo "==> API on http://127.0.0.1:$API_PORT, mock OIDC on http://127.0.0.1:$OIDC_PORT, database on 127.0.0.1:$DB_PORT" >&2
+    # The API refuses to start with the migration or purge login in its environment.
+    unset ROADMAPS_MIGRATION_DATABASE_URL ROADMAPS_ADMIN_DATABASE_URL ROADMAPS_PURGE_DATABASE_URL
     export ROADMAPS_ENV=local
     export ROADMAPS_DATABASE_URL="$APP_DATABASE_URL"
     export ROADMAPS_ALLOWED_HOSTS="127.0.0.1,localhost"
     export ROADMAPS_EDITOR_ORIGIN="http://localhost:$DEV_PORT"
+    export ROADMAPS_LOCAL_MOCK_OIDC_URL="http://127.0.0.1:$OIDC_PORT"
     export ROADMAPS_SERVICE_NAME="$SERVICE_NAME"
+    uv run --locked python -m tools.mock_oidc --port "$OIDC_PORT" &
+    MOCK_OIDC_PID=$!
+    API_PID=""
+    cleanup_dev() {
+      if [ -n "$API_PID" ]; then
+        kill "$API_PID" 2>/dev/null || true
+        wait "$API_PID" 2>/dev/null || true
+      fi
+      kill "$MOCK_OIDC_PID" 2>/dev/null || true
+      wait "$MOCK_OIDC_PID" 2>/dev/null || true
+    }
+    trap cleanup_dev EXIT INT TERM
+    for _ in $(seq 1 50); do
+      if ! kill -0 "$MOCK_OIDC_PID" 2>/dev/null; then
+        echo "api: mock OIDC exited before becoming ready on 127.0.0.1:$OIDC_PORT" >&2
+        exit 1
+      fi
+      if curl --noproxy '*' -fsS --max-time 1 "http://127.0.0.1:$OIDC_PORT/health" >/dev/null 2>&1; then
+        break
+      fi
+      sleep 0.1
+    done
+    if ! kill -0 "$MOCK_OIDC_PID" 2>/dev/null; then
+      echo "api: mock OIDC exited before becoming ready on 127.0.0.1:$OIDC_PORT" >&2
+      exit 1
+    fi
+    if ! curl --noproxy '*' -fsS --max-time 1 "http://127.0.0.1:$OIDC_PORT/health" >/dev/null 2>&1; then
+      echo "api: mock OIDC did not become ready on 127.0.0.1:$OIDC_PORT" >&2
+      exit 1
+    fi
     # --local-traces: the shared Jaeger, if it answers now and no endpoint is set.
-    exec uv run --locked python -m roadmaps_api.server --port "$API_PORT" --reload --local-traces
+    uv run --locked python -m roadmaps_api.server --port "$API_PORT" --reload --local-traces &
+    API_PID=$!
+    wait "$API_PID"
     ;;
   jaeger)
     jaeger up --detach --wait --quiet-pull
@@ -114,8 +154,8 @@ case "${1:-}" in
   test)
     shift
     db_up
-    # The migration login a developer exported to draft a revision stays out of the run.
-    unset ROADMAPS_MIGRATION_DATABASE_URL
+    # Privileged logins a developer exported stay out of the test run.
+    unset ROADMAPS_MIGRATION_DATABASE_URL ROADMAPS_PURGE_DATABASE_URL
     # The harness builds a template database from it, then one per worker
     # (tests/integration/AGENTS.md).
     export ROADMAPS_ADMIN_DATABASE_URL="$ADMIN_DATABASE_URL"

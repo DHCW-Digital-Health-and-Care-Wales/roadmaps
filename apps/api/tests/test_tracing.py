@@ -389,6 +389,9 @@ def test_a_test_s_exporter_is_the_only_one_whatever_the_environment_holds(
         monkeypatch.setenv("ROADMAPS_DATABASE_URL", make_settings().database_url)
         monkeypatch.setenv("ROADMAPS_ALLOWED_HOSTS", TEST_HOST)
         monkeypatch.setenv("ROADMAPS_EDITOR_ORIGIN", f"https://{TEST_HOST}")
+        monkeypatch.setenv("ROADMAPS_GOOGLE_CLIENT_ID", "test-google-client-id")
+        monkeypatch.setenv("ROADMAPS_GOOGLE_CLIENT_SECRET", "test-google-client-secret")
+        monkeypatch.setenv("ROADMAPS_GOOGLE_ALLOWED_HD", "wales.nhs.uk")
         settings = load_settings()
         assert settings.otlp_endpoint == endpoint
 

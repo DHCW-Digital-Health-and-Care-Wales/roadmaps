@@ -2,8 +2,9 @@
 
 Runs against real PostgreSQL 18 as `roadmaps_app` on the shared single-connection pool
 fixture (`pool_size=1, max_overflow=0`) so pooled transactions meet any leaked session
-state. Uses a minimal test-only probe router beside `create_app(...)` until real contract
-routes land in `STY-106` and `EPC-025` (D1, D4, D11, D12, D15).
+state. Uses a minimal test-only probe router beside `create_app(...)` alongside the
+contract routes to cover every policy kind and a tenant write before `EPC-025` adds
+tenant routes (D1, D4, D11, D12, D15).
 """
 
 import dataclasses
@@ -27,7 +28,6 @@ from roadmaps_api.app import create_app
 from roadmaps_api.authz import (
     PERSON_ASSERTION_HEADER,
     SHIPPED_ROLES,
-    AuthenticatedPrincipal,
     CurrentPrincipal,
     CurrentTenant,
     Permission,
@@ -46,13 +46,20 @@ from roadmaps_api.repositories.access_change_set import AccessChangeSetRepositor
 from roadmaps_api.wire import ApiRequestModel
 from tests import harness
 from tests.harness import PROBE_TABLE
-from tests.support import SAME_ORIGIN_HEADERS, Lines, make_settings
+from tests.support import (
+    SAME_ORIGIN_HEADERS,
+    Lines,
+    make_principal,
+    make_settings,
+)
 from tools.seed.factories import (
     ChangeSetRequest,
     MembershipInput,
     PersonInput,
+    SessionInput,
     create_membership,
     create_person_with_identity,
+    create_session,
     create_shipped_roles,
     create_tenant,
     system_access_change_set,
@@ -78,13 +85,15 @@ CURRENT_RLS_SETTINGS: Final = text(
     "SELECT current_setting('app.tenant_id', true), current_setting('app.person_id', true)"
 )
 
-# Standing S4 exemption list: only the future OIDC callback route may write on GET (D4, D15).
-READ_ONLY_GET_EXEMPTIONS: Final[frozenset[str]] = frozenset()
+# Standing S4 exemption list: only the OIDC callback route may write on GET (D4, D15, STY-106).
+READ_ONLY_GET_EXEMPTIONS: Final[frozenset[str]] = frozenset({"/api/v1/auth/callback/{provider}"})
 
-# SQL patterns: session-activity bookkeeping (`STY-106` D12) will register its exact
+# SQL patterns: session-activity bookkeeping (`STY-106` D12) registers its exact
 # definer routine here so same-origin GETs may update last_activity_at while same-site /
 # cross-site GETs must still write nothing at all (D4).
-SESSION_BOOKKEEPING_PATTERNS: Final[tuple[re.Pattern[str], ...]] = ()
+SESSION_BOOKKEEPING_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r"\bpublic\.touch_session_activity\(", re.IGNORECASE),
+)
 WRITE_SQL_PATTERN: Final = re.compile(
     r"^\s*(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE|CREATE|ALTER|DROP|GRANT|REVOKE|CALL)\b"
     r"|^\s*WITH\b.*\b(?:INSERT|UPDATE|DELETE|MERGE)\b",
@@ -111,10 +120,11 @@ class AuthzFixture:
     demoted_a: uuid.UUID
     admin_b: uuid.UUID
     multi_ab: uuid.UUID
+    identity_by_person: dict[uuid.UUID, uuid.UUID]
 
 
-def _seed_person(session: Session, display_name: str, sub: str) -> uuid.UUID:
-    person, _identity = create_person_with_identity(
+def _seed_person(session: Session, display_name: str, sub: str) -> tuple[uuid.UUID, uuid.UUID]:
+    person, identity = create_person_with_identity(
         session,
         PersonInput(
             display_name=display_name,
@@ -123,7 +133,7 @@ def _seed_person(session: Session, display_name: str, sub: str) -> uuid.UUID:
             created_at=SEED_TIME,
         ),
     )
-    return person.id
+    return person.id, identity.id
 
 
 @pytest.fixture
@@ -165,13 +175,22 @@ def authz_data(
                 ).items()
             }
 
-        admin_a = _seed_person(session, "Admin A", "admin-a")
-        lead_a = _seed_person(session, "Lead A", "lead-a")
-        viewer_a = _seed_person(session, "Viewer A", "viewer-a")
-        ended_a = _seed_person(session, "Ended A", "ended-a")
-        demoted_a = _seed_person(session, "Demoted A", "demoted-a")
-        admin_b = _seed_person(session, "Admin B", "admin-b")
-        multi_ab = _seed_person(session, "Multi AB", "multi-ab")
+        admin_a, admin_a_id = _seed_person(session, "Admin A", "admin-a")
+        lead_a, lead_a_id = _seed_person(session, "Lead A", "lead-a")
+        viewer_a, viewer_a_id = _seed_person(session, "Viewer A", "viewer-a")
+        ended_a, ended_a_id = _seed_person(session, "Ended A", "ended-a")
+        demoted_a, demoted_a_id = _seed_person(session, "Demoted A", "demoted-a")
+        admin_b, admin_b_id = _seed_person(session, "Admin B", "admin-b")
+        multi_ab, multi_ab_id = _seed_person(session, "Multi AB", "multi-ab")
+        identity_by_person = {
+            admin_a: admin_a_id,
+            lead_a: lead_a_id,
+            viewer_a: viewer_a_id,
+            ended_a: ended_a_id,
+            demoted_a: demoted_a_id,
+            admin_b: admin_b_id,
+            multi_ab: multi_ab_id,
+        }
 
         with system_access_change_set(
             session, tenant_a_id, ChangeSetRequest.seeded(TEST_SEED, "members-a")
@@ -231,6 +250,7 @@ def authz_data(
         demoted_a=demoted_a,
         admin_b=admin_b,
         multi_ab=multi_ab,
+        identity_by_person=identity_by_person,
     )
 
 
@@ -295,9 +315,15 @@ def _add_probe_router(app: FastAPI) -> None:
 
 
 @pytest.fixture
-def authz_app(database_url: str, engine: Engine, sessions: sessionmaker[Session]) -> FastAPI:
+def authz_app(
+    database_url: str,
+    engine: Engine,
+    sessions: sessionmaker[Session],
+    mock_oidc_base_url: str,
+) -> FastAPI:
     """The real app (plus D15 probe router) wired to the shared single-connection pool."""
-    app = create_app(make_settings(database_url))
+    settings = make_settings(database_url, local_mock_oidc_url=mock_oidc_base_url)
+    app = create_app(settings)
     app.state.engine.dispose()
     app.state.engine = engine
     app.state.sessions = sessions
@@ -305,12 +331,36 @@ def authz_app(database_url: str, engine: Engine, sessions: sessionmaker[Session]
     return app
 
 
-def _set_principal(app: FastAPI, person_id: uuid.UUID | None) -> None:
+def _set_principal(
+    app: FastAPI,
+    person_id: uuid.UUID | None,
+    *,
+    session_id: uuid.UUID = SESSION_ID,
+) -> None:
     if person_id is None:
         app.dependency_overrides.pop(get_current_principal, None)
     else:
-        principal = AuthenticatedPrincipal(person_id=person_id, session_id=SESSION_ID)
+        principal = make_principal(person_id, session_id=session_id)
         app.dependency_overrides[get_current_principal] = lambda: principal
+
+
+def _seed_live_session(
+    worker_database: str, authz_data: AuthzFixture, person_id: uuid.UUID
+) -> uuid.UUID:
+    now = datetime.now(UTC)
+    with harness.admin_session(worker_database) as session:
+        created = create_session(
+            session,
+            SessionInput(
+                person_id=person_id,
+                identity_id=authz_data.identity_by_person[person_id],
+                raw_token=f"authz-{uuid.uuid4().hex}",
+                signed_in_at=now,
+            ),
+        )
+        sid = created.id
+        session.commit()
+    return sid
 
 
 def _headers_for(method: str, person_id: uuid.UUID | None) -> dict[str, str]:
@@ -334,11 +384,39 @@ class CallSpec:
     policy: RoutePolicy
     path_for: Callable[[str], str]
     json_body: dict[str, Any] | None = None
+    success_status: int = 200
+    needs_live_session: bool = False
 
 
 CALL_SPECS: Final[dict[tuple[str, str], CallSpec]] = {
     ("GET", "/health"): CallSpec(RoutePolicy(PolicyKind.PUBLIC), lambda _slug: "/health"),
     ("GET", "/ready"): CallSpec(RoutePolicy(PolicyKind.PUBLIC), lambda _slug: "/ready"),
+    ("POST", "/api/v1/auth/sign-in"): CallSpec(
+        RoutePolicy(PolicyKind.PUBLIC),
+        lambda _slug: "/api/v1/auth/sign-in",
+        json_body={"provider": "local_mock"},
+    ),
+    ("GET", "/api/v1/auth/callback/{provider}"): CallSpec(
+        RoutePolicy(PolicyKind.PUBLIC),
+        lambda _slug: "/api/v1/auth/callback/local_mock",
+        success_status=302,
+    ),
+    ("GET", "/api/v1/me"): CallSpec(RoutePolicy(PolicyKind.SIGNED_IN), lambda _slug: "/api/v1/me"),
+    ("POST", "/api/v1/auth/extend"): CallSpec(
+        RoutePolicy(PolicyKind.SIGNED_IN),
+        lambda _slug: "/api/v1/auth/extend",
+        needs_live_session=True,
+    ),
+    ("POST", "/api/v1/auth/sign-out"): CallSpec(
+        RoutePolicy(PolicyKind.SIGNED_IN),
+        lambda _slug: "/api/v1/auth/sign-out",
+        needs_live_session=True,
+    ),
+    ("POST", "/api/v1/auth/sign-out-all"): CallSpec(
+        RoutePolicy(PolicyKind.SIGNED_IN),
+        lambda _slug: "/api/v1/auth/sign-out-all",
+        needs_live_session=True,
+    ),
     ("GET", "/api/v1/probe/public"): CallSpec(
         RoutePolicy(PolicyKind.PUBLIC), lambda _slug: "/api/v1/probe/public"
     ),
@@ -397,20 +475,21 @@ def _assert_call_specs_cover_all_routes(
 
 
 def _expected_status(
-    policy: RoutePolicy, *, role_key: ShippedRoleKey | None, signed_in_caller: bool
+    spec: CallSpec, *, role_key: ShippedRoleKey | None, signed_in_caller: bool
 ) -> int:
+    policy = spec.policy
     if policy.kind is PolicyKind.PUBLIC:
-        return 200
+        return spec.success_status
     if not signed_in_caller:
         return 401
     if policy.kind is PolicyKind.SIGNED_IN:
-        return 200
+        return spec.success_status
     if role_key is None:
         return 404
     if policy.kind is PolicyKind.TENANT_MEMBER:
-        return 200
+        return spec.success_status
     assert policy.permission is not None
-    return 200 if policy.permission in SHIPPED_ROLES[role_key] else 403
+    return spec.success_status if policy.permission in SHIPPED_ROLES[role_key] else 403
 
 
 def _authorised_person_for(policy: RoutePolicy, data: AuthzFixture) -> uuid.UUID:
@@ -642,7 +721,7 @@ def test_call_specs_registry_is_fail_closed_for_unregistered_routes(authz_app: F
 
 
 def test_generated_role_by_route_matrix_exercises_every_route_and_principal(
-    authz_app: FastAPI, authz_data: AuthzFixture
+    authz_app: FastAPI, authz_data: AuthzFixture, worker_database: str
 ) -> None:
     discovered = _discover_policy_routes(authz_app)
     _assert_call_specs_cover_all_routes(discovered, CALL_SPECS)
@@ -658,13 +737,18 @@ def test_generated_role_by_route_matrix_exercises_every_route_and_principal(
     ]
 
     with TestClient(authz_app) as client:
-        for (method, template), policy in sorted(discovered.items()):
+        for (method, template), _policy in sorted(discovered.items()):
             spec = CALL_SPECS[(method, template)]
             path = spec.path_for(authz_data.tenant_a_slug)
             for label, person_id, role_key in principals:
-                _set_principal(authz_app, person_id)
+                sid = (
+                    _seed_live_session(worker_database, authz_data, person_id)
+                    if person_id is not None and spec.needs_live_session
+                    else SESSION_ID
+                )
+                _set_principal(authz_app, person_id, session_id=sid)
                 expected = _expected_status(
-                    policy,
+                    spec,
                     role_key=role_key,
                     signed_in_caller=person_id is not None,
                 )
@@ -673,6 +757,7 @@ def test_generated_role_by_route_matrix_exercises_every_route_and_principal(
                     path,
                     headers=_headers_for(method, person_id),
                     json=spec.json_body,
+                    follow_redirects=False,
                 )
                 assert response.status_code == expected, (
                     f"{method} {template} as {label}: expected {expected}, "
@@ -802,12 +887,16 @@ class _WriteTracker:
             tuple_writes = int(row[1]) if row is not None else 0
         finally:
             probe.close()
-        if xid is not None and self._tx_xid is None:
-            self._tx_xid = xid
-            xid_assigned_now = True
-        if tuple_writes > self._tx_tuple_writes:
-            self._tx_tuple_writes = tuple_writes
-            tuple_wrote_now = True
+        # PostgreSQL 18 `pg_stat_xact_user_tables` can still report the previous transaction's
+        # tuple count on a pooled connection before a new XID is assigned; gate diffs on `xid`.
+        if xid is not None:
+            if self._tx_xid is None:
+                self._tx_xid = xid
+                xid_assigned_now = True
+                self._tx_tuple_writes = tuple_writes
+            elif tuple_writes > self._tx_tuple_writes:
+                self._tx_tuple_writes = tuple_writes
+                tuple_wrote_now = True
 
         if any(pattern.search(statement) for pattern in SESSION_BOOKKEEPING_PATTERNS):
             self.bookkeeping.append(statement)
@@ -860,6 +949,56 @@ def test_every_non_exempt_get_route_makes_no_domain_write_and_cross_site_writes_
                         f"{site_header} GET {template} wrote session bookkeeping: "
                         f"{tracker.bookkeeping}"
                     )
+
+
+def test_real_session_cookie_get_me_tracks_bookkeeping_only_on_same_origin(
+    authz_app: FastAPI,
+    worker_database: str,
+    engine: Engine,
+    authz_data: AuthzFixture,
+) -> None:
+    """Real cookie auth through `_WriteTracker`: same-origin slides, cross-site writes nothing."""
+    now = datetime.now(UTC)
+    with harness.admin_session(worker_database) as admin_sess:
+        create_session(
+            admin_sess,
+            SessionInput(
+                person_id=authz_data.admin_a,
+                identity_id=authz_data.identity_by_person[authz_data.admin_a],
+                raw_token="tracker-session-token",  # noqa: S106 - test fixture
+                signed_in_at=now - timedelta(minutes=10),
+                last_activity_at=now - timedelta(minutes=5),
+                idle_expires_at=now + timedelta(minutes=55),
+                absolute_expires_at=now + timedelta(hours=9),
+            ),
+        )
+        admin_sess.commit()
+
+    with _WriteTracker(engine) as tracker, TestClient(authz_app) as client:
+        for site_header in ("same-site", "cross-site"):
+            tracker.clear()
+            res = client.get(
+                "/api/v1/me",
+                headers={
+                    "Cookie": "__Host-session=tracker-session-token",
+                    "Sec-Fetch-Site": site_header,
+                },
+            )
+            assert res.status_code == 200
+            assert tracker.domain_writes == []
+            assert tracker.bookkeeping == []
+
+        tracker.clear()
+        res_same = client.get(
+            "/api/v1/me",
+            headers={
+                "Cookie": "__Host-session=tracker-session-token",
+                "Sec-Fetch-Site": "same-origin",
+            },
+        )
+        assert res_same.status_code == 200
+        assert tracker.domain_writes == []
+        assert len(tracker.bookkeeping) == 1
 
 
 def _write_plain_insert(tenant: CurrentTenant) -> None:

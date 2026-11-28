@@ -129,6 +129,7 @@ describe("worktree.sh setup", () => {
         `SITE_PREVIEW_PORT=${String(base + 3)}`,
         `API_PORT=${String(base + 4)}`,
         `DB_PORT=${String(base + 5)}`,
+        `OIDC_PORT=${String(base + 6)}`,
         `API_DB_PROJECT=roadmaps-slot-${String(slot)}`,
       ].join("\n"),
     )
@@ -280,6 +281,11 @@ describe("worktree.sh info", () => {
       new RegExp(`api:dev\\s+http://127\\.0\\.0\\.1:${String(base + 4)}\\n`),
     )
     expect(output).toMatch(new RegExp(`127\\.0\\.0\\.1:${String(base + 5)}\\n`))
+    expect(output).toMatch(
+      new RegExp(
+        `mock OIDC\\)\\s+http://127\\.0\\.0\\.1:${String(base + 6)}\\n`,
+      ),
+    )
   })
 
   it("asks for setup again when .env.worktree predates a port", async () => {

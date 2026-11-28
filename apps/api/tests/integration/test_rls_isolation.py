@@ -361,16 +361,21 @@ def test_tenant_a_isolates_tenant_b_rows_people_and_identities(
 
 
 def test_person_keyed_policies_are_read_only_and_filter_ended_memberships(
-    sessions: sessionmaker[Session], two_tenants: TwoTenantFixture
+    sessions: sessionmaker[Session],
+    two_tenants: TwoTenantFixture,
+    worker_admin: psycopg.Connection,
 ) -> None:
-    # Ended member sees themselves and their own identity, but zero memberships/tenants (D11).
+    # Ended member sees themselves and their identity, but zero memberships/tenants/roles (D7).
     with sessions(info=session_info(person_id=two_tenants.person_a_ended)) as session:
         assert list(session.scalars(select(Person.id))) == [two_tenants.person_a_ended]
         assert list(session.scalars(select(Identity.person_id))) == [two_tenants.person_a_ended]
         assert list(session.scalars(text("SELECT id FROM public.memberships"))) == []
         assert list(session.scalars(select(Tenant.id))) == []
+        assert list(session.scalars(select(Role.id))) == []
+        assert list(session.scalars(select(RolePermission.id))) == []
 
-    # Active multi-tenant member with no tenant set reads active memberships & tenants (read-only).
+    # Active multi-tenant member with no tenant set reads active memberships, tenants,
+    # and ONLY the roles & permissions referenced by those active memberships (D7).
     with sessions(info=session_info(person_id=two_tenants.person_ab)) as session:
         assert set(session.scalars(text("SELECT id FROM public.memberships"))) == {
             two_tenants.membership_ab_a,
@@ -380,10 +385,47 @@ def test_person_keyed_policies_are_read_only_and_filter_ended_memberships(
             two_tenants.tenant_a,
             two_tenants.tenant_b,
         }
+        assert set(session.scalars(select(Role.id))) == {
+            two_tenants.role_a,
+            two_tenants.role_b,
+        }
+        assert set(session.scalars(select(RolePermission.role_id))) == {
+            two_tenants.role_a,
+            two_tenants.role_b,
+        }
         # Other tenant-owned tables remain fail-closed when app.tenant_id is unset.
-        for model in (TenantScope, Role, RolePermission, Invitation, ChangeSet, ChangeSummary):
+        for model in (TenantScope, Invitation, ChangeSet, ChangeSummary):
             assert list(session.scalars(select(model))) == []
 
+    # Single-tenant member with app.tenant_id unset sees ONLY their own active role
+    # and permissions, never another tenant's roles or unheld roles in their own tenant (D7).
+    with worker_admin.transaction():
+        cs_extra = one_uuid(
+            worker_admin,
+            "SELECT change_set_id FROM open_access_change_set_internal("
+            " %s, 'migration', 'system', NULL, 'seed', 'extra-role-a', %s, NULL, NULL)",
+            (two_tenants.tenant_a, b"\x33" * 32),
+        )
+        unheld_role_a = one_uuid(
+            worker_admin,
+            "INSERT INTO roles (tenant_id, name, system_key)"
+            " VALUES (%s, 'Product Lead', 'product_lead') RETURNING id",
+            (two_tenants.tenant_a,),
+        )
+        worker_admin.execute(
+            "INSERT INTO role_permissions (tenant_id, role_id, permission)"
+            " VALUES (%s, %s, 'tags:edit')",
+            (two_tenants.tenant_a, unheld_role_a),
+        )
+        worker_admin.execute(
+            "SELECT sign_off_access_change_set_internal(%s, %s)", (two_tenants.tenant_a, cs_extra)
+        )
+    with sessions(info=session_info(person_id=two_tenants.person_a_active)) as session:
+        assert list(session.scalars(select(Role.id))) == [two_tenants.role_a]
+        assert set(session.scalars(select(RolePermission.role_id))) == {two_tenants.role_a}
+
+    # Re-enter as multi-tenant person to assert write refusals on shared & person-keyed tables.
+    with sessions(info=session_info(person_id=two_tenants.person_ab)) as session:
         # Person-keyed memberships policy is strictly read-only.
         assert (
             session.connection()

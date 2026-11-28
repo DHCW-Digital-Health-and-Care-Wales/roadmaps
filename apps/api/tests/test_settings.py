@@ -1,16 +1,27 @@
 """Settings come from environment variables only and fail closed."""
 
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 
-from roadmaps_api.settings import CLOUD_RUN_MARKERS, Environment, SettingsError, load_settings
+from roadmaps_api.settings import (
+    CLOUD_RUN_MARKERS,
+    Environment,
+    Settings,
+    SettingsError,
+    load_settings,
+    parse_loopback_http_origin,
+)
 
 URL = "postgresql+psycopg://roadmaps:SECRET-PASSWORD@db.example:5432/roadmaps"
 VALID = {
     "ROADMAPS_DATABASE_URL": URL,
     "ROADMAPS_ALLOWED_HOSTS": "api.example",
     "ROADMAPS_EDITOR_ORIGIN": "https://api.example",
+    "ROADMAPS_GOOGLE_CLIENT_ID": "test-google-client-id",
+    "ROADMAPS_GOOGLE_CLIENT_SECRET": "SECRET-PASSWORD-GOOGLE",
+    "ROADMAPS_GOOGLE_ALLOWED_HD": "wales.nhs.uk",
 }
 
 
@@ -24,6 +35,12 @@ def test_an_unset_environment_gets_production_rules() -> None:
     assert settings.database_url == URL
     assert settings.otlp_endpoint is None
     assert settings.service_name == "roadmaps-api"
+    assert settings.google_client_id == "test-google-client-id"
+    assert settings.google_client_secret == "SECRET-PASSWORD-GOOGLE"  # noqa: S105 - synthetic test
+    assert settings.google_allowed_hd == ("wales.nhs.uk",)
+    assert settings.local_mock_oidc_url is None
+    assert settings.session_cookie_name == "__Host-session"
+    assert settings.transaction_cookie_prefix == "__Host-tx-"
 
 
 TRACING = {
@@ -68,6 +85,44 @@ def test_a_local_environment_serves_the_live_openapi() -> None:
     assert settings.serves_live_openapi
     assert settings.allowed_hosts == ("localhost", "127.0.0.1")
     assert settings.editor_origin == "http://localhost:5173"
+    assert settings.session_cookie_name == "__Host-5173-session"
+    tx_id = UUID("01950000-0000-7000-8000-000000000001")
+    assert settings.transaction_cookie_name(tx_id) == f"__Host-5173-tx-{tx_id.hex}"
+
+
+def test_local_and_test_allow_omitting_google_and_enabling_loopback_mock() -> None:
+    base = {
+        "ROADMAPS_DATABASE_URL": URL,
+        "ROADMAPS_ALLOWED_HOSTS": "localhost,127.0.0.1",
+        "ROADMAPS_EDITOR_ORIGIN": "http://localhost:21640",
+    }
+    for env in ("local", "test"):
+        without_providers = load_settings({**base, "ROADMAPS_ENV": env})
+        assert without_providers.google_client_id is None
+        assert without_providers.google_client_secret is None
+        assert without_providers.google_allowed_hd == ()
+        assert without_providers.local_mock_oidc_url is None
+
+        with_mock = load_settings(
+            {
+                **base,
+                "ROADMAPS_ENV": env,
+                "ROADMAPS_LOCAL_MOCK_OIDC_URL": "http://127.0.0.1:21646",
+            }
+        )
+        assert with_mock.local_mock_oidc_url == "http://127.0.0.1:21646"
+
+    local_default_port = load_settings(
+        {**base, "ROADMAPS_ENV": "local", "ROADMAPS_EDITOR_ORIGIN": "http://localhost"}
+    )
+    assert local_default_port.session_cookie_name == "__Host-80-session"
+    test_mode = load_settings({**base, "ROADMAPS_ENV": "test"})
+    assert test_mode.session_cookie_name == "__Host-session"
+
+    # Cloud Run never prefixes cookies with a local port even if ROADMAPS_ENV=local.
+    cloud_run_local = load_settings({**VALID, "ROADMAPS_ENV": "local", "K_SERVICE": "roadmaps-api"})
+    assert cloud_run_local.session_cookie_name == "__Host-session"
+    assert cloud_run_local.transaction_cookie_prefix == "__Host-tx-"
 
 
 EDITOR_ORIGINS = {
@@ -162,6 +217,104 @@ BAD = {
     "an empty migration login's URL": (
         {"ROADMAPS_MIGRATION_DATABASE_URL": ""},
         ["ROADMAPS_MIGRATION_DATABASE_URL"],
+    ),
+    # No API process holds the purge login, in any environment (STY-106 D15).
+    **{
+        f"the purge login's URL with ROADMAPS_ENV {environment or 'unset'}": (
+            {"ROADMAPS_ENV": environment, "ROADMAPS_PURGE_DATABASE_URL": URL},
+            ["ROADMAPS_PURGE_DATABASE_URL"],
+        )
+        for environment in ("local", "test", "production", None)
+    },
+    "an empty purge login's URL": (
+        {"ROADMAPS_PURGE_DATABASE_URL": ""},
+        ["ROADMAPS_PURGE_DATABASE_URL"],
+    ),
+    # Google OIDC settings required in production / unset / invalid / Cloud Run (D8).
+    "missing Google client id in production": (
+        {"ROADMAPS_GOOGLE_CLIENT_ID": None},
+        ["ROADMAPS_GOOGLE_CLIENT_ID"],
+    ),
+    "missing Google client secret in production": (
+        {"ROADMAPS_GOOGLE_CLIENT_SECRET": None},
+        ["ROADMAPS_GOOGLE_CLIENT_SECRET"],
+    ),
+    "missing Google allowed hd in production": (
+        {"ROADMAPS_GOOGLE_ALLOWED_HD": None},
+        ["ROADMAPS_GOOGLE_ALLOWED_HD"],
+    ),
+    "wildcard Google allowed hd": (
+        {"ROADMAPS_GOOGLE_ALLOWED_HD": "*.wales.nhs.uk"},
+        ["ROADMAPS_GOOGLE_ALLOWED_HD"],
+    ),
+    "blank entry in Google allowed hd": (
+        {"ROADMAPS_GOOGLE_ALLOWED_HD": "wales.nhs.uk,,dhcw.example"},
+        ["ROADMAPS_GOOGLE_ALLOWED_HD"],
+    ),
+    "partial Google settings in local": (
+        {
+            "ROADMAPS_ENV": "local",
+            "ROADMAPS_GOOGLE_CLIENT_SECRET": None,
+            "ROADMAPS_GOOGLE_ALLOWED_HD": None,
+        },
+        ["ROADMAPS_GOOGLE_CLIENT_SECRET", "ROADMAPS_GOOGLE_ALLOWED_HD"],
+    ),
+    **{
+        f"missing Google settings in {env} with {marker} set": (
+            {
+                "ROADMAPS_ENV": env,
+                marker: "1",
+                "ROADMAPS_GOOGLE_CLIENT_ID": None,
+                "ROADMAPS_GOOGLE_CLIENT_SECRET": None,
+                "ROADMAPS_GOOGLE_ALLOWED_HD": None,
+            },
+            [
+                "ROADMAPS_GOOGLE_CLIENT_ID",
+                "ROADMAPS_GOOGLE_CLIENT_SECRET",
+                "ROADMAPS_GOOGLE_ALLOWED_HD",
+            ],
+        )
+        for env in ("local", "test")
+        for marker in CLOUD_RUN_MARKERS
+    },
+    # Local mock provider strictly refused outside local/test or on Cloud Run (S4, D5, D8).
+    **{
+        f"local mock OIDC URL with ROADMAPS_ENV {environment or 'unset'}": (
+            {
+                "ROADMAPS_ENV": environment,
+                "ROADMAPS_LOCAL_MOCK_OIDC_URL": "http://127.0.0.1:8001",
+            },
+            ["ROADMAPS_LOCAL_MOCK_OIDC_URL"]
+            if environment != "staging"
+            else ["ROADMAPS_ENV", "ROADMAPS_LOCAL_MOCK_OIDC_URL"],
+        )
+        for environment in ("production", None, "staging")
+    },
+    **{
+        f"local mock OIDC URL in {env} with {marker} set": (
+            {
+                "ROADMAPS_ENV": env,
+                marker: "1",
+                "ROADMAPS_LOCAL_MOCK_OIDC_URL": "http://127.0.0.1:8001",
+            },
+            ["ROADMAPS_LOCAL_MOCK_OIDC_URL"],
+        )
+        for env in ("local", "test")
+        for marker in CLOUD_RUN_MARKERS
+    },
+    "non-loopback local mock OIDC URL in local": (
+        {
+            "ROADMAPS_ENV": "local",
+            "ROADMAPS_LOCAL_MOCK_OIDC_URL": "http://evil.example:8001",
+        },
+        ["ROADMAPS_LOCAL_MOCK_OIDC_URL"],
+    ),
+    "https local mock OIDC URL with path in local": (
+        {
+            "ROADMAPS_ENV": "local",
+            "ROADMAPS_LOCAL_MOCK_OIDC_URL": "http://127.0.0.1:8001/extra",
+        },
+        ["ROADMAPS_LOCAL_MOCK_OIDC_URL"],
     ),
     "an OTLP endpoint that is not an HTTP URL": (
         {"OTEL_EXPORTER_OTLP_ENDPOINT": "SECRET-PASSWORD"},
@@ -337,7 +490,56 @@ def test_settings_come_from_the_environment_never_a_dotenv_file(
 
 def test_the_settings_repr_leaves_out_the_database_url_and_the_otlp_endpoint() -> None:
     settings = load_settings(
-        {**VALID, "OTEL_EXPORTER_OTLP_ENDPOINT": "https://u:SECRET-PASSWORD@collector.example"}
+        {
+            **VALID,
+            "OTEL_EXPORTER_OTLP_ENDPOINT": "https://u:SECRET-PASSWORD@collector.example",
+            "ROADMAPS_GOOGLE_CLIENT_SECRET": "TOP-SECRET-OIDC-VALUE",
+        }
     )
 
-    assert "SECRET-PASSWORD" not in repr(settings)
+    rendered = repr(settings)
+    assert "SECRET-PASSWORD" not in rendered
+    assert "TOP-SECRET-OIDC-VALUE" not in rendered
+
+
+@pytest.mark.parametrize(
+    ("raw_origin", "expected"),
+    [
+        ("http://127.0.0.1:8001", "http://127.0.0.1:8001"),
+        ("http://localhost:8001", "http://localhost:8001"),
+        ("http://[::1]:8001", "http://[::1]:8001"),
+        ("http://0.0.0.0:8001", None),
+        ("http://[::]:8001", None),
+        ("http://[0:0:0:0:0:0:0:0]:8001", None),
+        ("http://[::ffff:0.0.0.0]:8001", None),
+        ("https://127.0.0.1:8001", None),
+    ],
+)
+def test_parse_loopback_http_origin_allows_loopback_and_rejects_unspecified_hosts(
+    raw_origin: str, expected: str | None
+) -> None:
+    assert parse_loopback_http_origin(raw_origin) == expected
+
+
+def test_blank_local_mock_oidc_url_is_treated_as_unset() -> None:
+    local_empty_mock = load_settings(
+        {
+            "ROADMAPS_ENV": "local",
+            "ROADMAPS_DATABASE_URL": VALID["ROADMAPS_DATABASE_URL"],
+            "ROADMAPS_ALLOWED_HOSTS": "localhost",
+            "ROADMAPS_EDITOR_ORIGIN": "http://localhost:5173",
+            "ROADMAPS_LOCAL_MOCK_OIDC_URL": "   ",
+        }
+    )
+    assert local_empty_mock.local_mock_oidc_url is None
+
+
+def test_direct_settings_construction_refuses_invalid_editor_origin() -> None:
+    with pytest.raises(SettingsError) as raised:
+        Settings(
+            environment=Environment.TEST,
+            database_url=URL,
+            allowed_hosts=("api.example",),
+            editor_origin="not-an-origin",
+        )
+    assert raised.value.invalid == ["ROADMAPS_EDITOR_ORIGIN"]

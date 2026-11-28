@@ -8,6 +8,8 @@ import * as z from 'zod/mini';
 export const zErrorCode = z.enum([
     'auth.unauthenticated',
     'auth.person_mismatch',
+    'auth.provider_not_enabled',
+    'auth.provider_unavailable',
     'authz.forbidden',
     'request.origin_not_allowed',
     'request.unsupported_media_type',
@@ -28,3 +30,158 @@ export const zErrorResponse = z.object({
     detail: z.string(),
     params: z.record(z.string(), z.unknown())
 });
+
+/**
+ * ExtendSessionResponse
+ */
+export const zExtendSessionResponse = z.object({
+    absoluteExpiresAt: z.iso.datetime(),
+    idleExpiresAt: z.iso.datetime()
+});
+
+/**
+ * IdentityProvider
+ *
+ * Closed set of identity providers surfaced by `/api/v1/me` (D13).
+ */
+export const zIdentityProvider = z.enum([
+    'google',
+    'entra',
+    'local_mock'
+]);
+
+/**
+ * MeIdentityResponse
+ */
+export const zMeIdentityResponse = z.object({
+    email: z.string(),
+    id: z.uuid(),
+    lastSignInAt: z.nullable(z.iso.datetime()),
+    linkedAt: z.iso.datetime(),
+    provider: zIdentityProvider
+});
+
+/**
+ * MeRoleResponse
+ */
+export const zMeRoleResponse = z.object({
+    id: z.uuid(),
+    name: z.string(),
+    systemKey: z.nullable(z.string())
+});
+
+/**
+ * MeSessionResponse
+ */
+export const zMeSessionResponse = z.object({
+    absoluteExpiresAt: z.iso.datetime(),
+    idleExpiresAt: z.iso.datetime(),
+    provider: zIdentityProvider,
+    signedInAt: z.iso.datetime()
+});
+
+/**
+ * OidcProviderId
+ *
+ * Enabled v1 OIDC providers accepted by `/api/v1/auth/sign-in` and callbacks.
+ */
+export const zOidcProviderId = z.enum(['google', 'local_mock']);
+
+/**
+ * Permission
+ */
+export const zPermission = z.enum([
+    'roadmaps:create',
+    'roadmaps:edit',
+    'roadmaps:edit-any',
+    'roadmaps:publish',
+    'tags:edit',
+    'lists:edit',
+    'members:manage',
+    'assignments:manage',
+    'content:redact',
+    'tenant:settings'
+]);
+
+/**
+ * MeMembershipResponse
+ */
+export const zMeMembershipResponse = z.object({
+    nameCy: z.nullable(z.string()),
+    nameEn: z.string(),
+    permissions: z.array(zPermission),
+    role: zMeRoleResponse,
+    tenantId: z.uuid(),
+    tenantSlug: z.string()
+});
+
+/**
+ * MeResponse
+ */
+export const zMeResponse = z.object({
+    displayName: z.string(),
+    identities: z.array(zMeIdentityResponse),
+    memberships: z.array(zMeMembershipResponse),
+    personId: z.uuid(),
+    session: zMeSessionResponse
+});
+
+/**
+ * SignInStartRequest
+ */
+export const zSignInStartRequest = z.object({
+    provider: zOidcProviderId,
+    purpose: z._default(z.optional(z.literal('sign-in')), 'sign-in'),
+    returnPath: z._default(z.optional(z.string()), '/')
+});
+
+/**
+ * SignInStartResponse
+ */
+export const zSignInStartResponse = z.object({
+    authorizationUrl: z.string()
+});
+
+/**
+ * SignOutResponse
+ */
+export const zSignOutResponse = z.object({
+    status: z._default(z.optional(z.literal('ok')), 'ok')
+});
+
+export const zSignInCallbackApiV1AuthCallbackProviderGetPath = z.object({
+    provider: z.string()
+});
+
+export const zSignInCallbackApiV1AuthCallbackProviderGetQuery = z.object({
+    code: z.nullish(z.string()),
+    state: z.nullish(z.string()),
+    error: z.nullish(z.string())
+});
+
+/**
+ * Successful Response
+ */
+export const zExtendSessionApiV1AuthExtendPostResponse = zExtendSessionResponse;
+
+export const zSignInStartApiV1AuthSignInPostBody = zSignInStartRequest;
+
+/**
+ * Successful Response
+ */
+export const zSignInStartApiV1AuthSignInPostResponse = zSignInStartResponse;
+
+/**
+ * Successful Response
+ */
+export const zSignOutApiV1AuthSignOutPostResponse = zSignOutResponse;
+
+/**
+ * Successful Response
+ */
+export const zSignOutAllApiV1AuthSignOutAllPostResponse = zSignOutResponse;
+
+/**
+ * Successful Response
+ */
+export const zGetMeApiV1MeGetResponse = zMeResponse;

@@ -57,12 +57,23 @@ CREATE ON SCHEMA public FROM <definer>` before commit. If `roadmaps_owner` itsel
   `apps/api/tests/integration/test_authorisation.py` (failing the standing role-by-route
   matrix, cross-tenant sweep, non-`GET` same-origin sweep and read-only `GET` suite
   immediately if omitted). A new `public()` route also requires a reviewed entry in
-  `PUBLIC_ROUTES` (`apps/api/src/roadmaps_api/authz/routing.py`); the future OIDC
-  callback also registers in `READ_ONLY_GET_EXEMPTIONS`.
+  `PUBLIC_ROUTES` (`apps/api/src/roadmaps_api/authz/routing.py`); the OIDC callback is
+  registered in `READ_ONLY_GET_EXEMPTIONS`.
 - **State-changing API test calls send same-origin and person-assertion headers**:
   non-`GET` requests need `Sec-Fetch-Site: same-origin` (or `Origin: <editor_origin>`),
   `Content-Type: application/json` for routes declaring a body parameter, and
   `X-Roadmaps-Person-Id` when authenticated. Inject test principals by overriding
-  `app.dependency_overrides[get_current_principal]`. In `STY-107`, keep `fetch`'s default
-  mode (not `no-cors` under `no-referrer`) so the browser never sends `Origin: null`, and
-  open the local editor on `localhost:<DEV_PORT>` rather than `127.0.0.1`.
+  `app.dependency_overrides[get_current_principal]` (with `tests/support.py`'s
+  `make_principal`). In `STY-107`, keep `fetch`'s default mode (not `no-cors` under
+  `no-referrer`) so the browser never sends `Origin: null`, and open the local editor on
+  `localhost:<DEV_PORT>` rather than `127.0.0.1`.
+- **Retention purge runner (`STY-106`)**: `roadmaps_api.purge.runner.run_purge` is the
+  shared zero-arg, fail-closed runner for retention CLIs (`roadmaps-purge-transactions`,
+  `roadmaps-purge-sessions`; reuse for `STY-110`'s `roadmaps-purge-invitations`).
+  `ROADMAPS_PURGE_DATABASE_URL` is refused by the API's `load_settings()`.
+- **`sessions.identity_id` uses `ON DELETE RESTRICT` (`STY-106`)**: future identity
+  unlinking (`EPC-028`) must account for `fk_sessions_identity_id_identities` rather than
+  expecting cascading session deletion.
+- **`public.create_sign_in_transaction` refuses non-`'sign-in'` purposes (`STY-106`)**:
+  `STY-110` (`redeem`) and `EPC-028` (`link`) must extend it with database-side binding
+  checks for `invitation_id` / `initiating_session_id` / `initiating_person_id`.

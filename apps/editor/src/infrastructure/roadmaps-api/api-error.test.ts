@@ -11,6 +11,8 @@ type Mapping = readonly [kind: AppErrorKind, retryable: boolean]
 const CODES: Readonly<Record<ErrorCode, readonly [number, ...Mapping]>> = {
   "auth.unauthenticated": [401, "unauthenticated", false],
   "auth.person_mismatch": [409, "unauthenticated", false],
+  "auth.provider_not_enabled": [400, "unknown", false],
+  "auth.provider_unavailable": [503, "unknown", true],
   "authz.forbidden": [403, "forbidden", false],
   "request.origin_not_allowed": [403, "unknown", false],
   "request.unsupported_media_type": [415, "unknown", false],

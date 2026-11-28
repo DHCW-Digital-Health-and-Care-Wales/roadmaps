@@ -15,6 +15,8 @@ interface Mapping {
 const BY_CODE: Record<ErrorCode, Mapping> = {
   "auth.unauthenticated": { kind: "unauthenticated", retryable: false },
   "auth.person_mismatch": { kind: "unauthenticated", retryable: false },
+  "auth.provider_not_enabled": { kind: "unknown", retryable: false },
+  "auth.provider_unavailable": { kind: "unknown", retryable: true },
   "authz.forbidden": { kind: "forbidden", retryable: false },
   "request.origin_not_allowed": { kind: "unknown", retryable: false },
   "request.unsupported_media_type": { kind: "unknown", retryable: false },

@@ -10,8 +10,8 @@
 # API's commands through apps/api/scripts/api.sh, which also names the slot's
 # database container's Compose project from it; without it they keep their
 # canonical ports (the editor 5173 dev and 4173 preview and E2E, the public site
-# 5174 and 4174, the API 8000 and its database 15432), so a main checkout is
-# unaffected.
+# 5174 and 4174, the API 8000, the local mock OIDC provider 8001 and its database
+# 15432), so a main checkout is unaffected.
 #
 #   setup      claim a slot, write .env.worktree, install dependencies (pnpm's,
 #              and the API's with uv), create apps/editor/.env.local (idempotent:
@@ -32,7 +32,7 @@ PORT_BASE=21000
 MAX_SLOT=99
 # A slot's ports, in offset order from its base: the one place the layout is
 # written down.
-PORT_VARS=(DEV_PORT PREVIEW_PORT SITE_DEV_PORT SITE_PREVIEW_PORT API_PORT DB_PORT)
+PORT_VARS=(DEV_PORT PREVIEW_PORT SITE_DEV_PORT SITE_PREVIEW_PORT API_PORT DB_PORT OIDC_PORT)
 
 # The Compose project of a slot's database container (apps/api/compose.yaml).
 db_project() {
@@ -256,6 +256,7 @@ Worktree slot $WORKTREE_SLOT
     site:lighthouse
   pnpm api:dev                          http://127.0.0.1:$API_PORT
   pnpm api:db:up, api:test (database)   127.0.0.1:$DB_PORT
+  pnpm api:dev (local mock OIDC)        http://127.0.0.1:$OIDC_PORT
 EOF
 }
 

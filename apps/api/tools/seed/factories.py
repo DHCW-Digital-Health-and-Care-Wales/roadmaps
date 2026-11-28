@@ -11,7 +11,7 @@ import contextlib
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy import text
@@ -26,16 +26,19 @@ from roadmaps_api.authz import (
 )
 from roadmaps_api.database import PERSON_SETTING, TENANT_SETTING
 from roadmaps_api.models import (
+    AuthSession,
     Identity,
     Invitation,
     Membership,
     Person,
     Role,
     RolePermission,
+    SignInTransaction,
     Tenant,
     TenantScope,
 )
 from roadmaps_api.repositories.access_change_set import AccessChangeSetRepository
+from roadmaps_api.services.sessions import hash_token
 from tools.seed.deterministic import hash_invitation_token, request_hash_for
 from tools.seed.personas import LOCAL_MOCK_ISSUER, TenantSpec
 
@@ -99,6 +102,39 @@ class InvitationInput:
     created_at: datetime
     expires_at: datetime
     invitation_id: UUID | None = None
+
+
+@dataclass(frozen=True)
+class SessionInput:
+    person_id: UUID
+    identity_id: UUID
+    raw_token: str
+    signed_in_at: datetime
+    provider: str = "local_mock"
+    last_activity_at: datetime | None = None
+    idle_expires_at: datetime | None = None
+    absolute_expires_at: datetime | None = None
+    revoked_at: datetime | None = None
+    session_id: UUID | None = None
+
+
+@dataclass(frozen=True)
+class SignInTransactionInput:
+    raw_state: str
+    raw_cookie_token: str
+    nonce: str
+    code_verifier: str
+    created_at: datetime
+    expires_at: datetime
+    provider: str = "local_mock"
+    issuer: str = LOCAL_MOCK_ISSUER
+    purpose: str = "sign-in"
+    return_path: str = "/"
+    invitation_id: UUID | None = None
+    initiating_session_id: UUID | None = None
+    initiating_person_id: UUID | None = None
+    consumed_at: datetime | None = None
+    transaction_id: UUID | None = None
 
 
 def _set_local_settings(session: Session, tenant_value: str, person_value: str) -> None:
@@ -298,3 +334,51 @@ def create_invitation(session: Session, data: InvitationInput) -> Invitation:
     session.add(invitation)
     session.flush()
     return invitation
+
+
+def create_session(session: Session, data: SessionInput) -> AuthSession:
+    """Creates and flushes an `AuthSession` storing only the SHA-256 token hash (D14)."""
+    idle_expires_at = data.idle_expires_at or (data.signed_in_at + timedelta(minutes=60))
+    absolute_expires_at = data.absolute_expires_at or (data.signed_in_at + timedelta(hours=10))
+    auth_session = AuthSession(
+        token_hash=hash_token(data.raw_token),
+        person_id=data.person_id,
+        identity_id=data.identity_id,
+        provider=data.provider,
+        signed_in_at=data.signed_in_at,
+        last_activity_at=data.last_activity_at or data.signed_in_at,
+        idle_expires_at=idle_expires_at,
+        absolute_expires_at=absolute_expires_at,
+        revoked_at=data.revoked_at,
+        created_at=data.signed_in_at,
+    )
+    if data.session_id is not None:
+        auth_session.id = data.session_id
+    session.add(auth_session)
+    session.flush()
+    return auth_session
+
+
+def create_sign_in_transaction(session: Session, data: SignInTransactionInput) -> SignInTransaction:
+    """Creates and flushes a `SignInTransaction` storing hashed state and cookie token (D14)."""
+    tx = SignInTransaction(
+        state_hash=hash_token(data.raw_state),
+        cookie_token_hash=hash_token(data.raw_cookie_token),
+        nonce=data.nonce,
+        code_verifier=data.code_verifier,
+        provider=data.provider,
+        issuer=data.issuer,
+        purpose=data.purpose,
+        return_path=data.return_path,
+        invitation_id=data.invitation_id,
+        initiating_session_id=data.initiating_session_id,
+        initiating_person_id=data.initiating_person_id,
+        created_at=data.created_at,
+        expires_at=data.expires_at,
+        consumed_at=data.consumed_at,
+    )
+    if data.transaction_id is not None:
+        tx.id = data.transaction_id
+    session.add(tx)
+    session.flush()
+    return tx

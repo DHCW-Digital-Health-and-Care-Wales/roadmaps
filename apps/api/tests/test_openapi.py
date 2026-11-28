@@ -101,8 +101,14 @@ def test_the_local_live_document_is_the_one_the_app_builds() -> None:
 
     assert live.status_code == 200
     assert live.json() == app.openapi()
-    # `/health` and `/ready` are no part of the contract, and it has no route yet.
-    assert live.json()["paths"] == {}
+    # `/health` and `/ready` are no part of the contract; `/api/v1` auth & `/me` routes are.
+    assert {"/health", "/ready"}.isdisjoint(live.json()["paths"])
+    assert "/api/v1/me" in live.json()["paths"]
+    callback_responses = live.json()["paths"]["/api/v1/auth/callback/{provider}"]["get"][
+        "responses"
+    ]
+    assert "302" in callback_responses
+    assert "200" not in callback_responses
 
 
 def test_the_envelope_a_refusal_sends_is_the_documented_one(client: TestClient) -> None:

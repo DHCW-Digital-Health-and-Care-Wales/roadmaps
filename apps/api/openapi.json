@@ -5,6 +5,8 @@
         "enum": [
           "auth.unauthenticated",
           "auth.person_mismatch",
+          "auth.provider_not_enabled",
+          "auth.provider_unavailable",
           "authz.forbidden",
           "request.origin_not_allowed",
           "request.unsupported_media_type",
@@ -40,6 +42,300 @@
         ],
         "title": "ErrorResponse",
         "type": "object"
+      },
+      "ExtendSessionResponse": {
+        "properties": {
+          "absoluteExpiresAt": {
+            "format": "date-time",
+            "title": "Absoluteexpiresat",
+            "type": "string"
+          },
+          "idleExpiresAt": {
+            "format": "date-time",
+            "title": "Idleexpiresat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idleExpiresAt",
+          "absoluteExpiresAt"
+        ],
+        "title": "ExtendSessionResponse",
+        "type": "object"
+      },
+      "IdentityProvider": {
+        "description": "Closed set of identity providers surfaced by `/api/v1/me` (D13).",
+        "enum": [
+          "google",
+          "entra",
+          "local_mock"
+        ],
+        "title": "IdentityProvider",
+        "type": "string"
+      },
+      "MeIdentityResponse": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lastSignInAt": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lastsigninat"
+          },
+          "linkedAt": {
+            "format": "date-time",
+            "title": "Linkedat",
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/IdentityProvider"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "email",
+          "lastSignInAt",
+          "linkedAt"
+        ],
+        "title": "MeIdentityResponse",
+        "type": "object"
+      },
+      "MeMembershipResponse": {
+        "properties": {
+          "nameCy": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Namecy"
+          },
+          "nameEn": {
+            "title": "Nameen",
+            "type": "string"
+          },
+          "permissions": {
+            "items": {
+              "$ref": "#/components/schemas/Permission"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "role": {
+            "$ref": "#/components/schemas/MeRoleResponse"
+          },
+          "tenantId": {
+            "format": "uuid",
+            "title": "Tenantid",
+            "type": "string"
+          },
+          "tenantSlug": {
+            "title": "Tenantslug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenantId",
+          "tenantSlug",
+          "nameEn",
+          "nameCy",
+          "role",
+          "permissions"
+        ],
+        "title": "MeMembershipResponse",
+        "type": "object"
+      },
+      "MeResponse": {
+        "properties": {
+          "displayName": {
+            "title": "Displayname",
+            "type": "string"
+          },
+          "identities": {
+            "items": {
+              "$ref": "#/components/schemas/MeIdentityResponse"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
+          "memberships": {
+            "items": {
+              "$ref": "#/components/schemas/MeMembershipResponse"
+            },
+            "title": "Memberships",
+            "type": "array"
+          },
+          "personId": {
+            "format": "uuid",
+            "title": "Personid",
+            "type": "string"
+          },
+          "session": {
+            "$ref": "#/components/schemas/MeSessionResponse"
+          }
+        },
+        "required": [
+          "personId",
+          "displayName",
+          "identities",
+          "memberships",
+          "session"
+        ],
+        "title": "MeResponse",
+        "type": "object"
+      },
+      "MeRoleResponse": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "systemKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Systemkey"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "systemKey"
+        ],
+        "title": "MeRoleResponse",
+        "type": "object"
+      },
+      "MeSessionResponse": {
+        "properties": {
+          "absoluteExpiresAt": {
+            "format": "date-time",
+            "title": "Absoluteexpiresat",
+            "type": "string"
+          },
+          "idleExpiresAt": {
+            "format": "date-time",
+            "title": "Idleexpiresat",
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/IdentityProvider"
+          },
+          "signedInAt": {
+            "format": "date-time",
+            "title": "Signedinat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idleExpiresAt",
+          "absoluteExpiresAt",
+          "signedInAt",
+          "provider"
+        ],
+        "title": "MeSessionResponse",
+        "type": "object"
+      },
+      "OidcProviderId": {
+        "description": "Enabled v1 OIDC providers accepted by `/api/v1/auth/sign-in` and callbacks.",
+        "enum": [
+          "google",
+          "local_mock"
+        ],
+        "title": "OidcProviderId",
+        "type": "string"
+      },
+      "Permission": {
+        "enum": [
+          "roadmaps:create",
+          "roadmaps:edit",
+          "roadmaps:edit-any",
+          "roadmaps:publish",
+          "tags:edit",
+          "lists:edit",
+          "members:manage",
+          "assignments:manage",
+          "content:redact",
+          "tenant:settings"
+        ],
+        "title": "Permission",
+        "type": "string"
+      },
+      "SignInStartRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/OidcProviderId"
+          },
+          "purpose": {
+            "const": "sign-in",
+            "default": "sign-in",
+            "title": "Purpose",
+            "type": "string"
+          },
+          "returnPath": {
+            "default": "/",
+            "title": "Returnpath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "SignInStartRequest",
+        "type": "object"
+      },
+      "SignInStartResponse": {
+        "properties": {
+          "authorizationUrl": {
+            "title": "Authorizationurl",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorizationUrl"
+        ],
+        "title": "SignInStartResponse",
+        "type": "object"
+      },
+      "SignOutResponse": {
+        "properties": {
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "SignOutResponse",
+        "type": "object"
       }
     }
   },
@@ -48,5 +344,202 @@
     "version": "0.1.0"
   },
   "openapi": "3.1.0",
-  "paths": {}
+  "paths": {
+    "/api/v1/auth/callback/{provider}": {
+      "get": {
+        "description": "Completes an OIDC sign-in callback, establishes the session cookie and redirects.",
+        "operationId": "sign_in_callback_api_v1_auth_callback__provider__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "title": "Provider",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign In Callback"
+      }
+    },
+    "/api/v1/auth/extend": {
+      "post": {
+        "description": "Extends the current session's idle expiry immediately, capped at absolute expiry (D12).",
+        "operationId": "extend_session_api_v1_auth_extend_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Extend Session"
+      }
+    },
+    "/api/v1/auth/sign-in": {
+      "post": {
+        "description": "Starts an OIDC sign-in transaction, sets its cookie and returns the provider URL.",
+        "operationId": "sign_in_start_api_v1_auth_sign_in_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignInStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInStartResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign In Start"
+      }
+    },
+    "/api/v1/auth/sign-out": {
+      "post": {
+        "description": "Revokes the current session and expires the session cookie (S3).",
+        "operationId": "sign_out_api_v1_auth_sign_out_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignOutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sign Out"
+      }
+    },
+    "/api/v1/auth/sign-out-all": {
+      "post": {
+        "description": "Revokes every active session for the current person and expires the session cookie (S3).",
+        "operationId": "sign_out_all_api_v1_auth_sign_out_all_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignOutResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sign Out All"
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "description": "Returns the signed-in person, identities, active memberships and session limits (D13).",
+        "operationId": "get_me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Me"
+      }
+    }
+  }
 }

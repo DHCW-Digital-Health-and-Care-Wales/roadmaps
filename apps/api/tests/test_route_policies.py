@@ -43,7 +43,13 @@ from roadmaps_api.errors import ApiError, ErrorCode
 from roadmaps_api.routes import api_v1
 from roadmaps_api.settings import MAX_BODY_BYTES, Environment
 from roadmaps_api.wire import ApiRequestModel
-from tests.support import PLANTED, SAME_ORIGIN_HEADERS, TEST_EDITOR_ORIGIN, make_settings
+from tests.support import (
+    PLANTED,
+    SAME_ORIGIN_HEADERS,
+    TEST_EDITOR_ORIGIN,
+    make_principal,
+    make_settings,
+)
 
 PERSON_A = UUID("01950000-0000-7000-8000-000000000001")
 PERSON_B = UUID("01950000-0000-7000-8000-000000000002")
@@ -602,7 +608,7 @@ def anon_guard_client() -> Iterator[TestClient]:
 
 @pytest.fixture(scope="module")
 def authed_guard_client() -> Iterator[TestClient]:
-    principal = AuthenticatedPrincipal(person_id=PERSON_A, session_id=SESSION_A)
+    principal = make_principal(PERSON_A, session_id=SESSION_A)
     with TestClient(_build_guard_app(principal=principal)) as client:
         yield client
 

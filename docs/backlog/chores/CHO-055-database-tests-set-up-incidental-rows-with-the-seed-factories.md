@@ -21,13 +21,13 @@ SQL stays.
 
 ## Measurement
 
-_At commit `2868b58b`, lines matching
+_At commit `267df749`, lines matching
 `INSERT INTO (tenants|people|roles|role_permissions|memberships|invitations)`, setup and
 SQL under test together. All paths are in `apps/api/tests/integration/`:_
 
 | Area                            | Measurement | Verdict                                                                                                    |
 | ------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------- |
-| `test_rls_isolation.py`         | 17 lines    | Setup: all are in the `two_tenants` fixture                                                                |
+| `test_rls_isolation.py`         | 19 lines    | Setup: 17 in the `two_tenants` fixture and 2 in a test body                                                |
 | `test_access_change_sets.py`    | 15 lines    | 10 are setup in `access_env`; judge the 5 in three test bodies                                             |
 | `test_schema_and_privileges.py` | 24 lines    | 3 are setup in `_seed_tenant_person_role`; judge the other 21, keeping the SQL whose refusal a test checks |
 

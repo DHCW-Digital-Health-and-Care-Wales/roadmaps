@@ -2,6 +2,7 @@
 
 - **Status**: Done — fail-closed route policy enforcement, tenant dependency, same-origin/JSON
   and person-assertion guards, permission-literal lint and standing authorisation suite
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/344
 - **Type**: Feature
 - **Area**: API + Infrastructure
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)

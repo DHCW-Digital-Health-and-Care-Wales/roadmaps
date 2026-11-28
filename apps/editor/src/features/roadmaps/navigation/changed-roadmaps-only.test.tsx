@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { createTestRoadmap } from "@/domain/roadmap/testing/test-roadmap"
 import { createTestRoadmapItem } from "@/domain/roadmap/testing/test-roadmap-item"
@@ -38,8 +38,21 @@ const ROADMAP_ITEMS = {
 const CHANGED_TEXT = "2 roadmaps have unpublished changes"
 
 afterEach(() => {
+  vi.useRealTimers()
   localStorage.clear()
 })
+
+/**
+ * Fakes the clock from here on, still running in real time so typing goes on, for
+ * `pastTypingPause` to move it past the search's pause at once.
+ */
+function fakeTypingClock() {
+  vi.useFakeTimers({ shouldAdvanceTime: true })
+}
+/** Moves the faked clock past the pause after typing, which runs what waits for it. */
+async function pastTypingPause() {
+  await act(() => vi.advanceTimersByTimeAsync(TYPING_PAUSE_MS))
+}
 
 /** The navigation, beside the page or in the drawer that holds it. */
 const navigation = () =>
@@ -159,9 +172,10 @@ describe("the count on a desktop", () => {
     matchMediaQueries(DESKTOP_WIDTH)
     const { user } = await renderChanged()
     await user.click(count())
+    fakeTypingClock()
 
     await user.type(searchBox(), "  ")
-    await new Promise((resolve) => setTimeout(resolve, TYPING_PAUSE_MS + 200))
+    await pastTypingPause()
 
     expect(count()).toHaveAttribute("aria-pressed", "true")
     expect(hasLink("Product C roadmap")).toBe(false)
@@ -187,9 +201,10 @@ describe("the count on a desktop", () => {
     })
     observer.observe(document.body, { childList: true, subtree: true })
 
+    fakeTypingClock()
     await user.type(searchBox(), "  ")
     await user.click(count())
-    await new Promise((resolve) => setTimeout(resolve, TYPING_PAUSE_MS + 200))
+    await pastTypingPause()
     observer.disconnect()
 
     expect(sayings).toBe(1)

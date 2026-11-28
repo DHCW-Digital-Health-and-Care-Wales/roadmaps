@@ -240,15 +240,14 @@ describe("The page scrolls to the moved item (S4)", () => {
     const scrolled = vi.spyOn(Element.prototype, "scrollIntoView")
 
     await chooseFromMenu(user, "Delta", "To the top")
-    // Two frames on, once the menu has let go of the page.
-    for (let frame = 0; frame < 3; frame++) {
-      await new Promise((resolve) => requestAnimationFrame(resolve))
-    }
 
     const delta = main()
       .getByRole("heading", { level: 3, name: "Delta" })
       .closest("li")
-    expect(scrolled.mock.contexts).toContain(delta)
+    // A few frames on, once the menu has let go of the page.
+    await waitFor(() => {
+      expect(scrolled.mock.contexts).toContain(delta)
+    })
   })
 })
 
@@ -258,7 +257,7 @@ describe("The page scrolls to an item that travelled (STY-072)", () => {
   it("though focus came back to its Move before the move was drawn", async () => {
     // A browser that draws the move a while after it was chosen, as a view transition
     // does: the menu has handed focus back to Move by then.
-    withViewTransitions()
+    const start = withViewTransitions({ deferred: true })
     const { user } = await renderPage()
     const scrolled = vi.spyOn(Element.prototype, "scrollIntoView")
     const move = main().getByRole("button", { name: "Move Delta" })
@@ -267,15 +266,18 @@ describe("The page scrolls to an item that travelled (STY-072)", () => {
     await waitFor(() => {
       expect(move).toHaveFocus()
     })
+    expect(titlesUnder("Now")[0]).not.toBe("Delta")
+    act(() => {
+      start.draw()
+    })
+
     await waitFor(() => {
       expect(marked()).toEqual([["Delta", "Moved to the top"]])
     })
-    for (let frame = 0; frame < 3; frame++) {
-      await new Promise((resolve) => requestAnimationFrame(resolve))
-    }
-
     expect(titlesUnder("Now")[0]).toBe("Delta")
-    expect(scrolled.mock.contexts).toContain(move.closest("li"))
+    await waitFor(() => {
+      expect(scrolled.mock.contexts).toContain(move.closest("li"))
+    })
   })
 })
 

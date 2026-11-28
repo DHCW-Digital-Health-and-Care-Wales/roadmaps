@@ -22,9 +22,10 @@ describe("expectOpeningFocus", () => {
 
   it("waits for focus that moves after the field is found, as a dialog's does", async () => {
     const input = field()
-    setTimeout(() => {
+    // A frame later, as a Base UI popup moves its first focus.
+    requestAnimationFrame(() => {
       input.focus()
-    }, 50)
+    })
 
     expect(input).not.toHaveFocus()
     await expectOpeningFocus(findField)
@@ -33,9 +34,9 @@ describe("expectOpeningFocus", () => {
   })
 
   it("waits for a field that renders after it is first looked for, as one back from a closed dialog does", async () => {
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       field().focus()
-    }, 50)
+    })
 
     expect(() => findField()).toThrow("No field")
     await expectOpeningFocus(findField)

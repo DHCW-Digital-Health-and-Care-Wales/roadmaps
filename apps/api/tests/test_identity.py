@@ -671,6 +671,26 @@ def test_discovery_and_jwks_outage_backoff_avoids_upstream_storms() -> None:
     assert counts["jwks"] == 3
 
 
+class ContendedLock:
+    """A cache entry's lock that sets `contended` once a caller has to wait for it.
+
+    A test of callers sharing one fetch waits on `contended` before it releases the fetch,
+    so the second caller is shown waiting behind the first, never merely not started yet.
+    """
+
+    def __init__(self, contended: threading.Event) -> None:
+        self._lock = threading.Lock()
+        self._contended = contended
+
+    def __enter__(self) -> None:
+        if not self._lock.acquire(blocking=False):
+            self._contended.set()
+            self._lock.acquire()
+
+    def __exit__(self, *_exc: object) -> None:
+        self._lock.release()
+
+
 def test_concurrent_discovery_and_jwks_callers_share_one_fetch() -> None:
     key = _make_rsa_key("k1")
     google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
@@ -694,23 +714,27 @@ def test_concurrent_discovery_and_jwks_callers_share_one_fetch() -> None:
         jwks_release.wait(timeout=5.0)
         return _json_response({"keys": [key.as_dict(private=False)]})
 
-    sf_cache = JwksCache(adapter=RecordingAdapter(sf_handler))
+    contended = threading.Event()
+    sf_cache = JwksCache(
+        adapter=RecordingAdapter(sf_handler), lock_factory=lambda: ContendedLock(contended)
+    )
     with ThreadPoolExecutor(max_workers=2) as pool:
         f1 = pool.submit(sf_cache.get_discovery, google_cfg)
         assert disc_entered.wait(timeout=5.0)
         f2 = pool.submit(sf_cache.get_discovery, google_cfg)
-        time.sleep(0.05)
+        assert contended.wait(timeout=5.0)
         disc_release.set()
         discovery = f1.result()
         assert discovery.issuer == GOOGLE_CANONICAL_ISSUER
         assert f2.result().issuer == GOOGLE_CANONICAL_ISSUER
     assert sf_counts["discovery"] == 1
 
+    contended.clear()
     with ThreadPoolExecutor(max_workers=2) as pool:
         k1 = pool.submit(sf_cache.get_key_set, google_cfg, discovery=discovery)
         assert jwks_entered.wait(timeout=5.0)
         k2 = pool.submit(sf_cache.get_key_set, google_cfg, discovery=discovery)
-        time.sleep(0.05)
+        assert contended.wait(timeout=5.0)
         jwks_release.set()
         assert k1.result() is not None
         assert k2.result() is not None
@@ -776,7 +800,10 @@ def test_concurrent_key_rollover_callbacks_share_one_refetch_and_both_succeed() 
         )
 
     adapter = RecordingAdapter(handler)
-    cache = JwksCache(adapter=adapter, clock=lambda: clock[0])
+    contended = threading.Event()
+    cache = JwksCache(
+        adapter=adapter, clock=lambda: clock[0], lock_factory=lambda: ContendedLock(contended)
+    )
     client = OidcClient(
         build_provider_configs(_google_settings()), jwks_cache=cache, adapter=adapter
     )
@@ -802,7 +829,7 @@ def test_concurrent_key_rollover_callbacks_share_one_refetch_and_both_succeed() 
             OidcProviderId.GOOGLE,
             _exchange_request(code="c2", now=now),
         )
-        time.sleep(0.05)
+        assert contended.wait(timeout=5.0)
         rollover_release.set()
         assert first.result().subject == "google-sub-001"
         assert second.result().subject == "google-sub-001"

@@ -402,6 +402,7 @@ export async function holdPublishDialogClosing(page: Page): Promise<void> {
       const noticeShown = new MutationObserver(() => {
         if (!document.body.textContent.includes(published)) return
         noticeShown.disconnect()
+        // eslint-disable-next-line tests/no-fixed-pause -- Not a pause a test waits out: the closing is held until the notice shows; the second sets how late it then ends.
         setTimeout(() => {
           hold.remove()
         }, 1000)

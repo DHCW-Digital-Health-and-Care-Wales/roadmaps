@@ -117,7 +117,8 @@ class FreezingProxy:
         self._listener = socket.create_server(("127.0.0.1", 0))
         self._listener.settimeout(0.1)
         self._sockets: list[socket.socket] = []
-        self.frozen = threading.Event()
+        self._flowing = threading.Event()
+        self._flowing.set()
         self._stop = threading.Event()
         self._threads = [threading.Thread(target=self._accept)]
         self._threads[0].start()
@@ -139,6 +140,10 @@ class FreezingProxy:
                 self._threads.append(thread)
                 thread.start()
 
+    def freeze(self) -> None:
+        """Stops forwarding: data either side sends is held until the proxy closes."""
+        self._flowing.clear()
+
     def _pipe(self, source: socket.socket, sink: socket.socket) -> None:
         source.settimeout(0.1)
         while not self._stop.is_set():
@@ -150,13 +155,15 @@ class FreezingProxy:
                 return
             if not data:
                 return
-            while self.frozen.is_set() and not self._stop.is_set():
-                time.sleep(0.05)
+            self._flowing.wait()
+            if self._stop.is_set():
+                return
             with contextlib.suppress(OSError):
                 sink.sendall(data)
 
     def close(self) -> None:
         self._stop.set()
+        self._flowing.set()
         for thread in self._threads:
             thread.join()
         for sock in [*self._sockets, self._listener]:
@@ -173,7 +180,7 @@ def test_ready_gives_up_on_a_pooled_connection_whose_database_stops_answering(
             make_settings(url.set(port=proxy.port).render_as_string(hide_password=False))
         ) as client:
             assert client.get("/ready").status_code == 200
-            proxy.frozen.set()
+            proxy.freeze()
             started = time.monotonic()
             response = client.get("/ready")
 

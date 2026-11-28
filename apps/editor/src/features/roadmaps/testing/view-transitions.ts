@@ -2,14 +2,14 @@ import { vi } from "vitest"
 
 /**
  * A browser with view transitions and their types. It gives back the `startViewTransition`
- * spy, which records each transition started, and `ends`, which finishes those held.
- * Each transition draws its update `delay` ms after it was asked for, as a view
- * transition does, or at once with a `delay` of 0; with `held`, it draws it at once and
- * finishes only when its entry in `ends` is called (`delay` is ignored). Undo it with
- * `withoutViewTransitions`. Call it after a test's setup moves, or each of those is
- * drawn late too, and the next is chosen before it has landed.
+ * spy, which records each transition started, with `draw`, which draws the updates of
+ * those deferred, and `ends`, which finishes those held. Each transition draws its update
+ * at once; with `deferred`, only when `draw` is called, as a browser draws the update a
+ * while after it was asked for; with `held`, it draws it at once and finishes only when
+ * its entry in `ends` is called. Undo it with `withoutViewTransitions`. With `deferred`
+ * or `held`, call it after a test's setup moves, or each of those waits too.
  */
-export function withViewTransitions({ delay = 50, held = false } = {}) {
+export function withViewTransitions({ deferred = false, held = false } = {}) {
   vi.stubGlobal(
     "ViewTransition",
     class {
@@ -19,17 +19,18 @@ export function withViewTransitions({ delay = 50, held = false } = {}) {
     },
   )
   const ends: (() => void)[] = []
+  const pending: (() => void)[] = []
   const start = vi.fn((options: StartViewTransitionOptions) => {
     let finished: Promise<void>
     if (held) {
       options.update?.()
       finished = new Promise<void>((resolve) => ends.push(resolve))
-    } else if (delay > 0) {
+    } else if (deferred) {
       finished = new Promise<void>((resolve) => {
-        setTimeout(() => {
+        pending.push(() => {
           options.update?.()
           resolve()
-        }, delay)
+        })
       })
     } else {
       options.update?.()
@@ -46,7 +47,11 @@ export function withViewTransitions({ delay = 50, held = false } = {}) {
     configurable: true,
     value: start,
   })
-  return Object.assign(start, { ends })
+  /** Draws the update of every deferred transition started so far. */
+  const draw = () => {
+    for (const drawUpdate of pending.splice(0)) drawUpdate()
+  }
+  return Object.assign(start, { ends, draw })
 }
 
 /** Puts the browser back as it was before `withViewTransitions`. */

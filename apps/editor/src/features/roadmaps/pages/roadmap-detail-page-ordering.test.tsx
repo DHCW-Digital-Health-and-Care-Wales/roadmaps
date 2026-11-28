@@ -417,12 +417,15 @@ describe("A pending order at the placement's heading (S3)", () => {
       await chooseFromMenu(user, "Echo", "Now")
       await chooseFromMenu(user, "New clinic", "To the top")
       expect(titlesUnder("Now")[0]).toBe("New clinic")
-      const start = withViewTransitions()
+      const start = withViewTransitions({ deferred: true })
 
       await user.click(main().getByRole("button", { name: "Undo order Now" }))
 
       // Not drawn until the browser has drawn the page as it was.
       expect(titlesUnder("Now")[0]).toBe("New clinic")
+      act(() => {
+        start.draw()
+      })
       await waitFor(() => {
         expect(titlesUnder("Now")).toEqual([
           "Alpha",

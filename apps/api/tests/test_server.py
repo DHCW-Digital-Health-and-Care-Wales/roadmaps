@@ -12,7 +12,6 @@ import signal
 import socket
 import subprocess
 import sys
-import time
 import warnings
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
@@ -24,7 +23,7 @@ import pytest
 
 from roadmaps_api import app, server
 from roadmaps_api.settings import Settings, load_settings
-from tests.support import DOWN_DATABASE_URL, PLANTED, free_port
+from tests.support import DOWN_DATABASE_URL, PLANTED, free_port, wait_until_serving
 
 API_DIR = Path(__file__).parent.parent
 SERVER_ENVIRONMENT = {
@@ -72,17 +71,6 @@ def finish(process: subprocess.Popen[bytes], tmp_path: Path) -> Run:
     )
 
 
-def wait_until_up(base: str) -> None:
-    deadline = time.monotonic() + 30
-    while time.monotonic() < deadline:
-        try:
-            if httpx2.get(f"{base}/health").status_code == 200:
-                return
-        except httpx2.TransportError:
-            time.sleep(0.1)
-    pytest.fail("the server did not start")
-
-
 @contextmanager
 def serving_with_reload(
     tmp_path: Path, environment: dict[str, str]
@@ -97,7 +85,7 @@ def serving_with_reload(
     process = run_server(["-c", serve], environment, tmp_path)
     try:
         base = f"http://127.0.0.1:{port}"
-        wait_until_up(base)
+        wait_until_serving(base, timeout=30.0)
         yield base, process
     finally:
         if process.poll() is None:

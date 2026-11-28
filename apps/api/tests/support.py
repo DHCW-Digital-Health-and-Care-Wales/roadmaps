@@ -13,6 +13,7 @@ import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
+from http import HTTPStatus
 from typing import Annotated, Any, Final, override
 from uuid import UUID
 
@@ -138,6 +139,21 @@ class RecordingAdapter(BaseAdapter):
         return None
 
 
+def wait_until_serving(base_url: str, *, timeout: float) -> None:
+    """Polls `base_url`'s `/health` until it answers 200, failing the test after `timeout`.
+
+    The one pause the tests allow, `time.sleep` being banned elsewhere: an interval
+    between checks of a condition, never a fixed wait standing in for one.
+    """
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        with contextlib.suppress(httpx2.TransportError):
+            if httpx2.get(f"{base_url}/health").status_code == HTTPStatus.OK:
+                return
+        time.sleep(0.05)  # noqa: TID251 - a poll interval, not a wait for an outcome
+    pytest.fail(f"no server answered at {base_url}")
+
+
 @contextmanager
 def serving_mock_oidc() -> Generator[str]:
     """Starts the in-repo local mock OIDC FastAPI app on an ephemeral loopback port."""
@@ -149,15 +165,7 @@ def serving_mock_oidc() -> Generator[str]:
     )
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
-    deadline = time.monotonic() + 10.0
-    while time.monotonic() < deadline:
-        try:
-            if httpx2.get(f"{base_url}/health").status_code == 200:
-                break
-        except httpx2.TransportError:
-            time.sleep(0.05)
-    else:
-        pytest.fail("local mock OIDC server did not start")
+    wait_until_serving(base_url, timeout=10.0)
     try:
         yield base_url
     finally:

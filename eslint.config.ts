@@ -4,6 +4,8 @@ import { defineConfig, globalIgnores } from "eslint/config"
 import globals from "globals"
 import tseslint from "typescript-eslint"
 
+import { noFixedPausesInTests } from "./eslint.base.ts"
+
 // The root package's own TypeScript. Each app under apps/ and each package under
 // packages/ is linted by its own config.
 export default defineConfig(
@@ -23,5 +25,6 @@ export default defineConfig(
       },
     },
   },
+  noFixedPausesInTests,
   prettier,
 )

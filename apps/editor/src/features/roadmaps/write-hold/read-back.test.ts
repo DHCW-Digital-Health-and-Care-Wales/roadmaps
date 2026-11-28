@@ -1,5 +1,5 @@
 import { QueryClient, QueryObserver } from "@tanstack/react-query"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { roadmapKeys } from "../hooks/roadmap-queries"
 import { readBackAfterWrite } from "./read-back"
@@ -9,6 +9,7 @@ describe("readBackAfterWrite", () => {
     defaultOptions: { queries: { retry: false } },
   })
   afterEach(() => {
+    vi.restoreAllMocks()
     queryClient.clear()
   })
 
@@ -24,16 +25,23 @@ describe("readBackAfterWrite", () => {
   }
 
   it("waits for a read a page starts as it opens, between pages when the write answers", async () => {
-    let reads = 0
-    const read = async () => {
-      reads += 1
-      await new Promise((resolve) => setTimeout(resolve, 5))
-      return [`read ${String(reads)}`]
-    }
-    ;(await shown(read))()
+    ;(await shown(() => Promise.resolve(["read 1"])))()
+    // The opening page's read answers only once the read-back, after the page has
+    // opened, asks for the read again: the read is under way until it waits for it.
+    let opened = false
+    let answerPageRead: (rows: string[]) => void = () => undefined
+    const pageRead = new Promise<string[]>((resolve) => {
+      answerPageRead = resolve
+    })
+    const refetch = queryClient.refetchQueries.bind(queryClient)
+    vi.spyOn(queryClient, "refetchQueries").mockImplementation((...args) => {
+      if (opened) answerPageRead(["read 2"])
+      return refetch(...args)
+    })
 
     const readBack = readBackAfterWrite(queryClient, ["roadmaps"])
-    const unsubscribe = observe(read)
+    const unsubscribe = observe(() => pageRead)
+    opened = true
 
     await expect(readBack).resolves.toBe(true)
     expect(queryClient.getQueryData(roadmapKeys.list())).toEqual(["read 2"])

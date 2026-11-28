@@ -4,7 +4,6 @@ from roadmaps_api.identity.client import (
     OidcClient,
     TokenExchangeRequest,
     VerifiedIdentity,
-    validate_id_token_claims,
 )
 from roadmaps_api.identity.errors import (
     OidcError,
@@ -15,12 +14,10 @@ from roadmaps_api.identity.jwks import FAILURE_BACKOFF_SECONDS, OUTBOUND_TIMEOUT
 from roadmaps_api.identity.providers import (
     GOOGLE_CANONICAL_ISSUER,
     LOCAL_MOCK_ISSUER,
-    IdentityProvider,
     OidcProviderId,
     ProviderConfig,
     build_provider_configs,
     is_safe_deployed_issuer,
-    provider_for_issuer,
     validate_deployed_providers,
 )
 
@@ -29,7 +26,6 @@ __all__ = [
     "GOOGLE_CANONICAL_ISSUER",
     "LOCAL_MOCK_ISSUER",
     "OUTBOUND_TIMEOUT",
-    "IdentityProvider",
     "JwksCache",
     "OidcClient",
     "OidcError",
@@ -41,7 +37,5 @@ __all__ = [
     "VerifiedIdentity",
     "build_provider_configs",
     "is_safe_deployed_issuer",
-    "provider_for_issuer",
     "validate_deployed_providers",
-    "validate_id_token_claims",
 ]

@@ -1,6 +1,5 @@
 """Confidential OIDC client using `authlib` + `joserfc` + `requests` (ADR-018, D4, D10)."""
 
-import hmac
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Final
@@ -53,10 +52,6 @@ class TokenExchangeRequest:
     now: int | None = None
 
 
-def _is_numeric_timestamp(value: object) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool)
-
-
 def _require_http_ok_response(response: requests.Response) -> requests.Response:
     """Compliance hook enforcing HTTP 200 on token-endpoint responses (RFC 6749 §5.1)."""
     if response.status_code != HTTP_OK:
@@ -65,43 +60,31 @@ def _require_http_ok_response(response: requests.Response) -> requests.Response:
     return response
 
 
-def _validate_standard_claims(
+def _validate_claims(
     config: ProviderConfig,
-    header: Mapping[str, Any],
-    raw_claims: Mapping[str, Any],
+    token: jwt.Token,
     *,
     expected_nonce: str,
     now: int | None,
-) -> CodeIDToken:
-    if header.get("alg") != "RS256":
-        msg = "invalid_alg"
-        raise OidcVerificationError(msg)
+) -> VerifiedIdentity:
+    """Validates a signature-verified ID token's claims against `config` (ADR-018).
 
-    for time_claim in ("exp", "iat"):
-        if not _is_numeric_timestamp(raw_claims.get(time_claim)):
-            msg = f"invalid_{time_claim}"
-            raise OidcVerificationError(msg)
-    if "nbf" in raw_claims and not _is_numeric_timestamp(raw_claims["nbf"]):
-        msg = "invalid_nbf"
-        raise OidcVerificationError(msg)
-
-    nonce = raw_claims.get("nonce")
-    if not isinstance(nonce, str) or not hmac.compare_digest(
-        nonce.encode("utf-8"), expected_nonce.encode("utf-8")
-    ):
-        msg = "invalid_nonce"
-        raise OidcVerificationError(msg)
-
+    `jwt.decode` has already enforced the `RS256` allow-list. `CodeIDToken` checks
+    `nonce` and `azp` from `params`, and joserfc checks the options below and that `exp`,
+    `iat` and `nbf` are finite numbers within the skew. `aud` and `azp` are explicit
+    options because authlib's defaults accept a wrong `aud` whose `azp` names this client.
+    """
     options: dict[str, Any] = {
         "iss": {"essential": True, "values": list(config.accepted_issuers)},
         "sub": {"essential": True},
         "aud": {"essential": True, "value": config.client_id},
+        "azp": {"value": config.client_id},
         "exp": {"essential": True},
         "iat": {"essential": True},
     }
     claims = CodeIDToken(
-        dict(raw_claims),
-        dict(header),
+        dict(token.claims),
+        dict(token.header),
         options=options,
         params={"nonce": expected_nonce, "client_id": config.client_id},
     )
@@ -111,30 +94,8 @@ def _validate_standard_claims(
         msg = "invalid_claims"
         raise OidcVerificationError(msg) from exc
 
-    # Explicitly guard `azp` whenever the key is present (including empty/non-string values).
-    if "azp" in claims:
-        azp = claims["azp"]
-        if not isinstance(azp, str) or azp != config.client_id:
-            msg = "invalid_azp"
-            raise OidcVerificationError(msg)
-    return claims
-
-
-def validate_id_token_claims(
-    config: ProviderConfig,
-    header: Mapping[str, Any],
-    raw_claims: Mapping[str, Any],
-    *,
-    expected_nonce: str,
-    now: int | None,
-) -> VerifiedIdentity:
-    """Validates decoded ID-token headers and claims against `config`."""
-    claims = _validate_standard_claims(
-        config, header, raw_claims, expected_nonce=expected_nonce, now=now
-    )
-
-    subject = claims.get("sub")
-    if not isinstance(subject, str) or not subject.strip():
+    subject = claims["sub"]
+    if not subject.strip():
         msg = "invalid_sub"
         raise OidcVerificationError(msg)
 
@@ -276,10 +237,6 @@ class OidcClient:
             raise OidcVerificationError(msg)
 
         decoded = self._decode_with_rollover(config, raw_id_token, discovery=discovery)
-        return validate_id_token_claims(
-            config,
-            decoded.header,
-            decoded.claims,
-            expected_nonce=request.expected_nonce,
-            now=request.now,
+        return _validate_claims(
+            config, decoded, expected_nonce=request.expected_nonce, now=request.now
         )

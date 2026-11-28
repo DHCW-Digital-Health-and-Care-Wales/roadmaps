@@ -2,8 +2,10 @@
 
 Uses `RecordingAdapter` (`requests.adapters.BaseAdapter`) for deterministic mocked Google
 transports (D4) so every refused claim, key rollover, outage retention, failure backoff,
-single-flight deduplication, token-endpoint refusal, timeout and redirect refusal runs
-without sockets.
+serialised refresh, token-endpoint refusal, timeout and redirect refusal runs without
+sockets. Refused claims are driven through `exchange_code_and_verify`, so each case holds
+whichever layer refuses it: joserfc's algorithm allow-list and claim types, authlib's
+`CodeIDToken` (`nonce`, `azp`) or this module's own options and checks.
 """
 
 import base64
@@ -24,7 +26,6 @@ from roadmaps_api.identity import (
     FAILURE_BACKOFF_SECONDS,
     GOOGLE_CANONICAL_ISSUER,
     LOCAL_MOCK_ISSUER,
-    IdentityProvider,
     OidcClient,
     OidcError,
     OidcProviderError,
@@ -34,9 +35,7 @@ from roadmaps_api.identity import (
     TokenExchangeRequest,
     build_provider_configs,
     is_safe_deployed_issuer,
-    provider_for_issuer,
     validate_deployed_providers,
-    validate_id_token_claims,
 )
 from roadmaps_api.identity.jwks import (
     OUTBOUND_TIMEOUT,
@@ -276,6 +275,15 @@ def _alg_none_token(claims: dict[str, Any]) -> str:
     return f"{h}.{p}."
 
 
+def _rs256_raw_payload_token(key: RSAKey, payload: bytes) -> str:
+    """Signs a payload verbatim, e.g. with the non-standard JSON `NaN`/`Infinity` literals."""
+    return jws.serialize_compact({"alg": "RS256", "kid": key.kid}, payload, key)
+
+
+def _without(claims: dict[str, Any], name: str) -> dict[str, Any]:
+    return {c: v for c, v in claims.items() if c != name}
+
+
 def _hs256_token(claims: dict[str, Any]) -> str:
     oct_key = OctKey.import_key(b"symmetric-secret-key-at-least-32-bytes")
     return jwt.encode({"alg": "HS256", "kid": "k1"}, claims, oct_key)
@@ -300,9 +308,7 @@ def _tampered_signature_token(key: RSAKey, claims: dict[str, Any]) -> str:
 
 REFUSED_TOKEN_CASES: dict[str, Callable[[RSAKey, int], str]] = {
     "wrong iss": lambda k, now: _sign_rs256(k, _valid_claims(now, iss="https://evil.example")),
-    "missing iss": lambda k, now: _sign_rs256(
-        k, {c: v for c, v in _valid_claims(now).items() if c != "iss"}
-    ),
+    "missing iss": lambda k, now: _sign_rs256(k, _without(_valid_claims(now), "iss")),
     "wrong aud": lambda k, now: _sign_rs256(k, _valid_claims(now, aud="other-client")),
     # D4 explicit requirement: wrong aud with matching azp MUST be refused.
     "wrong aud with matching azp": lambda k, now: _sign_rs256(
@@ -323,16 +329,36 @@ REFUSED_TOKEN_CASES: dict[str, Callable[[RSAKey, int], str]] = {
     "single aud empty azp": lambda k, now: _sign_rs256(
         k, _valid_claims(now, aud=GOOGLE_CLIENT_ID, azp="")
     ),
+    "single aud non-string azp": lambda k, now: _sign_rs256(
+        k, _valid_claims(now, aud=GOOGLE_CLIENT_ID, azp=12345)
+    ),
+    "single aud azp list naming this client and another": lambda k, now: _sign_rs256(
+        k, _valid_claims(now, aud=GOOGLE_CLIENT_ID, azp=[GOOGLE_CLIENT_ID, "other-client"])
+    ),
     "expired exp past 60s skew": lambda k, now: _sign_rs256(k, _valid_claims(now, exp=now - 61)),
     "future iat past 60s skew": lambda k, now: _sign_rs256(k, _valid_claims(now, iat=now + 61)),
     "future nbf past 60s skew": lambda k, now: _sign_rs256(k, _valid_claims(now, nbf=now + 61)),
+    "missing exp": lambda k, now: _sign_rs256(k, _without(_valid_claims(now), "exp")),
+    "missing iat": lambda k, now: _sign_rs256(k, _without(_valid_claims(now), "iat")),
     "boolean exp": lambda k, now: _sign_rs256(k, _valid_claims(now, exp=True)),
     "boolean iat": lambda k, now: _sign_rs256(k, _valid_claims(now, iat=True)),
     "boolean nbf": lambda k, now: _sign_rs256(k, _valid_claims(now, nbf=True)),
-    "wrong nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="wrong-nonce")),
-    "missing nonce": lambda k, now: _sign_rs256(
-        k, {c: v for c, v in _valid_claims(now).items() if c != "nonce"}
+    "string exp": lambda k, now: _sign_rs256(k, _valid_claims(now, exp=str(now + 300))),
+    "string iat": lambda k, now: _sign_rs256(k, _valid_claims(now, iat=str(now))),
+    "string nbf": lambda k, now: _sign_rs256(k, _valid_claims(now, nbf=str(now))),
+    "null exp": lambda k, now: _sign_rs256(k, _valid_claims(now, exp=None)),
+    "NaN exp": lambda k, now: _rs256_raw_payload_token(
+        k, json.dumps(_valid_claims(now, exp=float("nan"))).encode()
     ),
+    "Infinity exp": lambda k, now: _rs256_raw_payload_token(
+        k, json.dumps(_valid_claims(now, exp=float("inf"))).encode()
+    ),
+    "NaN iat": lambda k, now: _rs256_raw_payload_token(
+        k, json.dumps(_valid_claims(now, iat=float("nan"))).encode()
+    ),
+    "wrong nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="wrong-nonce")),
+    "missing nonce": lambda k, now: _sign_rs256(k, _without(_valid_claims(now), "nonce")),
+    "empty nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="")),
     "non-string nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce=12345)),
     "non-ASCII nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="n\u00f6nce")),
     "alg none": lambda _k, now: _alg_none_token(_valid_claims(now)),
@@ -341,18 +367,19 @@ REFUSED_TOKEN_CASES: dict[str, Callable[[RSAKey, int], str]] = {
     "alg ES256": lambda _k, now: _es256_token(_valid_claims(now)),
     "tampered signature": lambda k, now: _tampered_signature_token(k, _valid_claims(now)),
     "wrong hd": lambda k, now: _sign_rs256(k, _valid_claims(now, hd="evil.example")),
-    "missing hd": lambda k, now: _sign_rs256(
-        k, {c: v for c, v in _valid_claims(now).items() if c != "hd"}
-    ),
+    "missing hd": lambda k, now: _sign_rs256(k, _without(_valid_claims(now), "hd")),
     "email_verified false": lambda k, now: _sign_rs256(k, _valid_claims(now, email_verified=False)),
     "email_verified missing": lambda k, now: _sign_rs256(
-        k, {c: v for c, v in _valid_claims(now).items() if c != "email_verified"}
+        k, _without(_valid_claims(now), "email_verified")
     ),
     "email_verified string true": lambda k, now: _sign_rs256(
         k, _valid_claims(now, email_verified="true")
     ),
     "email_verified int 1": lambda k, now: _sign_rs256(k, _valid_claims(now, email_verified=1)),
+    "missing sub": lambda k, now: _sign_rs256(k, _without(_valid_claims(now), "sub")),
+    "empty sub": lambda k, now: _sign_rs256(k, _valid_claims(now, sub="")),
     "blank sub": lambda k, now: _sign_rs256(k, _valid_claims(now, sub="   ")),
+    "non-string sub": lambda k, now: _sign_rs256(k, _valid_claims(now, sub=12345)),
     "blank email": lambda k, now: _sign_rs256(k, _valid_claims(now, email="   ")),
     "non-compact garbage": lambda _k, _now: "not-a-jwt",
     "unencoded JWS payload": lambda k, _now: jws.serialize_compact(
@@ -548,22 +575,23 @@ def test_discovery_and_jwks_outage_backoff_avoids_upstream_storms() -> None:
     # After backoff elapses, discovery succeeds and caches.
     clock[0] += FAILURE_BACKOFF_SECONDS + 1.0
     disc_status[0] = 200
-    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
+    discovery = cache.get_discovery(google_cfg)
+    assert discovery.issuer == GOOGLE_CANONICAL_ISSUER
     assert counts["discovery"] == 2
 
     # Cold JWKS outage backs off similarly.
     with pytest.raises(OidcProviderError):
-        cache.get_key_set(google_cfg)
+        cache.get_key_set(google_cfg, discovery=discovery)
     assert counts["jwks"] == 1
     with pytest.raises(OidcProviderError) as jwks_backed_off:
-        cache.get_key_set(google_cfg)
+        cache.get_key_set(google_cfg, discovery=discovery)
     assert jwks_backed_off.value.reason == "provider_backoff"
     assert counts["jwks"] == 1
 
     # After backoff elapses, JWKS succeeds and caches.
     clock[0] += FAILURE_BACKOFF_SECONDS + 1.0
     jwks_status[0] = 200
-    assert cache.get_key_set(google_cfg) is not None
+    assert cache.get_key_set(google_cfg, discovery=discovery) is not None
     assert counts["jwks"] == 2
 
     # Warm discovery + JWKS outage past TTL retains stale values AND backs off follow-ups.
@@ -575,13 +603,13 @@ def test_discovery_and_jwks_outage_backoff_avoids_upstream_storms() -> None:
     assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
     assert counts["discovery"] == 3
 
-    assert cache.get_key_set(google_cfg) is not None
+    assert cache.get_key_set(google_cfg, discovery=discovery) is not None
     assert counts["jwks"] == 3
-    assert cache.get_key_set(google_cfg) is not None
+    assert cache.get_key_set(google_cfg, discovery=discovery) is not None
     assert counts["jwks"] == 3
 
 
-def test_discovery_and_jwks_single_flight_deduplicates_concurrent_fetches() -> None:
+def test_concurrent_discovery_and_jwks_callers_share_one_fetch() -> None:
     key = _make_rsa_key("k1")
     google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
 
@@ -611,54 +639,20 @@ def test_discovery_and_jwks_single_flight_deduplicates_concurrent_fetches() -> N
         f2 = pool.submit(sf_cache.get_discovery, google_cfg)
         time.sleep(0.05)
         disc_release.set()
-        assert f1.result().issuer == GOOGLE_CANONICAL_ISSUER
+        discovery = f1.result()
+        assert discovery.issuer == GOOGLE_CANONICAL_ISSUER
         assert f2.result().issuer == GOOGLE_CANONICAL_ISSUER
     assert sf_counts["discovery"] == 1
 
     with ThreadPoolExecutor(max_workers=2) as pool:
-        k1 = pool.submit(sf_cache.get_key_set, google_cfg)
+        k1 = pool.submit(sf_cache.get_key_set, google_cfg, discovery=discovery)
         assert jwks_entered.wait(timeout=5.0)
-        k2 = pool.submit(sf_cache.get_key_set, google_cfg)
+        k2 = pool.submit(sf_cache.get_key_set, google_cfg, discovery=discovery)
         time.sleep(0.05)
         jwks_release.set()
         assert k1.result() is not None
         assert k2.result() is not None
     assert sf_counts["jwks"] == 1
-
-
-def test_stale_cache_returns_immediately_without_blocking_on_inflight_refresh() -> None:
-    key = _make_rsa_key("k1")
-    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
-    clock = [1000.0]
-    refresh_entered = threading.Event()
-    refresh_release = threading.Event()
-    disc_calls = [0]
-
-    def handler(
-        req: requests.PreparedRequest, _timeout: object
-    ) -> tuple[int, dict[str, str], bytes]:
-        if req.url == GOOGLE_DISCOVERY_URL:
-            disc_calls[0] += 1
-            if disc_calls[0] == 2:
-                refresh_entered.set()
-                refresh_release.wait(timeout=5.0)
-            return _json_response(_standard_discovery())
-        return _json_response({"keys": [key.as_dict(private=False)]})
-
-    cache = JwksCache(adapter=RecordingAdapter(handler), clock=lambda: clock[0])
-    assert cache.get_discovery(google_cfg).issuer == GOOGLE_CANONICAL_ISSUER
-
-    # Expire TTL: thread 1 enters refresh, thread 2 returns stale immediately without waiting.
-    clock[0] += 7200.0
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        first = pool.submit(cache.get_discovery, google_cfg)
-        assert refresh_entered.wait(timeout=5.0)
-        second = cache.get_discovery(google_cfg)
-        assert second.issuer == GOOGLE_CANONICAL_ISSUER
-        assert not first.done()
-        refresh_release.set()
-        assert first.result().issuer == GOOGLE_CANONICAL_ISSUER
-    assert disc_calls[0] == 2
 
 
 def test_concurrent_key_rollover_callbacks_share_one_refetch_and_both_succeed() -> None:
@@ -725,6 +719,37 @@ def test_concurrent_key_rollover_callbacks_share_one_refetch_and_both_succeed() 
     assert jwks_calls[0] == 2
 
 
+def test_unknown_kid_refetch_reuses_keys_another_callback_already_refetched() -> None:
+    key = _make_rsa_key("k1")
+    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
+    jwks_calls = [0]
+
+    def handler(
+        req: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if req.url == GOOGLE_DISCOVERY_URL:
+            return _json_response(_standard_discovery())
+        jwks_calls[0] += 1
+        return _json_response({"keys": [key.as_dict(private=False)]})
+
+    cache = JwksCache(adapter=RecordingAdapter(handler), clock=lambda: 1000.0)
+    discovery = cache.get_discovery(google_cfg)
+    stale = cache.get_key_set(google_cfg, discovery=discovery)
+
+    # The first callback's refetch replaces the keys; a second callback that decoded against
+    # the replaced set gets the new set back, inside the rate limit and without a fetch.
+    refreshed = cache.refetch_on_unknown_kid(
+        google_cfg, discovery=discovery, previous_key_set=stale
+    )
+    assert refreshed is not None
+    assert refreshed is not stale
+    assert (
+        cache.refetch_on_unknown_kid(google_cfg, discovery=discovery, previous_key_set=stale)
+        is refreshed
+    )
+    assert jwks_calls[0] == 2
+
+
 def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() -> None:
     prod_with_mock = Settings(
         environment=Environment.PRODUCTION,
@@ -776,41 +801,33 @@ def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() 
     with pytest.raises(SettingsError):
         build_provider_configs(local_on_cloud_run)
 
-    unsafe_config = ProviderConfig(
-        provider=OidcProviderId.LOCAL_MOCK,
-        canonical_issuer=LOCAL_MOCK_ISSUER,
-        accepted_issuers=frozenset({LOCAL_MOCK_ISSUER}),
-        discovery_url="http://127.0.0.1:8001/.well-known/openid-configuration",
+
+@pytest.mark.parametrize(
+    ("provider", "issuer", "expected_invalid"),
+    [
+        (OidcProviderId.LOCAL_MOCK, LOCAL_MOCK_ISSUER, ["ROADMAPS_LOCAL_MOCK_OIDC_URL"]),
+        (OidcProviderId.GOOGLE, "http://accounts.google.com", ["ROADMAPS_GOOGLE_CLIENT_ID"]),
+        (OidcProviderId.GOOGLE, GOOGLE_CANONICAL_ISSUER, None),
+    ],
+    ids=["loopback mock issuer", "non-HTTPS Google issuer", "HTTPS Google issuer"],
+)
+def test_deployed_provider_guard_names_the_setting_enabling_an_unsafe_issuer(
+    provider: OidcProviderId, issuer: str, expected_invalid: list[str] | None
+) -> None:
+    config = ProviderConfig(
+        provider=provider,
+        canonical_issuer=issuer,
+        accepted_issuers=frozenset({issuer}),
+        discovery_url=f"{issuer}/.well-known/openid-configuration",
         client_id="c",
         client_secret="s",  # noqa: S106 - synthetic test secret
     )
-    with pytest.raises(SettingsError):
-        validate_deployed_providers({OidcProviderId.LOCAL_MOCK: unsafe_config})
-
-    assert provider_for_issuer(GOOGLE_CANONICAL_ISSUER) is IdentityProvider.GOOGLE
-    assert provider_for_issuer(LOCAL_MOCK_ISSUER) is IdentityProvider.LOCAL_MOCK
-    assert (
-        provider_for_issuer(
-            "https://login.microsoftonline.com/11111111-1111-1111-1111-111111111111/v2.0"
-        )
-        is IdentityProvider.ENTRA
-    )
-    with pytest.raises(ValueError, match="Unrecognised"):
-        provider_for_issuer("https://unknown.example")
-
-
-def test_validate_id_token_claims_rejects_non_rs256_header() -> None:
-    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
-    now = int(time.time())
-
-    with pytest.raises(OidcVerificationError):
-        validate_id_token_claims(
-            google_cfg,
-            {"alg": "HS256"},
-            _valid_claims(now),
-            expected_nonce="expected-nonce",
-            now=now,
-        )
+    if expected_invalid is None:
+        validate_deployed_providers({provider: config})
+        return
+    with pytest.raises(SettingsError) as exc_info:
+        validate_deployed_providers({provider: config})
+    assert exc_info.value.invalid == expected_invalid
 
 
 def test_unconfigured_provider_raises_provider_error() -> None:
@@ -860,7 +877,7 @@ def test_malformed_discovery_and_jwks_documents_fail_closed(mode: str, payload: 
 
     cache = JwksCache(adapter=RecordingAdapter(handler))
     with pytest.raises(OidcProviderError):
-        cache.get_key_set(google_cfg)
+        cache.get_key_set(google_cfg, discovery=cache.get_discovery(google_cfg))
 
 
 def test_missing_id_token_and_unknown_kid_refetch_failures_fail_closed() -> None:
@@ -896,6 +913,11 @@ def test_missing_id_token_and_unknown_kid_refetch_failures_fail_closed() -> None
     with pytest.raises(OidcVerificationError):
         client.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(now=now))
 
+    discovery = cache.get_discovery(google_cfg)
+    current = cache.get_key_set(google_cfg, discovery=discovery)
     clock[0] += UNKNOWN_KID_REFETCH_INTERVAL_SECONDS + 1.0
     jwks_fail[0] = True
-    assert cache.refetch_on_unknown_kid(google_cfg) is None
+    assert (
+        cache.refetch_on_unknown_kid(google_cfg, discovery=discovery, previous_key_set=current)
+        is None
+    )

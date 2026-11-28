@@ -1,7 +1,6 @@
 """Pinned OIDC provider registry and deployed-issuer guard (ADR-018, STY-106 S4, D1, D8, D10)."""
 
 import ipaddress
-import re
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Final
@@ -9,6 +8,7 @@ from urllib.parse import urlsplit
 
 from roadmaps_api.settings import (
     GOOGLE_ALLOWED_HD,
+    GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     LOCAL_MOCK_OIDC_URL,
     Environment,
@@ -30,21 +30,12 @@ LOCAL_MOCK_CLIENT_ID: Final = "roadmaps-local-mock"
 LOCAL_MOCK_CLIENT_SECRET: Final = "roadmaps-local-mock-secret"  # noqa: S105 - local mock only
 
 OIDC_SCOPES: Final = "openid email profile"
-ENTRA_ISSUER_PATTERN: Final = re.compile(r"^https://login\.microsoftonline\.com/[^/]+/v2\.0$")
 
 
 class OidcProviderId(StrEnum):
     """Enabled v1 OIDC providers accepted by `/api/v1/auth/sign-in` and callbacks."""
 
     GOOGLE = "google"
-    LOCAL_MOCK = "local_mock"
-
-
-class IdentityProvider(StrEnum):
-    """Closed set of identity providers surfaced by `/api/v1/me` (D13)."""
-
-    GOOGLE = "google"
-    ENTRA = "entra"
     LOCAL_MOCK = "local_mock"
 
 
@@ -85,11 +76,22 @@ def is_safe_deployed_issuer(issuer: str) -> bool:
     return not is_loopback_host(parts.hostname) and not _is_unspecified_ip(parts.hostname)
 
 
+# The setting whose presence enables each provider, named when its issuer is refused.
+_ENABLING_SETTING: Final = {
+    OidcProviderId.GOOGLE: GOOGLE_CLIENT_ID,
+    OidcProviderId.LOCAL_MOCK: LOCAL_MOCK_OIDC_URL,
+}
+
+
 def validate_deployed_providers(configs: dict[OidcProviderId, ProviderConfig]) -> None:
     """Fails closed if any configured provider uses a non-HTTPS or loopback issuer (S4)."""
-    for config in configs.values():
-        if not is_safe_deployed_issuer(config.canonical_issuer):
-            refuse([LOCAL_MOCK_OIDC_URL])
+    unsafe = [
+        _ENABLING_SETTING[provider]
+        for provider, config in configs.items()
+        if not is_safe_deployed_issuer(config.canonical_issuer)
+    ]
+    if unsafe:
+        refuse(unsafe)
 
 
 def build_provider_configs(settings: Settings) -> dict[OidcProviderId, ProviderConfig]:
@@ -137,15 +139,3 @@ def build_provider_configs(settings: Settings) -> dict[OidcProviderId, ProviderC
         validate_deployed_providers(configs)
 
     return configs
-
-
-def provider_for_issuer(issuer: str) -> IdentityProvider:
-    """Maps a stored canonical `identities.issuer` URL to its wire provider enum (D13)."""
-    if issuer == GOOGLE_CANONICAL_ISSUER:
-        return IdentityProvider.GOOGLE
-    if issuer == LOCAL_MOCK_ISSUER:
-        return IdentityProvider.LOCAL_MOCK
-    if ENTRA_ISSUER_PATTERN.fullmatch(issuer):
-        return IdentityProvider.ENTRA
-    msg = "Unrecognised canonical identity issuer"
-    raise ValueError(msg)

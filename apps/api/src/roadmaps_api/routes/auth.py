@@ -9,13 +9,13 @@ from fastapi.responses import RedirectResponse
 from pydantic import ConfigDict, field_validator
 
 from roadmaps_api.authz import CurrentPrincipal, Permission, PolicyAPIRoute, public, signed_in
-from roadmaps_api.identity import IdentityProvider, OidcProviderId
+from roadmaps_api.identity import OidcProviderId
 from roadmaps_api.services.auth import (
     TRANSACTION_TTL_SECONDS,
     AuthSvc,
     validate_return_path,
 )
-from roadmaps_api.services.me import MeSvc
+from roadmaps_api.services.me import IdentityProvider, MeSvc
 from roadmaps_api.services.sessions import SessionSvc
 from roadmaps_api.wire import ApiRequestModel, ApiResponseModel
 

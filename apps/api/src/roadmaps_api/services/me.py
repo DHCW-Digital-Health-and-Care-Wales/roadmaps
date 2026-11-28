@@ -1,8 +1,10 @@
 """Service for `GET /api/v1/me` returning person, memberships and session (D2, D13)."""
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Annotated
+from enum import StrEnum
+from typing import Annotated, Final
 from uuid import UUID
 
 from fastapi import Depends
@@ -11,8 +13,30 @@ from sqlalchemy.orm import Session, sessionmaker
 from roadmaps_api.authz import AuthenticatedPrincipal, Permission, parse_role_permissions
 from roadmaps_api.database import Sessions, session_info
 from roadmaps_api.errors import ApiError, ErrorCode
-from roadmaps_api.identity import IdentityProvider, provider_for_issuer
+from roadmaps_api.identity import GOOGLE_CANONICAL_ISSUER, LOCAL_MOCK_ISSUER
 from roadmaps_api.repositories.me import MeRepository
+
+ENTRA_ISSUER_PATTERN: Final = re.compile(r"^https://login\.microsoftonline\.com/[^/]+/v2\.0$")
+
+
+class IdentityProvider(StrEnum):
+    """Closed set of identity providers surfaced by `/api/v1/me` (D13)."""
+
+    GOOGLE = "google"
+    ENTRA = "entra"
+    LOCAL_MOCK = "local_mock"
+
+
+def provider_for_issuer(issuer: str) -> IdentityProvider:
+    """Maps a stored canonical `identities.issuer` URL to its wire provider enum (D13)."""
+    if issuer == GOOGLE_CANONICAL_ISSUER:
+        return IdentityProvider.GOOGLE
+    if issuer == LOCAL_MOCK_ISSUER:
+        return IdentityProvider.LOCAL_MOCK
+    if ENTRA_ISSUER_PATTERN.fullmatch(issuer):
+        return IdentityProvider.ENTRA
+    msg = "Unrecognised canonical identity issuer"
+    raise ValueError(msg)
 
 
 @dataclass(frozen=True)

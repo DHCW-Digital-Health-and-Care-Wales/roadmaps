@@ -1,4 +1,4 @@
-"""A Ruff suppression says why: `# noqa: <codes> - <reason>`.
+"""A `noqa` says why: `# noqa: <codes> - <reason>`.
 
 Ruff has no rule that asks for a reason. Added 2026-11-28: bare suppressions passed
 lint and reached review in two deliveries (PRs #344 and #346). Review by 2027-02-26.
@@ -15,7 +15,8 @@ from typing import Final
 import pytest
 
 API_DIR: Final = Path(__file__).resolve().parents[1]
-# Every spelling Ruff obeys, its own `ruff: ignore[...]` and range forms included.
+# `noqa`, and Ruff's own `ignore`, `file-ignore` and `disable` comments, which fail with
+# or without a reason. isort's action comments (`isort: off`) are not covered.
 SUPPRESSION: Final = re.compile(
     r"#\s*(?:(?:ruff|flake8)\s*:\s*)?noqa\b|#\s*ruff\s*:\s*(?:file-)?(?:ignore|disable)\b",
     re.IGNORECASE,
@@ -50,6 +51,7 @@ def python_files() -> Iterator[Path]:
     [
         pytest.param("import os  # noqa: F401 - re-exported\n", [], id="reasoned"),
         pytest.param("import os  # noqa: F401, E501 - re-exported\n", [], id="two codes"),
+        pytest.param("# ruff: noqa: F401 - re-exported\n", [], id="reasoned whole file"),
         pytest.param('PLANTED = "# noqa: F401"\n', [], id="in a string"),
         pytest.param("import os  # noqa: F401\n", [1], id="codes alone"),
         pytest.param("import os  # noqa: F401 re-exported\n", [1], id="no separator"),

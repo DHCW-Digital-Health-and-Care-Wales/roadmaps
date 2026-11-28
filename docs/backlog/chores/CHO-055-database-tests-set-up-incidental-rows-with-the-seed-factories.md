@@ -25,13 +25,13 @@ _At commit `267df749`, lines in `apps/api/tests/integration/` matching
 setup and SQL under test together (`create_tenant` writes `tenant_scopes` and
 `create_person_with_identity` writes `identities`, so those rows convert with them):_
 
-| Area                            | Measurement | Verdict                                                                                                                 |
-| ------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `test_rls_isolation.py`         | 29 lines    | 19 are setup in `two_tenants` and 2 in a test body; keep the 8 in test bodies that exercise RLS write refusals          |
-| `test_access_change_sets.py`    | 22 lines    | 11 are setup in `access_env`; judge the 11 in test bodies, keeping the SQL under test                                   |
-| `test_schema_and_privileges.py` | 27 lines    | 5 are setup in `_seed_tenant_person_role`; judge the other 22, keeping the SQL whose refusal a test checks              |
-| `test_auth.py`                  | 4 lines     | 3 are identity setup in test bodies; keep the 1 disabled-trigger rogue permission row                                   |
-| `test_seed.py`                  | 3 lines     | Sentinel tenant rows verifying `run_seed` wipes or preserves manual edits; keep if independent of the seeder under test |
+| Area                            | Measurement | Verdict                                                                                                                      |
+| ------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `test_rls_isolation.py`         | 29 lines    | 19 are setup in `two_tenants` and 2 in a test body; keep the 8 in test bodies that exercise RLS write refusals               |
+| `test_access_change_sets.py`    | 22 lines    | 11 are setup in `access_env`; judge the 11 in test bodies, keeping the SQL under test                                        |
+| `test_schema_and_privileges.py` | 27 lines    | 5 are setup in `_seed_tenant_person_role`; judge the other 22, keeping the SQL whose refusal a test checks                   |
+| `test_auth.py`                  | 4 lines     | 3 are identity setup in test bodies; keep the 1 disabled-trigger rogue permission row                                        |
+| `test_seed.py`                  | 3 lines     | Keep, out of S1: each is a sentinel whose wiping or survival the test checks, written independently of the seeder under test |
 
 The factories do not make every such row as it stands (an ended membership, a `google`
 invitation, a second identity for an existing person).

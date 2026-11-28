@@ -16,7 +16,7 @@ from roadmaps_api.errors import ApiError, ErrorCode
 from roadmaps_api.identity import GOOGLE_CANONICAL_ISSUER, LOCAL_MOCK_ISSUER
 from roadmaps_api.repositories.me import MeRepository
 
-ENTRA_ISSUER_PATTERN: Final = re.compile(r"^https://login\.microsoftonline\.com/[^/]+/v2\.0$")
+_ENTRA_ISSUER_PATTERN: Final = re.compile(r"^https://login\.microsoftonline\.com/[^/]+/v2\.0$")
 
 
 class IdentityProvider(StrEnum):
@@ -33,7 +33,7 @@ def provider_for_issuer(issuer: str) -> IdentityProvider:
         return IdentityProvider.GOOGLE
     if issuer == LOCAL_MOCK_ISSUER:
         return IdentityProvider.LOCAL_MOCK
-    if ENTRA_ISSUER_PATTERN.fullmatch(issuer):
+    if _ENTRA_ISSUER_PATTERN.fullmatch(issuer):
         return IdentityProvider.ENTRA
     msg = "Unrecognised canonical identity issuer"
     raise ValueError(msg)

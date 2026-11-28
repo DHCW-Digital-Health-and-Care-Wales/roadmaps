@@ -60,25 +60,29 @@ def _require_http_ok_response(response: requests.Response) -> requests.Response:
     return response
 
 
-def _validate_claims(
+def _verified_identity(
     config: ProviderConfig,
     token: jwt.Token,
     *,
     expected_nonce: str,
     now: int | None,
 ) -> VerifiedIdentity:
-    """Validates a signature-verified ID token's claims against `config` (ADR-018).
+    """Validates a signature-verified ID token's claims and returns its identity (ADR-018).
 
-    `jwt.decode` has already enforced the `RS256` allow-list. `CodeIDToken` checks
-    `nonce` and `azp` from `params`, and joserfc checks the options below and that `exp`,
-    `iat` and `nbf` are finite numbers within the skew. `aud` and `azp` are explicit
-    options because authlib's defaults accept a wrong `aud` whose `azp` names this client.
+    `jwt.decode` has already enforced the `RS256` allow-list; joserfc checks the options
+    below and that `exp`, `iat` and `nbf` are finite numbers within the skew; authlib's
+    `CodeIDToken` checks `nonce` and `azp` against `params`. Each option closes a gap in
+    authlib's defaults: `aud`, which they leave unchecked so a wrong `aud` whose `azp`
+    names this client passes; `azp` and `nonce`, whose authlib checks skip a falsy claim
+    or expected value. joserfc alone would accept a list `azp` or `nonce` containing the
+    expected value, so both layers stay.
     """
     options: dict[str, Any] = {
         "iss": {"essential": True, "values": list(config.accepted_issuers)},
         "sub": {"essential": True},
         "aud": {"essential": True, "value": config.client_id},
         "azp": {"value": config.client_id},
+        "nonce": {"essential": True, "value": expected_nonce},
         "exp": {"essential": True},
         "iat": {"essential": True},
     }
@@ -237,6 +241,6 @@ class OidcClient:
             raise OidcVerificationError(msg)
 
         decoded = self._decode_with_rollover(config, raw_id_token, discovery=discovery)
-        return _validate_claims(
+        return _verified_identity(
             config, decoded, expected_nonce=request.expected_nonce, now=request.now
         )

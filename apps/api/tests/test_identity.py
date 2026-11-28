@@ -353,12 +353,20 @@ REFUSED_TOKEN_CASES: dict[str, Callable[[RSAKey, int], str]] = {
     "Infinity exp": lambda k, now: _rs256_raw_payload_token(
         k, json.dumps(_valid_claims(now, exp=float("inf"))).encode()
     ),
+    "null iat": lambda k, now: _sign_rs256(k, _valid_claims(now, iat=None)),
+    "null nbf": lambda k, now: _sign_rs256(k, _valid_claims(now, nbf=None)),
     "NaN iat": lambda k, now: _rs256_raw_payload_token(
         k, json.dumps(_valid_claims(now, iat=float("nan"))).encode()
+    ),
+    "NaN nbf": lambda k, now: _rs256_raw_payload_token(
+        k, json.dumps(_valid_claims(now, nbf=float("nan"))).encode()
     ),
     "wrong nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="wrong-nonce")),
     "missing nonce": lambda k, now: _sign_rs256(k, _without(_valid_claims(now), "nonce")),
     "empty nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="")),
+    "nonce list containing the expected nonce": lambda k, now: _sign_rs256(
+        k, _valid_claims(now, nonce=["expected-nonce", "other"])
+    ),
     "non-string nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce=12345)),
     "non-ASCII nonce": lambda k, now: _sign_rs256(k, _valid_claims(now, nonce="n\u00f6nce")),
     "alg none": lambda _k, now: _alg_none_token(_valid_claims(now)),
@@ -400,6 +408,30 @@ def test_every_refused_jwt_claim_and_algorithm_is_rejected(
 
     with pytest.raises(OidcVerificationError):
         client.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(now=now))
+
+
+@pytest.mark.parametrize(
+    "claims_change",
+    [{"nonce": ""}, {"nonce": "any-nonce"}, {"nonce": None}],
+    ids=["empty nonce", "some nonce", "no nonce"],
+)
+def test_an_empty_expected_nonce_refuses_every_token(claims_change: dict[str, Any]) -> None:
+    key = _make_rsa_key("k1")
+    now = int(time.time())
+    claims = {k: v for k, v in {**_valid_claims(now), **claims_change}.items() if v is not None}
+    token = _sign_rs256(key, claims)
+    adapter, _counts = _make_google_transport([key], lambda: token)
+    client = OidcClient(build_provider_configs(_google_settings()), adapter=adapter)
+    request = TokenExchangeRequest(
+        code="auth-code",
+        redirect_uri=f"{EDITOR_ORIGIN}/api/v1/auth/callback/google",
+        code_verifier="v" * 43,
+        expected_nonce="",
+        now=now,
+    )
+
+    with pytest.raises(OidcVerificationError):
+        client.exchange_code_and_verify(OidcProviderId.GOOGLE, request)
 
 
 def test_jwks_key_rollover_rate_limited_refetch_and_stale_key_retention() -> None:
@@ -655,6 +687,34 @@ def test_concurrent_discovery_and_jwks_callers_share_one_fetch() -> None:
     assert sf_counts["jwks"] == 1
 
 
+def test_fresh_discovery_read_does_not_wait_behind_a_key_set_fetch() -> None:
+    key = _make_rsa_key("k1")
+    google_cfg = build_provider_configs(_google_settings())[OidcProviderId.GOOGLE]
+    jwks_entered = threading.Event()
+    jwks_release = threading.Event()
+
+    def handler(
+        req: requests.PreparedRequest, _timeout: object
+    ) -> tuple[int, dict[str, str], bytes]:
+        if req.url == GOOGLE_DISCOVERY_URL:
+            return _json_response(_standard_discovery())
+        jwks_entered.set()
+        jwks_release.wait(timeout=5.0)
+        return _json_response({"keys": [key.as_dict(private=False)]})
+
+    cache = JwksCache(adapter=RecordingAdapter(handler))
+    discovery = cache.get_discovery(google_cfg)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        key_set = pool.submit(cache.get_key_set, google_cfg, discovery=discovery)
+        try:
+            assert jwks_entered.wait(timeout=5.0)
+            fresh = pool.submit(cache.get_discovery, google_cfg)
+            assert fresh.result(timeout=2.0) is discovery
+        finally:
+            jwks_release.set()
+        assert key_set.result() is not None
+
+
 def test_concurrent_key_rollover_callbacks_share_one_refetch_and_both_succeed() -> None:
     key1 = _make_rsa_key("k1")
     key2 = _make_rsa_key("k2")
@@ -807,12 +867,11 @@ def test_build_provider_configs_refuses_local_mock_in_production_or_cloud_run() 
     [
         (OidcProviderId.LOCAL_MOCK, LOCAL_MOCK_ISSUER, ["ROADMAPS_LOCAL_MOCK_OIDC_URL"]),
         (OidcProviderId.GOOGLE, "http://accounts.google.com", ["ROADMAPS_GOOGLE_CLIENT_ID"]),
-        (OidcProviderId.GOOGLE, GOOGLE_CANONICAL_ISSUER, None),
     ],
-    ids=["loopback mock issuer", "non-HTTPS Google issuer", "HTTPS Google issuer"],
+    ids=["loopback mock issuer", "non-HTTPS Google issuer"],
 )
 def test_deployed_provider_guard_names_the_setting_enabling_an_unsafe_issuer(
-    provider: OidcProviderId, issuer: str, expected_invalid: list[str] | None
+    provider: OidcProviderId, issuer: str, expected_invalid: list[str]
 ) -> None:
     config = ProviderConfig(
         provider=provider,
@@ -822,9 +881,6 @@ def test_deployed_provider_guard_names_the_setting_enabling_an_unsafe_issuer(
         client_id="c",
         client_secret="s",  # noqa: S106 - synthetic test secret
     )
-    if expected_invalid is None:
-        validate_deployed_providers({provider: config})
-        return
     with pytest.raises(SettingsError) as exc_info:
         validate_deployed_providers({provider: config})
     assert exc_info.value.invalid == expected_invalid

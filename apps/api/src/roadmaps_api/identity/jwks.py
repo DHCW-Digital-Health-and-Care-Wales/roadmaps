@@ -4,8 +4,10 @@ Every outbound HTTP request carries explicit `(connect, read)` timeouts and
 `allow_redirects=False` (D4). Discovery documents and keys are retained across a provider
 outage once cached; a failed fetch backs off for `FAILURE_BACKOFF_SECONDS`, an unknown
 `kid` refetches at most once per `UNKNOWN_KID_REFETCH_INTERVAL_SECONDS`, and a cold cache
-fails closed (TM-09). One lock, held across each fetch, serialises refreshes: sign-ins are
-few, so a caller waiting behind a bounded refresh costs less than lock-free stale reads.
+fails closed (TM-09). Each provider's discovery document and key set has its own lock,
+held across its fetch: a caller needing that entry waits behind its refresh, so sign-ins
+are serialised during the refresh (requests bounds each connect and read, not the whole
+fetch), while fresh reads of every other entry carry on.
 """
 
 import logging
@@ -13,7 +15,7 @@ import math
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Final
 
 import requests
@@ -49,8 +51,9 @@ class DiscoveryDocument:
 
 @dataclass
 class _Entry[T]:
-    """One provider's cached value and the times of its last fetch, failure and forced fetch."""
+    """One provider's cached value, the lock held across its fetch, and its fetch times."""
 
+    lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
     value: T | None = None
     fetched_at: float = -math.inf
     failed_at: float = -math.inf
@@ -86,13 +89,13 @@ class JwksCache:
     ) -> None:
         self._adapter = adapter
         self._clock = clock
-        self._lock = threading.Lock()
+        self._entries_lock = threading.Lock()
         self._discovery: dict[OidcProviderId, _Entry[DiscoveryDocument]] = {}
         self._jwks: dict[OidcProviderId, _Entry[KeySet]] = {}
 
     def get_discovery(self, config: ProviderConfig) -> DiscoveryDocument:
-        with self._lock:
-            entry = self._discovery.setdefault(config.provider, _Entry())
+        entry = self._entry(self._discovery, config.provider)
+        with entry.lock:
             return self._cached(
                 entry,
                 config.provider,
@@ -102,8 +105,8 @@ class JwksCache:
 
     def get_key_set(self, config: ProviderConfig, *, discovery: DiscoveryDocument) -> KeySet:
         """Returns cached JWKS, refreshing past TTL with backoff and stale-key retention."""
-        with self._lock:
-            entry = self._jwks.setdefault(config.provider, _Entry())
+        entry = self._entry(self._jwks, config.provider)
+        with entry.lock:
             return self._cached(
                 entry,
                 config.provider,
@@ -119,8 +122,8 @@ class JwksCache:
         previous_key_set: KeySet,
     ) -> KeySet | None:
         """Rate-limited JWKS refetch on unknown `kid`; `None` when limited or the fetch fails."""
-        with self._lock:
-            entry = self._jwks.setdefault(config.provider, _Entry())
+        entry = self._entry(self._jwks, config.provider)
+        with entry.lock:
             # A concurrent callback that refreshed while this one waited already holds the keys.
             if entry.value is not None and entry.value is not previous_key_set:
                 return entry.value
@@ -140,6 +143,12 @@ class JwksCache:
             entry.value, entry.fetched_at = key_set, self._clock()
             return key_set
 
+    def _entry[T](
+        self, store: dict[OidcProviderId, _Entry[T]], provider: OidcProviderId
+    ) -> _Entry[T]:
+        with self._entries_lock:
+            return store.setdefault(provider, _Entry())
+
     def _cached[T](
         self,
         entry: _Entry[T],
@@ -148,7 +157,7 @@ class JwksCache:
         *,
         log_event: str,
     ) -> T:
-        """Returns `entry`'s value, fetching it past TTL; the caller holds `self._lock`."""
+        """Returns `entry`'s value, fetching it past TTL; the caller holds `entry.lock`."""
         now = self._clock()
         if entry.value is not None and now - entry.fetched_at < CACHE_TTL_SECONDS:
             return entry.value

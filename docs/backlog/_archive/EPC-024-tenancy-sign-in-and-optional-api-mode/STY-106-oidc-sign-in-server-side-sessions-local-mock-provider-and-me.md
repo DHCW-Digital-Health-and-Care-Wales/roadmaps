@@ -2,6 +2,7 @@
 
 - **Status**: Done — OIDC sign-in, opaque server-side sessions, `/me`, loopback mock OIDC
   provider, retention purge CLIs and updated OpenAPI/editor contract
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/346
 - **Type**: Feature
 - **Area**: API + Infrastructure + CI/CD
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)

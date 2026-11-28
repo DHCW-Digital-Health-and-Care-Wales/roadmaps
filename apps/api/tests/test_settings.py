@@ -4,10 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from roadmaps_api.settings import Environment, SettingsError, load_settings
+from roadmaps_api.settings import CLOUD_RUN_MARKERS, Environment, SettingsError, load_settings
 
 URL = "postgresql+psycopg://roadmaps:SECRET-PASSWORD@db.example:5432/roadmaps"
-VALID = {"ROADMAPS_DATABASE_URL": URL, "ROADMAPS_ALLOWED_HOSTS": "api.example"}
+VALID = {
+    "ROADMAPS_DATABASE_URL": URL,
+    "ROADMAPS_ALLOWED_HOSTS": "api.example",
+    "ROADMAPS_EDITOR_ORIGIN": "https://api.example",
+}
 
 
 def test_an_unset_environment_gets_production_rules() -> None:
@@ -16,6 +20,7 @@ def test_an_unset_environment_gets_production_rules() -> None:
     assert settings.environment is Environment.PRODUCTION
     assert not settings.serves_live_openapi
     assert settings.allowed_hosts == ("api.example",)
+    assert settings.editor_origin == "https://api.example"
     assert settings.database_url == URL
     assert settings.otlp_endpoint is None
     assert settings.service_name == "roadmaps-api"
@@ -52,11 +57,67 @@ def test_tracing_exports_to_the_otlp_endpoint_under_the_service_s_name(
 
 def test_a_local_environment_serves_the_live_openapi() -> None:
     settings = load_settings(
-        {**VALID, "ROADMAPS_ENV": "local", "ROADMAPS_ALLOWED_HOSTS": "localhost, 127.0.0.1"}
+        {
+            **VALID,
+            "ROADMAPS_ENV": "local",
+            "ROADMAPS_ALLOWED_HOSTS": "localhost, 127.0.0.1",
+            "ROADMAPS_EDITOR_ORIGIN": "http://localhost:5173",
+        }
     )
 
     assert settings.serves_live_openapi
     assert settings.allowed_hosts == ("localhost", "127.0.0.1")
+    assert settings.editor_origin == "http://localhost:5173"
+
+
+EDITOR_ORIGINS = {
+    "uppercase scheme and host canonicalised": (
+        {"ROADMAPS_EDITOR_ORIGIN": "HTTPS://API.EXAMPLE"},
+        "https://api.example",
+    ),
+    "default https port 443 stripped": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:443"},
+        "https://api.example",
+    ),
+    "non-default https port preserved": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:8443"},
+        "https://api.example:8443",
+    ),
+    "default http port 80 stripped in local": (
+        {"ROADMAPS_ENV": "local", "ROADMAPS_EDITOR_ORIGIN": "http://localhost:80"},
+        "http://localhost",
+    ),
+    "non-default http port preserved in local": (
+        {"ROADMAPS_ENV": "local", "ROADMAPS_EDITOR_ORIGIN": "http://localhost:21640"},
+        "http://localhost:21640",
+    ),
+    "port 443 preserved on http in test": (
+        {"ROADMAPS_ENV": "test", "ROADMAPS_EDITOR_ORIGIN": "http://localhost:443"},
+        "http://localhost:443",
+    ),
+    "port 80 preserved on https": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:80"},
+        "https://api.example:80",
+    ),
+    "IPv6 literal with port in local": (
+        {"ROADMAPS_ENV": "local", "ROADMAPS_EDITOR_ORIGIN": "http://[::1]:5173"},
+        "http://[::1]:5173",
+    ),
+    "IPv6 literal with default https port stripped when listed": (
+        {
+            "ROADMAPS_ALLOWED_HOSTS": "[::1]",
+            "ROADMAPS_EDITOR_ORIGIN": "https://[::1]:443",
+        },
+        "https://[::1]",
+    ),
+}
+
+
+@pytest.mark.parametrize(("changes", "expected"), EDITOR_ORIGINS.values(), ids=EDITOR_ORIGINS)
+def test_editor_origin_is_canonicalised(changes: dict[str, str], expected: str) -> None:
+    settings = load_settings({**VALID, **changes})
+
+    assert settings.editor_origin == expected
 
 
 BAD = {
@@ -127,6 +188,120 @@ BAD = {
         {"ROADMAPS_ENV": "prod", "ROADMAPS_DATABASE_URL": None, "ROADMAPS_ALLOWED_HOSTS": None},
         ["ROADMAPS_ENV", "ROADMAPS_DATABASE_URL", "ROADMAPS_ALLOWED_HOSTS"],
     ),
+    "an unset editor origin": ({"ROADMAPS_EDITOR_ORIGIN": None}, ["ROADMAPS_EDITOR_ORIGIN"]),
+    "an empty editor origin": ({"ROADMAPS_EDITOR_ORIGIN": " "}, ["ROADMAPS_EDITOR_ORIGIN"]),
+    "an editor origin with a trailing slash": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example/"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with a path": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example/app"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with a query": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example?a=1"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with an empty query mark": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example?"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with a fragment": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example#top"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with an empty fragment mark": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example#"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with userinfo": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://user:SECRET-PASSWORD@api.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with empty userinfo": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://@api.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with a wildcard": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://*.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with a non-http scheme": (
+        {"ROADMAPS_EDITOR_ORIGIN": "ftp://api.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin without scheme separator": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https:api.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with no host": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://:443"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with empty port": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with port zero": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:0"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with port out of range": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:65536"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with non-numeric port": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:SECRET-PASSWORD"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with signed port": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:+443"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with leading-zero port": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api.example:0443"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin with internal whitespace": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://api .example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an http editor origin in production": (
+        {"ROADMAPS_ENV": "production", "ROADMAPS_EDITOR_ORIGIN": "http://api.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an http editor origin with ROADMAPS_ENV unset": (
+        {"ROADMAPS_EDITOR_ORIGIN": "http://api.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an http editor origin with invalid ROADMAPS_ENV": (
+        {"ROADMAPS_ENV": "staging", "ROADMAPS_EDITOR_ORIGIN": "http://api.example"},
+        ["ROADMAPS_ENV", "ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    **{
+        f"an http editor origin in {env} with {marker} set": (
+            {"ROADMAPS_ENV": env, marker: "1", "ROADMAPS_EDITOR_ORIGIN": "http://api.example"},
+            ["ROADMAPS_EDITOR_ORIGIN"],
+        )
+        for env in ("local", "test")
+        for marker in CLOUD_RUN_MARKERS
+    },
+    "an editor origin whose host is not in allowed hosts in production": (
+        {"ROADMAPS_ENV": "production", "ROADMAPS_EDITOR_ORIGIN": "https://other.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    "an editor origin whose host is not in allowed hosts when ROADMAPS_ENV unset": (
+        {"ROADMAPS_EDITOR_ORIGIN": "https://other.example"},
+        ["ROADMAPS_EDITOR_ORIGIN"],
+    ),
+    **{
+        f"an editor origin host outside allowed hosts in {env} with {marker} set": (
+            {"ROADMAPS_ENV": env, marker: "1", "ROADMAPS_EDITOR_ORIGIN": "https://other.example"},
+            ["ROADMAPS_EDITOR_ORIGIN"],
+        )
+        for env in ("local", "test")
+        for marker in CLOUD_RUN_MARKERS
+    },
 }
 
 

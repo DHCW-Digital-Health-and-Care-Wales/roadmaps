@@ -24,7 +24,14 @@ from roadmaps_api.middleware import PROBE_PATHS, REQUEST_ID_HEADER, RequestConte
 from roadmaps_api.routes import probes
 from roadmaps_api.settings import MAX_BODY_BYTES
 from roadmaps_api.tracing import create_tracer_provider
-from tests.support import PLANTED, TEST_HOST, Lines, make_settings, serving
+from tests.support import (
+    PLANTED,
+    SAME_ORIGIN_JSON_HEADERS,
+    TEST_HOST,
+    Lines,
+    make_settings,
+    serving,
+)
 
 
 def too_large_stream() -> Iterator[bytes]:
@@ -45,35 +52,37 @@ TOO_LARGE = PLANTED.encode().ljust(MAX_BODY_BYTES + 1)
 # reads no body ran.
 BODIES = {
     "a declared body over the limit to a route that reads it": (
-        lambda c: c.post("/test/echo", content=TOO_LARGE),
+        lambda c: c.post("/test/echo", content=TOO_LARGE, headers=SAME_ORIGIN_JSON_HEADERS),
         413,
         "/test/echo",
         0,
     ),
     "a streamed body over the limit to a route that reads it": (
-        lambda c: c.post("/test/echo", content=too_large_stream()),
+        lambda c: c.post(
+            "/test/echo", content=too_large_stream(), headers=SAME_ORIGIN_JSON_HEADERS
+        ),
         413,
         "/test/echo",
         0,
     ),
     "a body at the limit": (
-        lambda c: c.post(
-            "/test/echo", content=at_the_limit(), headers={"Content-Type": "application/json"}
-        ),
+        lambda c: c.post("/test/echo", content=at_the_limit(), headers=SAME_ORIGIN_JSON_HEADERS),
         200,
         "/test/echo",
         0,
     ),
     # Answered once the route has run: nothing is read, and the route's answer is not sent.
     "a declared body over the limit to a route that reads none": (
-        lambda c: c.post("/test/unread", content=TOO_LARGE),
+        lambda c: c.post("/test/unread", content=TOO_LARGE, headers=SAME_ORIGIN_JSON_HEADERS),
         413,
         "/test/unread",
         1,
     ),
     # Left unread, with the route's own answer.
     "a streamed body over the limit to a route that reads none": (
-        lambda c: c.post("/test/unread", content=too_large_stream()),
+        lambda c: c.post(
+            "/test/unread", content=too_large_stream(), headers=SAME_ORIGIN_JSON_HEADERS
+        ),
         200,
         "/test/unread",
         1,

@@ -32,6 +32,7 @@ from tests.harness import PROBE_TABLE
 from tests.support import (
     DOWN_DATABASE_URL,
     PLANTED,
+    SAME_ORIGIN_HEADERS,
     ConfigureLogging,
     Lines,
     make_settings,
@@ -96,7 +97,7 @@ ROUTES = {
     ),
     "a method the path does not take": (lambda c: c.delete("/test/echo"), 405, "/test/echo"),
     "a body that fails validation": (
-        lambda c: c.post(f"/test/echo?{PLANTED}=1", json={}),
+        lambda c: c.post(f"/test/echo?{PLANTED}=1", json={}, headers=SAME_ORIGIN_HEADERS),
         422,
         "/test/echo",
     ),
@@ -287,7 +288,11 @@ def test_a_broken_stdout_drops_the_line_without_raising(
     assert capsys.readouterr().err == ""
 
 
-VALID = {"ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL, "ROADMAPS_ALLOWED_HOSTS": "localhost"}
+VALID = {
+    "ROADMAPS_DATABASE_URL": DOWN_DATABASE_URL,
+    "ROADMAPS_ALLOWED_HOSTS": "localhost",
+    "ROADMAPS_EDITOR_ORIGIN": "https://localhost",
+}
 
 
 def settings_for(environ: dict[str, str]) -> Settings:

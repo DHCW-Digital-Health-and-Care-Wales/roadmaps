@@ -7,7 +7,7 @@ export type ClientOptions = {
 /**
  * ErrorCode
  */
-export type ErrorCode = 'request.not_found' | 'request.method_not_allowed' | 'request.invalid' | 'service.not_ready' | 'server.internal_error';
+export type ErrorCode = 'auth.unauthenticated' | 'auth.person_mismatch' | 'authz.forbidden' | 'request.origin_not_allowed' | 'request.unsupported_media_type' | 'request.not_found' | 'request.method_not_allowed' | 'request.invalid' | 'service.not_ready' | 'server.internal_error';
 
 /**
  * ErrorResponse

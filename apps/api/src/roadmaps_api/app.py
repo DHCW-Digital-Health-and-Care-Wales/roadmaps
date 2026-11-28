@@ -9,6 +9,7 @@ from opentelemetry.sdk.trace.export import SpanExporter
 from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from roadmaps_api.authz import PolicyAPIRoute, validate_shipped_roles, verify_app_routes
 from roadmaps_api.database import create_database_engine, create_sessions
 from roadmaps_api.errors import register_error_handlers
 from roadmaps_api.middleware import RequestContext
@@ -45,6 +46,7 @@ def create_app(settings: Settings, *, span_exporter: SpanExporter | None = None)
 
     Its spans go to `span_exporter`, a test's, else to the settings' OTLP endpoint, if any.
     """
+    validate_shipped_roles()
     tracer_provider = create_tracer_provider(settings, span_exporter)
     tracer = tracer_provider.get_tracer(INSTRUMENTATION)
     engine = create_database_engine(settings.database_url)
@@ -72,14 +74,18 @@ def create_app(settings: Settings, *, span_exporter: SpanExporter | None = None)
         # API's spans are its own (`tracing`).
         telemetry={"tracing": False, "metrics": False, "logs": False, "auto_configure": False},
     )
+    app.router.route_class = PolicyAPIRoute
     app.state.tracer = tracer
     app.state.engine = engine
     app.state.sessions = create_sessions(engine)
+    app.state.editor_origin = settings.editor_origin
+    app.state.serves_live_openapi = settings.serves_live_openapi
     # Read once, from the package's own migrations, for `/ready` to compare.
     app.state.latest_revision = latest_revision()
     register_error_handlers(app)
     app.include_router(probes.router)
     app.include_router(api_v1.router)
+    verify_app_routes(app)
     document_refusals(app)
     # Added innermost first: a request meets RequestContext, then the Host allow-list,
     # then the body limit. Both answer in Starlette's plain text, not the envelope

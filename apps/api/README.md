@@ -19,7 +19,7 @@ pnpm api:migrate    # the database, then the migrations
 pnpm api:seed       # migrate, truncate and deterministically seed local data (pass --seed <int> to vary)
 pnpm api:db:down    # stop it, keeping its data
 pnpm api:format     # ruff format, and ruff's fixes
-pnpm api:lint       # ruff, import-linter and the transaction check
+pnpm api:lint       # ruff, import-linter, transaction check and permission-literal check
 pnpm api:typecheck  # ty
 pnpm api:test       # pytest at 100% branch coverage, up to four workers, each on its own database
 pnpm api:openapi    # write openapi.json, the contract; needs no database
@@ -118,11 +118,16 @@ needs. To draft one, set `ROADMAPS_MIGRATION_DATABASE_URL` and run
 Settings come from environment variables only, which `pnpm api:dev` sets for the slot:
 `ROADMAPS_ENV` (`local`, `test` or `production`, the default),
 `ROADMAPS_DATABASE_URL` (`postgresql+psycopg://…`), `ROADMAPS_ALLOWED_HOSTS` (the
-`Host` names served, comma-separated, never a wildcard), `ROADMAPS_SERVICE_NAME` (its
-traces' service, `roadmaps-api` by default) and OpenTelemetry's
-`OTEL_EXPORTER_OTLP_ENDPOINT` (see _Traces_). Only `ROADMAPS_DATABASE_URL` and
-`ROADMAPS_ALLOWED_HOSTS` are required: either one missing, or any one invalid, stops
-start-up, naming it, as does `ROADMAPS_MIGRATION_DATABASE_URL`, which only the migration
-tooling reads: `python -m roadmaps_api.migrate`, and Alembic's command line when
-drafting. Every log line is JSON on stdout; only a local API's lines carry
-an exception's or another library's message.
+`Host` names served, comma-separated, never a wildcard), `ROADMAPS_EDITOR_ORIGIN` (the
+editor's bare `scheme://host[:port]` origin with no path, query, fragment, userinfo or
+wildcard; under `production`, an unset or invalid `ROADMAPS_ENV`, or Cloud Run it must use
+`https` and a host in `ROADMAPS_ALLOWED_HOSTS`; `pnpm api:dev` sets it to
+`http://localhost:<DEV_PORT>`, so open the editor on `localhost` rather than `127.0.0.1`
+for state-changing calls), `ROADMAPS_SERVICE_NAME` (its traces' service, `roadmaps-api` by
+default) and OpenTelemetry's `OTEL_EXPORTER_OTLP_ENDPOINT` (see _Traces_).
+`ROADMAPS_DATABASE_URL`, `ROADMAPS_ALLOWED_HOSTS` and `ROADMAPS_EDITOR_ORIGIN` are
+required: any one missing, or any setting invalid, stops start-up, naming it, as does
+`ROADMAPS_MIGRATION_DATABASE_URL`, which only the migration tooling reads:
+`python -m roadmaps_api.migrate`, and Alembic's command line when drafting. Every log line
+is JSON on stdout; only a local API's lines carry an exception's or another library's
+message.

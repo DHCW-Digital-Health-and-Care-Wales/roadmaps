@@ -1,4 +1,4 @@
-"""The transaction check fails a route or repository ending a transaction (ADR-017).
+"""The transaction check fails a route, authz module or repository ending a transaction (ADR-017).
 
 import-linter's layers contract is configured, not written here, so no test runs it.
 """
@@ -14,7 +14,7 @@ from tools import check_transactions
 API_DIR = Path(__file__).parent.parent
 
 
-def test_the_transaction_check_passes_the_api_s_routes_and_repositories(
+def test_the_transaction_check_passes_the_api_s_routes_authz_and_repositories(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.chdir(API_DIR)

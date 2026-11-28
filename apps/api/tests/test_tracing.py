@@ -28,6 +28,7 @@ from roadmaps_api import tracing
 from roadmaps_api.settings import MAX_BODY_BYTES, Settings, load_settings
 from tests.support import (
     PLANTED,
+    SAME_ORIGIN_HEADERS,
     TEST_HOST,
     Lines,
     free_port,
@@ -134,7 +135,7 @@ SERVED = {
         error=False,
     ),
     "an invalid body": Served(
-        lambda client: client.post("/test/echo", json={}),
+        lambda client: client.post("/test/echo", json={}, headers=SAME_ORIGIN_HEADERS),
         422,
         "POST /test/echo",
         "/test/echo",
@@ -387,6 +388,7 @@ def test_a_test_s_exporter_is_the_only_one_whatever_the_environment_holds(
         monkeypatch.setenv("FASTAPI_OTEL_AUTO_CONFIGURE", "true")
         monkeypatch.setenv("ROADMAPS_DATABASE_URL", make_settings().database_url)
         monkeypatch.setenv("ROADMAPS_ALLOWED_HOSTS", TEST_HOST)
+        monkeypatch.setenv("ROADMAPS_EDITOR_ORIGIN", f"https://{TEST_HOST}")
         settings = load_settings()
         assert settings.otlp_endpoint == endpoint
 

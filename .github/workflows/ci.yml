@@ -361,10 +361,10 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
-  # The API (apps/api): ruff, import-linter, the transaction check, ty, drift in its
-  # committed OpenAPI document and pytest at 100% branch coverage, through its pnpm
-  # scripts, which run uv. pnpm api:test starts the
-  # database of apps/api/compose.yaml, as it does locally, in the runner's Docker.
+  # The API (apps/api): ruff, import-linter, the transaction and permission-literal checks,
+  # ty, drift in its committed OpenAPI document and pytest at 100% branch coverage, through
+  # its pnpm scripts, which run uv. pnpm api:test starts the database of apps/api/compose.yaml,
+  # as it does locally, in the runner's Docker.
   api-verify:
     name: "API: verify"
     needs: changes

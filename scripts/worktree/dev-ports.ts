@@ -13,7 +13,10 @@ export interface AppPorts {
   readonly defaults: DevPorts
 }
 
-/** The editor's; its defaults are the origins the OAuth client lists. */
+/**
+ * The editor's; its defaults are the origins the OAuth client lists.
+ * `apps/api/scripts/api.sh` also uses the 5173 fallback for `ROADMAPS_EDITOR_ORIGIN`.
+ */
 export const EDITOR_PORTS: AppPorts = {
   devVariable: "DEV_PORT",
   previewVariable: "PREVIEW_PORT",

@@ -11,6 +11,7 @@ from roadmaps_api.authz import (
     SHIPPED_ROLES,
     Permission,
     ShippedRoleKey,
+    validate_shipped_roles,
 )
 
 PERMISSION_FORMAT = re.compile(r"^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$")
@@ -66,3 +67,26 @@ def test_shipped_roles_match_adr_019_and_are_immutable() -> None:
     with pytest.raises(TypeError):
         cast("dict[object, object]", SHIPPED_ROLE_NAMES)[ShippedRoleKey.VIEWER] = "Mutated"
     assert all(isinstance(perms, frozenset) for perms in SHIPPED_ROLES.values())
+
+
+def test_validate_shipped_roles_accepts_the_catalogue_and_rejects_corrupted_roles() -> None:
+    validate_shipped_roles()
+
+    with pytest.raises(ValueError, match="missing"):
+        validate_shipped_roles(roles={ShippedRoleKey.ADMIN: frozenset()})
+    with pytest.raises(ValueError, match="unknown"):
+        validate_shipped_roles(
+            roles={
+                ShippedRoleKey.ADMIN: frozenset({cast("Permission", "bogus:perm")}),
+                ShippedRoleKey.PRODUCT_LEAD: frozenset(),
+                ShippedRoleKey.VIEWER: frozenset(),
+            }
+        )
+    with pytest.raises(TypeError, match="Permission"):
+        validate_shipped_roles(
+            roles={
+                ShippedRoleKey.ADMIN: frozenset({cast("Permission", str(Permission.LISTS_EDIT))}),
+                ShippedRoleKey.PRODUCT_LEAD: frozenset(),
+                ShippedRoleKey.VIEWER: frozenset(),
+            }
+        )

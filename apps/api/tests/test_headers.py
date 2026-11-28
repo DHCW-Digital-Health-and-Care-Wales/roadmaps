@@ -8,7 +8,7 @@ from httpx2 import Response
 
 from roadmaps_api.app import create_app
 from roadmaps_api.settings import MAX_BODY_BYTES, Environment
-from tests.support import make_settings, serving
+from tests.support import SAME_ORIGIN_HEADERS, make_settings, serving
 
 HEADERS = {
     "cache-control": "no-store",
@@ -21,7 +21,7 @@ RESPONSES = {
     "a probe": lambda c: c.get("/health"),
     "a 503 probe": lambda c: c.get("/ready"),
     "a 404": lambda c: c.get("/nowhere"),
-    "a 422": lambda c: c.post("/test/echo", json={}),
+    "a 422": lambda c: c.post("/test/echo", json={}, headers=SAME_ORIGIN_HEADERS),
     "a 413": lambda c: c.post("/test/echo", content=b"x" * (MAX_BODY_BYTES + 1)),
     "a refused Host": lambda c: c.get("/health", headers={"Host": "elsewhere.example"}),
     "a 500": lambda c: c.get("/test/boom"),

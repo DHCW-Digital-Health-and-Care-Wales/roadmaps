@@ -19,8 +19,9 @@ from httpx2 import Response
 from pydantic import Field, model_validator
 
 from roadmaps_api.app import create_app
+from roadmaps_api.authz import public
 from roadmaps_api.wire import ApiRequestModel
-from tests.support import PLANTED, make_settings
+from tests.support import PLANTED, SAME_ORIGIN_HEADERS, SAME_ORIGIN_JSON_HEADERS, make_settings
 
 CAMEL_CASE = re.compile(r"[a-z][a-zA-Z0-9]*")
 
@@ -50,21 +51,21 @@ REFUSALS = {
         {},
     ),
     "a body that fails validation": (
-        lambda c: c.post("/test/echo", json={"name": [PLANTED]}),
+        lambda c: c.post("/test/echo", json={"name": [PLANTED]}, headers=SAME_ORIGIN_HEADERS),
         422,
         "request.invalid",
         {"errors": [{"loc": ["body", "name"], "type": "string_type"}]},
     ),
     "a query that fails validation": (
-        lambda c: c.post(f"/test/echo?count={PLANTED}", json={"name": "a"}),
+        lambda c: c.post(
+            f"/test/echo?count={PLANTED}", json={"name": "a"}, headers=SAME_ORIGIN_HEADERS
+        ),
         422,
         "request.invalid",
         {"errors": [{"loc": ["query", "count"], "type": "int_parsing"}]},
     ),
     "a body that is not JSON": (
-        lambda c: c.post(
-            "/test/echo", content=PLANTED, headers={"Content-Type": "application/json"}
-        ),
+        lambda c: c.post("/test/echo", content=PLANTED, headers=SAME_ORIGIN_JSON_HEADERS),
         422,
         "request.invalid",
         {"errors": [{"loc": ["body", 0], "type": "json_invalid"}]},
@@ -73,7 +74,7 @@ REFUSALS = {
         lambda c: c.post(
             "/test/echo",
             content=b'{"name": "\xff"}',
-            headers={"Content-Type": "application/json"},
+            headers=SAME_ORIGIN_JSON_HEADERS,
         ),
         422,
         "request.invalid",
@@ -116,7 +117,7 @@ def test_a_refusal_is_the_envelope_without_the_input(
 
 
 def test_a_valid_request_passes_through(client: TestClient) -> None:
-    response = client.post("/test/echo?count=2", json={"name": "a"})
+    response = client.post("/test/echo?count=2", json={"name": "a"}, headers=SAME_ORIGIN_HEADERS)
 
     assert response.status_code == 200
     assert response.json() == {"name": "a", "count": 2}
@@ -167,13 +168,13 @@ class Search(ApiRequestModel):
 def locations_app() -> FastAPI:
     app = create_app(make_settings())
 
-    @app.post("/test/shapes")
+    @app.post("/test/shapes", dependencies=[public()])
     def shapes(body: Shapes) -> None: ...
 
-    @app.get("/test/search")
+    @app.get("/test/search", dependencies=[public()])
     def search(query: Annotated[Search, Query()]) -> None: ...
 
-    @app.get("/test/parameters/{itemId}")
+    @app.get("/test/parameters/{itemId}", dependencies=[public()])
     def parameters(
         itemId: int,  # noqa: N803 the wire's name, as a path template spells it
         ids: Annotated[list[int], Query(alias="itemIds")] = [],  # noqa: B006 FastAPI copies it
@@ -241,7 +242,9 @@ def test_a_422_trims_forbidden_keys_and_keeps_locations(
     locations_client: TestClient, method: str, url: str, sent: object, errors: Errors
 ) -> None:
     # Only the route with a header parameter reads it.
-    response = locations_client.request(method, url, json=sent, headers={"x-page": PLANTED})
+    response = locations_client.request(
+        method, url, json=sent, headers={**SAME_ORIGIN_HEADERS, "x-page": PLANTED}
+    )
 
     assert response.status_code == 422
     assert response.json()["params"] == {
@@ -254,7 +257,9 @@ def test_a_422_keeps_nested_fields_under_a_wrapped_union_choice(
     locations_client: TestClient,
 ) -> None:
     response = locations_client.post(
-        "/test/shapes", json={"wrapped": {"itemCount": PLANTED, PLANTED: 1}}
+        "/test/shapes",
+        json={"wrapped": {"itemCount": PLANTED, PLANTED: 1}},
+        headers=SAME_ORIGIN_HEADERS,
     )
 
     assert response.status_code == 422
@@ -287,7 +292,9 @@ def test_a_422_caps_listed_errors_and_marks_truncation_only_past_the_cap(
     truncated: bool,
 ) -> None:
     response = locations_client.post(
-        "/test/shapes", json={"leaves": [{"itemCount": PLANTED} for _ in range(submitted_count)]}
+        "/test/shapes",
+        json={"leaves": [{"itemCount": PLANTED} for _ in range(submitted_count)]},
+        headers=SAME_ORIGIN_HEADERS,
     )
 
     assert response.status_code == 422
@@ -340,7 +347,7 @@ def test_a_422_truncates_long_string_loc_segments(
     expected_loc: list[str | int],
     expected_type: str,
 ) -> None:
-    response = locations_client.post("/test/shapes", json=sent)
+    response = locations_client.post("/test/shapes", json=sent, headers=SAME_ORIGIN_HEADERS)
 
     assert response.status_code == 422
     assert response.json()["params"] == {"errors": [{"loc": expected_loc, "type": expected_type}]}
@@ -354,6 +361,7 @@ def test_a_422_bounds_the_response_for_a_long_dictionary_key_with_many_errors(
     response = locations_client.post(
         "/test/shapes",
         json={"buckets": {long_key: [{"itemCount": PLANTED} for _ in range(40)]}},
+        headers=SAME_ORIGIN_HEADERS,
     )
 
     assert response.status_code == 422

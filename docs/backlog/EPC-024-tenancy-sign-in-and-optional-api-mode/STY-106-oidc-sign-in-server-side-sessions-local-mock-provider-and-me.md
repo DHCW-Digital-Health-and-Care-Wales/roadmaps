@@ -1,6 +1,6 @@
 # STY-106: OIDC sign-in, server-side sessions, local mock provider and `/me`
 
-- **Status**: Proposed — grilled (D1–D15); selectable once STY-105 is Done
+- **Status**: Proposed — grilled (D1–D15); selectable (STY-093, STY-102, STY-103 and STY-105 Done)
 - **Type**: Feature
 - **Area**: API + Infrastructure + CI/CD
 - **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)

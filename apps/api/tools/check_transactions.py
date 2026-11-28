@@ -1,6 +1,6 @@
-"""Fails a route or repository that ends a transaction (ADR-017 _Layering_).
+"""Fails a route, authz module or repository that ends a transaction (ADR-017 _Layering_).
 
-Services end transactions; routes and repositories never call `commit()`,
+Services end transactions; routes, authz modules and repositories never call `commit()`,
 `rollback()` or `begin()` on a session (`with session.begin():` commits as it closes).
 A call by any of those names fails, whatever object it is made on, since the type is
 not known here: name the method otherwise. Run from `apps/api` with no arguments to
@@ -13,7 +13,11 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
-LAYERS: Final = (Path("src/roadmaps_api/routes"), Path("src/roadmaps_api/repositories"))
+LAYERS: Final = (
+    Path("src/roadmaps_api/routes"),
+    Path("src/roadmaps_api/authz"),
+    Path("src/roadmaps_api/repositories"),
+)
 ENDS_A_TRANSACTION: Final = frozenset({"commit", "rollback", "begin"})
 
 

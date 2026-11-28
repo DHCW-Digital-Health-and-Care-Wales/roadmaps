@@ -1,9 +1,11 @@
 # STY-105: Route authorisation policy, tenant dependency and same-origin guard
 
-- **Status**: Proposed — grilled (D1–D15); selectable (STY-103 Done)
+- **Status**: Done — fail-closed route policy enforcement, tenant dependency, same-origin/JSON
+  and person-assertion guards, permission-literal lint and standing authorisation suite
+- **Delivered**: https://github.com/DHCW-Digital-Health-and-Care-Wales/roadmaps/pull/344
 - **Type**: Feature
 - **Area**: API + Infrastructure
-- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](README.md)
+- **Epic**: [EPC-024-tenancy-sign-in-and-optional-api-mode](../../EPC-024-tenancy-sign-in-and-optional-api-mode/README.md)
 - **Depends on**: STY-103 (hard)
 - **Binding ADRs**: ADR-017 §Errors, §Layering; ADR-018 §Sessions; ADR-019 §The catalogue
   and the shipped roles, §Enforcement; ADR-020
@@ -252,3 +254,72 @@ session_id)` or raising `401 auth.unauthenticated` (default stub raises `401` in
 - Real OIDC sign-in and session lookup (`STY-106`, which plugs into the session
   authenticator dependency established here).
 - Object-level assignment and retired-roadmap checks (`EPC-026`).
+
+## Delivery
+
+### Departures
+
+- **Stricter dependency-order check at startup (extends D10):** `verify_app_routes` also
+  requires each route's declared policy to be the first dependency in
+  `ctx.dependant.dependencies`, refusing `include_router(..., dependencies=…)` and any
+  non-policy router-level dependency ahead of a route's policy. This guarantees no
+  router-level dependency executes pre-authentication and guarantees the route's own
+  `body_field` is always the effective one without depending on FastAPI's private
+  `_effective_route_context_var`.
+
+### Contract for dependents
+
+- **Route policies and `PolicyAPIRoute` (`roadmaps_api.authz`)**:
+  - Every API router must set `route_class=PolicyAPIRoute` (as `probes.router` and
+    `api_v1.router` do; `create_app` also sets `app.router.route_class = PolicyAPIRoute`).
+  - Every route declares exactly one policy: `public()`, `signed_in()`, `tenant_member()`,
+    or `tenant_permission(Permission.…)`. `verify_app_routes(app)` runs during `create_app`
+    and refuses unclassified/duplicate/invalid policies, router-level or include-time
+    dependencies placed ahead of the policy, empty or disallowed HTTP methods, tenant
+    routes missing `{tenantSlug}`, unlisted `public()` routes, plain `APIRoute`s,
+    `PolicyAPIRoute` subclasses, `Mount`, `Host`, `WebSocketRoute`, `frontend()`/low-priority
+    routes and any plain Starlette `Route` whose explicit methods are not all in the active
+    public allow-list.
+  - Adding a new public endpoint (such as `STY-106`'s OIDC start/callback) adds its
+    `(method, path)` to `PUBLIC_ROUTES` in `apps/api/src/roadmaps_api/authz/routing.py`
+    and its call spec to `CALL_SPECS` (and `READ_ONLY_GET_EXEMPTIONS` for the callback) in
+    `apps/api/tests/integration/test_authorisation.py`.
+- **Session-authenticator seam and person assertion (`roadmaps_api.authz`)**:
+  - `get_current_principal(request: Request) -> AuthenticatedPrincipal(person_id, session_id)`
+    raises `401 auth.unauthenticated` by default; tests override it via
+    `app.dependency_overrides[get_current_principal]`. `STY-106` wires cookie-hash session
+    lookup and `people.disabled_at IS NULL` verification here.
+  - `require_asserted_person` enforces `X-Roadmaps-Person-Id` (`PERSON_ASSERTION_HEADER`)
+    on every authenticated non-`GET`/`HEAD`/`OPTIONS` route (`409 auth.person_mismatch`).
+- **Tenant context (`roadmaps_api.authz`)**:
+  - `CurrentTenant` (`resolve_tenant_context`) resolves `{tenantSlug}` from
+    `request.path_params` against active memberships (`ended_at IS NULL`) via person-scoped
+    RLS, reads `role_permissions` under tenant-scoped RLS, validates every row against
+    `Permission` (logging `authz.unknown_permission` with `tenant_id`, `role_id` and `code`
+    only and failing closed with `403 authz.forbidden` on unknown values), and returns a
+    frozen `TenantContext(tenant_id, tenant_slug, person_id, role_id, permissions)` with
+    `open_session() -> Session` pre-bound to `(tenant_id, person_id)`.
+- **Settings and error codes**:
+  - `ROADMAPS_EDITOR_ORIGIN` is required (`Settings.editor_origin`, canonical bare origin;
+    HTTPS + `ROADMAPS_ALLOWED_HOSTS` membership enforced in production, unset/invalid
+    `ROADMAPS_ENV` or on Cloud Run). `apps/api/scripts/api.sh dev` reads `DEV_PORT` from
+    `.env.worktree` (falling back to `5173` outside a worktree) and exports
+    `ROADMAPS_EDITOR_ORIGIN="http://localhost:$DEV_PORT"`.
+  - Five `ErrorCode`s added in `errors.py`, exported to `apps/api/openapi.json` and
+    `packages/api-types/src/generated/`, and mapped in
+    `apps/editor/src/infrastructure/roadmaps-api/api-error.ts`: `auth.unauthenticated`
+    (401), `auth.person_mismatch` (409), `authz.forbidden` (403),
+    `request.origin_not_allowed` (403) and `request.unsupported_media_type` (415).
+- **Permission-literal lint (`apps/api/tools/check_permissions.py`)**:
+  - Runs inside `pnpm api:lint`, scanning `src/roadmaps_api/` and `tools/` (excluding
+    `src/roadmaps_api/authz/permissions.py` and docstrings) for raw permission literals.
+
+### Scenario evidence
+
+| Scenario | Held by                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S1       | `apps/api/tests/test_route_policies.py` (`test_create_app_runs_startup_policy_and_shipped_role_checks`, `test_every_route_on_create_app_is_classified_and_public_routes_match_allow_list`, `test_policy_api_route_refuses_missing_duplicate_or_invalid_policy`, `test_policy_api_route_refuses_empty_or_disallowed_methods`, `test_verify_app_routes_refuses_every_illicit_route`; test-first)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| S2       | `apps/api/tests/test_check_permissions.py` (`tools/check_permissions.py` wired into `pnpm api:lint`), `apps/api/tests/test_permissions.py` (`test_validate_shipped_roles_accepts_the_catalogue_and_rejects_corrupted_roles`), `apps/api/tests/integration/test_authorisation.py` (`test_unknown_permission_in_role_fails_closed_without_logging_raw_value`; test-first)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| S3       | `apps/api/tests/integration/test_authorisation.py` (`test_tenant_dependency_scopes_session_and_isolates_roles_across_tenants`, `test_tenant_context_is_frozen_and_never_leaks_rls_across_pooled_connections`, `test_tenant_dependency_fails_closed_if_route_lacks_tenant_slug`, `test_tenant_and_permission_checks_run_before_body_validation`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| S4       | `apps/api/tests/test_settings.py` (`ROADMAPS_EDITOR_ORIGIN` canonicalisation/strict checks; test-first), `apps/api/tests/test_api_script.py` (`api.sh` `DEV_PORT` wiring), `apps/api/tests/test_route_policies.py` (`test_enforce_same_origin_rules`, `test_same_origin_guard_runs_on_every_non_safe_method`, `test_same_origin_guard_uses_configured_editor_origin`, `test_enforce_json_media_type`, `test_json_media_type_guard_wiring_for_body_and_bodyless_routes`, `test_person_assertion_header_on_authenticated_state_changing_routes`, `test_guard_and_dependency_evaluation_order_on_authenticated_body_route`, `test_wrong_method_still_answers_405_with_allow_header_before_guards`), `apps/api/tests/integration/test_authorisation.py` (`test_every_non_get_route_refuses_missing_same_origin_proof`, `test_every_non_exempt_get_route_makes_no_domain_write_and_cross_site_writes_nothing`, `test_read_only_get_detector_catches_every_write_kind`), `apps/editor/src/infrastructure/roadmaps-api/api-error.test.ts` |
+| S5       | `apps/api/tests/integration/test_authorisation.py` (`test_call_specs_registry_is_fail_closed_for_unregistered_routes`, `test_generated_role_by_route_matrix_exercises_every_route_and_principal`, `test_cross_tenant_sweep_returns_404_and_changes_nothing`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |

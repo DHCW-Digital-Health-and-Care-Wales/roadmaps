@@ -8,8 +8,9 @@ from fastapi import FastAPI, Query
 from fastapi.testclient import TestClient
 
 from roadmaps_api.app import create_app
+from roadmaps_api.authz import public
 from roadmaps_api.wire import ApiRequestModel, ApiResponseModel
-from tests.support import make_settings
+from tests.support import SAME_ORIGIN_HEADERS, make_settings
 
 
 class Child(ApiRequestModel):
@@ -39,15 +40,15 @@ class ChildFound(ApiResponseModel):
 def wire_app() -> FastAPI:
     app = create_app(make_settings())
 
-    @app.post("/test/search")
+    @app.post("/test/search", dependencies=[public()])
     def search_body(body: Search) -> Found:
         return Found(search_term=body.search_term, page_size=body.page_size)
 
-    @app.get("/test/search")
+    @app.get("/test/search", dependencies=[public()])
     def search_query(query: Annotated[Search, Query()]) -> Found:
         return Found(search_term=query.search_term, page_size=query.page_size)
 
-    @app.post("/test/nested")
+    @app.post("/test/nested", dependencies=[public()])
     def nested(body: Nested) -> ChildFound:
         child = body.child_node
         return ChildFound(item_name=child.item_name, item_count=child.item_count)
@@ -88,7 +89,7 @@ BOUND: dict[str, tuple[str, str, Any, dict[str, object]]] = {
 def test_a_request_binds_camel_case_names_alone(
     wire_client: TestClient, method: str, url: str, body: object, answer: dict[str, object]
 ) -> None:
-    response = wire_client.request(method, url, json=body)
+    response = wire_client.request(method, url, json=body, headers=SAME_ORIGIN_HEADERS)
 
     assert response.status_code == 200
     assert response.json() == answer
@@ -152,7 +153,7 @@ REFUSED: dict[str, tuple[str, str, Any, Refusals]] = {
 def test_a_request_model_refuses_what_it_does_not_declare(
     wire_client: TestClient, method: str, url: str, body: object, errors: Refusals
 ) -> None:
-    response = wire_client.request(method, url, json=body)
+    response = wire_client.request(method, url, json=body, headers=SAME_ORIGIN_HEADERS)
 
     assert response.status_code == 422
     assert response.json()["code"] == "request.invalid"

@@ -47,3 +47,22 @@ CREATE ON SCHEMA public FROM <definer>` before commit. If `roadmaps_owner` itsel
   owner (`roadmaps_history_definer`), not the statement's caller; put caller-role checks
   in the trigger's `WHEN` clause (as `invitations` does for `roadmaps_auth_definer`'s
   purge `DELETE`).
+- **Every API router sets `route_class=PolicyAPIRoute` and every route declares one
+  policy** (`public()`, `signed_in()`, `tenant_member()`, or
+  `tenant_permission(Permission.…)`): `create_app` calls `verify_app_routes` and fails
+  closed on missing/duplicate policies, include-time dependencies or non-policy router
+  dependencies placed ahead of a route's policy, plain `APIRoute`s, mounts, hosts,
+  `frontend()` routes, tenant routes lacking `{tenantSlug}` or unlisted `public()` routes.
+- **Every new route needs a `CALL_SPECS` entry** in
+  `apps/api/tests/integration/test_authorisation.py` (failing the standing role-by-route
+  matrix, cross-tenant sweep, non-`GET` same-origin sweep and read-only `GET` suite
+  immediately if omitted). A new `public()` route also requires a reviewed entry in
+  `PUBLIC_ROUTES` (`apps/api/src/roadmaps_api/authz/routing.py`); the future OIDC
+  callback also registers in `READ_ONLY_GET_EXEMPTIONS`.
+- **State-changing API test calls send same-origin and person-assertion headers**:
+  non-`GET` requests need `Sec-Fetch-Site: same-origin` (or `Origin: <editor_origin>`),
+  `Content-Type: application/json` for routes declaring a body parameter, and
+  `X-Roadmaps-Person-Id` when authenticated. Inject test principals by overriding
+  `app.dependency_overrides[get_current_principal]`. In `STY-107`, keep `fetch`'s default
+  mode (not `no-cors` under `no-referrer`) so the browser never sends `Origin: null`, and
+  open the local editor on `localhost:<DEV_PORT>` rather than `127.0.0.1`.

@@ -293,11 +293,16 @@ describe("Its field (S2–S6)", () => {
     const input = await openField(user, "Next")
     await user.type(input, HEARING)
 
-    act(() => {
-      main().getByRole("button", { name: "More" }).focus()
-    })
-    // A leave waits a task: let one pass.
-    await act(() => new Promise((resolve) => setTimeout(resolve)))
+    // A leave waits a task: fake the clock while focus moves, to run that task at once.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    try {
+      act(() => {
+        main().getByRole("button", { name: "More" }).focus()
+      })
+      await act(() => vi.runOnlyPendingTimersAsync())
+    } finally {
+      vi.useRealTimers()
+    }
 
     expect(field("Next")).toHaveValue(HEARING)
     act(() => {

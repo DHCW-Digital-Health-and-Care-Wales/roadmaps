@@ -5,14 +5,15 @@
   the owner on 2026-11-20 (ADR-015). Amended by ADR-020 (_ADR-020 amendments_) and by
   the owner's STY-090 grilling (_STY-090 amendments_), STY-091 grilling (_STY-091
   amendments_), STY-101 grilling (_STY-101 amendments_), STY-092 grilling (_STY-092
-  amendments_), CHO-047's delivery question (_CHO-047 amendments_) and STY-103 grilling
-  (_STY-103 amendments_).
+  amendments_), CHO-047's delivery question (_CHO-047 amendments_), STY-103 grilling
+  (_STY-103 amendments_) and STY-105's route authorisation (_STY-105 amendments_).
 - Date: 2026-11-21 (amended by ADR-020: CORS, serving the editor, response rules;
   STY-090: URL paths, tracing after the skeleton; STY-091: roles, migrations, `/ready`
   and the test workers; STY-101: two plain-text refusals, log messages; STY-092:
   camelCase JSON contract, committed OpenAPI and raw TS schemas, import boundary;
   CHO-047, 2026-11-25: request models forbid extra keys; STY-103, 2026-11-26: eight
-  no-login roles in `bootstrap.sql` and four local password logins)
+  no-login roles in `bootstrap.sql` and four local password logins; STY-105, 2026-11-27:
+  the `authz` layer between services and repositories)
 
 ## Context
 
@@ -282,6 +283,21 @@ amendments_; the rest of _STY-091 amendments_ stands.
   member of exactly one caller role; locally and in CI, `tools/bootstrap_database.py`
   creates four password logins, one per caller role, and `EPC-023` creates the matching
   IAM logins where hosted.
+
+### STY-105 amendments
+
+From STY-105's route authorisation (2026-11-27), which ADR-019 binds; recorded here at
+the owner's request in the review of PR 346 (2026-11-28). The rest of _Layering_ stands.
+
+- **`authz` is a layer between services and repositories**: route →
+  service → `authz` → repository. `roadmaps_api.authz` holds each route's declared
+  policy, the principal and tenant dependencies, the permission catalogue and the
+  same-origin and media-type guards (ADR-019, ADR-020). Routes declare their policy
+  from it and services take its principal and permission types; it reads memberships
+  and role permissions through repositories, never a service or a route.
+- **Enforced** by the same import-linter `layers` contract, which lists
+  `roadmaps_api.authz` between `services` and `repositories`
+  (`apps/api/pyproject.toml`).
 
 ## Consequences
 

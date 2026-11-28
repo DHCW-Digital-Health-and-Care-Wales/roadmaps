@@ -1153,12 +1153,16 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
     await publish(user)
     const hold = await expectWriteHold("Your changes may have been published")
     // Reads that never answer, until the session's end cancels them.
-    const hang = (options?: RepositoryReadOptions) =>
-      new Promise<never>((_, reject) => {
+    const reads: Promise<never>[] = []
+    const hang = (options?: RepositoryReadOptions) => {
+      const read = new Promise<never>((_, reject) => {
         options?.signal?.addEventListener("abort", () => {
           reject(new Error("Aborted"))
         })
       })
+      reads.push(read)
+      return read
+    }
     vi.spyOn(repository, "listRoadmaps").mockImplementation(hang)
     vi.spyOn(repository, "listRoadmapItems").mockImplementation((_, options) =>
       hang(options),
@@ -1177,7 +1181,8 @@ describe("Publishing a roadmap's changes (STY-025)", () => {
       expect(refresh).not.toHaveAttribute("aria-busy", "true")
     })
     // Let Refresh's cancelled reads settle before looking.
-    await act(() => new Promise((resolve) => setTimeout(resolve, 50)))
+    expect(reads).not.toHaveLength(0)
+    await act(() => Promise.allSettled(reads))
     expect(hold).toBeInTheDocument()
     expect(refresh).toHaveAccessibleName("Reconnect")
   })

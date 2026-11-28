@@ -15,6 +15,7 @@ import math
 import threading
 import time
 from collections.abc import Callable
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from typing import Any, Final
 
@@ -49,11 +50,14 @@ class DiscoveryDocument:
     jwks_uri: str
 
 
+type EntryLock = AbstractContextManager[object]
+
+
 @dataclass
 class _Entry[T]:
     """One provider's cached value, the lock held across its fetch, and its fetch times."""
 
-    lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
+    lock: EntryLock = field(repr=False)
     value: T | None = None
     fetched_at: float = -math.inf
     failed_at: float = -math.inf
@@ -86,9 +90,11 @@ class JwksCache:
         *,
         adapter: BaseAdapter | None = None,
         clock: Callable[[], float] = time.monotonic,
+        lock_factory: Callable[[], EntryLock] = threading.Lock,
     ) -> None:
         self._adapter = adapter
         self._clock = clock
+        self._lock_factory = lock_factory
         self._entries_lock = threading.Lock()
         self._discovery: dict[OidcProviderId, _Entry[DiscoveryDocument]] = {}
         self._jwks: dict[OidcProviderId, _Entry[KeySet]] = {}
@@ -147,7 +153,10 @@ class JwksCache:
         self, store: dict[OidcProviderId, _Entry[T]], provider: OidcProviderId
     ) -> _Entry[T]:
         with self._entries_lock:
-            return store.setdefault(provider, _Entry())
+            entry = store.get(provider)
+            if entry is None:
+                entry = store[provider] = _Entry(lock=self._lock_factory())
+            return entry
 
     def _cached[T](
         self,

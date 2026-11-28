@@ -91,6 +91,16 @@ layers = [
 ]
 
 [[tool.importlinter.contracts]]
+name = "Authorisation depends only downwards on repositories, never on routes or app (ADR-017 Layering)"
+type = "layers"
+layers = [
+  "roadmaps_api.app",
+  "roadmaps_api.routes",
+  "roadmaps_api.authz",
+  "roadmaps_api.repositories",
+]
+
+[[tool.importlinter.contracts]]
 name = "The runtime package never imports dev-only faker or tools (STY-093 S5)"
 type = "forbidden"
 source_modules = ["roadmaps_api"]

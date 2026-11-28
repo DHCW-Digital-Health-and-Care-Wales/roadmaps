@@ -8,6 +8,7 @@ body validation (STY-105 D5, D9, D11, D12, D14).
 """
 
 import logging
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
@@ -16,22 +17,28 @@ from uuid import UUID
 
 from fastapi import Depends, Request
 from fastapi.params import Depends as DependsParam
-from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from roadmaps_api.authz.guards import SAFE_METHODS
 from roadmaps_api.authz.permissions import Permission
 from roadmaps_api.database import Sessions, session_info
 from roadmaps_api.errors import ApiError, ErrorCode
-from roadmaps_api.models import Membership, RolePermission, Tenant
+from roadmaps_api.repositories.authorisation import (
+    AuthorisationRepository,
+    TenantAuthorisationRepository,
+)
 
 logger = logging.getLogger(__name__)
 
 PERSON_ASSERTION_HEADER: Final = "X-Roadmaps-Person-Id"
 POLICY_ATTR: Final = "_roadmaps_route_policy"
-_PERMISSION_BY_VALUE: Final[dict[str, Permission]] = {
-    permission.value: permission for permission in Permission
-}
+
+# Matches `tenants.slug` (`ck_tenants_slug_format` in models.py): 2..63 lowercase
+# alphanumeric/hyphen characters. Refusing malformed slugs (including NUL bytes) upfront
+# keeps non-existent lookups a uniform 404 before touching PostgreSQL.
+_MIN_SLUG_LENGTH: Final = 2
+_MAX_SLUG_LENGTH: Final = 63
+_TENANT_SLUG_FORM: Final = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 class RoutePolicyError(RuntimeError):
@@ -99,6 +106,21 @@ def _parse_canonical_uuid(raw: str) -> UUID | None:
     return parsed if str(parsed) == raw.lower() else None
 
 
+def _parse_permission(raw: str) -> Permission | None:
+    try:
+        return Permission(raw)
+    except ValueError:
+        return None
+
+
+def _is_valid_tenant_slug(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and _MIN_SLUG_LENGTH <= len(value) <= _MAX_SLUG_LENGTH
+        and _TENANT_SLUG_FORM.fullmatch(value) is not None
+    )
+
+
 def require_asserted_person(
     request: Request,
     principal: Annotated[AuthenticatedPrincipal, Depends(get_current_principal)],
@@ -122,38 +144,28 @@ def resolve_tenant_context(
 ) -> TenantContext:
     """Resolves `{tenantSlug}` against active membership and validates role permissions (S2-S3)."""
     tenant_slug = request.path_params.get("tenantSlug")
-    if not isinstance(tenant_slug, str) or not tenant_slug:
+    if not _is_valid_tenant_slug(tenant_slug):
         raise ApiError(ErrorCode.NOT_FOUND)
+    assert isinstance(tenant_slug, str)  # noqa: S101 - narrowed by _is_valid_tenant_slug
 
     # Transaction 1 (person-scoped RLS): resolve active membership for the named tenant slug.
     with sessions(info=session_info(person_id=principal.person_id)) as session:
-        membership = session.execute(
-            select(Tenant.id, Membership.role_id)
-            .join(Membership, Membership.tenant_id == Tenant.id)
-            .where(
-                Tenant.slug == tenant_slug,
-                Membership.person_id == principal.person_id,
-                Membership.ended_at.is_(None),
-            )
-        ).one_or_none()
+        membership = AuthorisationRepository(session).find_active_membership_by_slug(
+            tenant_slug=tenant_slug, person_id=principal.person_id
+        )
     if membership is None:
         raise ApiError(ErrorCode.NOT_FOUND)
     tenant_id, role_id = membership
 
     # Transaction 2 (tenant-scoped RLS): read role_permissions and parse strictly via Permission.
     with sessions(info=session_info(tenant_id=tenant_id, person_id=principal.person_id)) as session:
-        raw_permissions = list(
-            session.scalars(
-                select(RolePermission.permission).where(
-                    RolePermission.tenant_id == tenant_id,
-                    RolePermission.role_id == role_id,
-                )
-            )
+        raw_permissions = TenantAuthorisationRepository(session, tenant_id).list_role_permissions(
+            role_id=role_id
         )
 
     permissions: set[Permission] = set()
     for raw in raw_permissions:
-        permission = _PERMISSION_BY_VALUE.get(raw)
+        permission = _parse_permission(raw)
         if permission is None:
             # Never log the raw unknown permission string (D11, ADR-018/ADR-019).
             logger.error(

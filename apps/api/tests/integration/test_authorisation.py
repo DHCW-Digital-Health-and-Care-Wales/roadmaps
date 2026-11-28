@@ -1,29 +1,33 @@
 """S2 (DB), S3, S4 (read-only GET), S5: tenant dependency, matrix and cross-tenant sweep.
 
-Runs against real PostgreSQL 18 as `roadmaps_app` on a single-connection pool
-(`pool_size=1, max_overflow=0`) so pooled transactions meet any leaked session state.
-Uses a minimal test-only probe router beside `create_app(...)` until real contract routes
-land in `STY-106` and `EPC-025` (D1, D4, D11, D12, D15).
+Runs against real PostgreSQL 18 as `roadmaps_app` on the shared single-connection pool
+fixture (`pool_size=1, max_overflow=0`) so pooled transactions meet any leaked session
+state. Uses a minimal test-only probe router beside `create_app(...)` until real contract
+routes land in `STY-106` and `EPC-025` (D1, D4, D11, D12, D15).
 """
 
 import dataclasses
+import hashlib
 import re
 import uuid
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any, Final
+from typing import Any, Final, Self
 
 import psycopg
 import pytest
 from fastapi import APIRouter, FastAPI
 from fastapi.routing import iter_route_contexts
 from fastapi.testclient import TestClient
-from sqlalchemy import Connection, Engine, create_engine, event, text
+from sqlalchemy import Connection, Engine, event, text
+from sqlalchemy.orm import Session, sessionmaker
 
 from roadmaps_api.app import create_app
 from roadmaps_api.authz import (
     PERSON_ASSERTION_HEADER,
+    SHIPPED_ROLE_NAMES,
     SHIPPED_ROLES,
     AuthenticatedPrincipal,
     CurrentPrincipal,
@@ -39,10 +43,10 @@ from roadmaps_api.authz import (
     tenant_member,
     tenant_permission,
 )
-from roadmaps_api.database import create_sessions
+from roadmaps_api.repositories.access_change_set import AccessChangeSetRepository
 from roadmaps_api.wire import ApiRequestModel
 from tests.harness import PROBE_TABLE, one_uuid
-from tests.support import PLANTED, SAME_ORIGIN_HEADERS, Lines, make_settings
+from tests.support import SAME_ORIGIN_HEADERS, Lines, make_settings
 
 SEED_TIME: Final = datetime(2026, 11, 27, 12, 0, tzinfo=UTC)
 SESSION_ID: Final = uuid.UUID("01950000-0000-7000-8000-0000000000aa")
@@ -55,8 +59,9 @@ READ_ONLY_GET_EXEMPTIONS: Final[frozenset[str]] = frozenset()
 # cross-site GETs must still write nothing at all (D4).
 SESSION_BOOKKEEPING_PATTERNS: Final[tuple[re.Pattern[str], ...]] = ()
 WRITE_SQL_PATTERN: Final = re.compile(
-    r"^\s*(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE|CREATE|ALTER|DROP|GRANT|REVOKE)\b",
-    re.IGNORECASE,
+    r"^\s*(?:INSERT|UPDATE|DELETE|MERGE|TRUNCATE|CREATE|ALTER|DROP|GRANT|REVOKE|CALL)\b"
+    r"|^\s*WITH\b.*\b(?:INSERT|UPDATE|DELETE|MERGE)\b",
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -81,6 +86,25 @@ class AuthzFixture:
     multi_ab: uuid.UUID
 
 
+@contextmanager
+def _access_change_set(
+    conn: psycopg.Connection,
+    tenant_id: uuid.UUID,
+    key: str,
+    *,
+    kind: str = "access_change",
+) -> Generator[uuid.UUID]:
+    request_hash = hashlib.sha256(key.encode("utf-8")).digest()
+    cs_id = one_uuid(
+        conn,
+        "SELECT change_set_id FROM open_access_change_set_internal("
+        " %s, %s, 'system', NULL, 'seed', %s, %s, NULL, NULL)",
+        (tenant_id, kind, key, request_hash),
+    )
+    yield cs_id
+    conn.execute("SELECT sign_off_access_change_set_internal(%s, %s)", (tenant_id, cs_id))
+
+
 def _seed_tenant_with_roles(
     conn: psycopg.Connection, *, slug: str, name: str, key: str
 ) -> tuple[uuid.UUID, dict[ShippedRoleKey, uuid.UUID]]:
@@ -93,26 +117,21 @@ def _seed_tenant_with_roles(
         "INSERT INTO tenant_scopes (tenant_id, scope) VALUES (%s, 'access'), (%s, 'lists')",
         (tenant_id, tenant_id),
     )
-    cs_id = one_uuid(
-        conn,
-        "SELECT change_set_id FROM open_access_change_set_internal("
-        " %s, 'migration', 'system', NULL, 'seed', %s, %s, NULL, NULL)",
-        (tenant_id, f"seed-{key}", b"\x11" * 32),
-    )
     role_ids: dict[ShippedRoleKey, uuid.UUID] = {}
-    for role_key, perms in SHIPPED_ROLES.items():
-        role_id = one_uuid(
-            conn,
-            "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, %s, %s) RETURNING id",
-            (tenant_id, role_key.value.replace("_", " ").title(), role_key.value),
-        )
-        role_ids[role_key] = role_id
-        for perm in sorted(perms):
-            conn.execute(
-                "INSERT INTO role_permissions (tenant_id, role_id, permission) VALUES (%s, %s, %s)",
-                (tenant_id, role_id, perm.value),
+    with _access_change_set(conn, tenant_id, f"seed-{key}", kind="migration"):
+        for role_key, perms in SHIPPED_ROLES.items():
+            role_id = one_uuid(
+                conn,
+                "INSERT INTO roles (tenant_id, name, system_key) VALUES (%s, %s, %s) RETURNING id",
+                (tenant_id, SHIPPED_ROLE_NAMES[role_key], role_key.value),
             )
-    conn.execute("SELECT sign_off_access_change_set_internal(%s, %s)", (tenant_id, cs_id))
+            role_ids[role_key] = role_id
+            for perm in sorted(perms):
+                conn.execute(
+                    "INSERT INTO role_permissions (tenant_id, role_id, permission)"
+                    " VALUES (%s, %s, %s)",
+                    (tenant_id, role_id, perm.value),
+                )
     return tenant_id, role_ids
 
 
@@ -152,48 +171,32 @@ def authz_data(
         admin_b = _insert_person(worker_admin, "Admin B", "admin-b")
         multi_ab = _insert_person(worker_admin, "Multi AB", "multi-ab")
 
-        cs_a = one_uuid(
-            worker_admin,
-            "SELECT change_set_id FROM open_access_change_set_internal("
-            " %s, 'access_change', 'system', NULL, 'seed', 'members-a', %s, NULL, NULL)",
-            (tenant_a_id, b"\x22" * 32),
-        )
-        for person_id, role_key, ended in (
-            (admin_a, ShippedRoleKey.ADMIN, None),
-            (lead_a, ShippedRoleKey.PRODUCT_LEAD, None),
-            (viewer_a, ShippedRoleKey.VIEWER, None),
-            (ended_a, ShippedRoleKey.ADMIN, ended_at),
-            # D1: ended Admin + active Viewer in the same tenant must resolve to Viewer.
-            (demoted_a, ShippedRoleKey.ADMIN, ended_at),
-            (demoted_a, ShippedRoleKey.VIEWER, None),
-            (multi_ab, ShippedRoleKey.ADMIN, None),
-        ):
-            worker_admin.execute(
-                "INSERT INTO memberships (tenant_id, person_id, role_id, ended_at)"
-                " VALUES (%s, %s, %s, %s)",
-                (tenant_a_id, person_id, roles_a[role_key], ended),
-            )
-        worker_admin.execute(
-            "SELECT sign_off_access_change_set_internal(%s, %s)", (tenant_a_id, cs_a)
-        )
+        with _access_change_set(worker_admin, tenant_a_id, "members-a"):
+            for person_id, role_key, ended in (
+                (admin_a, ShippedRoleKey.ADMIN, None),
+                (lead_a, ShippedRoleKey.PRODUCT_LEAD, None),
+                (viewer_a, ShippedRoleKey.VIEWER, None),
+                (ended_a, ShippedRoleKey.ADMIN, ended_at),
+                # D1: ended Admin + active Viewer in the same tenant must resolve to Viewer.
+                (demoted_a, ShippedRoleKey.ADMIN, ended_at),
+                (demoted_a, ShippedRoleKey.VIEWER, None),
+                (multi_ab, ShippedRoleKey.ADMIN, None),
+            ):
+                worker_admin.execute(
+                    "INSERT INTO memberships (tenant_id, person_id, role_id, ended_at)"
+                    " VALUES (%s, %s, %s, %s)",
+                    (tenant_a_id, person_id, roles_a[role_key], ended),
+                )
 
-        cs_b = one_uuid(
-            worker_admin,
-            "SELECT change_set_id FROM open_access_change_set_internal("
-            " %s, 'access_change', 'system', NULL, 'seed', 'members-b', %s, NULL, NULL)",
-            (tenant_b_id, b"\x33" * 32),
-        )
-        for person_id, role_key in (
-            (admin_b, ShippedRoleKey.ADMIN),
-            (multi_ab, ShippedRoleKey.VIEWER),
-        ):
-            worker_admin.execute(
-                "INSERT INTO memberships (tenant_id, person_id, role_id) VALUES (%s, %s, %s)",
-                (tenant_b_id, person_id, roles_b[role_key]),
-            )
-        worker_admin.execute(
-            "SELECT sign_off_access_change_set_internal(%s, %s)", (tenant_b_id, cs_b)
-        )
+        with _access_change_set(worker_admin, tenant_b_id, "members-b"):
+            for person_id, role_key in (
+                (admin_b, ShippedRoleKey.ADMIN),
+                (multi_ab, ShippedRoleKey.VIEWER),
+            ):
+                worker_admin.execute(
+                    "INSERT INTO memberships (tenant_id, person_id, role_id) VALUES (%s, %s, %s)",
+                    (tenant_b_id, person_id, roles_b[role_key]),
+                )
 
     return AuthzFixture(
         tenant_a_id=tenant_a_id,
@@ -281,18 +284,14 @@ def _add_probe_router(app: FastAPI) -> None:
 
 
 @pytest.fixture
-def authz_app(database_url: str) -> Iterator[FastAPI]:
-    """The real app (plus D15 probe router) backed by a single-connection pool as `roadmaps_app`."""
+def authz_app(database_url: str, engine: Engine, sessions: sessionmaker[Session]) -> FastAPI:
+    """The real app (plus D15 probe router) wired to the shared single-connection pool."""
     app = create_app(make_settings(database_url))
-    # Replace the default engine with a single-connection pool so pooled transactions prove
-    # app.tenant_id and app.person_id never leak across requests (tests/integration/AGENTS.md).
     app.state.engine.dispose()
-    single_engine = create_engine(database_url, pool_size=1, max_overflow=0)
-    app.state.engine = single_engine
-    app.state.sessions = create_sessions(single_engine)
+    app.state.engine = engine
+    app.state.sessions = sessions
     _add_probe_router(app)
-    yield app
-    single_engine.dispose()
+    return app
 
 
 def _set_principal(app: FastAPI, person_id: uuid.UUID | None) -> None:
@@ -319,7 +318,7 @@ def _headers_for(method: str, person_id: uuid.UUID | None) -> dict[str, str]:
 
 @dataclass(frozen=True)
 class CallSpec:
-    """How the standing matrix, cross-tenant sweep and read-only GET suite call one route."""
+    """How the standing matrix, sweeps and read-only GET suite call one route."""
 
     path_for: Callable[[str], str]
     json_body: dict[str, Any] | None = None
@@ -386,6 +385,22 @@ def _expected_status(
     return 200 if policy.permission in SHIPPED_ROLES[role_key] else 403
 
 
+def _authorised_person_for(policy: RoutePolicy, data: AuthzFixture) -> uuid.UUID:
+    """Picks a seeded Tenant A person authorised to reach the handler for `policy`."""
+    if policy.kind is PolicyKind.TENANT_PERMISSION:
+        assert policy.permission is not None
+        by_role = {
+            ShippedRoleKey.ADMIN: data.admin_a,
+            ShippedRoleKey.PRODUCT_LEAD: data.lead_a,
+            ShippedRoleKey.VIEWER: data.viewer_a,
+        }
+        for role_key, person_id in by_role.items():
+            if policy.permission in SHIPPED_ROLES[role_key]:
+                return person_id
+        pytest.fail(f"No shipped role holds {policy.permission}")
+    return data.admin_a
+
+
 # ---------------------------------------------------------------------------
 # S3: tenant dependency, isolation, frozen context and pool hygiene
 # ---------------------------------------------------------------------------
@@ -399,8 +414,7 @@ def test_tenant_dependency_scopes_session_and_isolates_roles_across_tenants(
         _set_principal(authz_app, authz_data.admin_a)
         res = client.get(f"/api/v1/tenants/{authz_data.tenant_a_slug}/probe/member")
         assert res.status_code == 200
-        body = res.json()
-        assert body == {
+        assert res.json() == {
             "tenantId": str(authz_data.tenant_a_id),
             "tenantSlug": authz_data.tenant_a_slug,
             "personId": str(authz_data.admin_a),
@@ -418,9 +432,12 @@ def test_tenant_dependency_scopes_session_and_isolates_roles_across_tenants(
         b_tags = client.get(f"/api/v1/tenants/{authz_data.tenant_b_slug}/probe/tags")
         assert (b_tags.status_code, b_tags.json()["code"]) == (403, "authz.forbidden")
 
-        # Unknown tenant slug returns uniform 404 identical to non-member and ended member.
+        # Unknown and malformed slugs (including NUL bytes) return uniform 404, never 500.
         unknown = client.get("/api/v1/tenants/no-such-tenant/probe/member")
         assert (unknown.status_code, unknown.json()["code"]) == (404, "request.not_found")
+        for bad_slug in ("%00", "Tenant-A", "a", "a" * 64):
+            malformed = client.get(f"/api/v1/tenants/{bad_slug}/probe/member")
+            assert (malformed.status_code, malformed.json()) == (404, unknown.json()), bad_slug
 
         _set_principal(authz_app, authz_data.admin_b)
         non_member = client.get(f"/api/v1/tenants/{authz_data.tenant_a_slug}/probe/member")
@@ -435,7 +452,6 @@ def test_tenant_context_is_frozen_and_never_leaks_rls_across_pooled_connections(
     authz_app: FastAPI, authz_data: AuthzFixture
 ) -> None:
     captured: list[Any] = []
-
     extra = APIRouter(route_class=PolicyAPIRoute)
 
     @extra.post("/probe/check-frozen", dependencies=[tenant_member()])
@@ -496,24 +512,15 @@ def test_tenant_dependency_fails_closed_if_route_lacks_tenant_slug(
     assert (res.status_code, res.json()["code"]) == (404, "request.not_found")
 
 
-def test_d9_full_evaluation_order_with_db_tenant_resolution(
+def test_d9_db_evaluation_order_runs_tenant_and_permission_checks_before_body_validation(
     authz_app: FastAPI, authz_data: AuthzFixture
 ) -> None:
     url = f"/api/v1/tenants/{authz_data.tenant_a_slug}/probe/write"
     bad_body = {"unexpectedField": 1}
 
     with TestClient(authz_app) as client:
-        # Anonymous with invalid Pydantic body -> 401 before 422.
-        _set_principal(authz_app, None)
-        res = client.post(url, headers=SAME_ORIGIN_HEADERS, json=bad_body)
-        assert (res.status_code, res.json()["code"]) == (401, "auth.unauthenticated")
-
-        # Signed in without person assertion -> 409 before 404/403/422.
+        # Non-member with invalid body -> 404 before 422.
         _set_principal(authz_app, authz_data.admin_b)
-        res = client.post(url, headers=SAME_ORIGIN_HEADERS, json=bad_body)
-        assert (res.status_code, res.json()["code"]) == (409, "auth.person_mismatch")
-
-        # Non-member with matching person assertion and invalid body -> 404 before 422.
         res = client.post(url, headers=_headers_for("POST", authz_data.admin_b), json=bad_body)
         assert (res.status_code, res.json()["code"]) == (404, "request.not_found")
 
@@ -522,12 +529,10 @@ def test_d9_full_evaluation_order_with_db_tenant_resolution(
         res = client.post(url, headers=_headers_for("POST", authz_data.viewer_a), json=bad_body)
         assert (res.status_code, res.json()["code"]) == (403, "authz.forbidden")
 
-        # Authorised Admin with invalid body -> 422.
+        # Authorised Admin wiring check: invalid body reaches 422, valid body succeeds.
         _set_principal(authz_app, authz_data.admin_a)
         res = client.post(url, headers=_headers_for("POST", authz_data.admin_a), json=bad_body)
         assert (res.status_code, res.json()["code"]) == (422, "request.invalid")
-
-        # Authorised Admin with valid body -> 200.
         res = client.post(
             url, headers=_headers_for("POST", authz_data.admin_a), json={"label": "ok"}
         )
@@ -547,20 +552,13 @@ def test_unknown_permission_in_role_fails_closed_without_logging_raw_value(
 ) -> None:
     unknown_permission = "future:planted-secret"
     # Insert a valid-format unknown permission onto Tenant A's Viewer role (D1).
-    with worker_admin.transaction():
-        cs_id = one_uuid(
-            worker_admin,
-            "SELECT change_set_id FROM open_access_change_set_internal("
-            " %s, 'access_change', 'system', NULL, 'test', 'unknown-perm', %s, NULL, NULL)",
-            (authz_data.tenant_a_id, b"\x44" * 32),
-        )
+    with (
+        worker_admin.transaction(),
+        _access_change_set(worker_admin, authz_data.tenant_a_id, "unknown-perm"),
+    ):
         worker_admin.execute(
             "INSERT INTO role_permissions (tenant_id, role_id, permission) VALUES (%s, %s, %s)",
             (authz_data.tenant_a_id, authz_data.roles_a[ShippedRoleKey.VIEWER], unknown_permission),
-        )
-        worker_admin.execute(
-            "SELECT sign_off_access_change_set_internal(%s, %s)",
-            (authz_data.tenant_a_id, cs_id),
         )
 
     with TestClient(authz_app) as client:
@@ -598,7 +596,7 @@ def test_unknown_permission_in_role_fails_closed_without_logging_raw_value(
 
 
 # ---------------------------------------------------------------------------
-# S5: generated role-by-route matrix and cross-tenant sweep (D1, D15)
+# S5: generated role-by-route matrix, non-GET same-origin sweep & cross-tenant sweep
 # ---------------------------------------------------------------------------
 
 
@@ -660,6 +658,30 @@ def test_generated_role_by_route_matrix_exercises_every_route_and_principal(
                     assert response.json()["code"] == "request.not_found"
 
 
+def test_every_non_get_route_refuses_missing_same_origin_proof(
+    authz_app: FastAPI, authz_data: AuthzFixture
+) -> None:
+    discovered = _discover_policy_routes(authz_app)
+    _assert_call_specs_cover_all_routes(discovered, CALL_SPECS)
+    write_routes = [(m, t) for (m, t) in sorted(discovered) if m != "GET"]
+    assert write_routes
+
+    _set_principal(authz_app, authz_data.admin_a)
+    with TestClient(authz_app) as client:
+        for method, template in write_routes:
+            spec = CALL_SPECS[(method, template)]
+            response = client.request(
+                method,
+                spec.path_for(authz_data.tenant_a_slug),
+                headers={PERSON_ASSERTION_HEADER: str(authz_data.admin_a)},
+                json=spec.json_body,
+            )
+            assert (response.status_code, response.json()["code"]) == (
+                403,
+                "request.origin_not_allowed",
+            )
+
+
 def test_cross_tenant_sweep_returns_404_and_changes_nothing(
     authz_app: FastAPI, authz_data: AuthzFixture, worker_admin: psycopg.Connection
 ) -> None:
@@ -697,33 +719,72 @@ def test_cross_tenant_sweep_returns_404_and_changes_nothing(
 # ---------------------------------------------------------------------------
 
 
-def _record_sql_statements(engine: Engine) -> tuple[list[str], Callable[[], None]]:
-    statements: list[str] = []
+class _WriteTracker:
+    """Detects every DB write during a GET: DML, writable CTEs and definer/trigger writes.
 
-    def listener(
-        _conn: Connection,
+    Pairs SQL statement classification (catching zero-row DML attempts) with PostgreSQL's
+    native `pg_current_xact_id_if_assigned()` checked on a separate DBAPI cursor after
+    each statement (catching any write hidden inside a `SECURITY DEFINER` routine, trigger
+    or CTE).
+    """
+
+    def __init__(self, engine: Engine) -> None:
+        self._engine = engine
+        self.bookkeeping: list[str] = []
+        self.domain_writes: list[str] = []
+        self._tx_xid: int | None = None
+
+    def clear(self) -> None:
+        self.bookkeeping.clear()
+        self.domain_writes.clear()
+        self._tx_xid = None
+
+    def _on_begin(self, _conn: Connection) -> None:
+        self._tx_xid = None
+
+    def _on_end(self, _conn: Connection) -> None:
+        self._tx_xid = None
+
+    def _on_after_execute(
+        self,
+        conn: Connection,
         _cursor: object,
         statement: str,
         _parameters: object,
         _context: object,
         _executemany: bool,  # noqa: FBT001 - SQLAlchemy event hook signature
     ) -> None:
-        statements.append(statement)
+        xid_assigned_now = False
+        raw_conn = conn.connection.dbapi_connection
+        assert raw_conn is not None
+        probe = raw_conn.cursor()
+        try:
+            probe.execute("SELECT pg_current_xact_id_if_assigned()")
+            row = probe.fetchone()
+            xid = row[0] if row is not None else None
+        finally:
+            probe.close()
+        if xid is not None and self._tx_xid is None:
+            self._tx_xid = xid
+            xid_assigned_now = True
 
-    event.listen(engine, "before_cursor_execute", listener)
-    return statements, lambda: event.remove(engine, "before_cursor_execute", listener)
+        if any(pattern.search(statement) for pattern in SESSION_BOOKKEEPING_PATTERNS):
+            self.bookkeeping.append(statement)
+        elif xid_assigned_now or WRITE_SQL_PATTERN.search(statement):
+            self.domain_writes.append(statement)
 
+    def __enter__(self) -> Self:
+        event.listen(self._engine, "begin", self._on_begin)
+        event.listen(self._engine, "commit", self._on_end)
+        event.listen(self._engine, "rollback", self._on_end)
+        event.listen(self._engine, "after_cursor_execute", self._on_after_execute)
+        return self
 
-def _classify_writes(statements: list[str]) -> tuple[list[str], list[str]]:
-    """Splits executed write statements into `(session_bookkeeping, domain_or_access_writes)`."""
-    bookkeeping: list[str] = []
-    domain_writes: list[str] = []
-    for sql in statements:
-        if any(pattern.search(sql) for pattern in SESSION_BOOKKEEPING_PATTERNS):
-            bookkeeping.append(sql)
-        elif WRITE_SQL_PATTERN.search(sql):
-            domain_writes.append(sql)
-    return bookkeeping, domain_writes
+    def __exit__(self, *_exc: object) -> None:
+        event.remove(self._engine, "after_cursor_execute", self._on_after_execute)
+        event.remove(self._engine, "rollback", self._on_end)
+        event.remove(self._engine, "commit", self._on_end)
+        event.remove(self._engine, "begin", self._on_begin)
 
 
 def test_every_non_exempt_get_route_makes_no_domain_write_and_cross_site_writes_nothing(
@@ -739,61 +800,84 @@ def test_every_non_exempt_get_route_makes_no_domain_write_and_cross_site_writes_
     missing = set(get_routes) - set(CALL_SPECS)
     assert not missing, f"GET routes missing from CALL_SPECS: {sorted(missing)}"
 
-    statements, remove_listener = _record_sql_statements(authz_app.state.engine)
-    try:
-        with TestClient(authz_app) as client:
-            for method, template in get_routes:
-                policy = discovered[(method, template)]
-                # Choose a principal authorised to execute the handler body.
-                if policy.kind is PolicyKind.TENANT_PERMISSION and (
-                    policy.permission is Permission.ROADMAPS_EDIT
-                ):
-                    person_id: uuid.UUID | None = authz_data.lead_a
-                else:
-                    person_id = authz_data.admin_a
-                _set_principal(authz_app, person_id)
-                path = CALL_SPECS[(method, template)].path_for(authz_data.tenant_a_slug)
+    with _WriteTracker(authz_app.state.engine) as tracker, TestClient(authz_app) as client:
+        for method, template in get_routes:
+            policy = discovered[(method, template)]
+            _set_principal(authz_app, _authorised_person_for(policy, authz_data))
+            path = CALL_SPECS[(method, template)].path_for(authz_data.tenant_a_slug)
 
-                for site_header in ("same-origin", None, "same-site", "cross-site"):
-                    statements.clear()
-                    headers = {"Sec-Fetch-Site": site_header} if site_header is not None else {}
-                    response = client.get(path, headers=headers)
-                    assert response.status_code == 200, f"{template} ({site_header})"
-                    bookkeeping, domain_writes = _classify_writes(statements)
-                    assert domain_writes == [], f"GET {template} executed writes: {domain_writes}"
-                    if site_header in {"same-site", "cross-site"}:
-                        assert bookkeeping == [], (
-                            f"{site_header} GET {template} wrote session bookkeeping: {bookkeeping}"
-                        )
-    finally:
-        remove_listener()
+            for site_header in ("same-origin", None, "same-site", "cross-site"):
+                tracker.clear()
+                headers = {"Sec-Fetch-Site": site_header} if site_header is not None else {}
+                response = client.get(path, headers=headers)
+                assert response.status_code == 200, f"{template} ({site_header})"
+                assert tracker.domain_writes == [], (
+                    f"GET {template} executed writes: {tracker.domain_writes}"
+                )
+                if site_header in {"same-site", "cross-site"}:
+                    assert tracker.bookkeeping == [], (
+                        f"{site_header} GET {template} wrote session bookkeeping: "
+                        f"{tracker.bookkeeping}"
+                    )
 
 
-def test_read_only_get_detector_catches_a_mutating_get_route(
-    authz_app: FastAPI, authz_data: AuthzFixture
+def _write_plain_insert(tenant: CurrentTenant) -> None:
+    with tenant.open_session() as session:
+        session.execute(
+            text(f"INSERT INTO {PROBE_TABLE} (tenant_id) VALUES (:tenant_id)"),  # noqa: S608
+            {"tenant_id": tenant.tenant_id},
+        )
+        session.commit()
+
+
+def _write_cte(tenant: CurrentTenant) -> None:
+    with tenant.open_session() as session:
+        session.execute(
+            text(
+                f"WITH inserted AS (INSERT INTO {PROBE_TABLE} (tenant_id)"  # noqa: S608
+                " VALUES (:tenant_id) RETURNING tenant_id)"
+                " SELECT tenant_id FROM inserted"
+            ),
+            {"tenant_id": tenant.tenant_id},
+        )
+        session.commit()
+
+
+def _write_definer_select(tenant: CurrentTenant) -> None:
+    with tenant.open_session() as session:
+        repo = AccessChangeSetRepository(session, tenant.tenant_id)
+        opened = repo.open(
+            idempotency_key="bad-get-definer",
+            request_hash=hashlib.sha256(b"bad-get-definer").digest(),
+        )
+        repo.sign_off(opened.change_set_id)
+        session.commit()
+
+
+MUTATING_GET_WRITES: dict[str, Callable[[CurrentTenant], None]] = {
+    "plain INSERT": _write_plain_insert,
+    "writable CTE (WITH ... INSERT ... SELECT)": _write_cte,
+    "mutating SECURITY DEFINER SELECT": _write_definer_select,
+}
+
+
+@pytest.mark.parametrize("do_write", MUTATING_GET_WRITES.values(), ids=MUTATING_GET_WRITES)
+def test_read_only_get_detector_catches_every_write_kind(
+    authz_app: FastAPI,
+    authz_data: AuthzFixture,
+    do_write: Callable[[CurrentTenant], None],
 ) -> None:
     rogue = APIRouter(route_class=PolicyAPIRoute)
 
     @rogue.get("/probe/bad-get", dependencies=[tenant_member()])
     def bad_get(tenant: CurrentTenant) -> dict[str, str]:
-        with tenant.open_session() as session:
-            session.execute(
-                text(f"INSERT INTO {PROBE_TABLE} (tenant_id) VALUES (:tenant_id)"),  # noqa: S608
-                {"tenant_id": tenant.tenant_id},
-            )
-            session.commit()
-        return {"planted": PLANTED}
+        do_write(tenant)
+        return {"status": "ok"}
 
     authz_app.include_router(rogue, prefix="/api/v1/tenants/{tenantSlug}")
 
-    statements, remove_listener = _record_sql_statements(authz_app.state.engine)
-    try:
+    with _WriteTracker(authz_app.state.engine) as tracker, TestClient(authz_app) as client:
         _set_principal(authz_app, authz_data.admin_a)
-        with TestClient(authz_app) as client:
-            res = client.get(f"/api/v1/tenants/{authz_data.tenant_a_slug}/probe/bad-get")
-            assert res.status_code == 200
-        _, domain_writes = _classify_writes(statements)
-        assert len(domain_writes) == 1
-        assert "INSERT" in domain_writes[0]
-    finally:
-        remove_listener()
+        res = client.get(f"/api/v1/tenants/{authz_data.tenant_a_slug}/probe/bad-get")
+        assert res.status_code == 200
+        assert len(tracker.domain_writes) >= 1

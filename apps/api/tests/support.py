@@ -92,28 +92,29 @@ class Echo(ApiRequestModel):
 
 
 def add_test_routes(app: FastAPI) -> FastAPI:
-    router = APIRouter(prefix="/test", route_class=PolicyAPIRoute, dependencies=[public()])
+    router = APIRouter(prefix="/test", route_class=PolicyAPIRoute)
+    own = APIRouter(route_class=PolicyAPIRoute, dependencies=[public()])
     app.state.unread_calls = 0
 
-    @router.post("/echo")
+    @own.post("/echo")
     def echo(body: Echo, count: Annotated[int, Query()] = 1) -> dict[str, object]:
         return {"name": body.name, "count": count}
 
-    @router.post("/unread")
+    @own.post("/unread")
     def unread(request: Request) -> dict[str, str]:
         """Answers without reading the body, counting each call."""
         request.app.state.unread_calls += 1
         return {"status": "ok"}
 
-    @router.get("/boom")
+    @own.get("/boom")
     def boom() -> None:
         raise ValueError(PLANTED)
 
-    @router.get("/teapot")
+    @own.get("/teapot")
     def teapot() -> None:
         raise HTTPException(status_code=418, detail=PLANTED)
 
-    @router.get("/items/{item_id}")
+    @own.get("/items/{item_id}")
     def item(item_id: str) -> dict[str, str]:
         return {"item": item_id}
 
@@ -135,9 +136,10 @@ def add_test_routes(app: FastAPI) -> FastAPI:
     def admin_health() -> dict[str, str]:
         return {"status": "ok"}
 
+    add_tracing_routes(own)
+    router.include_router(own)
     router.include_router(nested)
     router.include_router(admin, prefix="/admin")
-    add_tracing_routes(router)
     app.include_router(router)
     return app
 

@@ -13,7 +13,11 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
-LAYERS: Final = (Path("src/roadmaps_api/routes"), Path("src/roadmaps_api/repositories"))
+LAYERS: Final = (
+    Path("src/roadmaps_api/routes"),
+    Path("src/roadmaps_api/authz"),
+    Path("src/roadmaps_api/repositories"),
+)
 ENDS_A_TRANSACTION: Final = frozenset({"commit", "rollback", "begin"})
 
 

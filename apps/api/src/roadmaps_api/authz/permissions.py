@@ -59,14 +59,15 @@ SHIPPED_ROLE_NAMES: Final[Mapping[ShippedRoleKey, str]] = MappingProxyType(
 
 
 def validate_shipped_roles(
-    roles: Mapping[ShippedRoleKey, frozenset[Permission]] = SHIPPED_ROLES,
+    roles: Mapping[ShippedRoleKey, frozenset[Permission]] | None = None,
 ) -> None:
     """Validates code-level shipped role definitions against `Permission` at startup (D11)."""
+    target = SHIPPED_ROLES if roles is None else roles
     expected_keys = set(ShippedRoleKey)
-    if set(roles) != expected_keys:
+    if set(target) != expected_keys:
         msg = "SHIPPED_ROLES is missing one or more ShippedRoleKey entries"
         raise ValueError(msg)
-    for role_key, permissions in roles.items():
+    for role_key, permissions in target.items():
         for permission in permissions:
             if not isinstance(permission, Permission):
                 try:

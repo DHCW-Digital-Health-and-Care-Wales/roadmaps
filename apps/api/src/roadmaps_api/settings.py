@@ -13,7 +13,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Final, NoReturn
+from typing import Final, NamedTuple, NoReturn
 from urllib.parse import urlsplit
 
 from sqlalchemy.engine import make_url
@@ -51,6 +51,14 @@ class Environment(StrEnum):
     LOCAL = "local"
     TEST = "test"
     PRODUCTION = "production"
+
+
+class ParsedOrigin(NamedTuple):
+    """Canonicalised bare origin (`scheme://host[:port]`) split for policy checks."""
+
+    scheme: str
+    host: str
+    canonical: str
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -115,7 +123,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
     parsed_origin = parse_origin(environ.get(EDITOR_ORIGIN, "").strip())
     if parsed_origin is None or (
         strict_origin
-        and (parsed_origin[0] != "https" or (hosts_valid and parsed_origin[1] not in hosts))
+        and (parsed_origin.scheme != "https" or (hosts_valid and parsed_origin.host not in hosts))
     ):
         invalid.append(EDITOR_ORIGIN)
 
@@ -135,7 +143,7 @@ def load_settings(environ: Mapping[str, str] | None = None) -> Settings:
         environment=environment,
         database_url=database_url,
         allowed_hosts=hosts,
-        editor_origin=parsed_origin[2],
+        editor_origin=parsed_origin.canonical,
         writes_messages=environment is Environment.LOCAL and not on_cloud_run,
         otlp_endpoint=otlp_endpoint.removesuffix("/") if otlp_endpoint else None,
         service_name=service_name,
@@ -177,8 +185,8 @@ def is_http_url(url: str) -> bool:
     return parts.scheme in {"http", "https"} and bool(parts.hostname)
 
 
-def parse_origin(raw: str) -> tuple[str, str, str] | None:
-    """Parses a bare `scheme://host[:port]` origin into `(scheme, host_token, canonical)`.
+def parse_origin(raw: str) -> ParsedOrigin | None:
+    """Parses a bare `scheme://host[:port]` origin into `ParsedOrigin(scheme, host, canonical)`.
 
     Refuses any path (including a trailing slash), query, fragment, userinfo, wildcard,
     whitespace, control character or malformed/zero port. Lowercases scheme and host and
@@ -211,4 +219,4 @@ def parse_origin(raw: str) -> tuple[str, str, str] | None:
     if port == _DEFAULT_PORTS[scheme]:
         port = None
     canonical = f"{scheme}://{host_token}" if port is None else f"{scheme}://{host_token}:{port}"
-    return scheme, host_token, canonical
+    return ParsedOrigin(scheme=scheme, host=host_token, canonical=canonical)

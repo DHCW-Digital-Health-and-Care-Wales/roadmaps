@@ -5,7 +5,11 @@ from typing import Any, Final, override
 
 from fastapi import FastAPI, Request, Response
 from fastapi.dependencies.models import Dependant
-from fastapi.routing import APIRoute, iter_route_contexts
+from fastapi.routing import (
+    APIRoute,
+    _effective_route_context_var,
+    iter_route_contexts,
+)
 from starlette.routing import Route
 
 from roadmaps_api.authz.guards import SAFE_METHODS, enforce_json_media_type, enforce_same_origin
@@ -73,7 +77,13 @@ class PolicyAPIRoute(APIRoute):
     @override
     def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
         original_handler = super().get_route_handler()
-        expects_body = self.body_field is not None
+        # Match FastAPI's own effective-context lookup so body parameters introduced by
+        # include-time router dependencies are also guarded upfront (STY-105 D8, D9).
+        effective = _effective_route_context_var.get()
+        effective_route = (
+            effective if effective is not None and effective.original_route is self else self
+        )
+        expects_body = effective_route.body_field is not None
 
         async def guarded_handler(request: Request) -> Response:
             if request.method not in SAFE_METHODS:
@@ -116,7 +126,7 @@ def verify_app_routes(app: FastAPI) -> None:
                 raise RoutePolicyError(msg)
             policy = extract_route_policy(ctx.dependant)
             if policy.kind is PolicyKind.PUBLIC:
-                if any((method, path_format) not in allowed_public for method in methods):
+                if any((method, path_format) not in PUBLIC_ROUTES for method in methods):
                     msg = f"Public route {path_format!r} is not in PUBLIC_ROUTES"
                     raise RoutePolicyError(msg)
             elif policy.kind in {PolicyKind.TENANT_MEMBER, PolicyKind.TENANT_PERMISSION} and (

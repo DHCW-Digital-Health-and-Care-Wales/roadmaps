@@ -15,7 +15,7 @@ harness's fixtures.
   that takes it, the worker's superuser connection empties every table but
   `alembic_version`, so the revision `/ready` reads stays.
 - Only the harness holds the superuser connection (`worker_admin`, `harness.admin()`,
-  `harness.admin_session()`).
+  `harness.admin_connection()`, `harness.admin_session()`, `harness.open_admin()`).
   Use it to set up what a test needs and to read catalogs, never as the login under test.
 - Set up the domain rows a test needs but does not itself exercise with
   `apps/api/tools/seed/factories.py` over `harness.admin_session()`, not raw SQL,

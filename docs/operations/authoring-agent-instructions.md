@@ -93,9 +93,13 @@ the code is.
   files than a comment can reach
 - **Edit**: a rule already written is now false — fix it or delete it. Removing
   a stale rule matters as much as adding a true one
-- **A new line replaces or sharpens an existing one.** When nothing it
-  replaces exists, its PR says why the file has to grow. A retrospective
-  deletes the lines its session showed stale, wrong or ignored
+- **Sharpen, prune or disclose before growing.** Check the whole file first
+  so a new line sharpens an existing rule instead of duplicating or fragmenting
+  it across sections. When nothing it replaces exists, prune a stale or no-op
+  line or disclose branch-only detail behind a pointer (a nested guide or a
+  skill's `references/`, as _Length_ sets); when nothing is stale or
+  disclosable, state in the PR why the addition earns its context load. A
+  retrospective deletes the lines its session showed stale, wrong or ignored
 
 ## Where it goes
 

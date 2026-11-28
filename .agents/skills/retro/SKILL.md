@@ -36,8 +36,10 @@ Trace each piece of friction to its cause, checking these categories:
   unwired or silently broken is the finding, not a reinvention.
 - **Coding standards**: did a reviewer miss a mistake? A **mechanical**
   violation (a syntactic pattern, banned API, import shape, file location)
-  earns a deterministic check with a regression case. Build it at the highest
-  rung that works: a type error; an existing lint rule, or a new rule in
+  earns a deterministic check with a regression case only when its
+  false-positive surface, config blast radius and maintenance cost beat leaving
+  it to review. Build it at the highest rung
+  that works: a type error; an existing lint rule, or a new rule in
   `eslint.base.ts`, an app's `eslint.config.ts` or `apps/api/pyproject.toml`;
   a unit test; only then a custom script. Put its
   incident and a review date about 90 days out in a comment at its head.
@@ -48,9 +50,10 @@ Trace each piece of friction to its cause, checking these categories:
   diff; one review's miss is evidence for a lens, never a check of its own.
 - **Agent guides**: would a rule have prevented the friction? Give it the
   first rung that holds it on the authoring guide's _Where it goes_ ladder; a
-  guide line must pass its recur bar and replace or sharpen a line there. Most
-  retros end with no guide edit. Delete any guide line the session showed
-  stale, wrong or ignored.
+  guide line must pass its recur bar and its sharpen, prune or disclose rule.
+  Check open retro PRs so two retros do not patch the same symptom into
+  different skills. Most retros end with no guide edit. Delete any guide line
+  the session showed stale, wrong or ignored.
 - **Tool economy**: were tool calls expensive or noisy (large dumps, repeated
   polling, work a cheaper delegated worker should have done)?
 - **No-ops**: which instructions did not change the agent's behaviour?

@@ -64,7 +64,11 @@ PR's base, so an edit between heads to a line the PR itself added takes that
 line's standing, not a standing of its own, and to check that each correction
 to a guide file changes no rule, as
 `docs/operations/authoring-agent-instructions.md` defines them (_Where it
-goes_).
+goes_). When a PR changes a guide file, add
+`.agents/skills/writing-for-agents/SKILL.md` and
+`docs/operations/authoring-agent-instructions.md` to every reviewer's brief so
+reviewers check each added line against their recur bar, co-location, single
+source of truth and sharpen, prune or disclose rules.
 
 For role-specific briefs, use `.claude/agents/mechanical-worker.md`,
 `.claude/agents/quality-reviewer.md`, `.claude/agents/code-reviewer.md` and
@@ -150,11 +154,8 @@ pass.
   `.agents/skills/` or an `AGENTS.md`/`CLAUDE.md` (an agent definition under
   `.claude/agents/` or a skill's script is config or code, not docs), takes the
   correctness lane alone (Opus and Sol), with the security lane when it is
-  security-relevant. Its briefs add the record sweep (`docs/AGENTS.md`)
-  and, for an instruction file, `.agents/skills/writing-for-agents/SKILL.md`
-  and `docs/operations/authoring-agent-instructions.md`, whose recur bar and
-  replace-or-sharpen rule the reviewers apply to every added line. Its cap is
-  round 1 and one re-check per reviewer, with no final fresh pass.
+  security-relevant; its briefs add the record sweep (`docs/AGENTS.md`), and
+  its cap is round 1 and one re-check per reviewer, with no final fresh pass.
 - **Security-relevant**: a PR that records a decision on, or implements or changes
   code or configuration that handles, authentication (sign-in included), sessions,
   tokens, OAuth scopes, authorisation, tenant isolation, secrets, untrusted input at a

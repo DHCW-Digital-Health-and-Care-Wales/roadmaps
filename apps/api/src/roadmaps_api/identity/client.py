@@ -9,7 +9,7 @@ from authlib.common.errors import AuthlibBaseError
 from authlib.integrations.requests_client import OAuth2Session
 from authlib.oidc.core import CodeIDToken
 from joserfc import jwt
-from joserfc.errors import InvalidKeyIdError, JoseError
+from joserfc.errors import ClaimError, InvalidKeyIdError, JoseError
 from joserfc.jwk import KeySet
 from requests.adapters import BaseAdapter
 
@@ -28,6 +28,8 @@ from roadmaps_api.identity.providers import (
 
 ALLOWED_JWS_ALGORITHMS: Final[tuple[str, ...]] = ("RS256",)
 CLOCK_SKEW_SECONDS: Final[int] = 60
+# Claims whose refusal is logged by name (`invalid_<claim>`); any other is `invalid_claims`.
+_LOGGED_CLAIM_REASONS: Final = frozenset({"iss", "sub", "aud", "azp", "nonce", "exp", "iat", "nbf"})
 
 
 @dataclass(frozen=True)
@@ -71,18 +73,20 @@ def _verified_identity(
 
     `jwt.decode` has already enforced the `RS256` allow-list; joserfc checks the options
     below and that `exp`, `iat` and `nbf` are finite numbers within the skew; authlib's
-    `CodeIDToken` checks `nonce` and `azp` against `params`. Each option closes a gap in
-    authlib's defaults: `aud`, which they leave unchecked so a wrong `aud` whose `azp`
-    names this client passes; `azp` and `nonce`, whose authlib checks skip a falsy claim
-    or expected value. joserfc alone would accept a list `azp` or `nonce` containing the
-    expected value, so both layers stay.
+    `CodeIDToken` checks `nonce` and `azp` against `params`. authlib's checks skip a falsy
+    expected nonce or `azp` claim, and its defaults leave `aud` unchecked (a wrong `aud`
+    whose `azp` names this client passes), so an empty expected nonce is refused here and
+    `aud` and `azp` are explicit options. joserfc alone would accept a list `azp`
+    containing the client ID, so both `azp` layers stay.
     """
+    if not expected_nonce:
+        msg = "invalid_nonce"
+        raise OidcVerificationError(msg)
     options: dict[str, Any] = {
         "iss": {"essential": True, "values": list(config.accepted_issuers)},
         "sub": {"essential": True},
         "aud": {"essential": True, "value": config.client_id},
         "azp": {"value": config.client_id},
-        "nonce": {"essential": True, "value": expected_nonce},
         "exp": {"essential": True},
         "iat": {"essential": True},
     }
@@ -95,7 +99,8 @@ def _verified_identity(
     try:
         claims.validate(now=now, leeway=CLOCK_SKEW_SECONDS)
     except JoseError as exc:
-        msg = "invalid_claims"
+        claim = exc.claim if isinstance(exc, ClaimError) else None
+        msg = f"invalid_{claim}" if claim in _LOGGED_CLAIM_REASONS else "invalid_claims"
         raise OidcVerificationError(msg) from exc
 
     subject = claims["sub"]

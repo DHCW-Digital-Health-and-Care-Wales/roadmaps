@@ -412,8 +412,8 @@ def test_every_refused_jwt_claim_and_algorithm_is_rejected(
 
 @pytest.mark.parametrize(
     "claims_change",
-    [{"nonce": ""}, {"nonce": "any-nonce"}, {"nonce": None}],
-    ids=["empty nonce", "some nonce", "no nonce"],
+    [{"nonce": ""}, {"nonce": "any-nonce"}, {"nonce": [""]}, {"nonce": None}],
+    ids=["empty nonce", "some nonce", "list of an empty nonce", "no nonce"],
 )
 def test_an_empty_expected_nonce_refuses_every_token(claims_change: dict[str, Any]) -> None:
     key = _make_rsa_key("k1")
@@ -432,6 +432,36 @@ def test_an_empty_expected_nonce_refuses_every_token(claims_change: dict[str, An
 
     with pytest.raises(OidcVerificationError):
         client.exchange_code_and_verify(OidcProviderId.GOOGLE, request)
+
+
+CLAIM_REFUSAL_REASONS: dict[str, tuple[Callable[[int], dict[str, Any]], str]] = {
+    "wrong nonce": (lambda now: _valid_claims(now, nonce="wrong-nonce"), "invalid_nonce"),
+    "wrong azp": (lambda now: _valid_claims(now, azp="other-client"), "invalid_azp"),
+    "wrong aud": (lambda now: _valid_claims(now, aud="other-client"), "invalid_aud"),
+    "expired exp": (lambda now: _valid_claims(now, exp=now - 61), "invalid_exp"),
+    "missing exp": (lambda now: _without(_valid_claims(now), "exp"), "invalid_exp"),
+    "non-list amr, a claim not logged by name": (
+        lambda now: _valid_claims(now, amr="pwd"),
+        "invalid_claims",
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("build_claims", "reason"), CLAIM_REFUSAL_REASONS.values(), ids=CLAIM_REFUSAL_REASONS
+)
+def test_claim_refusals_carry_the_refused_claim_as_their_reason(
+    build_claims: Callable[[int], dict[str, Any]], reason: str
+) -> None:
+    key = _make_rsa_key("k1")
+    now = int(time.time())
+    token = _sign_rs256(key, build_claims(now))
+    adapter, _counts = _make_google_transport([key], lambda: token)
+    client = OidcClient(build_provider_configs(_google_settings()), adapter=adapter)
+
+    with pytest.raises(OidcVerificationError) as exc_info:
+        client.exchange_code_and_verify(OidcProviderId.GOOGLE, _exchange_request(now=now))
+    assert exc_info.value.reason == reason
 
 
 def test_jwks_key_rollover_rate_limited_refetch_and_stale_key_retention() -> None:
